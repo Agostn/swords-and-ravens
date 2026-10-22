@@ -35,6 +35,8 @@ import ScrollToBottom from "react-scroll-to-bottom";
 import _ from "lodash";
 import VolumeSliderComponent from "./utils/VolumeSliderComponent";
 import { OverlayChildren } from "react-bootstrap/esm/Overlay";
+import { t } from "./i18n/i18n";
+import LanguageSelectComponent from "./i18n/LanguageSelectComponent";
 
 interface LobbyComponentProps {
   gameClient: GameClient;
@@ -109,7 +111,11 @@ export default class LobbyComponent extends Component<LobbyComponentProps> {
                         </Col>
                       )}
                       <Col xs="auto" style={{ width: "100px" }}>
-                        <b>{this.randomHouses ? "Seat " + (i + 1) : h.name}</b>
+                        <b>
+                          {this.randomHouses
+                            ? t("lobby.seat", { n: i + 1 })
+                            : h.name}
+                        </b>
                       </Col>
                       <Col
                         className={classNames({
@@ -166,7 +172,7 @@ export default class LobbyComponent extends Component<LobbyComponentProps> {
                     style={{ height: this.chatHeight, padding: "1rem" }}
                   >
                     <div className="d-flex flex-column h-100">
-                      <span>Spectators:</span>
+                      <span>{t("lobby.spectators")}</span>
                       <ScrollToBottom
                         className="mb-2 flex-fill-remaining"
                         scrollViewClassName="overflow-x-hidden"
@@ -216,14 +222,14 @@ export default class LobbyComponent extends Component<LobbyComponentProps> {
                             overlay={
                               <Tooltip id="start-game">
                                 {this.readyCheckOngoing
-                                  ? "Ready check is ongoing"
+                                  ? t("lobby.readyCheckOngoing")
                                   : canStartGameReason == "not-enough-players"
-                                    ? "More players must join to be able to start the game."
+                                    ? t("lobby.notEnoughPlayers")
                                     : canStartGameReason ==
                                         "targaryen-must-be-a-player-controlled-house"
-                                      ? "House Targaryen must be chosen by a player"
+                                      ? t("lobby.targaryenMustBePlayer")
                                       : canStartGameReason == "not-owner"
-                                        ? "Only the owner of the game can start it"
+                                        ? t("lobby.onlyOwnerCanStart")
                                         : null}
                               </Tooltip>
                             }
@@ -233,9 +239,9 @@ export default class LobbyComponent extends Component<LobbyComponentProps> {
                         )}
                       >
                         {this.lobby.settings.pbem ? (
-                          <span>Start</span>
+                          <span>{t("lobby.start")}</span>
                         ) : (
-                          <span>Launch Ready Check to start the game</span>
+                          <span>{t("lobby.launchReadyCheck")}</span>
                         )}
                       </ConditionalWrap>
                     </Button>
@@ -254,9 +260,9 @@ export default class LobbyComponent extends Component<LobbyComponentProps> {
                             overlay={
                               <Tooltip id="start-game">
                                 {this.readyCheckOngoing
-                                  ? "Ready check is ongoing"
+                                  ? t("lobby.readyCheckOngoing")
                                   : canCancelGameReason == "not-owner"
-                                    ? "Only the owner of the game can cancel it"
+                                    ? t("lobby.onlyOwnerCanCancel")
                                     : null}
                               </Tooltip>
                             }
@@ -265,7 +271,7 @@ export default class LobbyComponent extends Component<LobbyComponentProps> {
                           </OverlayTrigger>
                         )}
                       >
-                        <>Cancel</>
+                        <>{t("lobby.cancel")}</>
                       </ConditionalWrap>
                     </Button>
                   </Col>
@@ -281,7 +287,9 @@ export default class LobbyComponent extends Component<LobbyComponentProps> {
                       <OverlayTrigger
                         overlay={
                           <Tooltip id="lobby-mute-tooltip">
-                            {this.props.gameClient.muted ? "Unmute" : "Mute"}
+                            {this.props.gameClient.muted
+                              ? t("lobby.unmute")
+                              : t("lobby.mute")}
                           </Tooltip>
                         }
                       >
@@ -308,6 +316,9 @@ export default class LobbyComponent extends Component<LobbyComponentProps> {
                       </OverlayTrigger>
                     </div>
                   </Col>
+                  <Col xs="auto" className="d-flex align-items-center">
+                    <LanguageSelectComponent />
+                  </Col>
                 </Row>
               </Card.Body>
             </Card>
@@ -326,7 +337,7 @@ export default class LobbyComponent extends Component<LobbyComponentProps> {
         <Col className="m-2 p-2">
           <VolumeSliderComponent
             volume={this.props.gameClient.notificationsVolume * 100}
-            name="Notifications"
+            name={t("lobby.volume.notifications")}
             onVolumeChange={(val) =>
               this.props.gameClient.sfxManager.notificationVolumeChanged(
                 val / 100
@@ -335,14 +346,14 @@ export default class LobbyComponent extends Component<LobbyComponentProps> {
           />
           <VolumeSliderComponent
             volume={this.props.gameClient.musicVolume * 100}
-            name="Music"
+            name={t("lobby.volume.music")}
             onVolumeChange={(val) =>
               this.props.gameClient.sfxManager.musicVolumeChanged(val / 100)
             }
           />
           <VolumeSliderComponent
             volume={this.props.gameClient.sfxVolume * 100}
-            name="Sfx"
+            name={t("lobby.volume.sfx")}
             onVolumeChange={(val) =>
               this.props.gameClient.sfxManager.sfxVolumeChanged(val / 100)
             }
@@ -365,19 +376,18 @@ export default class LobbyComponent extends Component<LobbyComponentProps> {
           tooltip={
             <Tooltip id="game-password-tooltip">
               {isOwner ? (
-                <>
-                  You can set a password here to prevent strangers from joining
-                  your game.
-                </>
+                <>{t("lobby.password.ownerTooltip")}</>
               ) : this.lobby.password != "" ? (
-                <>Enter the password here to unlock and join the game.</>
+                <>{t("lobby.password.joinTooltip")}</>
               ) : (
                 <></>
               )}
             </Tooltip>
           }
           placeHolder={
-            isOwner ? "Set password" : "Enter the password to unlock the game"
+            isOwner
+              ? t("lobby.password.ownerPlaceholder")
+              : t("lobby.password.joinPlaceholder")
           }
           width={300}
         />
@@ -420,7 +430,7 @@ export default class LobbyComponent extends Component<LobbyComponentProps> {
             variant="outline-success"
             onClick={() => this.ready()}
           >
-            Ready
+            {t("lobby.ready")}
           </Button>
           <Spinner
             className="ml-3"
@@ -454,7 +464,7 @@ export default class LobbyComponent extends Component<LobbyComponentProps> {
     return !this.lobby.players.has(h) ? (
       <Col xs="auto" className={invisible ? "invisible" : ""}>
         <Button type="button" size="sm" onClick={() => this.choose(h)}>
-          Choose
+          {t("lobby.choose")}
         </Button>
       </Col>
     ) : this.lobby.players.get(h) == this.authenticatedUser ? (
@@ -465,7 +475,7 @@ export default class LobbyComponent extends Component<LobbyComponentProps> {
           variant="danger"
           onClick={() => this.leave()}
         >
-          Leave
+          {t("lobby.leave")}
         </Button>
       </Col>
     ) : (
@@ -477,7 +487,7 @@ export default class LobbyComponent extends Component<LobbyComponentProps> {
             variant="danger"
             onClick={() => this.kick(h)}
           >
-            Kick
+            {t("lobby.kick")}
           </Button>
         </Col>
       )
@@ -497,7 +507,7 @@ export default class LobbyComponent extends Component<LobbyComponentProps> {
   }
 
   cancel(): void {
-    if (confirm("Are you sure you want to cancel the game?")) {
+    if (confirm(t("lobby.confirmCancel"))) {
       this.lobby.cancel();
     }
   }

@@ -8,6 +8,8 @@ import EntireGame from "../common/EntireGame";
 import IngameGameState from "../common/ingame-game-state/IngameGameState";
 import { observable } from "mobx";
 import { observer } from "mobx-react";
+import { t, tr } from "./i18n/i18n";
+import LanguageSelectComponent from "./i18n/LanguageSelectComponent";
 
 interface UserSettingsComponentProps {
   entireGame: EntireGame;
@@ -35,13 +37,12 @@ export default class UserSettingsComponent extends Component<UserSettingsCompone
                       <OverlayTrigger
                         overlay={
                           <Tooltip id="chat-house-names-tooltip">
-                            Show house names instead of user names in chat
-                            windows.
+                            {tr("userSettings.chatHouseNames.tooltip")}
                           </Tooltip>
                         }
                       >
                         <label htmlFor="chat-house-names-setting">
-                          House names for chat
+                          {t("userSettings.chatHouseNames.label")}
                         </label>
                       </OverlayTrigger>
                     }
@@ -62,15 +63,12 @@ export default class UserSettingsComponent extends Component<UserSettingsCompone
                       <OverlayTrigger
                         overlay={
                           <Tooltip id="map-scrollbar-tooltip">
-                            Enables a fixed game map with a scrollbar. The map
-                            height then resizes with the actual window height.
-                            Keeping it activated won&apos;t affect the mobile
-                            experience.
+                            {tr("userSettings.mapScrollbar.tooltip")}
                           </Tooltip>
                         }
                       >
                         <label htmlFor="map-scrollbar-setting">
-                          Map scrollbar (Desktop only)
+                          {t("userSettings.mapScrollbar.label")}
                         </label>
                       </OverlayTrigger>
                     }
@@ -91,14 +89,12 @@ export default class UserSettingsComponent extends Component<UserSettingsCompone
                       <OverlayTrigger
                         overlay={
                           <Tooltip id="game-state-column-right-setting-tooltip">
-                            This setting swaps the houses column with the game
-                            state column, so that the game state column is
-                            displayed to the right of the map.
+                            {tr("userSettings.gameStateColumnRight.tooltip")}
                           </Tooltip>
                         }
                       >
                         <label htmlFor="game-state-column-right-setting">
-                          Game state column on the right
+                          {t("userSettings.gameStateColumnRight.label")}
                         </label>
                       </OverlayTrigger>
                     }
@@ -116,8 +112,11 @@ export default class UserSettingsComponent extends Component<UserSettingsCompone
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  FAQ
+                  {t("userSettings.faq")}
                 </a>
+              </Row>
+              <Row className="justify-content-center mt-1 mb-1">
+                <LanguageSelectComponent />
               </Row>
             </div>
           )}
