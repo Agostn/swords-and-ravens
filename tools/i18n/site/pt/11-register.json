@@ -1,0 +1,39 @@
+{
+"Areas/Identity/Pages/Account/Register.cshtml": [
+ ["ViewData[\"Title\"] = \"Register\";", "ViewData[\"Title\"] = \"Criar conta\";"],
+ ["<h1 class=\"text-2xl font-bold mb-4\">Create an Account</h1>", "<h1 class=\"text-2xl font-bold mb-4\">Criar uma conta</h1>"],
+ ["    By registering, you confirm that you own a licensed copy of the physical board game.", "    Ao criar uma conta, você confirma que tem uma cópia original do jogo de tabuleiro físico."],
+ ["placeholder=\"Username\"", "placeholder=\"Nome de usuário\""],
+ ["<label asp-for=\"Input.UserName\">Username</label>", "<label asp-for=\"Input.UserName\">Nome de usuário</label>"],
+ ["placeholder=\"name@example.com\"", "placeholder=\"nome@exemplo.com\""],
+ ["<label asp-for=\"Input.Email\">Email</label>", "<label asp-for=\"Input.Email\">E-mail</label>"],
+ ["placeholder=\"password\"", "placeholder=\"senha\"", 2],
+ ["<label asp-for=\"Input.Password\">Password</label>", "<label asp-for=\"Input.Password\">Senha</label>"],
+ ["<label asp-for=\"Input.ConfirmPassword\">Confirm Password</label>", "<label asp-for=\"Input.ConfirmPassword\">Confirme a senha</label>"],
+ ["btn-primary\">Register</button>", "btn-primary\">Criar conta</button>"],
+ ["<h3>Use another service to register.</h3>", "<h3>Ou crie a conta com outro serviço.</h3>"],
+ ["                            There are no external authentication services configured. See this <a href=\"https://go.microsoft.com/fwlink/?LinkID=532715\">article\n                            about setting up this ASP.NET application to support logging in via external services</a>.", "                            Nenhum outro serviço de login (Google, Discord, Facebook) está ativado neste site no momento."],
+ ["var buttonText = $\"Sign up with {providerLabel}\";", "var buttonText = $\"Criar conta com {providerLabel}\";"],
+ ["title=\"Log in using your @providerLabel account\"", "title=\"Usar sua conta do @providerLabel\""]
+],
+"Areas/Identity/Pages/Account/Register.cshtml.cs": [
+ ["ErrorMessage = \"The {0} must be between {2} and {1} characters long.\"", "ErrorMessage = \"O {0} precisa ter entre {2} e {1} caracteres.\""],
+ ["[Display(Name = \"Username\")]", "[Display(Name = \"Nome de usuário\")]"],
+ ["[Display(Name = \"Email\")]", "[Display(Name = \"E-mail\")]"],
+ ["ErrorMessage = \"The {0} must be at least {2} and at max {1} characters long.\",", "ErrorMessage = \"A {0} precisa ter de {2} a {1} caracteres.\","],
+ ["[Display(Name = \"Password\")]", "[Display(Name = \"Senha\")]"],
+ ["[Display(Name = \"Confirm password\")]", "[Display(Name = \"Confirmação da senha\")]"],
+ ["ErrorMessage = \"The password and confirmation password do not match.\"", "ErrorMessage = \"A senha e a confirmação não são iguais.\""],
+ ["\"Too many registration attempts from your network. Please try again later.\"", "\"Muitas tentativas de criar conta a partir da sua rede. Tente de novo mais tarde.\""],
+ ["\"Registration could not be completed.\"", "\"Não foi possível criar a conta.\""],
+ ["\"Please complete the human verification challenge and try again.\"", "\"Complete a verificação de que você não é um robô e tente de novo.\""],
+ ["\"This username is reserved and can't be used.\"", "\"Este nome de usuário é reservado e não pode ser usado.\""],
+ ["\"This username is already taken.\"", "\"Este nome de usuário já está em uso.\""],
+ ["\"Throwaway/disposable email addresses aren't allowed. Please use an email address you can actually receive mail at.\"", "\"E-mails temporários/descartáveis não são aceitos. Use um e-mail em que você realmente receba mensagens.\""],
+ ["\"Confirm your email\",", "\"Confirme seu e-mail\","],
+ ["$\"<p>Please confirm your account by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.</p>\"", "$\"<p>Confirme sua conta <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicando aqui</a>.</p>\""],
+ ["return \"An account with this email already exists. Please log in instead.\";", "return \"Já existe uma conta com este e-mail. Entre com ela.\";"],
+ ["? string.Join(\" or \", externalProviderNames)\n                    : \"an external provider\";", "? string.Join(\" ou \", externalProviderNames)\n                    : \"um serviço externo\";"],
+ ["return $\"This email is already linked to an account via {providerNames}. Please sign in with {providerNames} instead — \"\n                + \"you can add a password to your account afterwards from your profile settings.\";", "return $\"Este e-mail já está ligado a uma conta pelo {providerNames}. Entre com o {providerNames} — \"\n                + \"depois você pode criar uma senha nas configurações do seu perfil.\";"]
+]
+}

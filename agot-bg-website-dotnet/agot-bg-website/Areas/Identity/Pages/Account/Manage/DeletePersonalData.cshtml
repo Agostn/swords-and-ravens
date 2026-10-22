@@ -1,7 +1,7 @@
 ﻿@page
 @model DeletePersonalDataModel
 @{
-    ViewData["Title"] = "Delete Personal Data";
+    ViewData["Title"] = "Apagar dados pessoais";
     ViewData["ActivePage"] = ManageNavPages.PersonalData;
 }
 
@@ -9,10 +9,10 @@
 
 <div class="alert alert-warning" role="alert">
     <p>
-        <strong>Deleting your account cannot be undone.</strong> Your email, password, username,
-        profile text and connected login providers will be permanently erased. You will show up as
-        <strong>"Took the Black"</strong> in any games you already played, but you will no longer be
-        able to log in, and games you played will no longer count towards a win rate for you.
+        <strong>Apagar sua conta não pode ser desfeito.</strong> Seu e-mail, senha, nome de usuário,
+        texto do perfil e logins ligados serão apagados para sempre. Nas partidas que você já jogou,
+        você vai aparecer como <strong>"Took the Black"</strong> (vestiu o negro), mas não vai mais conseguir
+        entrar, e essas partidas não vão mais contar na sua taxa de vitória.
     </p>
 </div>
 
@@ -22,12 +22,12 @@
         @if (Model.RequirePassword)
         {
             <div class="form-floating mb-3">
-                <input asp-for="Input.Password" class="form-control" autocomplete="current-password" aria-required="true" placeholder="Please enter your password." />
+                <input asp-for="Input.Password" class="form-control" autocomplete="current-password" aria-required="true" placeholder="Digite sua senha." />
                 <label asp-for="Input.Password" class="form-label"></label>
                 <span asp-validation-for="Input.Password" class="text-danger"></span>
             </div>
         }
-        <button class="w-100 btn btn-lg btn-danger" type="submit">Delete data and close my account</button>
+        <button class="w-100 btn btn-lg btn-danger" type="submit">Apagar meus dados e encerrar minha conta</button>
     </form>
 </div>
 

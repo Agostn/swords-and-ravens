@@ -44,6 +44,7 @@ namespace agot_bg_website.Areas.Identity.Pages.Account
             /// </summary>
             [Required]
             [EmailAddress]
+            [Display(Name = "E-mail")]
             public string Email { get; set; }
         }
 
@@ -61,7 +62,7 @@ namespace agot_bg_website.Areas.Identity.Pages.Account
             {
                 ModelState.AddModelError(
                     string.Empty,
-                    "Verification email sent. Please check your email."
+                    "E-mail de confirmação enviado. Confira sua caixa de entrada (e o spam)."
                 );
                 return Page();
             }
@@ -77,17 +78,17 @@ namespace agot_bg_website.Areas.Identity.Pages.Account
             );
             await _emailSender.SendEmailAsync(
                 Input.Email,
-                "Confirm your email",
+                "Confirme seu e-mail",
                 EmailTemplates.Build(
                     user.UserName,
                     user.Email,
-                    $"<p>Please confirm your account by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.</p>"
+                    $"<p>Confirme sua conta <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicando aqui</a>.</p>"
                 )
             );
 
             ModelState.AddModelError(
                 string.Empty,
-                "Verification email sent. Please check your email."
+                "E-mail de confirmação enviado. Confira sua caixa de entrada (e o spam)."
             );
             return Page();
         }

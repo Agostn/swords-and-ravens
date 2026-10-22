@@ -1,0 +1,47 @@
+{
+"Pages/Shared/_Layout.cshtml": [
+ ["?? \"Play A Game of Thrones: The Board Game (2nd Edition) online for free, in real time or play-by-email, against friends or strangers.\";", "?? \"Jogue A Game of Thrones: The Board Game (2ª edição) online e de graça, ao vivo ou por turnos (PBEM), com amigos ou desconhecidos.\";"],
+ ["<html lang=\"en\" data-theme", "<html lang=\"pt-BR\" data-theme"],
+ ["<a class=\"nav-link\" asp-area=\"\" asp-page=\"/Games\">All Games</a>", "<a class=\"nav-link\" asp-area=\"\" asp-page=\"/Games\">Todas as partidas</a>"],
+ ["<a class=\"nav-link\" asp-area=\"\" asp-page=\"/MyGames\">My Games</a>", "<a class=\"nav-link\" asp-area=\"\" asp-page=\"/MyGames\">Minhas partidas</a>"],
+ ["<a class=\"nav-link\" asp-area=\"\" asp-page=\"/Users\">Users</a>", "<a class=\"nav-link\" asp-area=\"\" asp-page=\"/Users\">Jogadores</a>"],
+ ["<a class=\"nav-link\" asp-area=\"\" asp-page=\"/TermsOfUse\">Terms of Use</a>", "<a class=\"nav-link\" asp-area=\"\" asp-page=\"/TermsOfUse\">Termos de uso</a>"],
+ ["<a class=\"nav-link\" asp-area=\"\" asp-page=\"/About\">About</a>", "<a class=\"nav-link\" asp-area=\"\" asp-page=\"/About\">Sobre</a>"],
+ ["aria-label=\"Open menu\"", "aria-label=\"Abrir menu\""],
+ ["<li><a asp-area=\"\" asp-page=\"/Games\">All Games</a></li>", "<li><a asp-area=\"\" asp-page=\"/Games\">Todas as partidas</a></li>"],
+ ["<li><a asp-area=\"\" asp-page=\"/MyGames\">My Games</a></li>", "<li><a asp-area=\"\" asp-page=\"/MyGames\">Minhas partidas</a></li>"],
+ ["<li><a asp-area=\"\" asp-page=\"/Users\">Users</a></li>", "<li><a asp-area=\"\" asp-page=\"/Users\">Jogadores</a></li>"],
+ ["<li><a asp-area=\"\" asp-page=\"/TermsOfUse\">Terms of Use</a></li>", "<li><a asp-area=\"\" asp-page=\"/TermsOfUse\">Termos de uso</a></li>"],
+ ["<li><a asp-area=\"\" asp-page=\"/About\">About</a></li>", "<li><a asp-area=\"\" asp-page=\"/About\">Sobre</a></li>"],
+ ["                    This is a test instance.", "                    Este é um site de testes."],
+ ["asp-page=\"/Privacy\">Privacy</a>", "asp-page=\"/Privacy\">Privacidade</a>"],
+ ["<a class=\"link link-hover\" asp-area=\"\" asp-page=\"/TermsOfUse\">Terms of Use</a>", "<a class=\"link link-hover\" asp-area=\"\" asp-page=\"/TermsOfUse\">Termos de uso</a>"],
+ ["asp-page=\"/Contact\">Contact</a>", "asp-page=\"/Contact\">Contato</a>"],
+ ["rel=\"noopener noreferrer\">Donate</a>", "rel=\"noopener noreferrer\">Doar (projeto original)</a>"],
+ ["aria-label=\"Close\">", "aria-label=\"Fechar\">"],
+ [">Hosted by <span id=\"game-settings-modal-owner\">", ">Criada por <span id=\"game-settings-modal-owner\">"],
+ [">Created at <span id=\"game-settings-modal-created-at\"></span>", ">Criada em <span id=\"game-settings-modal-created-at\"></span>"],
+ ["> · Last action at <span", "> · Última ação em <span"],
+ ["<dt class=\"opacity-70\">Setup</dt>", "<dt class=\"opacity-70\">Configuração</dt>"],
+ ["<dt class=\"opacity-70\">Players</dt>", "<dt class=\"opacity-70\">Jogadores</dt>"],
+ ["class=\"opacity-70 hidden\">Round</dt>", "class=\"opacity-70 hidden\">Rodada</dt>"],
+ ["<p class=\"opacity-70 text-sm mb-1\">Settings</p>", "<p class=\"opacity-70 text-sm mb-1\">Opções</p>"],
+ [">No optional settings enabled</p>", ">Nenhuma opção extra ativada</p>"],
+ ["title=\"Won\" aria-label=\"Won\"", "title=\"Venceu\" aria-label=\"Venceu\""],
+ ["<button class=\"btn btn-sm\">Close</button>", "<button class=\"btn btn-sm\">Fechar</button>"],
+ ["<button>close</button>", "<button>fechar</button>"]
+],
+"Pages/Shared/_LoginPartial.cshtml": [
+ ["            Hello @User.Identity?.Name!", "            Olá, @User.Identity?.Name!"],
+ ["target=\"_blank\" rel=\"noopener noreferrer\">View profile</a>", "target=\"_blank\" rel=\"noopener noreferrer\">Ver perfil</a>"],
+ ["asp-page=\"/Account/Manage/Index\">Manage profile</a>", "asp-page=\"/Account/Manage/Index\">Editar perfil</a>"],
+ ["hover:bg-base-300\">Logout</button>", "hover:bg-base-300\">Sair</button>"],
+ ["asp-route-returnUrl=\"@safeReturnUrl\">Register</a>", "asp-route-returnUrl=\"@safeReturnUrl\">Criar conta</a>"],
+ ["asp-route-returnUrl=\"@safeReturnUrl\">Login</a>", "asp-route-returnUrl=\"@safeReturnUrl\">Entrar</a>"]
+],
+"Pages/Shared/_CookieConsentPartial.cshtml": [
+ ["            We use cookies to keep you signed in and remember your game/site preferences (no\n            advertising or third-party tracking cookies). Choosing to sign in via Google, Discord,\n            or Facebook also involves those providers' own cookies once you're redirected to them.\n            See our <a class=\"link link-hover\" asp-page=\"/Privacy\">Privacy Policy</a> for details.", "            Usamos cookies para manter você conectado e lembrar suas preferências do jogo e do site\n            (sem cookies de anúncios ou de rastreamento de terceiros). Se você entrar com Google,\n            Discord ou Facebook, esses serviços também usam os próprios cookies quando você é levado até eles.\n            Veja a nossa <a class=\"link link-hover\" asp-page=\"/Privacy\">Política de Privacidade</a> para mais detalhes."],
+ ["aria-label=\"Accept cookies\"", "aria-label=\"Aceitar cookies\""],
+ ["<span aria-hidden=\"true\">Accept</span>", "<span aria-hidden=\"true\">Aceitar</span>"]
+]
+}

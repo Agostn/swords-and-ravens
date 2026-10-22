@@ -9,15 +9,15 @@ public class NotificationsApiTests
     public static TheoryData<string, string> HtmlTemplateCases =>
         new()
         {
-            { "notifyReadyToStart", "is ready to start:" },
-            { "notifyYourTurn", "It's your turn to play in" },
+            { "notifyReadyToStart", "está pronta para começar:" },
+            { "notifyYourTurn", "É a sua vez de jogar em" },
             {
                 "notifyBribeForSupport",
-                "and now you can call for support or try to bribe your way there:"
+                "e agora pode pedir apoio ou tentar comprá-lo:"
             },
-            { "notifyBattleResults", "Your battle in" },
-            { "notifyNewVote", "a new vote has been started in" },
-            { "notifyGameEnded", "has ended:" },
+            { "notifyBattleResults", "Sua batalha em" },
+            { "notifyNewVote", "Uma nova votação começou em" },
+            { "notifyGameEnded", "terminou:" },
         };
 
     [Theory]
@@ -33,13 +33,13 @@ public class NotificationsApiTests
 
         var html = NotificationsApi.BuildBodyHtml(route, user, game, gameUrl);
 
-        Assert.Contains("<p>Hello Arya,</p>", html);
+        Assert.Contains("<p>Olá, Arya!</p>", html);
         Assert.Contains(expectedSnippet, html);
         Assert.Contains(
             "<p><a href=\"https://swordsandravens.net/play/123\">https://swordsandravens.net/play/123</a></p>",
             html
         );
-        Assert.Contains("<p>Warmest regards,<br />Staff @ Swords and Ravens</p>", html);
+        Assert.Contains("<p>Um abraço,<br />Equipe do Swords and Ravens</p>", html);
     }
 
     [Fact]
@@ -51,14 +51,14 @@ public class NotificationsApiTests
 
         var html = NotificationsApi.BuildBodyHtml("notifyReadyToStart", user, game, gameUrl);
 
-        Assert.Contains("Hello Player &lt;One&gt; &amp; Co,", html);
-        Assert.Contains("Your game &quot;Foo &amp; &lt;Bar&gt;&quot; is ready to start:", html);
+        Assert.Contains("Olá, Player &lt;One&gt; &amp; Co!", html);
+        Assert.Contains("Sua partida &quot;Foo &amp; &lt;Bar&gt;&quot; está pronta para começar:", html);
         Assert.Contains(
             "<a href=\"https://example.com/play/123?name=foo&amp;mode=&quot;pbem&quot;\">https://example.com/play/123?name=foo&amp;mode=&quot;pbem&quot;</a>",
             html
         );
-        Assert.DoesNotContain("Hello Player <One> & Co,", html);
-        Assert.DoesNotContain("Your game &quot;Foo & <Bar>&quot; is ready to start:", html);
+        Assert.DoesNotContain("Olá, Player <One> & Co!", html);
+        Assert.DoesNotContain("Sua partida &quot;Foo & <Bar>&quot; está pronta para começar:", html);
         Assert.DoesNotContain(
             "<a href=\"https://example.com/play/123?name=foo&mode=\"pbem\"\">",
             html

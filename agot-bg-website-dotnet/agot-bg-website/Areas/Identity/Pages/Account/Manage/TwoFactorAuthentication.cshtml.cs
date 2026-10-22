@@ -56,7 +56,7 @@ namespace agot_bg_website.Areas.Identity.Pages.Account.Manage
             var user = await _userManager.GetUserAsync(User);
             if (user == null)
             {
-                return NotFound($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
+                return NotFound($"Não foi possível carregar o usuário com ID '{_userManager.GetUserId(User)}'.");
             }
 
             // 2FA is only available for accounts with a local password - accounts that only ever
@@ -82,12 +82,12 @@ namespace agot_bg_website.Areas.Identity.Pages.Account.Manage
             var user = await _userManager.GetUserAsync(User);
             if (user == null)
             {
-                return NotFound($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
+                return NotFound($"Não foi possível carregar o usuário com ID '{_userManager.GetUserId(User)}'.");
             }
 
             await _signInManager.ForgetTwoFactorClientAsync();
             StatusMessage =
-                "The current browser has been forgotten. When you login again from this browser you will be prompted for your 2fa code.";
+                "Este navegador foi esquecido. Na próxima vez que entrar por ele, o código do autenticador vai ser pedido.";
             return RedirectToPage();
         }
     }

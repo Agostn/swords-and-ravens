@@ -1,0 +1,14 @@
+{
+"Pages/Shared/_ChatWidget.cshtml": [
+ ["<span class=\"opacity-80\">Last finished game:</span>", "<span class=\"opacity-80\">Última partida terminada:</span>"],
+ ["            Online users\n", "            Jogadores online\n"],
+ ["title=\"Westerosi time (basically, UTC)\"", "title=\"Horário de Westeros (UTC; Brasília = UTC−3)\""],
+ ["title=${\"Winner of \" + last_won_tournament}", "title=${\"Vencedor de \" + last_won_tournament}"],
+ ["const TAB_LABELS = { chat: \"Chat\", issues: \"Requests / Issues\" };", "const TAB_LABELS = { chat: \"Chat\", issues: \"Pedidos / Problemas\" };"],
+ ["<p class=\"opacity-70\">Please log in to chat with others.</p>", "<p class=\"opacity-70\">Entre na sua conta para conversar com os outros.</p>"],
+ ["<div class=\"alert alert-warning mb-3\">Chat connection lost. Please reload the page.</div>", "<div class=\"alert alert-warning mb-3\">A conexão do chat caiu. Recarregue a página.</div>"],
+ ["placeholder=\"Message\"", "placeholder=\"Mensagem\""],
+ ["disabled=${!isAuthenticated}>Send</button>", "disabled=${!isAuthenticated}>Enviar</button>"],
+ ["title=\"Load older messages\"", "title=\"Carregar mensagens antigas\""]
+]
+}

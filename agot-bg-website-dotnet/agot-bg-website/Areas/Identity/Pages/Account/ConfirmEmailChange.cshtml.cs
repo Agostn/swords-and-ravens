@@ -36,14 +36,14 @@ namespace agot_bg_website.Areas.Identity.Pages.Account
             var user = await _userManager.FindByIdAsync(userId);
             if (user == null)
             {
-                return NotFound($"Unable to load user with ID '{userId}'.");
+                return NotFound($"Não foi possível encontrar o usuário com ID '{userId}'.");
             }
 
             code = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(code));
             var result = await _userManager.ChangeEmailAsync(user, email, code);
             if (!result.Succeeded)
             {
-                StatusMessage = "Error changing email.";
+                StatusMessage = "Erro ao trocar o e-mail.";
                 return Page();
             }
 
@@ -53,7 +53,7 @@ namespace agot_bg_website.Areas.Identity.Pages.Account
             // Register.cshtml.cs/ExternalLogin.cshtml.cs), specifically so a user's email is never
             // publicly exposed via their username. So changing the email must leave UserName alone.
             await _signInManager.RefreshSignInAsync(user);
-            StatusMessage = "Thank you for confirming your email change.";
+            StatusMessage = "Obrigado por confirmar a troca de e-mail!";
             return Page();
         }
     }

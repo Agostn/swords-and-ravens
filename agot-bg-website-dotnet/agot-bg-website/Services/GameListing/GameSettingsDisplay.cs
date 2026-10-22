@@ -18,16 +18,16 @@ public static class GameSettingsDisplay
         string
     >
     {
-        ["base-game"] = "2nd Edition Base Game (3-6p)",
-        ["mother-of-dragons"] = "Mother of Dragons (7p/8p)",
-        ["a-dance-with-dragons"] = "A Dance with Dragons (6p)",
-        ["a-feast-for-crows"] = "A Feast for Crows (4p)",
-        ["a-dance-with-mother-of-dragons"] = "A Dance with Mother of Dragons (8p)",
-        ["struggle-in-the-north"] = "Struggle in the North (4p/5p)",
-        ["rumble-in-the-south"] = "Rumble in the South (4p)",
-        ["race-to-kings-landing"] = "Race to King's Landing (5p)",
-        ["no-kraken-for-dinner"] = "No Kraken for Dinner (5p)",
-        ["learn-the-game"] = "Teach the Game (2p)",
+        ["base-game"] = "Jogo Base – 2ª edição (3–6 jogadores)",
+        ["mother-of-dragons"] = "Mãe dos Dragões (7 ou 8 jogadores)",
+        ["a-dance-with-dragons"] = "A Dança dos Dragões (6 jogadores)",
+        ["a-feast-for-crows"] = "O Festim dos Corvos (4 jogadores)",
+        ["a-dance-with-mother-of-dragons"] = "A Dança com a Mãe dos Dragões (8 jogadores)",
+        ["struggle-in-the-north"] = "Luta pelo Norte (4 ou 5 jogadores)",
+        ["rumble-in-the-south"] = "Confusão no Sul (4 jogadores)",
+        ["race-to-kings-landing"] = "Corrida a Porto Real (5 jogadores)",
+        ["no-kraken-for-dinner"] = "Sem Kraken no Jantar (5 jogadores)",
+        ["learn-the-game"] = "Ensinar o Jogo (2 jogadores)",
     };
 
     /// <summary>
@@ -43,55 +43,55 @@ public static class GameSettingsDisplay
         string
     >
     {
-        ["onlyLive"] = "Game clock",
-        ["fixedClock"] = "Fixed clock",
-        ["startWhenFull"] = "Start when full",
-        ["adwdHouseCards"] = "A Dance with Dragons House cards",
-        ["asosHouseCards"] = "A Storm of Swords House cards",
-        ["firstEditionHouseCards"] = "1st edition House cards",
-        ["vassals"] = "Mother of Dragons: Vassals",
-        ["ironBank"] = "Mother of Dragons: Iron Bank",
-        ["seaOrderTokens"] = "Mother of Dragons: Sea Order Tokens",
-        ["allowGiftingPowerTokens"] = "Mother of Dragons: Gifting Power Tokens",
-        ["tidesOfBattle"] = "Tides of Battle",
-        ["removeTob3"] = "Custom: Remove 3s cards from ToB",
-        ["removeTobSkulls"] = "Custom: Remove skulls from ToB",
-        ["limitTob2"] = "Custom: Limit ToB 2s cards",
-        ["cokWesterosPhase"] = "Clash of Kings: Westeros Phase",
-        ["customBalancing"] = "Custom: Balancing",
-        ["houseCardsEvolution"] = "Custom: House cards evolution",
-        ["addPortToTheEyrie"] = "Custom: Add a port to The Eyrie",
-        ["randomVassalAssignment"] = "Custom: Random vassal assignment",
-        ["dragonWar"] = "Custom: Dragon War",
-        ["dragonRevenge"] = "Custom: Dragon Revenge",
-        ["fogOfWar"] = "Custom: Fog of War",
-        ["mixedWesterosDeck1"] = "Custom: Mixed Westeros Deck 1",
-        ["precedingMustering"] = "Custom: Preceding mustering",
-        ["randomStartPositions"] = "Custom: Random start positions",
-        ["useVassalPositions"] = "Custom: Vassal start positions",
-        ["holdVictoryPointsUntilEndOfRound"] = "Custom: Hold victory points until end of round",
-        ["draftHouseCards"] = "Custom: Draft House cards",
-        ["thematicDraft"] = "Custom: Thematic Draft",
-        ["selectedRandomDraft"] = "Custom: Selected Random Draft",
-        ["randomDraft"] = "Custom: Random Draft",
-        ["blindDraft"] = "Custom: Blind Draft",
-        ["limitedDraft"] = "Custom: Limited Draft",
-        ["draftTracks"] = "Custom: Draft Influence tracks",
-        ["perpetuumRandom"] = "Custom: Perpetuum Random",
-        ["draftMap"] = "Custom: Draft Scenario",
-        ["endless"] = "Custom: Endless game (1000 rounds)",
-        ["private"] = "Private game",
-        ["tournamentMode"] = "Tournament game",
-        ["faceless"] = "Faceless",
-        ["randomHouses"] = "Random houses",
-        ["randomChosenHouses"] = "Random chosen houses",
-        ["noPrivateChats"] = "No private chats",
+        ["onlyLive"] = "Relógio de jogo",
+        ["fixedClock"] = "Relógio fixo",
+        ["startWhenFull"] = "Começar quando lotar",
+        ["adwdHouseCards"] = "Cartas de Casa de A Dança dos Dragões",
+        ["asosHouseCards"] = "Cartas de Casa de A Tormenta de Espadas",
+        ["firstEditionHouseCards"] = "Cartas de Casa da 1ª edição",
+        ["vassals"] = "Mãe dos Dragões: Vassalos",
+        ["ironBank"] = "Mãe dos Dragões: Banco de Ferro",
+        ["seaOrderTokens"] = "Mãe dos Dragões: Ordens Marítimas",
+        ["allowGiftingPowerTokens"] = "Mãe dos Dragões: Presentear Fichas de Poder",
+        ["tidesOfBattle"] = "Marés de Batalha",
+        ["removeTob3"] = "Extra: Tirar as cartas de 3 das Marés",
+        ["removeTobSkulls"] = "Extra: Tirar as caveiras das Marés",
+        ["limitTob2"] = "Extra: Limitar cartas de 2 das Marés",
+        ["cokWesterosPhase"] = "Fase de Westeros de A Fúria dos Reis",
+        ["customBalancing"] = "Extra: Balanceamento da comunidade",
+        ["houseCardsEvolution"] = "Extra: Evolução das cartas de Casa",
+        ["addPortToTheEyrie"] = "Extra: Adicionar um porto ao Ninho da Águia",
+        ["randomVassalAssignment"] = "Extra: Distribuir vassalos aleatoriamente",
+        ["dragonWar"] = "Extra: Guerra dos Dragões",
+        ["dragonRevenge"] = "Extra: Vingança do Dragão",
+        ["fogOfWar"] = "Extra: Névoa de guerra",
+        ["mixedWesterosDeck1"] = "Extra: Baralho de Westeros I misto",
+        ["precedingMustering"] = "Extra: Recrutamento antes do início",
+        ["randomStartPositions"] = "Extra: Posições iniciais aleatórias",
+        ["useVassalPositions"] = "Extra: Posições iniciais de vassalo",
+        ["holdVictoryPointsUntilEndOfRound"] = "Extra: Pontos de vitória só no fim da rodada",
+        ["draftHouseCards"] = "Extra: Draft de cartas de Casa",
+        ["thematicDraft"] = "Extra: Draft temático",
+        ["selectedRandomDraft"] = "Extra: Draft com sorteio",
+        ["randomDraft"] = "Extra: Draft aleatório",
+        ["blindDraft"] = "Extra: Draft às cegas",
+        ["limitedDraft"] = "Extra: Draft limitado",
+        ["draftTracks"] = "Extra: Draft das Trilhas de Influência",
+        ["perpetuumRandom"] = "Extra: Aleatório sem fim",
+        ["draftMap"] = "Extra: Draft do cenário",
+        ["endless"] = "Extra: Partida sem fim (1000 rodadas)",
+        ["private"] = "Partida privada",
+        ["tournamentMode"] = "Partida de torneio",
+        ["faceless"] = "Homens Sem Rosto (anônima)",
+        ["randomHouses"] = "Casas aleatórias",
+        ["randomChosenHouses"] = "Sortear só as Casas escolhidas",
+        ["noPrivateChats"] = "Sem chats privados",
     };
 
     public static string GetSetupName(string? setupId) =>
         setupId is not null && SetupNames.TryGetValue(setupId, out var name)
             ? name
-            : setupId ?? "Unknown setup";
+            : setupId ?? "Configuração desconhecida";
 
     /// <summary>
     /// Every boolean setting that's true on this game, in GameSettings.ts's own declaration order.
@@ -122,7 +122,7 @@ public static class GameSettingsDisplay
         var isPbem =
             settingsEl.TryGetProperty("pbem", out var pbemEl)
             && pbemEl.ValueKind == JsonValueKind.True;
-        labels.Add(isPbem ? "Play By E-Mail" : "Live");
+        labels.Add(isPbem ? "Por turnos (PBEM)" : "Ao vivo");
 
         foreach (var (key, label) in SettingLabels)
         {
@@ -145,7 +145,7 @@ public static class GameSettingsDisplay
                     $" ({clock} min)",
                 "houseCardsEvolution"
                     when TryGetInt(settingsEl, "houseCardsEvolutionRound", out var round) =>
-                    $" (round {round})",
+                    $" (rodada {round})",
                 _ => "",
             };
             labels.Add(label + suffix);

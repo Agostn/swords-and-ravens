@@ -18,34 +18,34 @@ public static class RelativeTimeFormatter
         string result;
         if (span < TimeSpan.FromSeconds(60))
         {
-            result = "a moment";
+            result = "instantes";
         }
         else if (span < TimeSpan.FromMinutes(60))
         {
             var minutes = (int)span.TotalMinutes;
-            result = $"{minutes} minute{(minutes == 1 ? "" : "s")}";
+            result = $"{minutes} {(minutes == 1 ? "minuto" : "minutos")}";
         }
         else if (span < TimeSpan.FromHours(24))
         {
             var hours = (int)span.TotalHours;
-            result = $"{hours} hour{(hours == 1 ? "" : "s")}";
+            result = $"{hours} {(hours == 1 ? "hora" : "horas")}";
         }
         else if (span < TimeSpan.FromDays(30))
         {
             var days = (int)span.TotalDays;
-            result = $"{days} day{(days == 1 ? "" : "s")}";
+            result = $"{days} {(days == 1 ? "dia" : "dias")}";
         }
         else if (span < TimeSpan.FromDays(365))
         {
             var months = (int)(span.TotalDays / 30);
-            result = $"{months} month{(months == 1 ? "" : "s")}";
+            result = $"{months} {(months == 1 ? "mês" : "meses")}";
         }
         else
         {
             var years = (int)(span.TotalDays / 365);
-            result = $"{years} year{(years == 1 ? "" : "s")}";
+            result = $"{years} {(years == 1 ? "ano" : "anos")}";
         }
 
-        return future ? $"{result} from now" : $"{result} ago";
+        return future ? $"daqui a {result}" : $"há {result}";
     }
 }

@@ -212,7 +212,7 @@ public class ChatWebSocketApiNotifyChatPartnerTests : IDisposable
         var sent = Assert.Single(_emailSender.Sent);
         Assert.Equal(recipient.Email, sent.Email);
         Assert.Contains(game.Name, sent.Subject);
-        Assert.Contains("House Stark", sent.HtmlMessage);
+        Assert.Contains("Casa Stark", sent.HtmlMessage);
         Assert.Contains("https://swordsandravens.net/play/", sent.HtmlMessage);
     }
 

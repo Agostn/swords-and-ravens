@@ -12,31 +12,31 @@ public class RelativeTimeFormatterTests
     {
         var result = RelativeTimeFormatter.Format(Now.AddSeconds(-5), Now);
 
-        Assert.Equal("a moment ago", result);
+        Assert.Equal("há instantes", result);
     }
 
     [Fact]
     public void FewMinutesAgo_PluralizesCorrectly()
     {
-        Assert.Equal("1 minute ago", RelativeTimeFormatter.Format(Now.AddMinutes(-1), Now));
-        Assert.Equal("5 minutes ago", RelativeTimeFormatter.Format(Now.AddMinutes(-5), Now));
+        Assert.Equal("há 1 minuto", RelativeTimeFormatter.Format(Now.AddMinutes(-1), Now));
+        Assert.Equal("há 5 minutos", RelativeTimeFormatter.Format(Now.AddMinutes(-5), Now));
     }
 
     [Fact]
     public void FewHoursAgo_PluralizesCorrectly()
     {
-        Assert.Equal("2 hours ago", RelativeTimeFormatter.Format(Now.AddHours(-2), Now));
+        Assert.Equal("há 2 horas", RelativeTimeFormatter.Format(Now.AddHours(-2), Now));
     }
 
     [Fact]
     public void FewDaysAgo_PluralizesCorrectly()
     {
-        Assert.Equal("3 days ago", RelativeTimeFormatter.Format(Now.AddDays(-3), Now));
+        Assert.Equal("há 3 dias", RelativeTimeFormatter.Format(Now.AddDays(-3), Now));
     }
 
     [Fact]
     public void FutureTimestamp_ReturnsFromNow()
     {
-        Assert.Equal("2 hours from now", RelativeTimeFormatter.Format(Now.AddHours(2), Now));
+        Assert.Equal("daqui a 2 horas", RelativeTimeFormatter.Format(Now.AddHours(2), Now));
     }
 }

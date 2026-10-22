@@ -1,9 +1,9 @@
 ﻿@page
 @model IndexModel
 @{
-    ViewData["Title"] = "Play Game of Thrones: The Board Game Online";
-    ViewData["TitleOverride"] = "Swords and Ravens - Play Game of Thrones: The Board Game Online";
-    ViewData["Description"] = "Play A Game of Thrones: The Board Game (2nd Edition) online for free, in real time or play-by-email, against friends or strangers. All 3 expansions supported.";
+    ViewData["Title"] = "Jogue Game of Thrones: The Board Game online";
+    ViewData["TitleOverride"] = "Swords and Ravens - Jogue Game of Thrones: The Board Game online";
+    ViewData["Description"] = "Jogue A Game of Thrones: The Board Game (2ª edição) online e de graça, ao vivo ou por turnos (PBEM), com amigos ou desconhecidos. Com as 3 expansões, tudo em português.";
 }
 
 @* JSON-LD so search engines can identify this as the canonical entry point for the game/site. *@
@@ -23,21 +23,21 @@
         <div class="max-w-2xl">
             <h1 class="display-4 text-primary">Swords and Ravens</h1>
             <p class="py-4 text-base-content/80">
-                Play <em>A Game of Thrones: The Board Game</em> (2nd edition and all its 3 expansions)
-                online, in real time or play-by-email, against friends and strangers alike.
+                Jogue <em>A Game of Thrones: The Board Game</em> (2ª edição, com as 3 expansões)
+                online, ao vivo ou por turnos (PBEM), com amigos ou com quem quiser, tudo em português.
             </p>
             @if (User.Identity?.IsAuthenticated ?? false)
             {
                 <div class="flex items-center justify-center gap-3">
-                    <a class="btn btn-primary" asp-page="/MyGames">My Games</a>
-                    <a class="btn btn-outline" asp-page="/Games">All Games</a>
+                    <a class="btn btn-primary" asp-page="/MyGames">Minhas partidas</a>
+                    <a class="btn btn-outline" asp-page="/Games">Todas as partidas</a>
                 </div>
             }
             else
             {
                 <div class="flex items-center justify-center gap-3">
-                    <a class="btn btn-primary" asp-area="Identity" asp-page="/Account/Register">Create an account</a>
-                    <a class="btn btn-outline" asp-area="Identity" asp-page="/Account/Login">Login</a>
+                    <a class="btn btn-primary" asp-area="Identity" asp-page="/Account/Register">Criar uma conta</a>
+                    <a class="btn btn-outline" asp-area="Identity" asp-page="/Account/Login">Entrar</a>
                 </div>
             }
         </div>
@@ -47,20 +47,20 @@
 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8">
     <div class="card bg-base-200 shadow-md">
         <div class="card-body">
-            <h2 class="card-title text-secondary">Real-time &amp; PBEM</h2>
-            <p>Join a live game, or play at your own pace with play-by-email style turns.</p>
+            <h2 class="card-title text-secondary">Ao vivo ou por turnos</h2>
+            <p>Entre numa partida ao vivo ou jogue no seu ritmo, um turno por vez (PBEM), recebendo aviso quando for sua vez.</p>
         </div>
     </div>
     <div class="card bg-base-200 shadow-md">
         <div class="card-body">
-            <h2 class="card-title text-secondary">In-game chat</h2>
-            <p>Coordinate, negotiate, and betray your way to the Iron Throne with built-in chat.</p>
+            <h2 class="card-title text-secondary">Chat na partida</h2>
+            <p>Combine, negocie e traia rumo ao Trono de Ferro pelo chat da própria partida.</p>
         </div>
     </div>
     <div class="card bg-base-200 shadow-md">
         <div class="card-body">
-            <h2 class="card-title text-secondary">Sign in your way</h2>
-            <p>Use a username and password, or sign in with Google, Discord, or Facebook.</p>
+            <h2 class="card-title text-secondary">Entre do seu jeito</h2>
+            <p>Use nome de usuário e senha, ou entre com Google, Discord ou Facebook.</p>
         </div>
     </div>
 </div>

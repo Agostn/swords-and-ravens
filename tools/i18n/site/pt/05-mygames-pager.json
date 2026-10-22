@@ -1,0 +1,32 @@
+{
+"Pages/MyGames.cshtml": [
+ ["ViewData[\"Title\"] = \"My Games\";", "ViewData[\"Title\"] = \"Minhas partidas\";"],
+ ["<h1 class=\"text-2xl font-bold\">My Games</h1>", "<h1 class=\"text-2xl font-bold\">Minhas partidas</h1>"],
+ ["            Join us on Discord\n", "            Discord (original, em inglês)\n"],
+ ["            Support S&amp;R on Ko-fi\n", "            Apoie o S&amp;R original no Ko-fi\n"],
+ ["title=\"Create a new game\"", "title=\"Criar uma partida\""],
+ ["<h2 class=\"text-lg font-semibold mb-3\">Create a new game</h2>", "<h2 class=\"text-lg font-semibold mb-3\">Criar uma partida</h2>"],
+ ["placeholder=\"Enter game name...\"", "placeholder=\"Nome da partida...\""],
+ ["px-8\">Create Game</button>", "px-8\">Criar partida</button>"],
+ ["                Current live games <span", "                Partidas ao vivo agora <span"],
+ ["EmptyMessage = \"No live games right now.\"", "EmptyMessage = \"Nenhuma partida ao vivo agora.\""],
+ ["            Your games <span", "            Suas partidas <span"],
+ ["EmptyMessage = \"You are not currently part of any game.\"", "EmptyMessage = \"Você não está em nenhuma partida no momento.\""],
+ ["text-xl font-semibold\">All Games</span>", "text-xl font-semibold\">Todas as partidas</span>"]
+],
+"Pages/Shared/_Pager.cshtml": [
+ ["class=\"opacity-70\">Items per page:</label>", "class=\"opacity-70\">Itens por página:</label>"],
+ ["<button type=\"submit\" class=\"btn btn-sm\">Apply</button>", "<button type=\"submit\" class=\"btn btn-sm\">Aplicar</button>"],
+ ["class=\"opacity-70\">Go to page:</label>", "class=\"opacity-70\">Ir para a página:</label>"],
+ ["<button type=\"submit\" class=\"btn btn-sm\">Go</button>", "<button type=\"submit\" class=\"btn btn-sm\">Ir</button>"],
+ ["<span class=\"opacity-70\">Page @Model.PageNumber of @Model.TotalPages (@Model.TotalCount.ToString(\"N0\") total)</span>", "<span class=\"opacity-70\">Página @Model.PageNumber de @Model.TotalPages (@Model.TotalCount.ToString(\"N0\") no total)</span>"],
+ ["href=\"@Href(1)\">« First</a>", "href=\"@Href(1)\">« Primeira</a>"],
+ ["href=\"@Href(Model.PageNumber - 1)\">‹ Prev</a>", "href=\"@Href(Model.PageNumber - 1)\">‹ Anterior</a>"],
+ ["btn-disabled\">« First</span>", "btn-disabled\">« Primeira</span>"],
+ ["btn-disabled\">‹ Prev</span>", "btn-disabled\">‹ Anterior</span>"],
+ ["href=\"@Href(Model.PageNumber + 1)\">Next ›</a>", "href=\"@Href(Model.PageNumber + 1)\">Próxima ›</a>"],
+ ["href=\"@Href(Model.TotalPages)\">Last »</a>", "href=\"@Href(Model.TotalPages)\">Última »</a>"],
+ ["btn-disabled\">Next ›</span>", "btn-disabled\">Próxima ›</span>"],
+ ["btn-disabled\">Last »</span>", "btn-disabled\">Última »</span>"]
+]
+}

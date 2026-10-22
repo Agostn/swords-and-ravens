@@ -1,0 +1,153 @@
+{
+"Areas/Identity/Pages/Error.cshtml": [
+ ["\"Error\"", "\"Erro\""],
+ ["Error.<", "Erro.<"],
+ ["An error occurred while processing your request.", "Aconteceu um erro ao processar o seu pedido."],
+ ["Request ID:", "ID do pedido:"]
+],
+"Areas/Identity/Pages/Account/_StatusMessage.cshtml": [
+ ["Model.StartsWith(\"Error\")", "Model.StartsWith(\"Erro\")"],
+ ["aria-label=\"Close\"", "aria-label=\"Fechar\""]
+],
+"Areas/Identity/Pages/Account/AccessDenied.cshtml": [
+ ["\"Access denied\"", "\"Acesso negado\""],
+ ["You do not have access to this resource.", "Você não tem acesso a esta página."]
+],
+"Areas/Identity/Pages/Account/Banned.cshtml": [
+ ["\"Account banned\"", "\"Conta banida\""],
+ ["Your account has been banned and can no longer log in.", "Sua conta foi banida e não pode mais entrar no site."],
+ ["If you think this is a mistake, please get in touch with the site administrators.", "Se você acha que isso foi um engano, fale com os administradores do site."]
+],
+"Areas/Identity/Pages/Account/ConfirmEmail.cshtml": [["\"Confirm email\"", "\"Confirmar e-mail\""]],
+"Areas/Identity/Pages/Account/ConfirmEmail.cshtml.cs": [
+ ["$\"Unable to load user with ID '{userId}'.\"", "$\"Não foi possível encontrar o usuário com ID '{userId}'.\""],
+ ["\"Thank you for confirming your email.\"", "\"Obrigado por confirmar seu e-mail!\""],
+ ["\"Error confirming your email.\"", "\"Erro ao confirmar seu e-mail.\""]
+],
+"Areas/Identity/Pages/Account/ConfirmEmailChange.cshtml": [["\"Confirm email change\"", "\"Confirmar troca de e-mail\""]],
+"Areas/Identity/Pages/Account/ConfirmEmailChange.cshtml.cs": [
+ ["$\"Unable to load user with ID '{userId}'.\"", "$\"Não foi possível encontrar o usuário com ID '{userId}'.\""],
+ ["\"Error changing email.\"", "\"Erro ao trocar o e-mail.\""],
+ ["\"Thank you for confirming your email change.\"", "\"Obrigado por confirmar a troca de e-mail!\""]
+],
+"Areas/Identity/Pages/Account/ExternalLogin.cshtml": [
+ ["\"Register\"", "\"Criar conta\""],
+ ["Associate your @Model.ProviderDisplayName account.", "Ligar sua conta do @Model.ProviderDisplayName."],
+ ["\n    You've successfully authenticated with ", "\n    Você entrou com sucesso pelo "],
+ [".\n    Please choose a username below (this is what other players will see) and click the Register\n    button to finish logging in.\n", ".\n    Escolha abaixo um nome de usuário (é o nome que os outros jogadores vão ver) e clique em\n    Criar conta para terminar.\n"],
+ ["placeholder=\"Please enter a username.\"", "placeholder=\"Digite um nome de usuário.\""],
+ ["\n                This is shown to other players (e.g. in the online users list and in-game chat) and\n                can only be changed once afterwards, from your profile settings.\n            ", "\n                Este nome aparece para os outros jogadores (por exemplo, na lista de quem está online e no chat das partidas) e\n                só pode ser trocado uma vez depois, nas configurações do seu perfil.\n            "],
+ ["placeholder=\"Please enter your email.\"", "placeholder=\"Digite seu e-mail.\""],
+ ["\n                    This is the verified email address from your @Model.ProviderDisplayName account and can't be changed here.\n                ", "\n                    Este é o e-mail confirmado da sua conta do @Model.ProviderDisplayName e não pode ser trocado aqui.\n                "],
+ [">Register<", ">Criar conta<"]
+],
+"Areas/Identity/Pages/Account/ExternalLogin.cshtml.cs": [
+ ["\"The {0} must be between {2} and {1} characters long.\"", "\"O {0} precisa ter entre {2} e {1} caracteres.\""],
+ ["[Display(Name = \"Username\")]", "[Display(Name = \"Nome de usuário\")]"],
+ ["            [Required]\n            [EmailAddress]\n            public string Email { get; set; }", "            [Required]\n            [EmailAddress]\n            [Display(Name = \"E-mail\")]\n            public string Email { get; set; }"],
+ ["$\"Error from external provider: {remoteError}\"", "$\"Erro do serviço externo: {remoteError}\""],
+ ["\"Error loading external login information.\"", "\"Erro ao carregar as informações do login externo.\""],
+ ["\"This email address is already associated with an existing account. \"", "\"Este e-mail já está ligado a uma conta. \""],
+ ["\"Please sign in with your original method first, then add \"", "\"Entre primeiro do jeito que você usou da outra vez e depois adicione o \""],
+ ["$\"{info.ProviderDisplayName} from your account settings.\"", "$\"{info.ProviderDisplayName} nas configurações da sua conta.\""],
+ ["\"Error loading external login information during confirmation.\"", "\"Erro ao carregar as informações do login externo durante a confirmação.\""],
+ ["\"Throwaway/disposable email addresses aren't allowed. Please use an email address you can actually receive mail at.\"", "\"E-mails temporários/descartáveis não são aceitos. Use um e-mail em que você realmente receba mensagens.\""],
+ ["\"This username is reserved and can't be used.\"", "\"Este nome de usuário é reservado e não pode ser usado.\""],
+ ["\"This username is already taken.\"", "\"Este nome de usuário já está em uso.\""],
+ ["\"Confirm your email\"", "\"Confirme seu e-mail\""],
+ ["$\"<p>Please confirm your account by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.</p>\"", "$\"<p>Confirme sua conta <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicando aqui</a>.</p>\""]
+],
+"Areas/Identity/Pages/Account/ForgotPassword.cshtml": [
+ ["\"Forgot your password?\"", "\"Esqueceu a senha?\""],
+ ["Enter your email.", "Digite seu e-mail."],
+ ["placeholder=\"name@example.com\"", "placeholder=\"nome@exemplo.com\""],
+ [">Reset Password<", ">Redefinir senha<"]
+],
+"Areas/Identity/Pages/Account/ForgotPassword.cshtml.cs": [
+ ["            [Required]\n            [EmailAddress]\n            public string Email { get; set; }", "            [Required]\n            [EmailAddress]\n            [Display(Name = \"E-mail\")]\n            public string Email { get; set; }"],
+ ["\"Reset Password\"", "\"Redefinir senha\""],
+ ["$\"Please reset your password by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.\"", "$\"Para criar uma senha nova, <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clique aqui</a>.\""]
+],
+"Areas/Identity/Pages/Account/ForgotPasswordConfirmation.cshtml": [
+ ["\"Forgot password confirmation\"", "\"Redefinição de senha\""],
+ ["\n    Please check your email to reset your password.\n", "\n    Confira seu e-mail para redefinir a senha (olhe também no spam).\n"]
+],
+"Areas/Identity/Pages/Account/Lockout.cshtml": [
+ ["\"Locked out\"", "\"Conta bloqueada\""],
+ ["This account has been locked out, please try again later.", "Esta conta foi bloqueada temporariamente. Tente de novo mais tarde."]
+],
+"Areas/Identity/Pages/Account/LoginWith2fa.cshtml": [
+ ["\"Two-factor authentication\"", "\"Verificação em duas etapas\""],
+ ["Your login is protected with an authenticator app. Enter your authenticator code below.", "Sua conta está protegida por um app autenticador. Digite abaixo o código do app."],
+ [">Log in<", ">Entrar<"],
+ ["\n    Don't have access to your authenticator device? You can\n    ", "\n    Está sem acesso ao app autenticador? Você pode\n    "],
+ ["log in with a recovery code", "entrar com um código de recuperação"]
+],
+"Areas/Identity/Pages/Account/LoginWith2fa.cshtml.cs": [
+ ["\"The {0} must be at least {2} and at max {1} characters long.\"", "\"O {0} precisa ter de {2} a {1} caracteres.\""],
+ ["\"Authenticator code\"", "\"código do autenticador\""],
+ ["\"Remember this machine\"", "\"Lembrar deste aparelho\""],
+ ["$\"Unable to load two-factor authentication user.\"", "$\"Não foi possível carregar o usuário da verificação em duas etapas.\"", 2],
+ ["ModelState.AddModelError(string.Empty, \"Invalid authenticator code.\");", "ModelState.AddModelError(string.Empty, \"Código do autenticador inválido.\");"]
+],
+"Areas/Identity/Pages/Account/LoginWithRecoveryCode.cshtml": [
+ ["\"Recovery code verification\"", "\"Entrar com código de recuperação\""],
+ ["\n    You have requested to log in with a recovery code. This login will not be remembered until you provide\n    an authenticator app code at log in or disable 2FA and log in again.\n", "\n    Você pediu para entrar com um código de recuperação. Este login não fica lembrado até você usar\n    um código do app autenticador ao entrar, ou desativar a verificação em duas etapas e entrar de novo.\n"],
+ ["placeholder=\"RecoveryCode\"", "placeholder=\"Código de recuperação\""],
+ [">Log in<", ">Entrar<"]
+],
+"Areas/Identity/Pages/Account/LoginWithRecoveryCode.cshtml.cs": [
+ ["\"Recovery Code\"", "\"Código de recuperação\""],
+ ["$\"Unable to load two-factor authentication user.\"", "$\"Não foi possível carregar o usuário da verificação em duas etapas.\"", 2],
+ ["ModelState.AddModelError(string.Empty, \"Invalid recovery code entered.\");", "ModelState.AddModelError(string.Empty, \"Código de recuperação inválido.\");"]
+],
+"Areas/Identity/Pages/Account/Logout.cshtml": [
+ ["\"Log out\"", "\"Sair\""],
+ ["Click here to Logout", "Clique aqui para sair"],
+ ["You have successfully logged out of the application.", "Você saiu da sua conta."]
+],
+"Areas/Identity/Pages/Account/RegisterConfirmation.cshtml": [
+ ["\"Register confirmation\"", "\"Confirme seu e-mail\""],
+ ["\n    This app does not currently have a real email sender registered, see ", "\n    Este site ainda não tem um serviço de envio de e-mail configurado (veja "],
+ [" for how to configure a real email sender.\n    Normally this would be emailed: ", " para configurar).\n    Normalmente isto iria por e-mail: "],
+ [">these docs<", ">a documentação<"],
+ ["Click here to confirm your account", "Clique aqui para confirmar sua conta"],
+ ["\n        Please check your email to confirm your account.\n", "\n        Mandamos um link para o seu e-mail. Abra o e-mail e clique no link para confirmar sua conta (olhe também no spam).\n"]
+],
+"Areas/Identity/Pages/Account/RegisterConfirmation.cshtml.cs": [
+ ["$\"Unable to load user with email '{email}'.\"", "$\"Não foi possível encontrar o usuário com o e-mail '{email}'.\""]
+],
+"Areas/Identity/Pages/Account/ResendEmailConfirmation.cshtml": [
+ ["\"Resend email confirmation\"", "\"Reenviar e-mail de confirmação\""],
+ ["Enter your email.", "Digite seu e-mail."],
+ ["placeholder=\"name@example.com\"", "placeholder=\"nome@exemplo.com\""],
+ [">Resend<", ">Reenviar<"]
+],
+"Areas/Identity/Pages/Account/ResendEmailConfirmation.cshtml.cs": [
+ ["            [Required]\n            [EmailAddress]\n            public string Email { get; set; }", "            [Required]\n            [EmailAddress]\n            [Display(Name = \"E-mail\")]\n            public string Email { get; set; }"],
+ ["\"Verification email sent. Please check your email.\"", "\"E-mail de confirmação enviado. Confira sua caixa de entrada (e o spam).\"", 2],
+ ["\"Confirm your email\"", "\"Confirme seu e-mail\""],
+ ["$\"<p>Please confirm your account by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.</p>\"", "$\"<p>Confirme sua conta <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicando aqui</a>.</p>\""]
+],
+"Areas/Identity/Pages/Account/ResetPassword.cshtml": [
+ ["\"Reset password\"", "\"Redefinir senha\""],
+ ["Reset your password.", "Crie uma senha nova."],
+ ["placeholder=\"name@example.com\"", "placeholder=\"nome@exemplo.com\""],
+ ["placeholder=\"Please enter your password.\"", "placeholder=\"Digite a senha nova.\""],
+ ["placeholder=\"Please confirm your password.\"", "placeholder=\"Confirme a senha nova.\""],
+ [">Reset<", ">Redefinir<"]
+],
+"Areas/Identity/Pages/Account/ResetPassword.cshtml.cs": [
+ ["            [Required]\n            [EmailAddress]\n            public string Email { get; set; }", "            [Required]\n            [EmailAddress]\n            [Display(Name = \"E-mail\")]\n            public string Email { get; set; }"],
+ ["\"The {0} must be at least {2} and at max {1} characters long.\"", "\"A {0} precisa ter de {2} a {1} caracteres.\""],
+ ["            [DataType(DataType.Password)]\n            public string Password { get; set; }", "            [DataType(DataType.Password)]\n            [Display(Name = \"Senha\")]\n            public string Password { get; set; }"],
+ ["\"Confirm password\"", "\"Confirmação da senha\""],
+ ["\"The password and confirmation password do not match.\"", "\"A senha e a confirmação não são iguais.\""],
+ ["\"A code must be supplied for password reset.\"", "\"É preciso um código para redefinir a senha.\""]
+],
+"Areas/Identity/Pages/Account/ResetPasswordConfirmation.cshtml": [
+ ["\"Reset password confirmation\"", "\"Senha redefinida\""],
+ ["\n    Your password has been reset. Please ", "\n    Sua senha foi redefinida. "],
+ ["click here to log in", "Clique aqui para entrar"]
+]
+}

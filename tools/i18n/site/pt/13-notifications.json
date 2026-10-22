@@ -1,0 +1,16 @@
+{
+"Api/NotificationsApi.cs": [
+ ["game => $\"Your game is ready to start: {game.Name}\",", "game => $\"Sua partida está pronta para começar: {game.Name}\","],
+ ["$\"Your game &quot;{HtmlEncode(game.Name)}&quot; is ready to start:\",", "$\"Sua partida &quot;{HtmlEncode(game.Name)}&quot; está pronta para começar:\","],
+ ["game => $\"It's your turn in '{game.Name}'\",", "game => $\"É a sua vez em '{game.Name}'\","],
+ ["$\"It's your turn to play in &quot;{HtmlEncode(game.Name)}&quot;:\",", "$\"É a sua vez de jogar em &quot;{HtmlEncode(game.Name)}&quot;:\","],
+ ["game => $\"You are attacked and now can call for support in '{game.Name}'\",", "game => $\"Você foi atacado e pode pedir apoio em '{game.Name}'\","],
+ ["$\"You are attacked in the game &quot;{HtmlEncode(game.Name)}&quot; and now you can call for support or try to bribe your way there:\",", "$\"Você foi atacado na partida &quot;{HtmlEncode(game.Name)}&quot; e agora pode pedir apoio ou tentar comprá-lo:\","],
+ ["game => $\"Your battle is over in '{game.Name}'\",", "game => $\"Sua batalha terminou em '{game.Name}'\","],
+ ["$\"Your battle in &quot;{HtmlEncode(game.Name)}&quot; is over:\",", "$\"Sua batalha em &quot;{HtmlEncode(game.Name)}&quot; terminou:\","],
+ ["game => $\"Your vote is needed in '{game.Name}'\",", "game => $\"Precisamos do seu voto em '{game.Name}'\","],
+ ["$\"a new vote has been started in &quot;{HtmlEncode(game.Name)}&quot;:\",", "$\"Uma nova votação começou em &quot;{HtmlEncode(game.Name)}&quot;:\","],
+ ["game => $\"Game has ended -  {game.Name}\",", "game => $\"A partida terminou: {game.Name}\","],
+ ["$\"The game &quot;{HtmlEncode(game.Name)}&quot; has ended:\",", "$\"A partida &quot;{HtmlEncode(game.Name)}&quot; terminou:\","]
+]
+}

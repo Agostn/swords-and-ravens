@@ -46,9 +46,9 @@
         {
             <input type="hidden" name="@key" value="@value" />
         }
-        <label for="pageSizeInput" class="opacity-70">Items per page:</label>
+        <label for="pageSizeInput" class="opacity-70">Itens por página:</label>
         <input type="number" id="pageSizeInput" name="pageSize" min="@agot_bg_website.Infrastructure.Paging.PagingExtensions.MinPageSize" max="@agot_bg_website.Infrastructure.Paging.PagingExtensions.MaxPageSize" value="@Model.PageSize" class="input input-sm w-20" />
-        <button type="submit" class="btn btn-sm">Apply</button>
+        <button type="submit" class="btn btn-sm">Aplicar</button>
     </form>
 
     @if (Model.TotalPages > 1)
@@ -58,9 +58,9 @@
             {
                 <input type="hidden" name="@key" value="@value" />
             }
-            <label for="pageNumberInput" class="opacity-70">Go to page:</label>
+            <label for="pageNumberInput" class="opacity-70">Ir para a página:</label>
             <input type="number" id="pageNumberInput" name="pageNumber" min="1" max="@Model.TotalPages" value="@Model.PageNumber" class="input input-sm w-20" />
-            <button type="submit" class="btn btn-sm">Go</button>
+            <button type="submit" class="btn btn-sm">Ir</button>
         </form>
     }
 </div>
@@ -68,28 +68,28 @@
 @if (Model.TotalPages > 1)
 {
     <div class="flex flex-wrap items-center justify-between gap-2 mt-2 text-sm">
-        <span class="opacity-70">Page @Model.PageNumber of @Model.TotalPages (@Model.TotalCount.ToString("N0") total)</span>
+        <span class="opacity-70">Página @Model.PageNumber de @Model.TotalPages (@Model.TotalCount.ToString("N0") no total)</span>
         <div class="join">
             @if (Model.HasPrevious)
             {
-                <a class="join-item btn btn-sm" href="@Href(1)">« First</a>
-                <a class="join-item btn btn-sm" href="@Href(Model.PageNumber - 1)">‹ Prev</a>
+                <a class="join-item btn btn-sm" href="@Href(1)">« Primeira</a>
+                <a class="join-item btn btn-sm" href="@Href(Model.PageNumber - 1)">‹ Anterior</a>
             }
             else
             {
-                <span class="join-item btn btn-sm btn-disabled">« First</span>
-                <span class="join-item btn btn-sm btn-disabled">‹ Prev</span>
+                <span class="join-item btn btn-sm btn-disabled">« Primeira</span>
+                <span class="join-item btn btn-sm btn-disabled">‹ Anterior</span>
             }
             <span class="join-item btn btn-sm btn-disabled">@Model.PageNumber / @Model.TotalPages</span>
             @if (Model.HasNext)
             {
-                <a class="join-item btn btn-sm" href="@Href(Model.PageNumber + 1)">Next ›</a>
-                <a class="join-item btn btn-sm" href="@Href(Model.TotalPages)">Last »</a>
+                <a class="join-item btn btn-sm" href="@Href(Model.PageNumber + 1)">Próxima ›</a>
+                <a class="join-item btn btn-sm" href="@Href(Model.TotalPages)">Última »</a>
             }
             else
             {
-                <span class="join-item btn btn-sm btn-disabled">Next ›</span>
-                <span class="join-item btn btn-sm btn-disabled">Last »</span>
+                <span class="join-item btn btn-sm btn-disabled">Próxima ›</span>
+                <span class="join-item btn btn-sm btn-disabled">Última »</span>
             }
         </div>
     </div>

@@ -29,7 +29,7 @@ namespace agot_bg_website.Areas.Identity.Pages.Account.Manage
             var user = await _userManager.GetUserAsync(User);
             if (user == null)
             {
-                return NotFound($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
+                return NotFound($"Não foi possível carregar o usuário com ID '{_userManager.GetUserId(User)}'.");
             }
 
             if (!await _userManager.GetTwoFactorEnabledAsync(user))
@@ -55,7 +55,7 @@ namespace agot_bg_website.Areas.Identity.Pages.Account.Manage
             var user = await _userManager.GetUserAsync(User);
             if (user == null)
             {
-                return NotFound($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
+                return NotFound($"Não foi possível carregar o usuário com ID '{_userManager.GetUserId(User)}'.");
             }
 
             var disable2faResult = await _userManager.SetTwoFactorEnabledAsync(user, false);
@@ -69,7 +69,7 @@ namespace agot_bg_website.Areas.Identity.Pages.Account.Manage
                 _userManager.GetUserId(User)
             );
             StatusMessage =
-                "2fa has been disabled. You can reenable 2fa when you setup an authenticator app";
+                "A verificação em duas etapas foi desativada. Você pode ativá-la de novo configurando um app autenticador.";
             return RedirectToPage("./TwoFactorAuthentication");
         }
     }

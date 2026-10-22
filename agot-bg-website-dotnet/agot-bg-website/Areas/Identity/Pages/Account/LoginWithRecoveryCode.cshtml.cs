@@ -46,7 +46,7 @@ namespace agot_bg_website.Areas.Identity.Pages.Account
             [BindProperty]
             [Required]
             [DataType(DataType.Text)]
-            [Display(Name = "Recovery Code")]
+            [Display(Name = "Código de recuperação")]
             public string RecoveryCode { get; set; }
         }
 
@@ -57,7 +57,7 @@ namespace agot_bg_website.Areas.Identity.Pages.Account
             if (user == null)
             {
                 throw new InvalidOperationException(
-                    $"Unable to load two-factor authentication user."
+                    $"Não foi possível carregar o usuário da verificação em duas etapas."
                 );
             }
 
@@ -77,7 +77,7 @@ namespace agot_bg_website.Areas.Identity.Pages.Account
             if (user == null)
             {
                 throw new InvalidOperationException(
-                    $"Unable to load two-factor authentication user."
+                    $"Não foi possível carregar o usuário da verificação em duas etapas."
                 );
             }
 
@@ -106,7 +106,7 @@ namespace agot_bg_website.Areas.Identity.Pages.Account
                     "Invalid recovery code entered for user with ID '{UserId}' ",
                     user.Id
                 );
-                ModelState.AddModelError(string.Empty, "Invalid recovery code entered.");
+                ModelState.AddModelError(string.Empty, "Código de recuperação inválido.");
                 return Page();
             }
         }

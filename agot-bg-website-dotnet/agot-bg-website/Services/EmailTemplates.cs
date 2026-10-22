@@ -25,12 +25,12 @@ public static class EmailTemplates
         var hasRealUserName =
             !string.IsNullOrWhiteSpace(userName)
             && !string.Equals(userName, email, StringComparison.OrdinalIgnoreCase);
-        var greeting = hasRealUserName ? $"Hello {WebUtility.HtmlEncode(userName)}," : "Hello,";
+        var greeting = hasRealUserName ? $"Olá, {WebUtility.HtmlEncode(userName)}!" : "Olá!";
 
         return $"""
             <p>{greeting}</p>
             {bodyHtml}
-            <p>Warmest regards,<br />Staff @ Swords and Ravens</p>
+            <p>Um abraço,<br />Equipe do Swords and Ravens</p>
             """;
     }
 }

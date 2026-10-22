@@ -21,7 +21,7 @@ document.addEventListener("click", function (event) {
 // works for any number of rows (the User profile page alone can have 900+) without per-row
 // listeners or per-row <dialog> elements bloating the DOM.
 function formatLocalDateTime(value) {
-    return new Date(value).toLocaleString(undefined, {
+    return new Date(value).toLocaleString("pt-BR", {
         year: "numeric",
         month: "2-digit",
         day: "2-digit",
@@ -38,7 +38,7 @@ function formatLocalDateTimeToMinute(value) {
     }
     date.setSeconds(0, 0);
 
-    return date.toLocaleString(undefined, {
+    return date.toLocaleString("pt-BR", {
         year: "numeric",
         month: "2-digit",
         day: "2-digit",
@@ -91,7 +91,7 @@ document.addEventListener("click", function (event) {
     var winner = gearButton.dataset.winner || "";
     var waitingFor = gearButton.dataset.waitingFor || "";
     var showingWinner = Boolean(winner);
-    var footerLabel = showingWinner ? "Winner:" : (waitingFor ? "Waiting for" : "");
+    var footerLabel = showingWinner ? "Vencedor:" : (waitingFor ? "Esperando" : "");
     var footerValue = winner || waitingFor;
     statusLabel.textContent = footerLabel;
     statusValue.textContent = footerValue;

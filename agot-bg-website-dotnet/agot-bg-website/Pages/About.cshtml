@@ -1,59 +1,67 @@
 @page
 @{
-    ViewData["Title"] = "About";
-    ViewData["Description"] = "About Swords and Ravens, a free fan-made online implementation of A Game of Thrones: The Board Game (2nd Edition).";
+    ViewData["Title"] = "Sobre";
+    ViewData["Description"] = "Sobre o Swords and Ravens, versão online, gratuita e feita por fãs de A Game of Thrones: The Board Game (2ª edição), em português.";
 }
 
-<h1 class="text-2xl font-bold mb-4">About Swords and Ravens</h1>
+<h1 class="text-2xl font-bold mb-4">Sobre o Swords and Ravens</h1>
 
 <p>
-    Swords and Ravens is a free, non-commercial fan implementation of <em>A Game of Thrones: The Board Game
-    (Second Edition)</em>, playable directly in your browser. It was originally created by Longwelwind and is
-    now maintained by <a class="link" href="https://github.com/gereon77" target="_blank" rel="noopener">Gereon</a>,
-    with the considerable help of:
+    O Swords and Ravens é uma versão gratuita e sem fins comerciais, feita por fãs, de <em>A Game of Thrones: The Board Game
+    (2ª edição)</em>, para jogar direto no navegador. Foi criado por Longwelwind e hoje é mantido por
+    <a class="link" href="https://github.com/gereon77" target="_blank" rel="noopener">Gereon</a>,
+    com a grande ajuda de:
 </p>
 <ul class="list-disc list-inside my-3">
-    <li><b>Flutterbit</b> and <b>mmasztalerczuk</b> for their contributions to the codebase.</li>
-    <li><b>Tex</b> for hosting communication about the game on the AGOT:BG Discord.</li>
+    <li><b>Flutterbit</b> e <b>mmasztalerczuk</b>, pelas contribuições ao código.</li>
+    <li><b>Tex</b>, por cuidar da comunicação sobre o jogo no Discord do AGOT:BG.</li>
     <li>
         <a class="link" href="https://liliannecoeverden.com/" target="_blank" rel="noopener"><b>Lilianne Coeverden</b></a>
-        for creating unique house themes and generously contributing them to this project. Special thanks to her!
-        Visit her <a class="link" href="https://www.youtube.com/@@lilianne.coeverden" target="_blank" rel="noopener">YouTube channel</a>
-        for more content.
+        por criar temas exclusivos para as Casas e doá-los a este projeto. Um agradecimento especial a ela!
+        Visite o <a class="link" href="https://www.youtube.com/@@lilianne.coeverden" target="_blank" rel="noopener">canal dela no YouTube</a>
+        para ver mais.
     </li>
-    <li><b>DerSeynmaster</b>, <b>Jason77</b> and others for play-testing the game during the open beta-test.</li>
+    <li><b>DerSeynmaster</b>, <b>Jason77</b> e outros, por testarem o jogo durante o beta aberto.</li>
 </ul>
 
-<h2 class="text-xl font-semibold mt-6 mb-2">What's implemented?</h2>
+<h2 class="text-xl font-semibold mt-6 mb-2">Versão em português</h2>
+<p>
+    Esta é uma versão em português do Brasil, feita a partir do código aberto do Swords and Ravens
+    (licença GPLv3). O código desta versão está no
+    <a class="link" href="https://github.com/Agostn/swords-and-ravens" target="_blank" rel="noopener">GitHub</a>.
+    Os nomes de lugares seguem a série da HBO; quando o lugar não aparece na série, usamos o nome dos livros em português.
+</p>
+
+<h2 class="text-xl font-semibold mt-6 mb-2">O que já tem?</h2>
 <ul class="my-3 space-y-1">
-    <li><label class="inline-flex items-center gap-2"><input type="checkbox" class="checkbox checkbox-sm" checked disabled /> Base Game Second Edition</label></li>
-    <li><label class="inline-flex items-center gap-2"><input type="checkbox" class="checkbox checkbox-sm" checked disabled /> A Dance with Dragons</label></li>
-    <li><label class="inline-flex items-center gap-2"><input type="checkbox" class="checkbox checkbox-sm" checked disabled /> A Feast for Crows</label></li>
-    <li><label class="inline-flex items-center gap-2"><input type="checkbox" class="checkbox checkbox-sm" checked disabled /> Mother of Dragons</label></li>
+    <li><label class="inline-flex items-center gap-2"><input type="checkbox" class="checkbox checkbox-sm" checked disabled /> Jogo base, 2ª edição</label></li>
+    <li><label class="inline-flex items-center gap-2"><input type="checkbox" class="checkbox checkbox-sm" checked disabled /> A Dança dos Dragões</label></li>
+    <li><label class="inline-flex items-center gap-2"><input type="checkbox" class="checkbox checkbox-sm" checked disabled /> O Festim dos Corvos</label></li>
+    <li><label class="inline-flex items-center gap-2"><input type="checkbox" class="checkbox checkbox-sm" checked disabled /> Mãe dos Dragões</label></li>
 </ul>
 
-<h2 class="text-xl font-semibold mt-6 mb-2">Roadmap</h2>
-<p>Aside from game content, meta-game features are also planned:</p>
+<h2 class="text-xl font-semibold mt-6 mb-2">Próximos passos</h2>
+<p>Além do conteúdo do jogo, também estão planejados recursos fora das partidas:</p>
 <ul class="my-3 space-y-1">
     <li><label class="inline-flex items-center gap-2"><input type="checkbox" class="checkbox checkbox-sm" checked disabled /> Replays</label></li>
-    <li><label class="inline-flex items-center gap-2"><input type="checkbox" class="checkbox checkbox-sm" disabled /> Ranked games</label></li>
-    <li><label class="inline-flex items-center gap-2"><input type="checkbox" class="checkbox checkbox-sm" disabled /> Game statistics (win rates, ...)</label></li>
-    <li><label class="inline-flex items-center gap-2"><input type="checkbox" class="checkbox checkbox-sm" disabled /> Player statistics (kicked rate, ...)</label></li>
-    <li><label class="inline-flex items-center gap-2"><input type="checkbox" class="checkbox checkbox-sm" disabled /> Player reports &amp; moderation tools</label></li>
+    <li><label class="inline-flex items-center gap-2"><input type="checkbox" class="checkbox checkbox-sm" disabled /> Partidas ranqueadas</label></li>
+    <li><label class="inline-flex items-center gap-2"><input type="checkbox" class="checkbox checkbox-sm" disabled /> Estatísticas das partidas (taxa de vitória etc.)</label></li>
+    <li><label class="inline-flex items-center gap-2"><input type="checkbox" class="checkbox checkbox-sm" disabled /> Estatísticas dos jogadores (vezes que foi substituído etc.)</label></li>
+    <li><label class="inline-flex items-center gap-2"><input type="checkbox" class="checkbox checkbox-sm" disabled /> Denúncias e ferramentas de moderação</label></li>
 </ul>
 
-<h2 class="text-xl font-semibold mt-6 mb-2">How to contribute?</h2>
+<h2 class="text-xl font-semibold mt-6 mb-2">Como ajudar?</h2>
 <p>
-    Swords and Ravens is fully open-source and the source code is available on
-    <a class="link" href="https://github.com/Longwelwind/swords-and-ravens" target="_blank" rel="noopener">GitHub</a>.
-    Contributions, bug reports, or feedback are welcome!
+    O Swords and Ravens tem código totalmente aberto, disponível no
+    <a class="link" href="https://github.com/Longwelwind/swords-and-ravens" target="_blank" rel="noopener">GitHub</a> (projeto original, em inglês).
+    Contribuições, relatos de bugs e sugestões são bem-vindos!
 </p>
 <p class="mt-3">
-    A <a class="link" href="https://discord.gg/6NhRrtV" target="_blank" rel="noopener">Discord</a> server
-    is also available for discussions about the platform.
+    Também existe um servidor no <a class="link" href="https://discord.gg/6NhRrtV" target="_blank" rel="noopener">Discord</a>
+    (do projeto original, em inglês) para conversar sobre a plataforma.
 </p>
 
 <p class="mt-6">
-    This site is not affiliated with, endorsed by, or sponsored by Fantasy Flight Games / Edge Studio.
-    All board game intellectual property belongs to its respective owners.
+    Este site não tem ligação com a Fantasy Flight Games / Edge Studio, nem é aprovado ou patrocinado por elas.
+    Toda a propriedade intelectual do jogo de tabuleiro pertence aos seus donos.
 </p>

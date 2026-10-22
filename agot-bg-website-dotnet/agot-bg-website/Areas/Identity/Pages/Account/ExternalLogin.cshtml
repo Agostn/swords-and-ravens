@@ -1,17 +1,17 @@
 ﻿@page
 @model ExternalLoginModel
 @{
-    ViewData["Title"] = "Register";
+    ViewData["Title"] = "Criar conta";
 }
 
 <h1>@ViewData["Title"]</h1>
-<h2 id="external-login-title">Associate your @Model.ProviderDisplayName account.</h2>
+<h2 id="external-login-title">Ligar sua conta do @Model.ProviderDisplayName.</h2>
 <hr />
 
 <p id="external-login-description" class="text-info">
-    You've successfully authenticated with <strong>@Model.ProviderDisplayName</strong>.
-    Please choose a username below (this is what other players will see) and click the Register
-    button to finish logging in.
+    Você entrou com sucesso pelo <strong>@Model.ProviderDisplayName</strong>.
+    Escolha abaixo um nome de usuário (é o nome que os outros jogadores vão ver) e clique em
+    Criar conta para terminar.
 </p>
 
 <div class="row">
@@ -19,13 +19,13 @@
         <form asp-page-handler="Confirmation" asp-route-returnUrl="@Model.ReturnUrl" method="post">
             <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
             <div class="form-floating mb-3">
-                <input asp-for="Input.UserName" class="form-control" autocomplete="username" placeholder="Please enter a username." />
+                <input asp-for="Input.UserName" class="form-control" autocomplete="username" placeholder="Digite um nome de usuário." />
                 <label asp-for="Input.UserName" class="form-label"></label>
                 <span asp-validation-for="Input.UserName" class="text-danger"></span>
             </div>
             <p class="form-text text-muted">
-                This is shown to other players (e.g. in the online users list and in-game chat) and
-                can only be changed once afterwards, from your profile settings.
+                Este nome aparece para os outros jogadores (por exemplo, na lista de quem está online e no chat das partidas) e
+                só pode ser trocado uma vez depois, nas configurações do seu perfil.
             </p>
             <div class="form-floating mb-3">
                 @if (Model.EmailIsReadOnly)
@@ -34,7 +34,7 @@
                 }
                 else
                 {
-                    <input asp-for="Input.Email" class="form-control" autocomplete="email" placeholder="Please enter your email."/>
+                    <input asp-for="Input.Email" class="form-control" autocomplete="email" placeholder="Digite seu e-mail."/>
                 }
                 <label asp-for="Input.Email" class="form-label"></label>
                 <span asp-validation-for="Input.Email" class="text-danger"></span>
@@ -42,10 +42,10 @@
             @if (Model.EmailIsReadOnly)
             {
                 <p class="form-text text-muted">
-                    This is the verified email address from your @Model.ProviderDisplayName account and can't be changed here.
+                    Este é o e-mail confirmado da sua conta do @Model.ProviderDisplayName e não pode ser trocado aqui.
                 </p>
             }
-            <button type="submit" class="w-100 btn btn-lg btn-primary">Register</button>
+            <button type="submit" class="w-100 btn btn-lg btn-primary">Criar conta</button>
         </form>
     </div>
 </div>

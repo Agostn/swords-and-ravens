@@ -22,6 +22,7 @@ namespace agot_bg_website.Areas.Identity.Pages.Account.Manage
         ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
         ///     directly from your code. This API may change or be removed in future releases.
         /// </summary>
+        [Display(Name = "Nome de usuário")]
         public string Username { get; set; }
 
         public bool CanChangeUsername { get; set; }
@@ -57,38 +58,38 @@ namespace agot_bg_website.Areas.Identity.Pages.Account.Manage
             [StringLength(
                 30,
                 MinimumLength = 3,
-                ErrorMessage = "The {0} must be between {2} and {1} characters long."
+                ErrorMessage = "O {0} precisa ter entre {2} e {1} caracteres."
             )]
             [RegularExpression(
                 Infrastructure.Auth.UsernamePolicy.Pattern,
                 ErrorMessage = Infrastructure.Auth.UsernamePolicy.ErrorMessage
             )]
-            [Display(Name = "Username")]
+            [Display(Name = "Nome de usuário")]
             public string NewUsername { get; set; }
         }
 
         public class ProfileTextInputModel
         {
             [StringLength(1000)]
-            [Display(Name = "Say something about you")]
+            [Display(Name = "Sobre você")]
             public string ProfileText { get; set; }
         }
 
         public class PreferencesInputModel
         {
-            [Display(Name = "PBEM Notifications")]
+            [Display(Name = "Avisos por e-mail nas partidas por turnos (PBEM)")]
             public bool EmailNotificationActive { get; set; }
 
-            [Display(Name = "Join games in the muted state")]
+            [Display(Name = "Entrar nas partidas com o som desligado")]
             public bool MuteGames { get; set; }
 
-            [Display(Name = "Join games by using house names for in-game chat")]
+            [Display(Name = "Usar o nome das Casas no chat das partidas")]
             public bool UseHouseNamesForChat { get; set; }
 
-            [Display(Name = "Join games by using the map scrollbar")]
+            [Display(Name = "Usar a barra de rolagem no mapa")]
             public bool UseMapScrollbar { get; set; }
 
-            [Display(Name = "Align the game state column on the right (Desktop only)")]
+            [Display(Name = "Painel da partida do lado direito (só no computador)")]
             public bool GameStateColumnRight { get; set; }
         }
 
@@ -117,7 +118,7 @@ namespace agot_bg_website.Areas.Identity.Pages.Account.Manage
             var user = await _userManager.GetUserAsync(User);
             if (user == null)
             {
-                return NotFound($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
+                return NotFound($"Não foi possível carregar o usuário com ID '{_userManager.GetUserId(User)}'.");
             }
 
             await LoadAsync(user);
@@ -129,7 +130,7 @@ namespace agot_bg_website.Areas.Identity.Pages.Account.Manage
             var user = await _userManager.GetUserAsync(User);
             if (user == null)
             {
-                return NotFound($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
+                return NotFound($"Não foi possível carregar o usuário com ID '{_userManager.GetUserId(User)}'.");
             }
 
             if (!ModelState.IsValid)
@@ -148,7 +149,7 @@ namespace agot_bg_website.Areas.Identity.Pages.Account.Manage
                 {
                     ModelState.AddModelError(
                         "Input.NewUsername",
-                        "This username is reserved and can't be used."
+                        "Este nome de usuário é reservado e não pode ser usado."
                     );
                     await LoadAsync(user);
                     return Page();
@@ -159,7 +160,7 @@ namespace agot_bg_website.Areas.Identity.Pages.Account.Manage
                 {
                     ModelState.AddModelError(
                         "Input.NewUsername",
-                        "This username is already taken."
+                        "Este nome de usuário já está em uso."
                     );
                     await LoadAsync(user);
                     return Page();
@@ -183,12 +184,12 @@ namespace agot_bg_website.Areas.Identity.Pages.Account.Manage
                 await _userManager.UpdateAsync(user);
                 await _signInManager.RefreshSignInAsync(user);
                 StatusMessage =
-                    "Your username has been updated. (Username can only be changed once.)";
+                    "Seu nome de usuário foi trocado. (Só dá para trocar uma vez.)";
                 return RedirectToPage();
             }
 
             await _signInManager.RefreshSignInAsync(user);
-            StatusMessage = "Your profile has been updated";
+            StatusMessage = "Seu perfil foi atualizado.";
             return RedirectToPage();
         }
 
@@ -197,7 +198,7 @@ namespace agot_bg_website.Areas.Identity.Pages.Account.Manage
             var user = await _userManager.GetUserAsync(User);
             if (user == null)
             {
-                return NotFound($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
+                return NotFound($"Não foi possível carregar o usuário com ID '{_userManager.GetUserId(User)}'.");
             }
 
             if (!ModelState.IsValid)
@@ -209,7 +210,7 @@ namespace agot_bg_website.Areas.Identity.Pages.Account.Manage
             user.ProfileText = ProfileTextInput.ProfileText;
             await _userManager.UpdateAsync(user);
 
-            StatusMessage = "Your profile text has been updated";
+            StatusMessage = "O texto do seu perfil foi atualizado.";
             return RedirectToPage();
         }
 
@@ -218,7 +219,7 @@ namespace agot_bg_website.Areas.Identity.Pages.Account.Manage
             var user = await _userManager.GetUserAsync(User);
             if (user == null)
             {
-                return NotFound($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
+                return NotFound($"Não foi possível carregar o usuário com ID '{_userManager.GetUserId(User)}'.");
             }
 
             if (!ModelState.IsValid)
@@ -234,7 +235,7 @@ namespace agot_bg_website.Areas.Identity.Pages.Account.Manage
             user.GameStateColumnRight = PreferencesInput.GameStateColumnRight;
             await _userManager.UpdateAsync(user);
 
-            StatusMessage = "Your preferences have been updated";
+            StatusMessage = "Suas preferências foram salvas.";
             return RedirectToPage();
         }
     }

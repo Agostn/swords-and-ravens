@@ -5,6 +5,7 @@ using agot_bg_website.Domain;
 using agot_bg_website.Infrastructure;
 using agot_bg_website.Infrastructure.Auth;
 using agot_bg_website.Infrastructure.Chat;
+using agot_bg_website.Infrastructure.Localization;
 using agot_bg_website.Services;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Http.Features;
@@ -99,6 +100,14 @@ builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseNpgsql
 // Game row — are read-only there. The custom Admin area stays the only way to repair a broken
 // serialized game, and is also the base for the planned High Member operations screens.
 builder.Services.AddControllersWithViews();
+
+// Mensagens de validação dos formulários em português. PostConfigure para rodar depois do
+// provedor de DataAnnotations do próprio MVC (que cria os [Required] implícitos).
+builder.Services.PostConfigure<Microsoft.AspNetCore.Mvc.MvcOptions>(options =>
+{
+    options.ModelMetadataDetailsProviders.Add(new PtBrValidationMetadataProvider());
+    PtBrValidationMetadataProvider.ConfigureBindingMessages(options);
+});
 builder.Services.AddCoreAdmin(RoleNames.Admin);
 
 // GDPR: require explicit cookie consent (via _CookieConsentPartial.cshtml) before any
@@ -134,7 +143,9 @@ builder
     })
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddDefaultTokenProviders()
-    .AddDefaultUI();
+    .AddDefaultUI()
+    // Erros de conta/senha em português (ver Infrastructure/Localization).
+    .AddErrorDescriber<PtBrIdentityErrorDescriber>();
 
 // Replaces the SignInManager<ApplicationUser> that AddIdentity() above registered, with one whose
 // CanSignInAsync also refuses banned members — see AppSignInManager for why this is the one choke
@@ -497,6 +508,17 @@ app.Use(
         }
 
         await next();
+    }
+);
+
+// Site em português do Brasil: datas e números no formato brasileiro em todas as páginas.
+var ptBrCulture = new System.Globalization.CultureInfo("pt-BR");
+app.UseRequestLocalization(
+    new RequestLocalizationOptions
+    {
+        DefaultRequestCulture = new Microsoft.AspNetCore.Localization.RequestCulture(ptBrCulture),
+        SupportedCultures = [ptBrCulture],
+        SupportedUICultures = [ptBrCulture],
     }
 );
 

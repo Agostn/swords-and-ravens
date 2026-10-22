@@ -31,6 +31,7 @@ namespace agot_bg_website.Areas.Identity.Pages.Account.Manage
         ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
         ///     directly from your code. This API may change or be removed in future releases.
         /// </summary>
+        [Display(Name = "E-mail")]
         public string Email { get; set; }
 
         /// <summary>
@@ -65,7 +66,7 @@ namespace agot_bg_website.Areas.Identity.Pages.Account.Manage
             /// </summary>
             [Required]
             [EmailAddress]
-            [Display(Name = "New email")]
+            [Display(Name = "E-mail novo")]
             public string NewEmail { get; set; }
         }
 
@@ -84,7 +85,7 @@ namespace agot_bg_website.Areas.Identity.Pages.Account.Manage
             var user = await _userManager.GetUserAsync(User);
             if (user == null)
             {
-                return NotFound($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
+                return NotFound($"Não foi possível carregar o usuário com ID '{_userManager.GetUserId(User)}'.");
             }
 
             await LoadAsync(user);
@@ -96,7 +97,7 @@ namespace agot_bg_website.Areas.Identity.Pages.Account.Manage
             var user = await _userManager.GetUserAsync(User);
             if (user == null)
             {
-                return NotFound($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
+                return NotFound($"Não foi possível carregar o usuário com ID '{_userManager.GetUserId(User)}'.");
             }
 
             if (!ModelState.IsValid)
@@ -112,7 +113,7 @@ namespace agot_bg_website.Areas.Identity.Pages.Account.Manage
                 {
                     ModelState.AddModelError(
                         "Input.NewEmail",
-                        "Throwaway/disposable email addresses aren't allowed. Please use an email address you can actually receive mail at."
+                        "E-mails temporários/descartáveis não são aceitos. Use um e-mail em que você realmente receba mensagens."
                     );
                     await LoadAsync(user);
                     return Page();
@@ -135,19 +136,19 @@ namespace agot_bg_website.Areas.Identity.Pages.Account.Manage
                 );
                 await _emailSender.SendEmailAsync(
                     Input.NewEmail,
-                    "Confirm your email",
+                    "Confirme seu e-mail",
                     EmailTemplates.Build(
                         user.UserName,
                         email,
-                        $"<p>Please confirm your account by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.</p>"
+                        $"<p>Confirme seu e-mail <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicando aqui</a>.</p>"
                     )
                 );
 
-                StatusMessage = "Confirmation link to change email sent. Please check your email.";
+                StatusMessage = "Mandamos o link de confirmação para o e-mail novo. Confira sua caixa de entrada.";
                 return RedirectToPage();
             }
 
-            StatusMessage = "Your email is unchanged.";
+            StatusMessage = "Seu e-mail continua o mesmo.";
             return RedirectToPage();
         }
 
@@ -156,7 +157,7 @@ namespace agot_bg_website.Areas.Identity.Pages.Account.Manage
             var user = await _userManager.GetUserAsync(User);
             if (user == null)
             {
-                return NotFound($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
+                return NotFound($"Não foi possível carregar o usuário com ID '{_userManager.GetUserId(User)}'.");
             }
 
             if (!ModelState.IsValid)
@@ -182,15 +183,15 @@ namespace agot_bg_website.Areas.Identity.Pages.Account.Manage
             );
             await _emailSender.SendEmailAsync(
                 email,
-                "Confirm your email",
+                "Confirme seu e-mail",
                 EmailTemplates.Build(
                     user.UserName,
                     email,
-                    $"<p>Please confirm your account by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.</p>"
+                    $"<p>Confirme seu e-mail <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicando aqui</a>.</p>"
                 )
             );
 
-            StatusMessage = "Verification email sent. Please check your email.";
+            StatusMessage = "E-mail de confirmação enviado. Confira sua caixa de entrada (e o spam).";
             return RedirectToPage();
         }
     }

@@ -19,18 +19,18 @@ else
                     {
                         <th></th>
                     }
-                    <th>Name</th>
+                    <th>Nome</th>
                     @if (allOpen)
                     {
-                        <th>Host</th>
+                        <th>Criador</th>
                     }
                     @if (anyOngoing)
                     {
-                        <th class="text-center">Round</th>
-                        <th>Waiting for</th>
+                        <th class="text-center">Rodada</th>
+                        <th>Esperando</th>
                     }
-                    <th class="text-center">Players</th>
-                    <th>@(allOpen ? "Created at" : "Last action")</th>
+                    <th class="text-center">Jogadores</th>
+                    <th>@(allOpen ? "Criada" : "Última ação")</th>
                     <th class="sticky right-0 z-10 bg-inherit"></th>
                 </tr>
             </thead>
@@ -46,11 +46,11 @@ else
                             <td class="text-center">
                                 @if (isOpen)
                                 {
-                                    <span class="badge badge-success">Open</span>
+                                    <span class="badge badge-success">Aberta</span>
                                 }
                                 else if (isOngoing)
                                 {
-                                    <span class="badge badge-warning">Ongoing</span>
+                                    <span class="badge badge-warning">Em andamento</span>
                                 }
                             </td>
                         }
@@ -63,10 +63,10 @@ else
                                 // show for running/finished games. Shown here unconditionally
                                 // (regardless of ShowStateBadge) so there's a single place that
                                 // renders it, rather than duplicating the check in both cells.
-                                <span class="badge badge-error align-middle" title="Password protected"><i class="fas fa-lock"></i></span>
+                                <span class="badge badge-error align-middle" title="Protegida por senha"><i class="fas fa-lock"></i></span>
                             }
-                            <span class="badge @(game.IsPbem ? "badge-info" : "badge-success") align-middle" title="@(game.IsPbem ? "Play By E-Mail - players receive an e-mail when it is their turn" : "Live game")">
-                                @(game.IsPbem ? "PBEM" : "Live")
+                            <span class="badge @(game.IsPbem ? "badge-info" : "badge-success") align-middle" title="@(game.IsPbem ? "Por turnos (PBEM): cada jogador recebe um e-mail quando chega a vez dele" : "Partida ao vivo")">
+                                @(game.IsPbem ? "PBEM" : "Ao vivo")
                             </span>
                             @if (iAmPlaying)
                             {
@@ -75,24 +75,24 @@ else
                                     {
                                         <img src="~/house_icons/@(game.MyHouse.ToLowerInvariant()).png" alt="@game.MyHouse" class="h-full w-auto shrink-0" />
                                     }
-                                    @(game.MyTurn ? "Your turn" : "Playing")
+                                    @(game.MyTurn ? "Sua vez" : "Jogando")
                                 </span>
                                 @if (game.UnreadPublicMessages)
                                 {
-                                    <span class="badge badge-warning align-middle" title="Unread public messages"><i class="fas fa-envelope"></i></span>
+                                    <span class="badge badge-warning align-middle" title="Mensagens públicas não lidas"><i class="fas fa-envelope"></i></span>
                                 }
                                 @if (game.UnreadPrivateMessages)
                                 {
-                                    <span class="badge badge-error align-middle" title="Unread private messages"><i class="fas fa-envelope"></i></span>
+                                    <span class="badge badge-error align-middle" title="Mensagens privadas não lidas"><i class="fas fa-envelope"></i></span>
                                 }
                                 @if (game.MyNeededForVote)
                                 {
-                                    <span class="badge badge-error align-middle" title="There is an ongoing vote"><i class="fas fa-vote-yea"></i></span>
+                                    <span class="badge badge-error align-middle" title="Tem uma votação em andamento"><i class="fas fa-vote-yea"></i></span>
                                 }
                             }
                             @if (game.ReplacementNeededFor is not null)
                             {
-                                <span class="badge badge-error align-middle" title="Replacement needed for: @game.ReplacementNeededFor"><i class="fas fa-exchange-alt"></i></span>
+                                <span class="badge badge-error align-middle" title="Precisa de substituto para: @game.ReplacementNeededFor"><i class="fas fa-exchange-alt"></i></span>
                             }
                             <a class="link font-semibold text-base text-base-content" href="/play/@game.Id" target="_blank" rel="noopener noreferrer">@game.Name</a>
                         </td>
@@ -113,7 +113,7 @@ else
                         </td>
                         <td class="sticky right-0 z-10 bg-inherit text-right whitespace-nowrap">
                             <div class="flex flex-nowrap items-center justify-end gap-1">
-                                <button type="button" class="btn btn-ghost btn-sm btn-square js-game-settings-btn" title="View game settings" aria-label="View game settings"
+                                <button type="button" class="btn btn-ghost btn-sm btn-square js-game-settings-btn" title="Ver opções da partida" aria-label="Ver opções da partida"
                                         data-game-name="@game.Name" data-setup-name="@game.SetupName" data-player-count="@game.PlayersCount@(game.MaxPlayerCount is not null && game.PlayersCount != game.MaxPlayerCount ? $"/{game.MaxPlayerCount}" : "")"
                                         data-owner-name="@game.PublicOwnerDisplayName"
                                         data-is-faceless="@game.IsFaceless"
@@ -126,21 +126,21 @@ else
                                 </button>
                                 @if (Model.ShowJoinAsWaited && Model.CanPlayAsAnotherPlayer && game.JoinAsUserId is not null && !iAmPlaying)
                                 {
-                                    <a class="btn btn-outline btn-sm" href="/play/@game.Id/@game.JoinAsUserId" target="_blank" rel="noopener noreferrer" title="Join as the waited-for player">
-                                        Join as ...
+                                    <a class="btn btn-outline btn-sm" href="/play/@game.Id/@game.JoinAsUserId" target="_blank" rel="noopener noreferrer" title="Entrar como o jogador da vez">
+                                        Entrar como...
                                     </a>
                                 }
                                 @if (Model.ShowJoinAsOwner && Model.CanPlayAsAnotherPlayer && isOpen && !iAmPlaying)
                                 {
-                                    <a class="btn btn-outline btn-sm" href="/play/@game.Id/@game.OwnerUserId" target="_blank" rel="noopener noreferrer" title="Join as the game's owner - use this to resolve a stuck/dead lobby">
-                                        Join as host
+                                    <a class="btn btn-outline btn-sm" href="/play/@game.Id/@game.OwnerUserId" target="_blank" rel="noopener noreferrer" title="Entrar como o criador da partida (para destravar um saguão parado)">
+                                        Entrar como criador
                                     </a>
                                 }
                                 @if (Model.CanCancelGame)
                                 {
-                                    <form method="post" asp-page-handler="CancelGame" data-game-name="@game.Name" onsubmit="return confirm('Are you sure you want to cancel the game &quot;' + this.dataset.gameName + '&quot;?');" class="inline">
+                                    <form method="post" asp-page-handler="CancelGame" data-game-name="@game.Name" onsubmit="return confirm('Tem certeza de que quer cancelar a partida &quot;' + this.dataset.gameName + '&quot;?');" class="inline">
                                         <input type="hidden" name="gameId" value="@game.Id" />
-                                        <button type="submit" class="btn btn-error btn-sm btn-square" title="Cancel this game" aria-label="Cancel this game">
+                                        <button type="submit" class="btn btn-error btn-sm btn-square" title="Cancelar esta partida" aria-label="Cancelar esta partida">
                                             <i class="fas fa-xmark"></i>
                                         </button>
                                     </form>

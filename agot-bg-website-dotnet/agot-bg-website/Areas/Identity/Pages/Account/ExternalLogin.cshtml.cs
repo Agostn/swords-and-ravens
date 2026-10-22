@@ -97,6 +97,7 @@ namespace agot_bg_website.Areas.Identity.Pages.Account
             /// </summary>
             [Required]
             [EmailAddress]
+            [Display(Name = "E-mail")]
             public string Email { get; set; }
 
             /// <summary>
@@ -107,13 +108,13 @@ namespace agot_bg_website.Areas.Identity.Pages.Account
             [StringLength(
                 30,
                 MinimumLength = 3,
-                ErrorMessage = "The {0} must be between {2} and {1} characters long."
+                ErrorMessage = "O {0} precisa ter entre {2} e {1} caracteres."
             )]
             [RegularExpression(
                 Infrastructure.Auth.UsernamePolicy.Pattern,
                 ErrorMessage = Infrastructure.Auth.UsernamePolicy.ErrorMessage
             )]
-            [Display(Name = "Username")]
+            [Display(Name = "Nome de usuário")]
             public string UserName { get; set; }
         }
 
@@ -142,13 +143,13 @@ namespace agot_bg_website.Areas.Identity.Pages.Account
             returnUrl = ReturnUrlHelper.NormalizeAfterLogin(returnUrl ?? Url.Content("~/"));
             if (remoteError != null)
             {
-                ErrorMessage = $"Error from external provider: {remoteError}";
+                ErrorMessage = $"Erro do serviço externo: {remoteError}";
                 return RedirectToPage("./Login", new { ReturnUrl = returnUrl });
             }
             var info = await _signInManager.GetExternalLoginInfoAsync();
             if (info == null)
             {
-                ErrorMessage = "Error loading external login information.";
+                ErrorMessage = "Erro ao carregar as informações do login externo.";
                 return RedirectToPage("./Login", new { ReturnUrl = returnUrl });
             }
 
@@ -256,9 +257,9 @@ namespace agot_bg_website.Areas.Identity.Pages.Account
             {
                 ModelState.AddModelError(
                     string.Empty,
-                    "This email address is already associated with an existing account. "
-                        + "Please sign in with your original method first, then add "
-                        + $"{info.ProviderDisplayName} from your account settings."
+                    "Este e-mail já está ligado a uma conta. "
+                        + "Entre primeiro do jeito que você usou da outra vez e depois adicione o "
+                        + $"{info.ProviderDisplayName} nas configurações da sua conta."
                 );
                 return Page();
             }
@@ -294,7 +295,7 @@ namespace agot_bg_website.Areas.Identity.Pages.Account
             var info = await _signInManager.GetExternalLoginInfoAsync();
             if (info == null)
             {
-                ErrorMessage = "Error loading external login information during confirmation.";
+                ErrorMessage = "Erro ao carregar as informações do login externo durante a confirmação.";
                 return RedirectToPage("./Login", new { ReturnUrl = returnUrl });
             }
 
@@ -338,7 +339,7 @@ namespace agot_bg_website.Areas.Identity.Pages.Account
                 {
                     ModelState.AddModelError(
                         "Input.Email",
-                        "Throwaway/disposable email addresses aren't allowed. Please use an email address you can actually receive mail at."
+                        "E-mails temporários/descartáveis não são aceitos. Use um e-mail em que você realmente receba mensagens."
                     );
                     ProviderDisplayName = info.ProviderDisplayName;
                     ReturnUrl = returnUrl;
@@ -354,7 +355,7 @@ namespace agot_bg_website.Areas.Identity.Pages.Account
                 {
                     ModelState.AddModelError(
                         "Input.UserName",
-                        "This username is reserved and can't be used."
+                        "Este nome de usuário é reservado e não pode ser usado."
                     );
                     ProviderDisplayName = info.ProviderDisplayName;
                     ReturnUrl = returnUrl;
@@ -364,7 +365,7 @@ namespace agot_bg_website.Areas.Identity.Pages.Account
                 var existingNameUser = await _userManager.FindByNameAsync(Input.UserName);
                 if (existingNameUser is not null)
                 {
-                    ModelState.AddModelError("Input.UserName", "This username is already taken.");
+                    ModelState.AddModelError("Input.UserName", "Este nome de usuário já está em uso.");
                     ProviderDisplayName = info.ProviderDisplayName;
                     ReturnUrl = returnUrl;
                     return Page();
@@ -426,11 +427,11 @@ namespace agot_bg_website.Areas.Identity.Pages.Account
 
                         await _emailSender.SendEmailAsync(
                             Input.Email,
-                            "Confirm your email",
+                            "Confirme seu e-mail",
                             EmailTemplates.Build(
                                 null,
                                 Input.Email,
-                                $"<p>Please confirm your account by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.</p>"
+                                $"<p>Confirme sua conta <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicando aqui</a>.</p>"
                             )
                         );
 

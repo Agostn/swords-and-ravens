@@ -72,11 +72,11 @@ namespace agot_bg_website.Areas.Identity.Pages.Account.Manage
             [Required]
             [StringLength(
                 7,
-                ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.",
+                ErrorMessage = "O {0} precisa ter de {2} a {1} caracteres.",
                 MinimumLength = 6
             )]
             [DataType(DataType.Text)]
-            [Display(Name = "Verification Code")]
+            [Display(Name = "código de verificação")]
             public string Code { get; set; }
         }
 
@@ -85,7 +85,7 @@ namespace agot_bg_website.Areas.Identity.Pages.Account.Manage
             var user = await _userManager.GetUserAsync(User);
             if (user == null)
             {
-                return NotFound($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
+                return NotFound($"Não foi possível carregar o usuário com ID '{_userManager.GetUserId(User)}'.");
             }
 
             // See the matching guard/comment in TwoFactorAuthentication.cshtml.cs.
@@ -104,7 +104,7 @@ namespace agot_bg_website.Areas.Identity.Pages.Account.Manage
             var user = await _userManager.GetUserAsync(User);
             if (user == null)
             {
-                return NotFound($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
+                return NotFound($"Não foi possível carregar o usuário com ID '{_userManager.GetUserId(User)}'.");
             }
 
             if (!ModelState.IsValid)
@@ -124,7 +124,7 @@ namespace agot_bg_website.Areas.Identity.Pages.Account.Manage
 
             if (!is2faTokenValid)
             {
-                ModelState.AddModelError("Input.Code", "Verification code is invalid.");
+                ModelState.AddModelError("Input.Code", "O código de verificação está errado.");
                 await LoadSharedKeyAndQrCodeUriAsync(user);
                 return Page();
             }
@@ -136,7 +136,7 @@ namespace agot_bg_website.Areas.Identity.Pages.Account.Manage
                 userId
             );
 
-            StatusMessage = "Your authenticator app has been verified.";
+            StatusMessage = "Seu app autenticador foi confirmado.";
 
             if (await _userManager.CountRecoveryCodesAsync(user) == 0)
             {

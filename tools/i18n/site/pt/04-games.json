@@ -1,0 +1,51 @@
+{
+"Pages/Games.cshtml": [
+ ["ViewData[\"Title\"] = \"All Games\";", "ViewData[\"Title\"] = \"Todas as partidas\";"],
+ ["<h1 class=\"text-2xl font-bold\">All Games</h1>", "<h1 class=\"text-2xl font-bold\">Todas as partidas</h1>"],
+ ["            Join us on Discord\n", "            Discord (original, em inglês)\n"],
+ ["            Support S&amp;R on Ko-fi\n", "            Apoie o S&amp;R original no Ko-fi\n"],
+ ["title=\"Create a new game\"", "title=\"Criar uma partida\""],
+ ["<h2 class=\"text-lg font-semibold mb-3\">Create a new game</h2>", "<h2 class=\"text-lg font-semibold mb-3\">Criar uma partida</h2>"],
+ ["placeholder=\"Enter game name...\"", "placeholder=\"Nome da partida...\""],
+ ["px-8\">Create Game</button>", "px-8\">Criar partida</button>"],
+ ["                Current live games <span", "                Partidas ao vivo agora <span"],
+ ["EmptyMessage = \"No live games right now.\"", "EmptyMessage = \"Nenhuma partida ao vivo agora.\""],
+ ["title=\"Go to My Games\">Your games</a>", "title=\"Ir para Minhas partidas\">Suas partidas</a>"],
+ ["EmptyMessage = \"You are not currently part of any game.\"", "EmptyMessage = \"Você não está em nenhuma partida no momento.\""],
+ ["            Open games <span", "            Partidas abertas <span"],
+ ["EmptyMessage = \"No open games right now.\"", "EmptyMessage = \"Nenhuma partida aberta agora.\""],
+ ["            Ongoing games <span", "            Partidas em andamento <span"],
+ ["EmptyMessage = \"No ongoing games right now.\"", "EmptyMessage = \"Nenhuma partida em andamento agora.\""],
+ ["title=\"Games where the last move was more than 2 days ago and the player being waited on has not logged in for 8 days.\"", "title=\"Partidas em que a última jogada foi há mais de 2 dias e o jogador da vez não entra no site há 8 dias.\""],
+ ["                Games waiting for inactive players <span", "                Partidas esperando jogadores inativos <span"],
+ ["                Games without a move for 5 days <span", "                Partidas sem jogada há 5 dias <span"],
+ ["                Tournament games without a move for 2 days <span", "                Partidas de torneio sem jogada há 2 dias <span"],
+ ["                Inactive private games <span", "                Partidas privadas inativas <span"]
+],
+"Pages/Games.cshtml.cs": [
+ ["ErrorMessage = \"Game name must be between 1 and 200 characters.\";", "ErrorMessage = \"O nome da partida precisa ter de 1 a 200 caracteres.\";"]
+],
+"Pages/Shared/_GamesTable.cshtml": [
+ ["<th>Name</th>", "<th>Nome</th>"],
+ ["<th>Host</th>", "<th>Criador</th>"],
+ ["<th class=\"text-center\">Round</th>", "<th class=\"text-center\">Rodada</th>"],
+ ["<th>Waiting for</th>", "<th>Esperando</th>"],
+ ["<th class=\"text-center\">Players</th>", "<th class=\"text-center\">Jogadores</th>"],
+ ["<th>@(allOpen ? \"Created at\" : \"Last action\")</th>", "<th>@(allOpen ? \"Criada\" : \"Última ação\")</th>"],
+ ["<span class=\"badge badge-success\">Open</span>", "<span class=\"badge badge-success\">Aberta</span>"],
+ ["<span class=\"badge badge-warning\">Ongoing</span>", "<span class=\"badge badge-warning\">Em andamento</span>"],
+ ["title=\"Password protected\"", "title=\"Protegida por senha\""],
+ ["title=\"@(game.IsPbem ? \"Play By E-Mail - players receive an e-mail when it is their turn\" : \"Live game\")\"", "title=\"@(game.IsPbem ? \"Por turnos (PBEM): cada jogador recebe um e-mail quando chega a vez dele\" : \"Partida ao vivo\")\""],
+ ["@(game.IsPbem ? \"PBEM\" : \"Live\")", "@(game.IsPbem ? \"PBEM\" : \"Ao vivo\")"],
+ ["@(game.MyTurn ? \"Your turn\" : \"Playing\")", "@(game.MyTurn ? \"Sua vez\" : \"Jogando\")"],
+ ["title=\"Unread public messages\"", "title=\"Mensagens públicas não lidas\""],
+ ["title=\"Unread private messages\"", "title=\"Mensagens privadas não lidas\""],
+ ["title=\"There is an ongoing vote\"", "title=\"Tem uma votação em andamento\""],
+ ["title=\"Replacement needed for: @game.ReplacementNeededFor\"", "title=\"Precisa de substituto para: @game.ReplacementNeededFor\""],
+ ["title=\"View game settings\" aria-label=\"View game settings\"", "title=\"Ver opções da partida\" aria-label=\"Ver opções da partida\""],
+ ["title=\"Join as the waited-for player\">\n                                        Join as ...", "title=\"Entrar como o jogador da vez\">\n                                        Entrar como..."],
+ ["title=\"Join as the game's owner - use this to resolve a stuck/dead lobby\">\n                                        Join as host", "title=\"Entrar como o criador da partida (para destravar um saguão parado)\">\n                                        Entrar como criador"],
+ ["onsubmit=\"return confirm('Are you sure you want to cancel the game &quot;' + this.dataset.gameName + '&quot;?');\"", "onsubmit=\"return confirm('Tem certeza de que quer cancelar a partida &quot;' + this.dataset.gameName + '&quot;?');\""],
+ ["title=\"Cancel this game\" aria-label=\"Cancel this game\"", "title=\"Cancelar esta partida\" aria-label=\"Cancelar esta partida\""]
+]
+}

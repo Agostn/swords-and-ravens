@@ -17,7 +17,7 @@ public class RegisterModelTests
             externalProviderNames: []
         );
 
-        Assert.Equal("An account with this email already exists. Please log in instead.", message);
+        Assert.Equal("Já existe uma conta com este e-mail. Entre com ela.", message);
     }
 
     [Fact]
@@ -29,8 +29,8 @@ public class RegisterModelTests
         );
 
         Assert.Contains("Google", message);
-        Assert.Contains("sign in with Google instead", message);
-        Assert.Contains("add a password to your account afterwards", message);
+        Assert.Contains("Entre com o Google", message);
+        Assert.Contains("depois você pode criar uma senha", message);
     }
 
     [Fact]
@@ -41,7 +41,7 @@ public class RegisterModelTests
             externalProviderNames: ["Google", "Discord"]
         );
 
-        Assert.Contains("Google or Discord", message);
+        Assert.Contains("Google ou Discord", message);
     }
 
     [Fact]
@@ -52,6 +52,6 @@ public class RegisterModelTests
             externalProviderNames: []
         );
 
-        Assert.Contains("an external provider", message);
+        Assert.Contains("um serviço externo", message);
     }
 }

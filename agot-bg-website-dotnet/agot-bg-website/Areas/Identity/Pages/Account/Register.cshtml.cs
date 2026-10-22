@@ -86,13 +86,13 @@ namespace agot_bg_website.Areas.Identity.Pages.Account
             [StringLength(
                 30,
                 MinimumLength = 3,
-                ErrorMessage = "The {0} must be between {2} and {1} characters long."
+                ErrorMessage = "O {0} precisa ter entre {2} e {1} caracteres."
             )]
             [RegularExpression(
                 Infrastructure.Auth.UsernamePolicy.Pattern,
                 ErrorMessage = Infrastructure.Auth.UsernamePolicy.ErrorMessage
             )]
-            [Display(Name = "Username")]
+            [Display(Name = "Nome de usuário")]
             public string UserName { get; set; }
 
             /// <summary>
@@ -101,7 +101,7 @@ namespace agot_bg_website.Areas.Identity.Pages.Account
             /// </summary>
             [Required]
             [EmailAddress]
-            [Display(Name = "Email")]
+            [Display(Name = "E-mail")]
             public string Email { get; set; }
 
             /// <summary>
@@ -111,11 +111,11 @@ namespace agot_bg_website.Areas.Identity.Pages.Account
             [Required]
             [StringLength(
                 100,
-                ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.",
+                ErrorMessage = "A {0} precisa ter de {2} a {1} caracteres.",
                 MinimumLength = 6
             )]
             [DataType(DataType.Password)]
-            [Display(Name = "Password")]
+            [Display(Name = "Senha")]
             public string Password { get; set; }
 
             /// <summary>
@@ -123,10 +123,10 @@ namespace agot_bg_website.Areas.Identity.Pages.Account
             ///     directly from your code. This API may change or be removed in future releases.
             /// </summary>
             [DataType(DataType.Password)]
-            [Display(Name = "Confirm password")]
+            [Display(Name = "Confirmação da senha")]
             [Compare(
                 "Password",
-                ErrorMessage = "The password and confirmation password do not match."
+                ErrorMessage = "A senha e a confirmação não são iguais."
             )]
             public string ConfirmPassword { get; set; }
 
@@ -155,7 +155,7 @@ namespace agot_bg_website.Areas.Identity.Pages.Account
                 Response.StatusCode = StatusCodes.Status429TooManyRequests;
                 ModelState.AddModelError(
                     string.Empty,
-                    "Too many registration attempts from your network. Please try again later."
+                    "Muitas tentativas de criar conta a partir da sua rede. Tente de novo mais tarde."
                 );
                 return Page();
             }
@@ -164,7 +164,7 @@ namespace agot_bg_website.Areas.Identity.Pages.Account
             {
                 if (!string.IsNullOrWhiteSpace(Input.Website))
                 {
-                    ModelState.AddModelError(string.Empty, "Registration could not be completed.");
+                    ModelState.AddModelError(string.Empty, "Não foi possível criar a conta.");
                     return Page();
                 }
 
@@ -179,7 +179,7 @@ namespace agot_bg_website.Areas.Identity.Pages.Account
                 {
                     ModelState.AddModelError(
                         string.Empty,
-                        "Please complete the human verification challenge and try again."
+                        "Complete a verificação de que você não é um robô e tente de novo."
                     );
                     return Page();
                 }
@@ -188,7 +188,7 @@ namespace agot_bg_website.Areas.Identity.Pages.Account
                 {
                     ModelState.AddModelError(
                         "Input.UserName",
-                        "This username is reserved and can't be used."
+                        "Este nome de usuário é reservado e não pode ser usado."
                     );
                     return Page();
                 }
@@ -197,7 +197,7 @@ namespace agot_bg_website.Areas.Identity.Pages.Account
                 var existingNameUser = await _userManager.FindByNameAsync(Input.UserName);
                 if (existingNameUser is not null)
                 {
-                    ModelState.AddModelError("Input.UserName", "This username is already taken.");
+                    ModelState.AddModelError("Input.UserName", "Este nome de usuário já está em uso.");
                     return Page();
                 }
 
@@ -225,7 +225,7 @@ namespace agot_bg_website.Areas.Identity.Pages.Account
                 {
                     ModelState.AddModelError(
                         "Input.Email",
-                        "Throwaway/disposable email addresses aren't allowed. Please use an email address you can actually receive mail at."
+                        "E-mails temporários/descartáveis não são aceitos. Use um e-mail em que você realmente receba mensagens."
                     );
                     return Page();
                 }
@@ -260,11 +260,11 @@ namespace agot_bg_website.Areas.Identity.Pages.Account
 
                     await _emailSender.SendEmailAsync(
                         Input.Email,
-                        "Confirm your email",
+                        "Confirme seu e-mail",
                         EmailTemplates.Build(
                             Input.UserName,
                             Input.Email,
-                            $"<p>Please confirm your account by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.</p>"
+                            $"<p>Confirme sua conta <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicando aqui</a>.</p>"
                         )
                     );
 
@@ -332,15 +332,15 @@ namespace agot_bg_website.Areas.Identity.Pages.Account
         {
             if (hasPassword)
             {
-                return "An account with this email already exists. Please log in instead.";
+                return "Já existe uma conta com este e-mail. Entre com ela.";
             }
 
             var providerNames =
                 externalProviderNames.Count > 0
-                    ? string.Join(" or ", externalProviderNames)
-                    : "an external provider";
-            return $"This email is already linked to an account via {providerNames}. Please sign in with {providerNames} instead — "
-                + "you can add a password to your account afterwards from your profile settings.";
+                    ? string.Join(" ou ", externalProviderNames)
+                    : "um serviço externo";
+            return $"Este e-mail já está ligado a uma conta pelo {providerNames}. Entre com o {providerNames} — "
+                + "depois você pode criar uma senha nas configurações do seu perfil.";
         }
     }
 }

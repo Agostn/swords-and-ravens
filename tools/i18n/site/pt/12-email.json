@@ -1,0 +1,6 @@
+{
+"Services/EmailTemplates.cs": [
+ ["var greeting = hasRealUserName ? $\"Hello {WebUtility.HtmlEncode(userName)},\" : \"Hello,\";", "var greeting = hasRealUserName ? $\"Olá, {WebUtility.HtmlEncode(userName)}!\" : \"Olá!\";"],
+ ["<p>Warmest regards,<br />Staff @ Swords and Ravens</p>", "<p>Um abraço,<br />Equipe do Swords and Ravens</p>"]
+]
+}

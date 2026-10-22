@@ -41,6 +41,7 @@ namespace agot_bg_website.Areas.Identity.Pages.Account
             /// </summary>
             [Required]
             [EmailAddress]
+            [Display(Name = "E-mail")]
             public string Email { get; set; }
         }
 
@@ -68,8 +69,8 @@ namespace agot_bg_website.Areas.Identity.Pages.Account
 
                 await _emailSender.SendEmailAsync(
                     Input.Email,
-                    "Reset Password",
-                    $"Please reset your password by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>."
+                    "Redefinir senha",
+                    $"Para criar uma senha nova, <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clique aqui</a>."
                 );
 
                 return RedirectToPage("./ForgotPasswordConfirmation");

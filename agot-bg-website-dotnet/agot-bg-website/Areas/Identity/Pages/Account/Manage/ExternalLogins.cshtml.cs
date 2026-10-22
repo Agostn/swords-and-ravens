@@ -50,7 +50,7 @@ namespace agot_bg_website.Areas.Identity.Pages.Account.Manage
             var user = await _userManager.GetUserAsync(User);
             if (user == null)
             {
-                return NotFound($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
+                return NotFound($"Não foi possível carregar o usuário com ID '{_userManager.GetUserId(User)}'.");
             }
 
             CurrentLogins = await _userManager.GetLoginsAsync(user);
@@ -82,18 +82,18 @@ namespace agot_bg_website.Areas.Identity.Pages.Account.Manage
             var user = await _userManager.GetUserAsync(User);
             if (user == null)
             {
-                return NotFound($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
+                return NotFound($"Não foi possível carregar o usuário com ID '{_userManager.GetUserId(User)}'.");
             }
 
             var result = await _userManager.RemoveLoginAsync(user, loginProvider, providerKey);
             if (!result.Succeeded)
             {
-                StatusMessage = "The external login was not removed.";
+                StatusMessage = "Erro: o login externo não foi removido.";
                 return RedirectToPage();
             }
 
             await _signInManager.RefreshSignInAsync(user);
-            StatusMessage = "The external login was removed.";
+            StatusMessage = "O login externo foi removido.";
             return RedirectToPage();
         }
 
@@ -102,7 +102,7 @@ namespace agot_bg_website.Areas.Identity.Pages.Account.Manage
             var user = await _userManager.GetUserAsync(User);
             if (user == null)
             {
-                return NotFound($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
+                return NotFound($"Não foi possível carregar o usuário com ID '{_userManager.GetUserId(User)}'.");
             }
 
             // Only one external login provider may ever be linked to an account (in addition to an
@@ -115,7 +115,7 @@ namespace agot_bg_website.Areas.Identity.Pages.Account.Manage
             if (existingLogins.Count > 0)
             {
                 StatusMessage =
-                    "Your account is already linked to an external login. Remove it first if you want to link a different provider.";
+                    "Erro: sua conta já está ligada a um login externo. Remova-o antes de ligar outro serviço.";
                 return RedirectToPage();
             }
 
@@ -137,7 +137,7 @@ namespace agot_bg_website.Areas.Identity.Pages.Account.Manage
             var user = await _userManager.GetUserAsync(User);
             if (user == null)
             {
-                return NotFound($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
+                return NotFound($"Não foi possível carregar o usuário com ID '{_userManager.GetUserId(User)}'.");
             }
 
             var userId = await _userManager.GetUserIdAsync(user);
@@ -145,7 +145,7 @@ namespace agot_bg_website.Areas.Identity.Pages.Account.Manage
             if (info == null)
             {
                 throw new InvalidOperationException(
-                    $"Unexpected error occurred loading external login info."
+                    $"Erro inesperado ao carregar as informações do login externo."
                 );
             }
 
@@ -157,7 +157,7 @@ namespace agot_bg_website.Areas.Identity.Pages.Account.Manage
             {
                 await HttpContext.SignOutAsync(IdentityConstants.ExternalScheme);
                 StatusMessage =
-                    "Your account is already linked to an external login. Remove it first if you want to link a different provider.";
+                    "Erro: sua conta já está ligada a um login externo. Remova-o antes de ligar outro serviço.";
                 return RedirectToPage();
             }
 
@@ -165,14 +165,14 @@ namespace agot_bg_website.Areas.Identity.Pages.Account.Manage
             if (!result.Succeeded)
             {
                 StatusMessage =
-                    "The external login was not added. External logins can only be associated with one account.";
+                    "Erro: o login externo não foi adicionado. Cada login externo só pode ficar ligado a uma conta.";
                 return RedirectToPage();
             }
 
             // Clear the existing external cookie to ensure a clean login process
             await HttpContext.SignOutAsync(IdentityConstants.ExternalScheme);
 
-            StatusMessage = "The external login was added.";
+            StatusMessage = "O login externo foi adicionado.";
             return RedirectToPage();
         }
     }

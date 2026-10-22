@@ -77,7 +77,7 @@ public class MyGamesModel(
 
         if (string.IsNullOrWhiteSpace(name) || name.Length > 200)
         {
-            ErrorMessage = "Game name must be between 1 and 200 characters.";
+            ErrorMessage = "O nome da partida precisa ter de 1 a 200 caracteres.";
             return RedirectToPage();
         }
 

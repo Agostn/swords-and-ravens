@@ -46,7 +46,7 @@ namespace agot_bg_website.Areas.Identity.Pages.Account.Manage
             /// </summary>
             [Required]
             [DataType(DataType.Password)]
-            [Display(Name = "Current password")]
+            [Display(Name = "Senha atual")]
             public string OldPassword { get; set; }
 
             /// <summary>
@@ -56,11 +56,11 @@ namespace agot_bg_website.Areas.Identity.Pages.Account.Manage
             [Required]
             [StringLength(
                 100,
-                ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.",
+                ErrorMessage = "A {0} precisa ter de {2} a {1} caracteres.",
                 MinimumLength = 6
             )]
             [DataType(DataType.Password)]
-            [Display(Name = "New password")]
+            [Display(Name = "Senha nova")]
             public string NewPassword { get; set; }
 
             /// <summary>
@@ -68,10 +68,10 @@ namespace agot_bg_website.Areas.Identity.Pages.Account.Manage
             ///     directly from your code. This API may change or be removed in future releases.
             /// </summary>
             [DataType(DataType.Password)]
-            [Display(Name = "Confirm new password")]
+            [Display(Name = "Confirmação da senha nova")]
             [Compare(
                 "NewPassword",
-                ErrorMessage = "The new password and confirmation password do not match."
+                ErrorMessage = "A senha nova e a confirmação não são iguais."
             )]
             public string ConfirmPassword { get; set; }
         }
@@ -81,7 +81,7 @@ namespace agot_bg_website.Areas.Identity.Pages.Account.Manage
             var user = await _userManager.GetUserAsync(User);
             if (user == null)
             {
-                return NotFound($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
+                return NotFound($"Não foi possível carregar o usuário com ID '{_userManager.GetUserId(User)}'.");
             }
 
             var hasPassword = await _userManager.HasPasswordAsync(user);
@@ -103,7 +103,7 @@ namespace agot_bg_website.Areas.Identity.Pages.Account.Manage
             var user = await _userManager.GetUserAsync(User);
             if (user == null)
             {
-                return NotFound($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
+                return NotFound($"Não foi possível carregar o usuário com ID '{_userManager.GetUserId(User)}'.");
             }
 
             var changePasswordResult = await _userManager.ChangePasswordAsync(
@@ -122,7 +122,7 @@ namespace agot_bg_website.Areas.Identity.Pages.Account.Manage
 
             await _signInManager.RefreshSignInAsync(user);
             _logger.LogInformation("User changed their password successfully.");
-            StatusMessage = "Your password has been changed.";
+            StatusMessage = "Sua senha foi trocada.";
 
             return RedirectToPage();
         }

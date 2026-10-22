@@ -28,56 +28,56 @@ public static class NotificationsApi
     > Templates = new()
     {
         ["notifyReadyToStart"] = (
-            game => $"Your game is ready to start: {game.Name}",
+            game => $"Sua partida está pronta para começar: {game.Name}",
             (user, game, gameUrl) =>
                 BuildNotificationEmailHtml(
                     user,
-                    $"Your game &quot;{HtmlEncode(game.Name)}&quot; is ready to start:",
+                    $"Sua partida &quot;{HtmlEncode(game.Name)}&quot; está pronta para começar:",
                     gameUrl
                 )
         ),
         ["notifyYourTurn"] = (
-            game => $"It's your turn in '{game.Name}'",
+            game => $"É a sua vez em '{game.Name}'",
             (user, game, gameUrl) =>
                 BuildNotificationEmailHtml(
                     user,
-                    $"It's your turn to play in &quot;{HtmlEncode(game.Name)}&quot;:",
+                    $"É a sua vez de jogar em &quot;{HtmlEncode(game.Name)}&quot;:",
                     gameUrl
                 )
         ),
         ["notifyBribeForSupport"] = (
-            game => $"You are attacked and now can call for support in '{game.Name}'",
+            game => $"Você foi atacado e pode pedir apoio em '{game.Name}'",
             (user, game, gameUrl) =>
                 BuildNotificationEmailHtml(
                     user,
-                    $"You are attacked in the game &quot;{HtmlEncode(game.Name)}&quot; and now you can call for support or try to bribe your way there:",
+                    $"Você foi atacado na partida &quot;{HtmlEncode(game.Name)}&quot; e agora pode pedir apoio ou tentar comprá-lo:",
                     gameUrl
                 )
         ),
         ["notifyBattleResults"] = (
-            game => $"Your battle is over in '{game.Name}'",
+            game => $"Sua batalha terminou em '{game.Name}'",
             (user, game, gameUrl) =>
                 BuildNotificationEmailHtml(
                     user,
-                    $"Your battle in &quot;{HtmlEncode(game.Name)}&quot; is over:",
+                    $"Sua batalha em &quot;{HtmlEncode(game.Name)}&quot; terminou:",
                     gameUrl
                 )
         ),
         ["notifyNewVote"] = (
-            game => $"Your vote is needed in '{game.Name}'",
+            game => $"Precisamos do seu voto em '{game.Name}'",
             (user, game, gameUrl) =>
                 BuildNotificationEmailHtml(
                     user,
-                    $"a new vote has been started in &quot;{HtmlEncode(game.Name)}&quot;:",
+                    $"Uma nova votação começou em &quot;{HtmlEncode(game.Name)}&quot;:",
                     gameUrl
                 )
         ),
         ["notifyGameEnded"] = (
-            game => $"Game has ended -  {game.Name}",
+            game => $"A partida terminou: {game.Name}",
             (user, game, gameUrl) =>
                 BuildNotificationEmailHtml(
                     user,
-                    $"The game &quot;{HtmlEncode(game.Name)}&quot; has ended:",
+                    $"A partida &quot;{HtmlEncode(game.Name)}&quot; terminou:",
                     gameUrl
                 )
         ),

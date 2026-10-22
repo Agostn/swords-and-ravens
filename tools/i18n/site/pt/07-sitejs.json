@@ -1,0 +1,7 @@
+{
+"wwwroot/js/site.js": [
+ ["return new Date(value).toLocaleString(undefined, {", "return new Date(value).toLocaleString(\"pt-BR\", {"],
+ ["return date.toLocaleString(undefined, {", "return date.toLocaleString(\"pt-BR\", {"],
+ ["var footerLabel = showingWinner ? \"Winner:\" : (waitingFor ? \"Waiting for\" : \"\");", "var footerLabel = showingWinner ? \"Vencedor:\" : (waitingFor ? \"Esperando\" : \"\");"]
+]
+}

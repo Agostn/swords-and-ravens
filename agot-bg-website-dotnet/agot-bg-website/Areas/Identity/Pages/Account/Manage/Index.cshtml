@@ -1,7 +1,7 @@
 @page
 @model IndexModel
 @{
-    ViewData["Title"] = "Profile";
+    ViewData["Title"] = "Perfil";
     ViewData["ActivePage"] = ManageNavPages.Index;
 }
 
@@ -14,19 +14,19 @@
             @if (Model.CanChangeUsername)
             {
                 <div class="form-floating mb-3">
-                    <input asp-for="Input.NewUsername" class="form-control" placeholder="Please choose your username." />
+                    <input asp-for="Input.NewUsername" class="form-control" placeholder="Escolha seu nome de usuário." />
                     <label asp-for="Input.NewUsername" class="form-label"></label>
                     <span asp-validation-for="Input.NewUsername" class="text-danger"></span>
-                    <div class="form-text text-muted">You can change your username once. After updating, it cannot be changed again.</div>
+                    <div class="form-text text-muted">Você pode trocar seu nome de usuário uma vez. Depois disso, não dá para trocar de novo.</div>
                 </div>
-                <button id="update-profile-button" type="submit" class="btn btn-primary">Save</button>
+                <button id="update-profile-button" type="submit" class="btn btn-primary">Salvar</button>
             }
             else
             {
                 <div class="form-floating mb-3">
                     <input asp-for="Username" class="form-control" disabled />
                     <label asp-for="Username" class="form-label"></label>
-                    <div class="form-text text-muted">Username was changed on @(Model.LastUsernameUpdateTime?.ToLocalTime().ToString("g") ?? "a previous date") and cannot be modified again.</div>
+                    <div class="form-text text-muted">O nome de usuário foi trocado em @(Model.LastUsernameUpdateTime?.ToLocalTime().ToString("g") ?? "uma data anterior") e não pode ser trocado de novo.</div>
                 </div>
             }
         </form>
@@ -39,11 +39,11 @@
     <div class="col-md-6">
         <form id="profile-text-form" method="post" asp-page-handler="UpdateProfileText">
             <div class="form-floating mb-3">
-                <textarea asp-for="ProfileTextInput.ProfileText" class="form-control" style="height: 8rem" placeholder="Say something about you."></textarea>
+                <textarea asp-for="ProfileTextInput.ProfileText" class="form-control" style="height: 8rem" placeholder="Fale um pouco sobre você."></textarea>
                 <label asp-for="ProfileTextInput.ProfileText" class="form-label"></label>
                 <span asp-validation-for="ProfileTextInput.ProfileText" class="text-danger"></span>
             </div>
-            <button type="submit" class="btn btn-primary">Change</button>
+            <button type="submit" class="btn btn-primary">Salvar</button>
         </form>
     </div>
 </div>
@@ -52,7 +52,7 @@
 
 <div class="row">
     <div class="col-md-9">
-        <h4>Preferences</h4>
+        <h4>Preferências</h4>
         <form id="preferences-form" method="post" asp-page-handler="UpdatePreferences">
             <div class="flex flex-col gap-2 mb-3">
                 <div class="form-check text-nowrap">
@@ -76,7 +76,7 @@
                     <label asp-for="PreferencesInput.GameStateColumnRight" class="form-check-label"></label>
                 </div>
             </div>
-            <button type="submit" class="btn btn-primary">Update</button>
+            <button type="submit" class="btn btn-primary">Salvar</button>
         </form>
     </div>
 </div>

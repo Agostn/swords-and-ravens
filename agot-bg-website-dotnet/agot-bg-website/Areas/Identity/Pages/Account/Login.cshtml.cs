@@ -64,6 +64,7 @@ namespace agot_bg_website.Areas.Identity.Pages.Account
             /// </summary>
             [Required]
             [EmailAddress]
+            [Display(Name = "E-mail")]
             public string Email { get; set; }
 
             /// <summary>
@@ -72,13 +73,14 @@ namespace agot_bg_website.Areas.Identity.Pages.Account
             /// </summary>
             [Required]
             [DataType(DataType.Password)]
+            [Display(Name = "Senha")]
             public string Password { get; set; }
 
             /// <summary>
             ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
             ///     directly from your code. This API may change or be removed in future releases.
             /// </summary>
-            [Display(Name = "Remember me?")]
+            [Display(Name = "Continuar conectado?")]
             public bool RememberMe { get; set; }
         }
 
@@ -119,7 +121,7 @@ namespace agot_bg_website.Areas.Identity.Pages.Account
                 {
                     // Defence in depth: PasswordHash is already null for soft-deleted accounts so
                     // this can't succeed anyway, but fail fast with a clear reason.
-                    ModelState.AddModelError(string.Empty, "This account no longer exists.");
+                    ModelState.AddModelError(string.Empty, "Esta conta não existe mais.");
                     return Page();
                 }
 
@@ -170,15 +172,15 @@ namespace agot_bg_website.Areas.Identity.Pages.Account
                     // login silently did nothing while the nav kept showing Login/Register.
                     ModelState.AddModelError(
                         string.Empty,
-                        "You need to confirm your email address before you can log in. Check your inbox "
-                            + "(or your local SMTP catcher during development) for the confirmation link we sent "
-                            + "when you registered, or use \"Resend email confirmation\" below."
+                        "Você precisa confirmar seu e-mail antes de entrar. Procure na sua caixa de entrada "
+                            + "(e no spam) o link de confirmação que mandamos quando você criou a conta, "
+                            + "ou use \"Reenviar o e-mail de confirmação\" abaixo."
                     );
                     return Page();
                 }
                 else
                 {
-                    ModelState.AddModelError(string.Empty, "Invalid login attempt.");
+                    ModelState.AddModelError(string.Empty, "E-mail ou senha incorretos.");
                     return Page();
                 }
             }

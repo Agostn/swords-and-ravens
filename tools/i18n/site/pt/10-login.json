@@ -1,0 +1,26 @@
+{
+"Areas/Identity/Pages/Account/Login.cshtml": [
+ ["ViewData[\"Title\"] = \"Log in\";", "ViewData[\"Title\"] = \"Entrar\";"],
+ ["<h2>Use a local account to log in.</h2>", "<h2>Entre com seu e-mail e senha.</h2>"],
+ ["placeholder=\"name@example.com\"", "placeholder=\"nome@exemplo.com\""],
+ ["class=\"form-label\">Email</label>", "class=\"form-label\">E-mail</label>"],
+ ["placeholder=\"password\"", "placeholder=\"senha\""],
+ ["class=\"form-label\">Password</label>", "class=\"form-label\">Senha</label>"],
+ ["btn-primary\">Log in</button>", "btn-primary\">Entrar</button>"],
+ [">Forgot your password?</a>", ">Esqueceu a senha?</a>"],
+ [">Register as a new user</a>", ">Criar uma conta nova</a>"],
+ [">Resend email confirmation</a>", ">Reenviar o e-mail de confirmação</a>"],
+ ["<h3>Use another service to log in.</h3>", "<h3>Ou entre com outro serviço.</h3>"],
+ ["                            There are no external authentication services configured. See this <a href=\"https://go.microsoft.com/fwlink/?LinkID=532715\">article\n                            about setting up this ASP.NET application to support logging in via external services</a>.", "                            Nenhum outro serviço de login (Google, Discord, Facebook) está ativado neste site no momento."],
+ ["var buttonText = $\"Sign in with {providerLabel}\";", "var buttonText = $\"Entrar com {providerLabel}\";"],
+ ["title=\"Log in using your @providerLabel account\"", "title=\"Entrar usando sua conta do @providerLabel\""]
+],
+"Areas/Identity/Pages/Account/Login.cshtml.cs": [
+ ["            [Required]\n            [EmailAddress]\n            public string Email { get; set; }", "            [Required]\n            [EmailAddress]\n            [Display(Name = \"E-mail\")]\n            public string Email { get; set; }"],
+ ["            [Required]\n            [DataType(DataType.Password)]\n            public string Password { get; set; }", "            [Required]\n            [DataType(DataType.Password)]\n            [Display(Name = \"Senha\")]\n            public string Password { get; set; }"],
+ ["[Display(Name = \"Remember me?\")]", "[Display(Name = \"Continuar conectado?\")]"],
+ ["\"This account no longer exists.\"", "\"Esta conta não existe mais.\""],
+ ["                        \"You need to confirm your email address before you can log in. Check your inbox \"\n                            + \"(or your local SMTP catcher during development) for the confirmation link we sent \"\n                            + \"when you registered, or use \\\"Resend email confirmation\\\" below.\"", "                        \"Você precisa confirmar seu e-mail antes de entrar. Procure na sua caixa de entrada \"\n                            + \"(e no spam) o link de confirmação que mandamos quando você criou a conta, \"\n                            + \"ou use \\\"Reenviar o e-mail de confirmação\\\" abaixo.\""],
+ ["ModelState.AddModelError(string.Empty, \"Invalid login attempt.\");", "ModelState.AddModelError(string.Empty, \"E-mail ou senha incorretos.\");"]
+]
+}

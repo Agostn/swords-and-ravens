@@ -1,0 +1,7 @@
+{
+"Api/ChatWebSocketApi.cs": [
+ ["? fromHouseElement.GetString() ?? \"Unknown\"\n                : \"Unknown\";", "? fromHouseElement.GetString() ?? \"Desconhecida\"\n                : \"Desconhecida\";"],
+ ["<p>House {encodedHouse} has sent you a raven in the game &quot;{encodedGameName}&quot;:</p>", "<p>A Casa {encodedHouse} mandou um corvo para você na partida &quot;{encodedGameName}&quot;:</p>"],
+ ["$\"You received a new private message in game: '{game.Name}'\",", "$\"Você recebeu uma mensagem privada na partida '{game.Name}'\","]
+]
+}

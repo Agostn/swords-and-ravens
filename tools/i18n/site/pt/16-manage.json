@@ -1,0 +1,221 @@
+{
+"Areas/Identity/Pages/Account/Manage/_StatusMessage.cshtml": [
+ ["Model.StartsWith(\"Error\")", "Model.StartsWith(\"Erro\")"],
+ ["aria-label=\"Close\"", "aria-label=\"Fechar\""]
+],
+"Pages/Shared/_StatusMessage.cshtml": [
+ ["Model.StartsWith(\"Error\")", "Model.StartsWith(\"Erro\")"]
+],
+"Areas/Identity/Pages/Account/Manage/_Layout.cshtml": [
+ [">Manage your account<", ">Sua conta<"],
+ [">Change your account settings<", ">Configurações da conta<"]
+],
+"Areas/Identity/Pages/Account/Manage/_ManageNav.cshtml": [
+ ["asp-page=\"./Index\">Profile</a>", "asp-page=\"./Index\">Perfil</a>"],
+ ["asp-page=\"./Email\">Email</a>", "asp-page=\"./Email\">E-mail</a>"],
+ ["asp-page=\"./ChangePassword\">Password</a>", "asp-page=\"./ChangePassword\">Senha</a>"],
+ ["asp-page=\"./ExternalLogins\">External logins</a>", "asp-page=\"./ExternalLogins\">Logins externos</a>"],
+ ["asp-page=\"./TwoFactorAuthentication\">Two-factor authentication</a>", "asp-page=\"./TwoFactorAuthentication\">Verificação em duas etapas</a>"],
+ ["asp-page=\"./PersonalData\">Personal data</a>", "asp-page=\"./PersonalData\">Dados pessoais</a>"]
+],
+"Areas/Identity/Pages/Account/Manage/ChangePassword.cshtml": [
+ ["\"Change password\"", "\"Trocar senha\""],
+ ["placeholder=\"Please enter your old password.\"", "placeholder=\"Digite a senha atual.\""],
+ ["placeholder=\"Please enter your new password.\"", "placeholder=\"Digite a senha nova.\""],
+ ["placeholder=\"Please confirm your new password.\"", "placeholder=\"Confirme a senha nova.\""],
+ [">Update password<", ">Trocar senha<"]
+],
+"Areas/Identity/Pages/Account/Manage/ChangePassword.cshtml.cs": [
+ ["\"Current password\"", "\"Senha atual\""],
+ ["\"The {0} must be at least {2} and at max {1} characters long.\"", "\"A {0} precisa ter de {2} a {1} caracteres.\""],
+ ["\"New password\"", "\"Senha nova\""],
+ ["\"Confirm new password\"", "\"Confirmação da senha nova\""],
+ ["\"The new password and confirmation password do not match.\"", "\"A senha nova e a confirmação não são iguais.\""],
+ ["$\"Unable to load user with ID '{_userManager.GetUserId(User)}'.\"", "$\"Não foi possível carregar o usuário com ID '{_userManager.GetUserId(User)}'.\"", 2],
+ ["\"Your password has been changed.\"", "\"Sua senha foi trocada.\""]
+],
+"Areas/Identity/Pages/Account/Manage/DeletePersonalData.cshtml": [
+ ["\"Delete Personal Data\"", "\"Apagar dados pessoais\""],
+ ["<strong>Deleting your account cannot be undone.</strong> Your email, password, username,\n        profile text and connected login providers will be permanently erased. You will show up as\n        <strong>\"Took the Black\"</strong> in any games you already played, but you will no longer be\n        able to log in, and games you played will no longer count towards a win rate for you.", "<strong>Apagar sua conta não pode ser desfeito.</strong> Seu e-mail, senha, nome de usuário,\n        texto do perfil e logins ligados serão apagados para sempre. Nas partidas que você já jogou,\n        você vai aparecer como <strong>\"Took the Black\"</strong> (vestiu o negro), mas não vai mais conseguir\n        entrar, e essas partidas não vão mais contar na sua taxa de vitória."],
+ ["placeholder=\"Please enter your password.\"", "placeholder=\"Digite sua senha.\""],
+ [">Delete data and close my account<", ">Apagar meus dados e encerrar minha conta<"]
+],
+"Areas/Identity/Pages/Account/Manage/DeletePersonalData.cshtml.cs": [
+ ["            [Required]\n            [DataType(DataType.Password)]\n            public string Password { get; set; }", "            [Required]\n            [DataType(DataType.Password)]\n            [Display(Name = \"Senha\")]\n            public string Password { get; set; }"],
+ ["$\"Unable to load user with ID '{_userManager.GetUserId(User)}'.\"", "$\"Não foi possível carregar o usuário com ID '{_userManager.GetUserId(User)}'.\"", 2],
+ ["\"Incorrect password.\"", "\"Senha incorreta.\""]
+],
+"Areas/Identity/Pages/Account/Manage/Disable2fa.cshtml": [
+ ["\"Disable two-factor authentication (2FA)\"", "\"Desativar a verificação em duas etapas\""],
+ ["This action only disables 2FA.", "Isto só desativa a verificação em duas etapas."],
+ ["\n            Disabling 2FA does not change the keys used in authenticator apps. If you wish to change the key\n            used in an authenticator app you should ", "\n            Desativar não muda a chave usada no app autenticador. Se quiser trocar essa chave,\n            você deve "],
+ ["reset your authenticator keys.", "redefinir a chave do autenticador."],
+ [">Disable 2FA<", ">Desativar<"]
+],
+"Areas/Identity/Pages/Account/Manage/Disable2fa.cshtml.cs": [
+ ["$\"Unable to load user with ID '{_userManager.GetUserId(User)}'.\"", "$\"Não foi possível carregar o usuário com ID '{_userManager.GetUserId(User)}'.\"", 2],
+ ["\"2fa has been disabled. You can reenable 2fa when you setup an authenticator app\"", "\"A verificação em duas etapas foi desativada. Você pode ativá-la de novo configurando um app autenticador.\""]
+],
+"Areas/Identity/Pages/Account/Manage/DownloadPersonalData.cshtml": [
+ ["\"Download Your Data\"", "\"Baixar seus dados\""]
+],
+"Areas/Identity/Pages/Account/Manage/DownloadPersonalData.cshtml.cs": [
+ ["$\"Unable to load user with ID '{_userManager.GetUserId(User)}'.\"", "$\"Não foi possível carregar o usuário com ID '{_userManager.GetUserId(User)}'.\""]
+],
+"Areas/Identity/Pages/Account/Manage/Email.cshtml": [
+ ["\"Manage Email\"", "\"E-mail\""],
+ ["placeholder=\"Please enter your email.\"", "placeholder=\"Digite seu e-mail.\"", 2],
+ [">Send verification email<", ">Enviar e-mail de confirmação<"],
+ ["placeholder=\"Please enter new email.\"", "placeholder=\"Digite o e-mail novo.\""],
+ [">Change email<", ">Trocar e-mail<"]
+],
+"Areas/Identity/Pages/Account/Manage/Email.cshtml.cs": [
+ ["        public string Email { get; set; }", "        [Display(Name = \"E-mail\")]\n        public string Email { get; set; }"],
+ ["\"New email\"", "\"E-mail novo\""],
+ ["$\"Unable to load user with ID '{_userManager.GetUserId(User)}'.\"", "$\"Não foi possível carregar o usuário com ID '{_userManager.GetUserId(User)}'.\"", 3],
+ ["\"Throwaway/disposable email addresses aren't allowed. Please use an email address you can actually receive mail at.\"", "\"E-mails temporários/descartáveis não são aceitos. Use um e-mail em que você realmente receba mensagens.\""],
+ ["\"Confirm your email\"", "\"Confirme seu e-mail\"", 2],
+ ["$\"<p>Please confirm your account by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.</p>\"", "$\"<p>Confirme seu e-mail <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicando aqui</a>.</p>\"", 2],
+ ["\"Confirmation link to change email sent. Please check your email.\"", "\"Mandamos o link de confirmação para o e-mail novo. Confira sua caixa de entrada.\""],
+ ["\"Your email is unchanged.\"", "\"Seu e-mail continua o mesmo.\""],
+ ["\"Verification email sent. Please check your email.\"", "\"E-mail de confirmação enviado. Confira sua caixa de entrada (e o spam).\""]
+],
+"Areas/Identity/Pages/Account/Manage/EnableAuthenticator.cshtml": [
+ ["\"Configure authenticator app\"", "\"Configurar app autenticador\""],
+ ["To use an authenticator app go through the following steps:", "Para usar um app autenticador, siga estes passos:"],
+ ["\n                Download a two-factor authenticator app like Microsoft Authenticator for\n                ", "\n                Baixe um app autenticador, como o Microsoft Authenticator para\n                "],
+ ["Android</a> and\n                <a href=\"https://go.microsoft.com/fwlink/?Linkid=825073\">iOS</a> or\n                Google Authenticator for\n", "Android</a> e\n                <a href=\"https://go.microsoft.com/fwlink/?Linkid=825073\">iOS</a> ou o\n                Google Authenticator para\n"],
+ ["&amp;hl=en\">Android</a> and\n", "&amp;hl=pt_BR\">Android</a> e\n"],
+ ["Scan the QR Code or enter this key ", "Leia o QR Code ou digite esta chave "],
+ [" into your two factor authenticator app. Spaces and casing do not matter.", " no app autenticador. Espaços e maiúsculas/minúsculas não importam."],
+ ["\n                Once you have scanned the QR code or input the key above, your two factor authentication app will provide you\n                with a unique code. Enter the code in the confirmation box below.\n            ", "\n                Depois de ler o QR Code ou digitar a chave, o app autenticador vai mostrar\n                um código. Digite esse código no campo abaixo.\n            "],
+ ["placeholder=\"Please enter the code.\"", "placeholder=\"Digite o código.\""],
+ [">Verification Code<", ">Código de verificação<"],
+ [">Verify<", ">Verificar<"]
+],
+"Areas/Identity/Pages/Account/Manage/EnableAuthenticator.cshtml.cs": [
+ ["\"The {0} must be at least {2} and at max {1} characters long.\"", "\"O {0} precisa ter de {2} a {1} caracteres.\""],
+ ["\"Verification Code\"", "\"código de verificação\""],
+ ["$\"Unable to load user with ID '{_userManager.GetUserId(User)}'.\"", "$\"Não foi possível carregar o usuário com ID '{_userManager.GetUserId(User)}'.\"", 2],
+ ["\"Verification code is invalid.\"", "\"O código de verificação está errado.\""],
+ ["\"Your authenticator app has been verified.\"", "\"Seu app autenticador foi confirmado.\""]
+],
+"Areas/Identity/Pages/Account/Manage/ExternalLogins.cshtml": [
+ ["\"Manage your external logins\"", "\"Logins externos\""],
+ ["<h3>Registered Logins</h3>", "<h3>Logins ligados</h3>"],
+ ["title=\"Remove this @login.ProviderDisplayName login from your account\">Remove</button>", "title=\"Tirar o login do @login.ProviderDisplayName da sua conta\">Remover</button>"],
+ ["<h4>Add another service to log in.</h4>", "<h4>Adicionar outro serviço para entrar.</h4>"],
+ ["title=\"Link your @providerLabel account\"", "title=\"Ligar sua conta do @providerLabel\""],
+ [">Link @providerLabel<", ">Ligar @providerLabel<"],
+ ["\n        Your account is already linked to an external login. Remove it above if you want to link a different provider instead —\n        only one external login can be linked per account.\n    ", "\n        Sua conta já está ligada a um login externo. Remova-o acima se quiser ligar outro serviço —\n        só dá para ligar um login externo por conta.\n    "]
+],
+"Areas/Identity/Pages/Account/Manage/ExternalLogins.cshtml.cs": [
+ ["$\"Unable to load user with ID '{_userManager.GetUserId(User)}'.\"", "$\"Não foi possível carregar o usuário com ID '{_userManager.GetUserId(User)}'.\"", 4],
+ ["\"The external login was not removed.\"", "\"Erro: o login externo não foi removido.\""],
+ ["\"The external login was removed.\"", "\"O login externo foi removido.\""],
+ ["\"Your account is already linked to an external login. Remove it first if you want to link a different provider.\"", "\"Erro: sua conta já está ligada a um login externo. Remova-o antes de ligar outro serviço.\"", 2],
+ ["$\"Unexpected error occurred loading external login info.\"", "$\"Erro inesperado ao carregar as informações do login externo.\""],
+ ["\"The external login was not added. External logins can only be associated with one account.\"", "\"Erro: o login externo não foi adicionado. Cada login externo só pode ficar ligado a uma conta.\""],
+ ["\"The external login was added.\"", "\"O login externo foi adicionado.\""]
+],
+"Areas/Identity/Pages/Account/Manage/GenerateRecoveryCodes.cshtml": [
+ ["\"Generate two-factor authentication (2FA) recovery codes\"", "\"Gerar códigos de recuperação\""],
+ ["Put these codes in a safe place.", "Guarde estes códigos num lugar seguro."],
+ ["\n            If you lose your device and don't have the recovery codes you will lose access to your account.\n        ", "\n            Se você perder o aparelho e não tiver os códigos de recuperação, vai perder o acesso à sua conta.\n        "],
+ ["\n            Generating new recovery codes does not change the keys used in authenticator apps. If you wish to change the key\n            used in an authenticator app you should ", "\n            Gerar códigos novos não muda a chave usada no app autenticador. Se quiser trocar essa chave,\n            você deve "],
+ ["reset your authenticator keys.", "redefinir a chave do autenticador."],
+ [">Generate Recovery Codes<", ">Gerar códigos de recuperação<"]
+],
+"Areas/Identity/Pages/Account/Manage/GenerateRecoveryCodes.cshtml.cs": [
+ ["$\"Unable to load user with ID '{_userManager.GetUserId(User)}'.\"", "$\"Não foi possível carregar o usuário com ID '{_userManager.GetUserId(User)}'.\"", 2],
+ ["\"You have generated new recovery codes.\"", "\"Você gerou códigos de recuperação novos.\""]
+],
+"Areas/Identity/Pages/Account/Manage/Index.cshtml": [
+ ["\"Profile\"", "\"Perfil\""],
+ ["placeholder=\"Please choose your username.\"", "placeholder=\"Escolha seu nome de usuário.\""],
+ ["You can change your username once. After updating, it cannot be changed again.", "Você pode trocar seu nome de usuário uma vez. Depois disso, não dá para trocar de novo."],
+ [">Save<", ">Salvar<"],
+ ["Username was changed on @(Model.LastUsernameUpdateTime?.ToLocalTime().ToString(\"g\") ?? \"a previous date\") and cannot be modified again.", "O nome de usuário foi trocado em @(Model.LastUsernameUpdateTime?.ToLocalTime().ToString(\"g\") ?? \"uma data anterior\") e não pode ser trocado de novo."],
+ ["placeholder=\"Say something about you.\"", "placeholder=\"Fale um pouco sobre você.\""],
+ [">Change<", ">Salvar<"],
+ ["<h4>Preferences</h4>", "<h4>Preferências</h4>"],
+ [">Update<", ">Salvar<"]
+],
+"Areas/Identity/Pages/Account/Manage/Index.cshtml.cs": [
+ ["        public string Username { get; set; }", "        [Display(Name = \"Nome de usuário\")]\n        public string Username { get; set; }"],
+ ["\"The {0} must be between {2} and {1} characters long.\"", "\"O {0} precisa ter entre {2} e {1} caracteres.\""],
+ ["[Display(Name = \"Username\")]", "[Display(Name = \"Nome de usuário\")]"],
+ ["\"Say something about you\"", "\"Sobre você\""],
+ ["\"PBEM Notifications\"", "\"Avisos por e-mail nas partidas por turnos (PBEM)\""],
+ ["\"Join games in the muted state\"", "\"Entrar nas partidas com o som desligado\""],
+ ["\"Join games by using house names for in-game chat\"", "\"Usar o nome das Casas no chat das partidas\""],
+ ["\"Join games by using the map scrollbar\"", "\"Usar a barra de rolagem no mapa\""],
+ ["\"Align the game state column on the right (Desktop only)\"", "\"Painel da partida do lado direito (só no computador)\""],
+ ["$\"Unable to load user with ID '{_userManager.GetUserId(User)}'.\"", "$\"Não foi possível carregar o usuário com ID '{_userManager.GetUserId(User)}'.\"", 4],
+ ["\"This username is reserved and can't be used.\"", "\"Este nome de usuário é reservado e não pode ser usado.\""],
+ ["\"This username is already taken.\"", "\"Este nome de usuário já está em uso.\""],
+ ["\"Your username has been updated. (Username can only be changed once.)\"", "\"Seu nome de usuário foi trocado. (Só dá para trocar uma vez.)\""],
+ ["\"Your profile has been updated\"", "\"Seu perfil foi atualizado.\""],
+ ["\"Your profile text has been updated\"", "\"O texto do seu perfil foi atualizado.\""],
+ ["\"Your preferences have been updated\"", "\"Suas preferências foram salvas.\""]
+],
+"Areas/Identity/Pages/Account/Manage/PersonalData.cshtml": [
+ ["\"Personal Data\"", "\"Dados pessoais\""],
+ ["Your account contains personal data that you have given us. This page allows you to download or delete that data.", "Sua conta tem dados pessoais que você nos deu. Aqui você pode baixar ou apagar esses dados."],
+ ["Deleting this data will permanently remove your account, and this cannot be recovered.", "Apagar esses dados remove sua conta para sempre, sem como recuperar."],
+ [">Download<", ">Baixar<"],
+ [">Delete<", ">Apagar<"]
+],
+"Areas/Identity/Pages/Account/Manage/PersonalData.cshtml.cs": [
+ ["$\"Unable to load user with ID '{_userManager.GetUserId(User)}'.\"", "$\"Não foi possível carregar o usuário com ID '{_userManager.GetUserId(User)}'.\""]
+],
+"Areas/Identity/Pages/Account/Manage/ResetAuthenticator.cshtml": [
+ ["\"Reset authenticator key\"", "\"Redefinir chave do autenticador\""],
+ ["If you reset your authenticator key your authenticator app will not work until you reconfigure it.", "Se você redefinir a chave, o app autenticador para de funcionar até você configurá-lo de novo."],
+ ["\n            This process disables 2FA until you verify your authenticator app.\n            If you do not complete your authenticator app configuration you may lose access to your account.\n        ", "\n            Isso desativa a verificação em duas etapas até você confirmar o app autenticador.\n            Se não terminar a configuração do app, você pode perder o acesso à sua conta.\n        "],
+ [">Reset authenticator key<", ">Redefinir chave do autenticador<"]
+],
+"Areas/Identity/Pages/Account/Manage/ResetAuthenticator.cshtml.cs": [
+ ["$\"Unable to load user with ID '{_userManager.GetUserId(User)}'.\"", "$\"Não foi possível carregar o usuário com ID '{_userManager.GetUserId(User)}'.\"", 2],
+ ["\"Your authenticator app key has been reset, you will need to configure your authenticator app using the new key.\"", "\"A chave do autenticador foi redefinida. Configure o app autenticador com a chave nova.\""]
+],
+"Areas/Identity/Pages/Account/Manage/SetPassword.cshtml": [
+ ["\"Set password\"", "\"Criar senha\""],
+ ["Set your password", "Crie sua senha"],
+ ["\n    You do not have a local username/password for this site. Add a local\n    account so you can log in without an external login.\n", "\n    Você ainda não tem senha neste site. Crie uma para\n    poder entrar sem usar um login externo.\n"],
+ ["placeholder=\"Please enter your new password.\"", "placeholder=\"Digite a senha nova.\""],
+ ["placeholder=\"Please confirm your new password.\"", "placeholder=\"Confirme a senha nova.\""],
+ [">Set password<", ">Criar senha<"]
+],
+"Areas/Identity/Pages/Account/Manage/SetPassword.cshtml.cs": [
+ ["\"The {0} must be at least {2} and at max {1} characters long.\"", "\"A {0} precisa ter de {2} a {1} caracteres.\""],
+ ["\"New password\"", "\"Senha nova\""],
+ ["\"Confirm new password\"", "\"Confirmação da senha nova\""],
+ ["\"The new password and confirmation password do not match.\"", "\"A senha nova e a confirmação não são iguais.\""],
+ ["$\"Unable to load user with ID '{_userManager.GetUserId(User)}'.\"", "$\"Não foi possível carregar o usuário com ID '{_userManager.GetUserId(User)}'.\"", 2],
+ ["\"Your password has been set.\"", "\"Sua senha foi criada.\""]
+],
+"Areas/Identity/Pages/Account/Manage/ShowRecoveryCodes.cshtml": [
+ ["\"Recovery codes\"", "\"Códigos de recuperação\""],
+ ["Put these codes in a safe place.", "Guarde estes códigos num lugar seguro."],
+ ["\n            If you lose your device and don't have the recovery codes you will lose access to your account.\n        ", "\n            Se você perder o aparelho e não tiver os códigos de recuperação, vai perder o acesso à sua conta.\n        "]
+],
+"Areas/Identity/Pages/Account/Manage/TwoFactorAuthentication.cshtml": [
+ ["\"Two-factor authentication (2FA)\"", "\"Verificação em duas etapas\""],
+ ["<strong>You have no recovery codes left.</strong>\n                        <p>You must <a asp-page=\"./GenerateRecoveryCodes\">generate a new set of recovery codes</a> before you can log in with a recovery code.</p>", "<strong>Você não tem mais códigos de recuperação.</strong>\n                        <p>Você precisa <a asp-page=\"./GenerateRecoveryCodes\">gerar códigos novos</a> antes de poder entrar com um código de recuperação.</p>"],
+ ["<strong>You have 1 recovery code left.</strong>\n                        <p>You can <a asp-page=\"./GenerateRecoveryCodes\">generate a new set of recovery codes</a>.</p>", "<strong>Você só tem 1 código de recuperação.</strong>\n                        <p>Você pode <a asp-page=\"./GenerateRecoveryCodes\">gerar códigos novos</a>.</p>"],
+ ["<strong>You have @Model.RecoveryCodesLeft recovery codes left.</strong>\n                        <p>You should <a asp-page=\"./GenerateRecoveryCodes\">generate a new set of recovery codes</a>.</p>", "<strong>Você tem @Model.RecoveryCodesLeft códigos de recuperação.</strong>\n                        <p>É bom <a asp-page=\"./GenerateRecoveryCodes\">gerar códigos novos</a>.</p>"],
+ [">Forget this browser<", ">Esquecer este navegador<"],
+ [">Disable 2FA<", ">Desativar<"],
+ [">Reset recovery codes<", ">Gerar códigos de recuperação novos<"],
+ ["<h4>Authenticator app</h4>", "<h4>App autenticador</h4>"],
+ [">Add authenticator app<", ">Adicionar app autenticador<"],
+ [">Set up authenticator app<", ">Configurar app autenticador<"],
+ [">Reset authenticator app<", ">Redefinir app autenticador<"],
+ ["<strong>Privacy and cookie policy have not been accepted.</strong>\n                <p>You must accept the policy before you can enable two factor authentication.</p>", "<strong>Você ainda não aceitou a política de privacidade e cookies.</strong>\n                <p>Aceite a política antes de ativar a verificação em duas etapas.</p>"]
+],
+"Areas/Identity/Pages/Account/Manage/TwoFactorAuthentication.cshtml.cs": [
+ ["$\"Unable to load user with ID '{_userManager.GetUserId(User)}'.\"", "$\"Não foi possível carregar o usuário com ID '{_userManager.GetUserId(User)}'.\"", 2],
+ ["\"The current browser has been forgotten. When you login again from this browser you will be prompted for your 2fa code.\"", "\"Este navegador foi esquecido. Na próxima vez que entrar por ele, o código do autenticador vai ser pedido.\""]
+]
+}

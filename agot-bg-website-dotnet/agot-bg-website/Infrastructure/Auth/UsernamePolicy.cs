@@ -20,5 +20,5 @@ public static class UsernamePolicy
     public const string Pattern = @"^[\p{L}\p{Nd}_\-\. ]+$";
 
     public const string ErrorMessage =
-        "Username can only contain letters, numbers, spaces, dots, underscores, and dashes.";
+        "O nome de usuário só pode ter letras, números, espaços, pontos, sublinhados (_) e hífens (-).";
 }

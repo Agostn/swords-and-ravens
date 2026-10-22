@@ -2,13 +2,13 @@
 @{
     // Per-page SEO hooks: pages set ViewData["Title"]/["Description"], falling back to site-wide defaults here.
     var pageDescription = ViewData["Description"] as string
-        ?? "Play A Game of Thrones: The Board Game (2nd Edition) online for free, in real time or play-by-email, against friends or strangers.";
+        ?? "Jogue A Game of Thrones: The Board Game (2ª edição) online e de graça, ao vivo ou por turnos (PBEM), com amigos ou desconhecidos.";
     // Most pages get "Page - Swords and Ravens"; a page can set ViewData["TitleOverride"] for full control (e.g. the homepage leading with the brand name).
     var pageTitle = ViewData["TitleOverride"] as string ?? $"{ViewData["Title"]} - Swords and Ravens";
     var canonicalUrl = $"{Context.Request.Scheme}://{Context.Request.Host}{Context.Request.Path}";
 }
 <!DOCTYPE html>
-<html lang="en" data-theme="swordsandravens">
+<html lang="pt-BR" data-theme="swordsandravens">
 <head>
     <meta charset="utf-8" />
     @* Intentionally no responsive "width=device-width" viewport meta tag: like the old Django site,
@@ -62,32 +62,32 @@
                     <div class="hidden lg:flex items-center gap-1">
                         @if (User.Identity?.IsAuthenticated ?? false)
                         {
-                            <a class="nav-link" asp-area="" asp-page="/Games">All Games</a>
-                            <a class="nav-link" asp-area="" asp-page="/MyGames">My Games</a>
-                            <a class="nav-link" asp-area="" asp-page="/Users">Users</a>
+                            <a class="nav-link" asp-area="" asp-page="/Games">Todas as partidas</a>
+                            <a class="nav-link" asp-area="" asp-page="/MyGames">Minhas partidas</a>
+                            <a class="nav-link" asp-area="" asp-page="/Users">Jogadores</a>
                             <a class="nav-link" href="https://faq.swordsandravens.net" target="_blank" rel="noopener">FAQ</a>
                         }
-                        <a class="nav-link" asp-area="" asp-page="/TermsOfUse">Terms of Use</a>
-                        <a class="nav-link" asp-area="" asp-page="/About">About</a>
+                        <a class="nav-link" asp-area="" asp-page="/TermsOfUse">Termos de uso</a>
+                        <a class="nav-link" asp-area="" asp-page="/About">Sobre</a>
                         @if (User.IsInRole(agot_bg_website.Infrastructure.Auth.RoleNames.Admin))
                         {
                             <a class="nav-link" asp-area="Admin" asp-page="/Index">Admin</a>
                         }
                     </div>
                     <div class="dropdown dropdown-end lg:hidden">
-                        <div tabindex="0" role="button" class="btn btn-ghost btn-square" aria-label="Open menu">
+                        <div tabindex="0" role="button" class="btn btn-ghost btn-square" aria-label="Abrir menu">
                             <i class="fas fa-bars text-lg"></i>
                         </div>
                         <ul tabindex="0" class="dropdown-content menu z-20 mt-2 w-56 rounded-box border border-base-300 bg-base-200 p-2 shadow-md">
                             @if (User.Identity?.IsAuthenticated ?? false)
                             {
-                                <li><a asp-area="" asp-page="/Games">All Games</a></li>
-                                <li><a asp-area="" asp-page="/MyGames">My Games</a></li>
-                                <li><a asp-area="" asp-page="/Users">Users</a></li>
+                                <li><a asp-area="" asp-page="/Games">Todas as partidas</a></li>
+                                <li><a asp-area="" asp-page="/MyGames">Minhas partidas</a></li>
+                                <li><a asp-area="" asp-page="/Users">Jogadores</a></li>
                                 <li><a href="https://faq.swordsandravens.net" target="_blank" rel="noopener">FAQ</a></li>
                             }
-                            <li><a asp-area="" asp-page="/TermsOfUse">Terms of Use</a></li>
-                            <li><a asp-area="" asp-page="/About">About</a></li>
+                            <li><a asp-area="" asp-page="/TermsOfUse">Termos de uso</a></li>
+                            <li><a asp-area="" asp-page="/About">Sobre</a></li>
                             @if (User.IsInRole(agot_bg_website.Infrastructure.Auth.RoleNames.Admin))
                             {
                                 <li><a asp-area="Admin" asp-page="/Index">Admin</a></li>
@@ -111,7 +111,7 @@
                    this doesn't depend on DaisyUI's two-child grid layout at all. *@
                 <span>
                     <i class="fa-solid fa-flask-vial" aria-hidden="true"></i>
-                    This is a test instance.
+                    Este é um site de testes.
                 </span>
             </div>
         }
@@ -128,13 +128,13 @@
     <footer class="border-t border-base-300 py-3 text-sm opacity-70 shrink-0 bg-base-100 z-20">
         <div class="page-container flex items-center justify-center gap-1">
             <span>&copy; 2026 - Swords and Ravens -</span>
-            <a class="link link-hover" asp-area="" asp-page="/Privacy">Privacy</a>
+            <a class="link link-hover" asp-area="" asp-page="/Privacy">Privacidade</a>
             <span>-</span>
-            <a class="link link-hover" asp-area="" asp-page="/TermsOfUse">Terms of Use</a>
+            <a class="link link-hover" asp-area="" asp-page="/TermsOfUse">Termos de uso</a>
             <span>-</span>
-            <a class="link link-hover" asp-area="" asp-page="/Contact">Contact</a>
+            <a class="link link-hover" asp-area="" asp-page="/Contact">Contato</a>
             <span>-</span>
-            <a class="link link-hover" href="https://ko-fi.com/gereon77" target="_blank" rel="noopener noreferrer">Donate</a>
+            <a class="link link-hover" href="https://ko-fi.com/gereon77" target="_blank" rel="noopener noreferrer">Doar (projeto original)</a>
         </div>
     </footer>
     <partial name="_CookieConsentPartial" />
@@ -142,43 +142,43 @@
     <dialog id="game-settings-modal" class="modal">
         <div class="modal-box border border-base-300">
             <form method="dialog">
-                <button class="btn btn-sm btn-circle btn-ghost absolute right-3 top-3" aria-label="Close">
+                <button class="btn btn-sm btn-circle btn-ghost absolute right-3 top-3" aria-label="Fechar">
                     <i class="fas fa-xmark"></i>
                 </button>
             </form>
             <h3 id="game-settings-modal-title" class="font-bold text-lg pr-10 break-words"></h3>
-            <p id="game-settings-modal-owner-section" class="text-sm opacity-70">Hosted by <span id="game-settings-modal-owner"></span></p>
-            <p class="text-sm opacity-70">Created at <span id="game-settings-modal-created-at"></span><span id="game-settings-modal-last-active-at-section" class="hidden"> · Last action at <span id="game-settings-modal-last-active-at"></span></span></p>
+            <p id="game-settings-modal-owner-section" class="text-sm opacity-70">Criada por <span id="game-settings-modal-owner"></span></p>
+            <p class="text-sm opacity-70">Criada em <span id="game-settings-modal-created-at"></span><span id="game-settings-modal-last-active-at-section" class="hidden"> · Última ação em <span id="game-settings-modal-last-active-at"></span></span></p>
             <div class="divider my-2"></div>
             <dl class="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-sm">
-                <dt class="opacity-70">Setup</dt>
+                <dt class="opacity-70">Configuração</dt>
                 <dd id="game-settings-modal-setup"></dd>
-                <dt class="opacity-70">Players</dt>
+                <dt class="opacity-70">Jogadores</dt>
                 <dd id="game-settings-modal-players"></dd>
-                <dt id="game-settings-modal-round-label" class="opacity-70 hidden">Round</dt>
+                <dt id="game-settings-modal-round-label" class="opacity-70 hidden">Rodada</dt>
                 <dd id="game-settings-modal-round" class="hidden"></dd>
             </dl>
             <div class="mt-4">
-                <p class="opacity-70 text-sm mb-1">Settings</p>
+                <p class="opacity-70 text-sm mb-1">Opções</p>
                 <ul id="game-settings-modal-settings" class="list-disc list-inside space-y-0.5 text-sm"></ul>
-                <p id="game-settings-modal-no-settings" class="opacity-70 italic text-sm hidden">No optional settings enabled</p>
+                <p id="game-settings-modal-no-settings" class="opacity-70 italic text-sm hidden">Nenhuma opção extra ativada</p>
             </div>
             <div id="game-settings-modal-status-footer" class="hidden">
                 <div class="divider my-2"></div>
                 <p class="text-sm flex items-center gap-2">
-                    <i id="game-settings-modal-status-crown" class="fa-solid fa-crown" title="Won" aria-label="Won" hidden></i>
+                    <i id="game-settings-modal-status-crown" class="fa-solid fa-crown" title="Venceu" aria-label="Venceu" hidden></i>
                     <span id="game-settings-modal-status-label" class="opacity-70"></span>
                     <span id="game-settings-modal-status-value"></span>
                 </p>
             </div>
             <div class="modal-action">
                 <form method="dialog">
-                    <button class="btn btn-sm">Close</button>
+                    <button class="btn btn-sm">Fechar</button>
                 </form>
             </div>
         </div>
         <form method="dialog" class="modal-backdrop">
-            <button>close</button>
+            <button>fechar</button>
         </form>
     </dialog>
 

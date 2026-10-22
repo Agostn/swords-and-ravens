@@ -52,18 +52,18 @@ namespace agot_bg_website.Areas.Identity.Pages.Account
             [Required]
             [StringLength(
                 7,
-                ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.",
+                ErrorMessage = "O {0} precisa ter de {2} a {1} caracteres.",
                 MinimumLength = 6
             )]
             [DataType(DataType.Text)]
-            [Display(Name = "Authenticator code")]
+            [Display(Name = "código do autenticador")]
             public string TwoFactorCode { get; set; }
 
             /// <summary>
             ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
             ///     directly from your code. This API may change or be removed in future releases.
             /// </summary>
-            [Display(Name = "Remember this machine")]
+            [Display(Name = "Lembrar deste aparelho")]
             public bool RememberMachine { get; set; }
         }
 
@@ -75,7 +75,7 @@ namespace agot_bg_website.Areas.Identity.Pages.Account
             if (user == null)
             {
                 throw new InvalidOperationException(
-                    $"Unable to load two-factor authentication user."
+                    $"Não foi possível carregar o usuário da verificação em duas etapas."
                 );
             }
 
@@ -98,7 +98,7 @@ namespace agot_bg_website.Areas.Identity.Pages.Account
             if (user == null)
             {
                 throw new InvalidOperationException(
-                    $"Unable to load two-factor authentication user."
+                    $"Não foi possível carregar o usuário da verificação em duas etapas."
                 );
             }
 
@@ -130,7 +130,7 @@ namespace agot_bg_website.Areas.Identity.Pages.Account
                     "Invalid authenticator code entered for user with ID '{UserId}'.",
                     user.Id
                 );
-                ModelState.AddModelError(string.Empty, "Invalid authenticator code.");
+                ModelState.AddModelError(string.Empty, "Código do autenticador inválido.");
                 return Page();
             }
         }

@@ -415,8 +415,8 @@ public static class ChatWebSocketApi
         )
         {
             var fromHouse = data.TryGetProperty("fromHouse", out var fromHouseElement)
-                ? fromHouseElement.GetString() ?? "Unknown"
-                : "Unknown";
+                ? fromHouseElement.GetString() ?? "Desconhecida"
+                : "Desconhecida";
             await NotifyChatPartnerAsync(
                 context,
                 db,
@@ -512,7 +512,7 @@ public static class ChatWebSocketApi
             recipient.UserName,
             recipient.Email,
             $"""
-            <p>House {encodedHouse} has sent you a raven in the game &quot;{encodedGameName}&quot;:</p>
+            <p>A Casa {encodedHouse} mandou um corvo para você na partida &quot;{encodedGameName}&quot;:</p>
             <blockquote>{encodedMessage}</blockquote>
             <p><a href="{encodedGameUrl}">{encodedGameUrl}</a></p>
             """
@@ -520,7 +520,7 @@ public static class ChatWebSocketApi
 
         await emailSender.SendEmailAsync(
             recipient.Email,
-            $"You received a new private message in game: '{game.Name}'",
+            $"Você recebeu uma mensagem privada na partida '{game.Name}'",
             body
         );
     }
