@@ -1,0 +1,78 @@
+import { observable } from "mobx";
+import { isMobile } from "react-device-detect";
+
+/**
+ * Preferências da tela nova da partida (layout "mapa em tela cheia").
+ * Ficam no navegador de cada jogador. Se o armazenamento estiver
+ * bloqueado, usamos os valores padrão e nada quebra.
+ */
+
+const KEY = "hud-settings";
+
+interface StoredHudSettings {
+  classicLayout?: boolean;
+  rightPanelOpen?: boolean;
+  actionDockMinimized?: boolean;
+}
+
+function load(): StoredHudSettings {
+  try {
+    const raw = window.localStorage.getItem(KEY);
+    return raw ? (JSON.parse(raw) as StoredHudSettings) : {};
+  } catch {
+    return {};
+  }
+}
+
+class HudSettings {
+  @observable classicLayout = false;
+  @observable rightPanelOpen = true;
+  @observable actionDockMinimized = false;
+
+  constructor() {
+    const s = load();
+    this.classicLayout = s.classicLayout ?? false;
+    this.rightPanelOpen =
+      s.rightPanelOpen ??
+      (typeof window != "undefined" && window.innerWidth >= 1280);
+    this.actionDockMinimized = s.actionDockMinimized ?? false;
+  }
+
+  /** A tela nova vale para computador. No celular continua a antiga por enquanto. */
+  get hudActive(): boolean {
+    return !isMobile && !this.classicLayout;
+  }
+
+  save(): void {
+    try {
+      window.localStorage.setItem(
+        KEY,
+        JSON.stringify({
+          classicLayout: this.classicLayout,
+          rightPanelOpen: this.rightPanelOpen,
+          actionDockMinimized: this.actionDockMinimized
+        })
+      );
+    } catch {
+      // sem armazenamento: as escolhas valem só até recarregar a página
+    }
+  }
+
+  setClassicLayout(value: boolean): void {
+    this.classicLayout = value;
+    this.save();
+  }
+
+  toggleRightPanel(): void {
+    this.rightPanelOpen = !this.rightPanelOpen;
+    this.save();
+  }
+
+  setActionDockMinimized(value: boolean): void {
+    this.actionDockMinimized = value;
+    this.save();
+  }
+}
+
+const hudSettings = new HudSettings();
+export default hudSettings;

@@ -68,6 +68,9 @@ interface GameStateColumnProps {
   gameClient: GameClient;
   mapControls: MapControls;
   onColumnSwapClick: (e: React.MouseEvent<HTMLButtonElement>) => void;
+  // Tela nova (mapa em tela cheia): "status" mostra só a barra de rodada,
+  // fase e Selvagens; "action" mostra só o painel da jogada atual.
+  hudPart?: "status" | "action";
 }
 
 @observer
@@ -151,22 +154,7 @@ export default class GameStateColumn extends Component<GameStateColumnProps> {
     const isPhaseActive = (phase: any): boolean =>
       this.ingame.childGameState instanceof phase.gameState;
 
-    return (
-      <div className="flex-ratio-container">
-        <Card
-          key={`leaf-state-${this.props.ingame.entireGame.leafStateId}`}
-          id="game-state-panel"
-          className="flex-sized-to-content mb-2"
-          border={border}
-          style={{
-            maxHeight: "65%",
-            paddingRight: "2px",
-            borderWidth: "3px",
-            overflowY: "scroll"
-          }}
-        >
-          <Row className="no-space-around">
-            <Col>
+    const phaseAndState = (
               <ListGroup variant="flush">
                 {phases.some((phase) => isPhaseActive(phase)) && (
                   <ListGroupItem>
@@ -255,7 +243,48 @@ export default class GameStateColumn extends Component<GameStateColumnProps> {
                   )}
                 </ListGroupItem>
               </ListGroup>
-            </Col>
+    );
+
+    if (this.props.hudPart == "action") {
+      return (
+        <div
+          key={`leaf-state-${this.props.ingame.entireGame.leafStateId}`}
+          id="game-state-panel"
+          className="hud-game-state"
+        >
+          {phaseAndState}
+        </div>
+      );
+    }
+
+    if (this.props.hudPart == "status") {
+      return this.renderHudStatus(
+        roundWarning,
+        roundCritical,
+        wildlingsWarning,
+        wildlingsCritical,
+        knowsWildlingCard,
+        nextWildlingCard?.type,
+        phases.find((p) => isPhaseActive(p))?.name ?? null
+      );
+    }
+
+    return (
+      <div className="flex-ratio-container">
+        <Card
+          key={`leaf-state-${this.props.ingame.entireGame.leafStateId}`}
+          id="game-state-panel"
+          className="flex-sized-to-content mb-2"
+          border={border}
+          style={{
+            maxHeight: "65%",
+            paddingRight: "2px",
+            borderWidth: "3px",
+            overflowY: "scroll"
+          }}
+        >
+          <Row className="no-space-around">
+            <Col>{phaseAndState}</Col>
             <Col xs="auto" className="mx-1 px-0">
               <Col
                 style={{ width: "28px", fontSize: "1.375rem" }}
@@ -378,6 +407,142 @@ export default class GameStateColumn extends Component<GameStateColumnProps> {
           ingame={this.ingame}
           mapControls={this.mapControls}
         />
+      </div>
+    );
+  }
+
+  // Barra compacta do canto superior esquerdo na tela nova.
+  private renderHudStatus(
+    roundWarning: boolean,
+    roundCritical: boolean,
+    wildlingsWarning: boolean,
+    wildlingsCritical: boolean,
+    knowsWildlingCard: boolean,
+    nextWildlingCard: WildlingCardType | undefined,
+    activePhaseName: string | null
+  ): ReactNode {
+    const wildlingPercent = Math.round(
+      (this.game.wildlingStrength / MAX_WILDLING_STRENGTH) * 100
+    );
+    return (
+      <div className="hud-panel hud-status" role="status">
+        <OverlayTrigger
+          overlay={
+            <Tooltip id="hud-round-tooltip">
+              {t("ingame.roundOf", {
+                turn: this.game.turn,
+                max: this.game.maxTurns
+              })}
+            </Tooltip>
+          }
+          placement="bottom"
+        >
+          <span
+            className="hud-round"
+            onMouseEnter={() => this.highlightRegionsOfHouses()}
+            onMouseLeave={() => this.highlightedRegions.clear()}
+          >
+            <img
+              src={hourglassImage}
+              width={20}
+              className={classNames(
+                { "dye-warning": roundWarning },
+                { "dye-critical": roundCritical }
+              )}
+              alt=""
+            />
+            <span
+              className={classNames({
+                "txt-warning": roundWarning,
+                "txt-critical": roundCritical
+              })}
+            >
+              {t("hud.status.round", {
+                turn: this.game.turn,
+                max: this.game.maxTurns
+              })}
+            </span>
+          </span>
+        </OverlayTrigger>
+        {activePhaseName && (
+          <>
+            <span className="hud-divider" />
+            <OverlayTrigger
+              overlay={this.renderRemainingWesterosCards()}
+              trigger="click"
+              placement="bottom-start"
+              rootClose
+            >
+              <button type="button" className="hud-text-button">
+                <span className="hud-muted">{t("hud.status.phase")}</span>{" "}
+                <b>{activePhaseName}</b>
+              </button>
+            </OverlayTrigger>
+          </>
+        )}
+        <span className="hud-divider" />
+        <OverlayTrigger
+          overlay={this.renderWildlingDeckPopover(
+            knowsWildlingCard,
+            nextWildlingCard
+          )}
+          trigger="click"
+          placement="bottom-start"
+          rootClose
+        >
+          <button
+            type="button"
+            className={classNames("hud-text-button", {
+              "weak-box-outline": knowsWildlingCard
+            })}
+            title={t("hud.status.wildlingsHint")}
+          >
+            <img
+              src={mammothImage}
+              width={20}
+              alt=""
+              className={classNames(
+                { "dye-warning": wildlingsWarning },
+                { "dye-critical": wildlingsCritical }
+              )}
+            />
+            <span className="hud-meter" aria-hidden="true">
+              <span
+                className={classNames("hud-meter-fill", {
+                  warning: wildlingsWarning,
+                  critical: wildlingsCritical
+                })}
+                style={{ width: `${wildlingPercent}%` }}
+              />
+            </span>
+            <b
+              className={classNames({
+                "txt-warning": wildlingsWarning,
+                "txt-critical": wildlingsCritical
+              })}
+            >
+              {this.game.wildlingStrength}
+            </b>
+          </button>
+        </OverlayTrigger>
+        {this.game.dragonStrengthTokens.length > 0 && (
+          <>
+            <span className="hud-divider" />
+            <OverlayTrigger
+              overlay={this.renderDragonStrengthTooltip()}
+              placement="bottom"
+            >
+              <span
+                className="hud-round"
+                onMouseEnter={() => this.highlightRegionsWithDragons()}
+                onMouseLeave={() => this.highlightedRegions.clear()}
+              >
+                <img src={spikedDragonHeadImage} width={20} alt="" />
+                <b>{this.game.currentDragonStrength}</b>
+              </span>
+            </OverlayTrigger>
+          </>
+        )}
       </div>
     );
   }

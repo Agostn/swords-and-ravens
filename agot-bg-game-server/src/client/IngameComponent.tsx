@@ -78,6 +78,8 @@ import LoanCardComponent from "./game-state-panel/utils/LoanCardComponent";
 import { customsOfficer } from "../common/ingame-game-state/game-data-structure/loan-card/loanCardTypes";
 import { LoanPurchased } from "../common/ingame-game-state/game-data-structure/GameLog";
 import { t, tr } from "./i18n/i18n";
+import HudLayout from "./hud/HudLayout";
+import hudSettings from "./hud/hudSettings";
 
 export interface ColumnOrders {
   gameStateColumn: number;
@@ -240,6 +242,19 @@ export default class IngameComponent extends Component<IngameComponentProps> {
         </Col>
       );
     }
+    if (hudSettings.hudActive) {
+      return (
+        <HudLayout
+          gameClient={this.gameClient}
+          ingame={this.ingame}
+          mapControls={this.mapControls}
+          tracks={tracks}
+          gameControlsPopover={this.renderGameControlsPopover()}
+          onColumnSwapClick={(e) => this.onColumnSwap(e)}
+        />
+      );
+    }
+
     const columnOrder = this.user?.settings.gameStateColumnRight
       ? { housesInfosColumn: 1, mapColumn: 2, gameStateColumn: 3 }
       : { gameStateColumn: 1, mapColumn: 2, housesInfosColumn: 3 };
@@ -402,6 +417,20 @@ export default class IngameComponent extends Component<IngameComponentProps> {
               width={24}
             />
           </OverlayTrigger>
+        </button>
+        <button
+          type="button"
+          className="btn btn-sm btn-warning"
+          title={t("hud.menu.newLayoutHint")}
+          onClick={() => hudSettings.setClassicLayout(false)}
+          style={{
+            position: "fixed",
+            right: this.user?.settings.gameStateColumnRight ? "auto" : "4px",
+            left: this.user?.settings.gameStateColumnRight ? "4px" : "auto",
+            top: "125px"
+          }}
+        >
+          {t("hud.menu.newLayout")}
         </button>
       </>
     );
@@ -989,7 +1018,10 @@ export default class IngameComponent extends Component<IngameComponentProps> {
       "dontShowScrollbarHintsAgain"
     );
 
-    const dontShowAgain = isMobile || (dontShowAgainFromStorage ?? false);
+    // Na tela nova o mapa tem zoom próprio, então as dicas de barra de
+    // rolagem e de zoom do navegador não se aplicam.
+    const dontShowAgain =
+      isMobile || hudSettings.hudActive || (dontShowAgainFromStorage ?? false);
     if (
       screen.width < 1920 &&
       screen.height < 1080 &&

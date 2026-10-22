@@ -37,6 +37,7 @@ import ReplayComponent from "./ReplayComponent";
 import ConditionalWrap from "./utils/ConditionalWrap";
 import classNames from "classnames";
 import { t, tr } from "./i18n/i18n";
+import hudSettings from "./hud/hudSettings";
 
 const yourTurnToastAnimation = cssTransition({
   enter: "slide-in-elliptic-top-fwd",
@@ -94,11 +95,18 @@ export default class EntireGameComponent extends Component<EntireGameComponentPr
       <>
         <Col
           xs={12}
-          className={
+          className={classNames(
             this.entireGame.childGameState instanceof IngameGameState
               ? "pb-0"
-              : "pb-2"
-          }
+              : "pb-2",
+            {
+              // Tela nova: o cabeçalho vira uma faixa flutuante no topo
+              "hud-game-header":
+                this.entireGame.childGameState instanceof IngameGameState &&
+                !this.entireGame.ingameGameState?.replayManager.isReplayMode &&
+                hudSettings.hudActive
+            }
+          )}
         >
           <Row
             className={classNames("justify-content-center align-items-center", {

@@ -10,6 +10,7 @@ Gravidade: 🔴 alta · 🟠 média · 🟡 baixa · Situação: ✅ resolvido �
 1. **Checagem de tipos:** `cd agot-bg-game-server && node_modules/.bin/tsc --noEmit -p .` (precisa dar 0 erros).
 2. **Build do cliente:** `yarn run run-client` precisa terminar com "compiled successfully". **Obrigatório:** o `tsc` não acusa expressão regular inválida (ex.: `a)` sem escape); só o build do webpack pega.
 2b. **Testes da tradução:** `node_modules/.bin/jest tests/i18n` (paridade de chaves en/pt-BR, parâmetros, tags, cartas e textos do servidor).
+2c. **Tela nova:** abrir o jogo em 1440×900 e 1920×1080, testar zoom (roda do mouse e botões), arrastar, mini-mapa, recolher o painel das Casas, minimizar a jogada, abrir o chat e o botão "Tela antiga" / "Tela nova".
 3. **Partida de teste com o bot:** apague `src/server/website-client/local-entire-game.json`, reinicie o servidor, rode `tools/i18n/game.js` e depois `tools/i18n/bot.js` (joga com 3 Casas e tira prints). Confira os prints e o log do servidor.
 4. **Teste de travamento:** `tools/qa/crashtest.js` manda uma mensagem inválida de propósito; o servidor precisa continuar rodando.
 5. **Textos em inglês sobrando:** `node tools/i18n/strings.js <arquivos>` (jogo) e `python3 tools/i18n/site/extract.py <arquivos>` (site .NET; linhas marcadas "EN?").
@@ -58,6 +59,17 @@ Gravidade: 🔴 alta · 🟠 média · 🟡 baixa · Situação: ✅ resolvido �
 | W8 | FAQ e Discord do projeto original removidos do site e do jogo (22/out). Se o projeto ganhar FAQ/Discord próprios, colocar os links de volta em `_Layout.cshtml`, `Games.cshtml`, `MyGames.cshtml` e `UserSettingsComponent.tsx`. | 🟡 | ✅ | — |
 | W7 | Visual: títulos dos cartões da página inicial quase invisíveis; texto de exemplo dos campos alinhado à direita. | 🟡 | ⏳ | Etapa de design. |
 
+## Tela nova da partida (mapa em tela cheia, branch `design-novo`)
+
+| # | Risco | Grav. | Situação | O que fazer |
+|---|---|---|---|---|
+| H1 | O mapa usa `transform: scale()`. O Xarrow (setas de marcha) mede posições na tela e erra com zoom. | 🟠 | ✅ 22/out | Na tela nova as setas são desenhadas nas coordenadas do mapa (`renderMapCoordinateMarchArrows` no `MapComponent`). Testado com zoom 1x e 2x. A tela antiga continua com o Xarrow. |
+| H2 | Outros componentes que medem posição na tela (getBoundingClientRect) dentro do mapa podem errar com zoom. As animações de unidades já corrigem a escala. | 🟡 | ⏳ | Ao mexer em algo do mapa que mede posição, dividir pela escala (ver `MovingUnit`). Testar com zoom diferente de 1. |
+| H3 | O painel das Casas reaproveita o `HouseInfoColumn`, que precisa de ~580px. Em painéis menores o conteúdo é reduzido com CSS `zoom` (Chrome, Edge, Safari e Firefox 126+). | 🟡 | 🛡️ | Fazer uma versão compacta das linhas das Casas na etapa de usabilidade. |
+| H4 | O celular continua com a tela antiga (`hudSettings.hudActive` é falso no celular). | 🟡 | ⏳ | Fazer a versão de celular (proposta do quadro de design) numa etapa própria. |
+| H5 | Batalha, Selvagens, rascunho de cartas (draft) e fim de jogo na tela nova ainda não foram vistos rodando (o bot não chega lá). O painel da jogada usa os mesmos componentes da tela antiga, então devem funcionar, mas podem ficar apertados (painel com 38% da altura e rolagem). | 🟠 | ⏳ | Conferir numa partida de teste com gente jogando. Se apertar, aumentar a altura do painel nessas fases. |
+| H6 | As preferências da tela nova (tela antiga, painel recolhido, zoom do mapa) ficam no navegador de cada um (`localStorage`). Em janela anônima voltam ao padrão. | 🟡 | 🛡️ | Aceitável. |
+
 ## Imagens, direitos e legal
 
 | # | Risco | Grav. | Situação | O que fazer |
@@ -71,4 +83,5 @@ Gravidade: 🔴 alta · 🟠 média · 🟡 baixa · Situação: ✅ resolvido �
 | # | Risco | Grav. | Situação | O que fazer |
 |---|---|---|---|---|
 | A1 | No ambiente do Claude, `registry.npmjs.org` está na lista de exceções do proxy e não resolve. | 🟡 | 🛡️ | Rodar yarn/npm com `NO_PROXY=localhost,127.0.0.1 no_proxy=localhost,127.0.0.1 npm_config_noproxy=localhost,127.0.0.1`. |
+| A3 | O servidor local precisa do `src/server/ClientMessage.json`, que é gerado (`yarn run generate-json-schemas`) e não fica no Git. Sem ele o servidor não liga. | 🟡 | 🛡️ | Rodar o comando depois de instalar as dependências (o Codespaces já faz). |
 | A2 | Scripts que matam processos por nome (`pkill -f`, `pgrep -f`) podem matar o próprio terminal se o nome aparecer no comando. | 🟡 | 🛡️ | Usar `tools/qa/restart-server.sh` sozinho, sem outros comandos na mesma linha. |

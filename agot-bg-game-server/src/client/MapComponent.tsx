@@ -61,6 +61,7 @@ import Xarrow from "react-xarrows";
 import { getClassNameForDragonStrength } from "./WorldSnapshotComponent";
 import House from "../common/ingame-game-state/game-data-structure/House";
 import { t, tr } from "./i18n/i18n";
+import hudSettings from "./hud/hudSettings";
 
 export const MAP_HEIGHT = 1378;
 export const MAP_WIDTH = 741;
@@ -578,6 +579,13 @@ export default class MapComponent extends Component<MapComponentProps> {
       ? markers.filter(([u, r]) => isVisible(u.region) && isVisible(r))
       : markers;
 
+    // Na tela nova o mapa tem zoom (transform: scale), e o Xarrow mede as
+    // posições na tela, então as setas sairiam no lugar errado. Lá as setas
+    // são desenhadas direto nas coordenadas do mapa, de área para área.
+    if (hudSettings.hudActive) {
+      return [this.renderMapCoordinateMarchArrows(markers)];
+    }
+
     return markers.map(([unit, to]) => (
       <Xarrow
         key={`arrow-${unit.id}-${to.id}`}
@@ -596,6 +604,71 @@ export default class MapComponent extends Component<MapComponentProps> {
         tailSize={2}
       />
     ));
+  }
+
+  private renderMapCoordinateMarchArrows(markers: [Unit, Region][]): ReactNode {
+    // várias unidades indo da mesma área para a mesma área = uma seta só
+    const arrows = _.uniqBy(
+      markers.map(([unit, to]) => ({
+        from: unit.region,
+        to,
+        color: unit.allegiance.getHighlightColor()
+      })),
+      (a) => `${a.from.id}->${a.to.id}`
+    );
+    const colors = _.uniq(arrows.map((a) => a.color));
+
+    return (
+      <svg
+        key="march-arrows-map-coordinates"
+        className="march-arrows-overlay"
+        width={this.mapWidth}
+        height={MAP_HEIGHT}
+      >
+        <defs>
+          {colors.map((c, i) => (
+            <marker
+              key={`march-arrow-head-${i}`}
+              id={`march-arrow-head-${i}`}
+              viewBox="0 0 10 10"
+              refX="6"
+              refY="5"
+              markerWidth="4"
+              markerHeight="4"
+              orient="auto-start-reverse"
+            >
+              <path d="M 0 0 L 10 5 L 0 10 z" fill={c} />
+            </marker>
+          ))}
+        </defs>
+        {arrows.map((a) => {
+          const x1 = a.from.unitSlot.point.x;
+          const y1 = a.from.unitSlot.point.y;
+          const x2 = a.to.unitSlot.point.x;
+          const y2 = a.to.unitSlot.point.y;
+          // curva suave: ponto de controle deslocado para o lado
+          const mx = (x1 + x2) / 2;
+          const my = (y1 + y2) / 2;
+          const len = Math.hypot(x2 - x1, y2 - y1) || 1;
+          const bend = Math.min(60, len * 0.25);
+          const cx = mx - ((y2 - y1) / len) * bend;
+          const cy = my + ((x2 - x1) / len) * bend;
+          return (
+            <g key={`march-arrow-${a.from.id}-${a.to.id}`}>
+              <circle cx={x1} cy={y1} r={6} fill={a.color} />
+              <path
+                className="march-arrow-path"
+                d={`M ${x1} ${y1} Q ${cx} ${cy} ${x2} ${y2}`}
+                stroke={a.color}
+                strokeWidth={5}
+                fill="none"
+                markerEnd={`url(#march-arrow-head-${colors.indexOf(a.color)})`}
+              />
+            </g>
+          );
+        })}
+      </svg>
+    );
   }
 
   private renderLoanCardSlots(

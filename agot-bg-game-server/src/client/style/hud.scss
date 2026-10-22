@@ -1,0 +1,564 @@
+// Tela nova da partida: mapa em tela cheia com painéis flutuantes (proposta B).
+
+$hud-bg: rgba(23, 19, 15, 0.94);
+$hud-bg-solid: #1e1914;
+$hud-line: #3a3128;
+$hud-text: #ede6d8;
+$hud-muted: #a99e8b;
+$hud-gold: #e2b65a;
+$hud-gold-ink: #1a140c;
+$hud-blue: #3e7bd6;
+$hud-red: #c9473b;
+$hud-gap: 12px;
+
+.hud-root {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  overflow: hidden;
+  background: #0c0a08;
+  color: $hud-text;
+}
+
+// ---------- mapa ----------
+
+.hud-map-viewport {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  touch-action: none; // o arrastar e a pinça são tratados por nós
+  cursor: grab;
+  user-select: none;
+
+  &.dragging {
+    cursor: grabbing;
+  }
+}
+
+.hud-map-content {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform-origin: 0 0;
+  will-change: transform;
+
+  .map {
+    border-radius: 6px;
+    box-shadow: 0 0 60px rgba(0, 0, 0, 0.6);
+  }
+}
+
+.hud-map-controls {
+  position: absolute;
+  right: $hud-gap;
+  top: 64px;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  z-index: 3;
+  cursor: default;
+}
+
+.hud-zoom-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.hud-minimap {
+  position: relative;
+  border-radius: 8px;
+  border: 1px solid #4a4036;
+  background-size: 100% 100%;
+  background-color: #0c0a08;
+  opacity: 0.9;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+}
+
+.hud-minimap-view {
+  position: absolute;
+  border: 2px solid $hud-gold;
+  border-radius: 2px;
+  background: rgba(226, 182, 90, 0.12);
+  pointer-events: none;
+}
+
+// ---------- peças comuns ----------
+
+.hud-panel {
+  background: $hud-bg;
+  border: 1px solid $hud-line;
+  border-radius: 12px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.45);
+  color: $hud-text;
+}
+
+.hud-muted {
+  color: $hud-muted;
+}
+
+.hud-icon-button {
+  min-width: 40px;
+  height: 40px;
+  padding: 0 8px;
+  border-radius: 10px;
+  border: 1px solid $hud-line;
+  background: $hud-bg;
+  color: $hud-text;
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+
+  &:hover {
+    border-color: $hud-gold;
+  }
+
+  &:focus-visible {
+    outline: 2px solid $hud-gold;
+    outline-offset: 2px;
+  }
+
+  &.small {
+    min-width: 32px;
+    height: 32px;
+    font-size: 18px;
+  }
+
+  img {
+    display: block;
+  }
+}
+
+.hud-text-icon-button {
+  font-size: 13px;
+  font-weight: 500;
+  padding: 0 12px;
+}
+
+.hud-text-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 6px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: $hud-text;
+  font-size: 14px;
+  cursor: pointer;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.06);
+  }
+}
+
+.hud-divider {
+  width: 1px;
+  height: 20px;
+  background: $hud-line;
+}
+
+.hud-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 10px 8px 14px;
+  border-bottom: 1px solid $hud-line;
+  font-size: 14px;
+}
+
+// ---------- topo ----------
+
+.hud-top-left {
+  position: absolute;
+  top: $hud-gap;
+  left: $hud-gap;
+  z-index: 4;
+}
+
+.hud-status {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 10px;
+  min-height: 44px;
+  font-size: 14px;
+}
+
+.hud-round {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.hud-meter {
+  width: 64px;
+  height: 6px;
+  border-radius: 3px;
+  background: #2e2720;
+  overflow: hidden;
+  display: inline-block;
+}
+
+.hud-meter-fill {
+  display: block;
+  height: 100%;
+  background: #c9773b;
+
+  &.warning {
+    background: #f39c12;
+  }
+
+  &.critical {
+    background: #e74c3c;
+  }
+}
+
+.hud-top-right {
+  position: absolute;
+  top: $hud-gap;
+  right: $hud-gap;
+  z-index: 4;
+  display: flex;
+  gap: 8px;
+}
+
+// O cabeçalho da partida (relógio, nome, avisos) vira uma faixa no topo, ao centro.
+.hud-game-header {
+  position: fixed !important;
+  top: $hud-gap;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 11;
+  width: auto !important;
+  max-width: calc(100vw - 900px);
+  min-width: 260px;
+  padding: 2px 12px !important;
+  background: $hud-bg;
+  border: 1px solid $hud-line;
+  border-radius: 12px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.45);
+  flex: none !important;
+
+  > .row {
+    flex-wrap: nowrap;
+    margin: 0;
+  }
+
+  h4 {
+    font-size: 15px;
+    margin: 0;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .col-auto {
+    padding-left: 6px !important;
+    padding-right: 6px !important;
+  }
+
+  img {
+    max-height: 26px;
+    width: auto;
+  }
+}
+
+@media (max-width: 1400px) {
+  .hud-game-header {
+    max-width: calc(100vw - 760px);
+  }
+}
+
+// ---------- Casas (direita) ----------
+
+.hud-right-panel {
+  position: absolute;
+  top: 64px;
+  right: $hud-gap;
+  bottom: $hud-gap;
+  width: var(--hud-right-panel-width, 420px);
+  display: flex;
+  flex-direction: column;
+  z-index: 3;
+  overflow: hidden;
+}
+
+.hud-panel-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 6px;
+
+  // O HouseInfoColumn foi feito para uma coluna; aqui ele rola dentro do painel.
+  .flex-ratio-container {
+    height: auto;
+  }
+
+  .card {
+    background: transparent;
+    border-color: $hud-line;
+  }
+
+  .flex-fill-remaining,
+  .flex-sized-to-content {
+    flex: none;
+    overflow: visible;
+  }
+}
+
+.hud-house-strip {
+  position: absolute;
+  top: 64px;
+  right: $hud-gap;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.hud-house-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px 4px 4px;
+  border-radius: 999px;
+  background: $hud-bg;
+  border: 2px solid $hud-line;
+
+  &.mine {
+    border-color: $hud-gold;
+  }
+}
+
+.hud-house-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  img {
+    width: 20px;
+    height: 20px;
+    filter: invert(1);
+  }
+}
+
+.hud-house-vp {
+  min-width: 14px;
+  font-weight: 700;
+  font-size: 14px;
+  text-align: center;
+}
+
+// ---------- jogada (embaixo, no centro) ----------
+
+.hud-action-dock {
+  position: absolute;
+  bottom: $hud-gap;
+  left: 356px; // depois do chat
+  margin-left: auto;
+  margin-right: auto;
+  max-width: 900px;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  border-width: 2px;
+  background: rgba(30, 25, 20, 0.97);
+
+  &.own-turn {
+    border-color: $hud-gold;
+    box-shadow:
+      0 0 0 4px rgba(226, 182, 90, 0.15),
+      0 10px 40px rgba(0, 0, 0, 0.55);
+  }
+
+  // Minimizado: só uma faixa curta no centro, com o aviso de vez.
+  &.minimized {
+    left: 50% !important;
+    right: auto !important;
+    transform: translateX(-50%);
+    width: min(520px, calc(100vw - 720px));
+    min-width: 280px;
+  }
+}
+
+.hud-action-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 8px 8px 12px;
+  font-size: 14px;
+}
+
+.hud-action-summary {
+  flex: 1;
+  min-width: 0;
+  color: $hud-muted;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.hud-badge {
+  flex: none;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  padding: 4px 8px;
+  border-radius: 4px;
+  background: #2e2720;
+  color: #d8d0c2;
+
+  &.own-turn {
+    background: $hud-gold;
+    color: $hud-gold-ink;
+  }
+
+  &.cancelled {
+    background: $hud-red;
+    color: #fff;
+  }
+
+  &.ended {
+    background: #7fb77e;
+    color: #10180f;
+  }
+}
+
+.hud-action-body {
+  max-height: 38vh;
+  overflow-y: auto;
+  border-top: 1px solid $hud-line;
+
+  .list-group-item {
+    background: transparent;
+  }
+}
+
+// ---------- chat e histórico (embaixo, à esquerda) ----------
+
+.hud-chat-dock {
+  position: absolute;
+  left: $hud-gap;
+  bottom: $hud-gap;
+  z-index: 6;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.hud-chat-button {
+  width: 332px;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 12px;
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+
+  &:hover {
+    border-color: $hud-gold;
+  }
+}
+
+.hud-chat-preview {
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.hud-count {
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  border-radius: 11px;
+  background: $hud-red;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hud-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #f39c12;
+  flex: none;
+}
+
+.hud-chat-panel {
+  width: min(460px, calc(100vw - 24px));
+  height: min(640px, calc(100vh - 100px));
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.hud-chat-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+
+  > .card {
+    flex: 1;
+    height: 100% !important;
+    max-height: 100% !important;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+  }
+}
+
+// ---------- telas menores ----------
+
+@media (max-width: 1280px) {
+  .hud-action-dock {
+    left: $hud-gap;
+    bottom: 76px;
+  }
+}
+
+// Setas de marcha desenhadas nas coordenadas do mapa (tela nova)
+.march-arrows-overlay {
+  position: absolute;
+  left: 0;
+  top: 0;
+  pointer-events: none;
+  z-index: 5;
+  overflow: visible;
+}
+
+.march-arrow-path {
+  stroke-dasharray: 14 8;
+  animation: march-arrow-dash 1s linear infinite;
+  filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0.8));
+}
+
+@keyframes march-arrow-dash {
+  to {
+    stroke-dashoffset: -22;
+  }
+}
