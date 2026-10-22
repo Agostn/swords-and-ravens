@@ -52,6 +52,7 @@ Gravidade: 🔴 alta · 🟠 média · 🟡 baixa · Situação: ✅ resolvido �
 | W4 | Mensagens padrão de validação do .NET vinham em inglês. | 🟡 | ✅ 22/out | Tradutor global (`Infrastructure/Localization`) + testes `PtBrValidationTests`. |
 | W5 | Cultura pt-BR muda formato de números (vírgula). Onde número vai para CSS/JS/API, tem que usar `InvariantCulture`. | 🟡 | 🛡️ | Conferido: código já usa `InvariantCulture`/`"O"` nesses pontos. Cuidar em código novo. |
 | W6 | Se o fork for juntado no `master`, o GitHub Actions (`deploy.yml`) tenta publicar no servidor do projeto original e falha (sem as senhas). | 🟡 | ⏳ | Desativar/ajustar `deploy.yml` antes da etapa de hospedagem. |
+| W8 | FAQ e Discord do projeto original removidos do site e do jogo (22/out). Se o projeto ganhar FAQ/Discord próprios, colocar os links de volta em `_Layout.cshtml`, `Games.cshtml`, `MyGames.cshtml` e `UserSettingsComponent.tsx`. | 🟡 | ✅ | — |
 | W7 | Visual: títulos dos cartões da página inicial quase invisíveis; texto de exemplo dos campos alinhado à direita. | 🟡 | ⏳ | Etapa de design. |
 
 ## Imagens, direitos e legal

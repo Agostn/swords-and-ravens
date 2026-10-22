@@ -107,15 +107,6 @@ export default class UserSettingsComponent extends Component<UserSettingsCompone
                 </Col>
               </Row>
               <Row className="justify-content-center mt-1 mb-1">
-                <a
-                  href="https://faq.swordsandravens.net"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  {t("userSettings.faq")}
-                </a>
-              </Row>
-              <Row className="justify-content-center mt-1 mb-1">
                 <LanguageSelectComponent />
               </Row>
             </div>
