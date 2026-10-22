@@ -139,6 +139,7 @@ const enIngame = {
   "hud.orders.regions": "Areas with an order",
   "hud.orders.progress": "{done} of {total}",
   "hud.orders.starred": "Special orders (★) used",
+  "hud.orders.restricted": "Forbidden this round by a Westeros card",
   "hud.orders.left": "{n} of {total} left",
   "hud.title.placeOrders": "Place your orders",
   "hud.title.raven": "Messenger Raven",
@@ -164,7 +165,14 @@ const enIngame = {
   "hud.recent.history": "History",
   "hud.chat.label": "Chat",
   "hud.chat.ravens": "Ravens",
-  "hud.chat.ravensHint": "Private messages (open the chat and pick a player)"
+  "hud.chat.ravensHint": "Private messages (open the chat and pick a player)",
+  "hud.title.wildlingBidding": "Wildling attack: bidding",
+  "hud.title.clashBidding": "Clash of Kings: bidding",
+  "hud.title.ties": "Breaking ties",
+  "hud.title.combat": "Battle",
+  "hud.title.wildlingsAttack": "Wildling attack",
+  "hud.title.clashOfKings": "Clash of Kings",
+  "hud.title.draft": "Draft"
 };
 
 export default enIngame;

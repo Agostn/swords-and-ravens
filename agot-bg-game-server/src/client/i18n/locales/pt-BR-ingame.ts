@@ -140,6 +140,7 @@ const ptBRIngame: { [key in keyof typeof enIngame]: string } = {
   "hud.orders.regions": "Áreas com ordem",
   "hud.orders.progress": "{done} de {total}",
   "hud.orders.starred": "Ordens especiais (★) usadas",
+  "hud.orders.restricted": "Proibida nesta rodada por uma carta de Westeros",
   "hud.orders.left": "Restam {n} de {total}",
   "hud.title.placeOrders": "Coloque suas ordens",
   "hud.title.raven": "Corvo Mensageiro",
@@ -165,7 +166,14 @@ const ptBRIngame: { [key in keyof typeof enIngame]: string } = {
   "hud.recent.history": "Histórico",
   "hud.chat.label": "Chat",
   "hud.chat.ravens": "Corvos",
-  "hud.chat.ravensHint": "Mensagens privadas (abra o chat e escolha um jogador)"
+  "hud.chat.ravensHint": "Mensagens privadas (abra o chat e escolha um jogador)",
+  "hud.title.wildlingBidding": "Ataque dos Selvagens: lances",
+  "hud.title.clashBidding": "A Fúria dos Reis: lances",
+  "hud.title.ties": "Desempate dos lances",
+  "hud.title.combat": "Batalha",
+  "hud.title.wildlingsAttack": "Ataque dos Selvagens",
+  "hud.title.clashOfKings": "A Fúria dos Reis",
+  "hud.title.draft": "Draft"
 };
 
 export default ptBRIngame;

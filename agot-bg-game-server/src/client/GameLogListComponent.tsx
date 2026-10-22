@@ -69,7 +69,16 @@ const HUD_SKIPPED_LOG_TYPES: string[] = [
   "wildling-card-revealed",
   "wildling-bidding",
   "clash-of-kings-bidding-done",
-  "clash-of-kings-final-ordering"
+  "clash-of-kings-final-ordering",
+  "westeros-card-executed",
+  "westeros-phase-began",
+  "planning-phase-began",
+  "action-phase-began",
+  "draft-house-cards-began",
+  "action-phase-resolve-raid-began",
+  "action-phase-resolve-march-began",
+  "action-phase-resolve-consolidate-power-began",
+  "user-house-assignments"
 ];
 
 interface GameLogListComponentProps {

@@ -729,7 +729,18 @@ $hud-display-font: "IM Fell English SC", Georgia, serif;
 }
 
 .hud-action-body {
-  max-height: 38vh;
+  // alto o bastante para os botões da jogada sempre aparecerem
+  max-height: calc(100vh - 150px);
+
+  // as cartas grandes (Westeros, Selvagens) ficam menores aqui dentro
+  .vertical-game-card.medium,
+  .vertical-game-card.fairly {
+    zoom: 0.62;
+  }
+
+  .horizontal-game-card.medium {
+    zoom: 0.75;
+  }
 
   .text-large {
     font-size: 1rem;
@@ -774,6 +785,7 @@ $hud-display-font: "IM Fell English SC", Georgia, serif;
 }
 
 .hud-order-token {
+  position: relative;
   display: inline-flex;
   flex-direction: column;
   align-items: center;
@@ -781,6 +793,19 @@ $hud-display-font: "IM Fell English SC", Georgia, serif;
 
   &.used {
     opacity: 0.32;
+  }
+
+  // proibida por carta de Westeros: risco vermelho por cima
+  &.restricted::after {
+    content: "";
+    position: absolute;
+    left: 2px;
+    top: 19px;
+    width: 36px;
+    height: 3px;
+    background: $hud-red;
+    transform: rotate(-45deg);
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.6);
   }
 }
 
@@ -829,15 +854,17 @@ $hud-display-font: "IM Fell English SC", Georgia, serif;
 }
 
 .hud-log-line {
-  max-height: 44px;
+  max-height: 34px; // duas linhas; o resto some suavemente
   overflow: hidden;
   margin-bottom: 4px;
+  mask-image: linear-gradient(180deg, #000 70%, transparent 100%);
 
   // alguns acontecimentos usam títulos grandes; aqui tudo fica do mesmo tamanho
   * {
     font-size: 12px !important;
     line-height: 1.4 !important;
     text-align: left !important;
+    justify-content: flex-start !important;
     margin: 0 !important;
   }
 
@@ -989,4 +1016,34 @@ $hud-display-font: "IM Fell English SC", Georgia, serif;
     left: $hud-gap;
     bottom: 130px;
   }
+}
+
+// Ficha da trilha (Trono, Espada, Corvo) em cima do brasão de quem a tem
+.hud-track-holder {
+  position: absolute;
+  top: -7px;
+  right: -6px;
+  width: 14px;
+  height: 14px;
+  z-index: 1;
+  border-radius: 50%;
+  background: $hud-gold;
+  padding: 1px;
+  pointer-events: none;
+}
+
+.hud-caret {
+  color: $hud-muted;
+  font-size: 10px;
+}
+
+// Avisos ("É a sua vez!", resultado de batalhas) abaixo da barra do topo,
+// menores, para não cobrir as trilhas.
+body.hud-active .Toastify__toast-container--top-center {
+  top: 70px;
+}
+
+body.hud-active .Toastify__toast {
+  min-height: 0;
+  zoom: 0.8;
 }

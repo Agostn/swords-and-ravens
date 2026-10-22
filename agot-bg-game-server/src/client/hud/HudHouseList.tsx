@@ -13,8 +13,12 @@ import House from "../../common/ingame-game-state/game-data-structure/House";
 import { HouseCardState } from "../../common/ingame-game-state/game-data-structure/house-card/HouseCard";
 import User from "../../server/User";
 import HouseRowComponent from "../HouseRowComponent";
+import BiddingGameState from "../../common/ingame-game-state/westeros-game-state/bidding-game-state/BiddingGameState";
+import ChooseHouseCardGameState from "../../common/ingame-game-state/action-game-state/resolve-march-order-game-state/combat-game-state/choose-house-card-game-state/ChooseHouseCardGameState";
+import PlaceOrdersGameState from "../../common/ingame-game-state/planning-game-state/place-orders-game-state/PlaceOrdersGameState";
 import SupplyTrackComponent from "../game-state-panel/utils/SupplyTrackComponent";
 import HouseChip from "./HouseChip";
+import displayedVictoryPoints from "./displayedVictoryPoints";
 import { t } from "../i18n/i18n";
 
 interface HudHouseListProps {
@@ -67,13 +71,21 @@ export default class HudHouseList extends Component<HudHouseListProps> {
     }
     const ended = this.ingame.isEndedOrCancelled;
     const mine = house == me;
+    // "Pronto" só faz sentido quando todos jogam ao mesmo tempo (ordens,
+    // lances, escolher carta...). Fora disso, quem não está jogando
+    // simplesmente aguarda a vez, então não mostramos nada.
+    const leaf = this.ingame.leafState;
+    const everyonePlays =
+      leaf instanceof PlaceOrdersGameState ||
+      leaf instanceof BiddingGameState ||
+      leaf instanceof ChooseHouseCardGameState;
     const status = ended
       ? ""
       : isWaited
         ? mine
           ? t("hud.houses.yourTurn")
           : t("hud.houses.playing")
-        : isVassal
+        : isVassal || !everyonePlays
           ? ""
           : t("hud.houses.ready");
     return {
@@ -150,7 +162,9 @@ export default class HudHouseList extends Component<HudHouseListProps> {
                     )}
                   </span>
                 </span>
-                <b className="hud-house-num">{game.getVictoryPoints(h)}</b>
+                <b className="hud-house-num">
+                  {displayedVictoryPoints(game, h)}
+                </b>
                 <span className="hud-house-num">{h.powerTokens}</span>
                 <span className="hud-house-num">{h.supplyLevel}</span>
                 <span className="hud-house-num">{cards}</span>

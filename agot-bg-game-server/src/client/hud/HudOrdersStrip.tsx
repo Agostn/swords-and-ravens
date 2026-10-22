@@ -37,7 +37,12 @@ export default class HudOrdersStrip extends Component<HudOrdersStripProps> {
       (r) => placeOrders.placedOrders.tryGet(r, null)?.type.starred
     ).length;
 
+    // Cartas de Westeros desta rodada que proíbem tipos de ordem
+    // (ex.: "Chuvas de Outono" proíbe Marcha +1)
+    const restrictions = placeOrders.parentGameState.planningRestrictions;
+
     const groups = _.uniqBy(all, (o) => o.type.id).map((o) => ({
+      restricted: restrictions.some((r) => r.restriction(o.type)),
       type: o.type,
       total: all.filter((x) => x.type.id == o.type.id).length,
       left: available.filter((x) => x.type.id == o.type.id).length
@@ -78,11 +83,20 @@ export default class HudOrdersStrip extends Component<HudOrdersStripProps> {
                   <b>{g.type.name}</b>
                   <br />
                   {t("hud.orders.left", { n: g.left, total: g.total })}
+                  {g.restricted && (
+                    <>
+                      <br />
+                      {t("hud.orders.restricted")}
+                    </>
+                  )}
                 </Tooltip>
               }
             >
               <span
-                className={classNames("hud-order-token", { used: g.left == 0 })}
+                className={classNames("hud-order-token", {
+                  used: g.left == 0,
+                  restricted: g.restricted
+                })}
               >
                 <span
                   className="order-icon hud-order-img"

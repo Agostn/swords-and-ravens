@@ -25,6 +25,7 @@ import { preventOverflow } from "@popperjs/core";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faInfo } from "@fortawesome/free-solid-svg-icons";
 import { t } from "../i18n/i18n";
+import hudSettings from "../hud/hudSettings";
 
 @observer
 export default class PlaceOrdersComponent extends Component<GameStateComponentProps<PlaceOrdersGameState>> {
@@ -56,6 +57,9 @@ export default class PlaceOrdersComponent extends Component<GameStateComponentPr
     }
 
     render(): ReactNode {
+        if (hudSettings.hudActive) {
+            return this.renderCompact();
+        }
         return (
             <>
                 <Row className="justify-content-center">
@@ -98,6 +102,49 @@ export default class PlaceOrdersComponent extends Component<GameStateComponentPr
                     </Col>
                 </Row>
             </>
+        );
+    }
+
+    // Tela nova: o título do painel já diz o que fazer e as ordens proibidas
+    // aparecem riscadas na faixa de fichas, então aqui fica só o essencial:
+    // as cartas que proíbem ordens (pequenas) e os botões.
+    renderCompact(): ReactNode {
+        const player = this.props.gameClient.authenticatedPlayer;
+        const restrictionCards = this.placeOrders.parentGameState.planningRestrictions
+            .map(pr => this.restrictionToWesterosCardTypeMap.tryGet(pr, null))
+            .filter(prWc => prWc != null) as { westerosCardType: WesterosCardType; deckId: number }[];
+        return (
+            <Col xs={12}>
+                <Row className="justify-content-center align-items-center">
+                    {restrictionCards.map(prWc => (
+                        <Col xs="auto" key={`prwc_${prWc.westerosCardType.id}`}>
+                            <WesterosCardComponent cardType={prWc.westerosCardType} size="small" tooltip={true} westerosDeckI={prWc.deckId} />
+                        </Col>
+                    ))}
+                    {player && (
+                        <>
+                            <Col xs="auto">
+                                <Button type="button"
+                                    disabled={!this.placeOrders.canReady(player).status}
+                                    onClick={() => this.onReadyClick()}
+                                    variant="success"
+                                >
+                                    {t("common.ready")}
+                                </Button>
+                            </Col>
+                            <Col xs="auto">
+                                <Button type="button"
+                                    disabled={!this.placeOrders.canUnready(player).status}
+                                    onClick={() => this.onUnreadyClick()}
+                                    variant="outline-danger"
+                                >
+                                    {t("common.unready")}
+                                </Button>
+                            </Col>
+                        </>
+                    )}
+                </Row>
+            </Col>
         );
     }
 

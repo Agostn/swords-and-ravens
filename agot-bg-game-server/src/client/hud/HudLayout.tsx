@@ -37,6 +37,13 @@ import ResolveSingleConsolidatePowerGameState from "../../common/ingame-game-sta
 import ResolveRetreatGameState from "../../common/ingame-game-state/action-game-state/resolve-march-order-game-state/combat-game-state/post-combat-game-state/resolve-retreat-game-state/ResolveRetreatGameState";
 import ChooseCasualtiesGameState from "../../common/ingame-game-state/action-game-state/resolve-march-order-game-state/combat-game-state/post-combat-game-state/choose-casualties-game-state/ChooseCasualtiesGameState";
 import ReplaceOrderGameState from "../../common/ingame-game-state/action-game-state/use-raven-game-state/replace-order-game-state/ReplaceOrderGameState";
+import CombatGameState from "../../common/ingame-game-state/action-game-state/resolve-march-order-game-state/combat-game-state/CombatGameState";
+import WildlingsAttackGameState from "../../common/ingame-game-state/westeros-game-state/wildlings-attack-game-state/WildlingsAttackGameState";
+import ClashOfKingsGameState from "../../common/ingame-game-state/westeros-game-state/clash-of-kings-game-state/ClashOfKingsGameState";
+import ResolveTiesGameState from "../../common/ingame-game-state/westeros-game-state/clash-of-kings-game-state/resolve-ties-game-state/ResolveTiesGameState";
+import WesterosGameState from "../../common/ingame-game-state/westeros-game-state/WesterosGameState";
+import DraftGameState from "../../common/ingame-game-state/draft-game-state/DraftGameState";
+import PlanningGameState from "../../common/ingame-game-state/planning-game-state/PlanningGameState";
 import UseValyrianSteelBladeGameState from "../../common/ingame-game-state/action-game-state/resolve-march-order-game-state/combat-game-state/use-valyrian-steel-blade-game-state/UseValyrianSteelBladeGameState";
 import {
   westerosImage,
@@ -50,6 +57,7 @@ import HudTracks from "./HudTracks";
 import HudHouseList from "./HudHouseList";
 import HudOrdersStrip from "./HudOrdersStrip";
 import HouseChip from "./HouseChip";
+import displayedVictoryPoints from "./displayedVictoryPoints";
 import hudSettings from "./hudSettings";
 import { t, TranslationKey } from "../i18n/i18n";
 
@@ -117,10 +125,13 @@ export default class HudLayout extends Component<HudLayoutProps> {
 
   componentDidMount(): void {
     window.addEventListener("resize", this.onResize);
+    // avisos (toasts) e outros elementos fora daqui se ajustam à tela nova
+    document.body.classList.add("hud-active");
   }
 
   componentWillUnmount(): void {
     window.removeEventListener("resize", this.onResize);
+    document.body.classList.remove("hud-active");
   }
 
   private get publicChatRoom(): Channel | null {
@@ -197,10 +208,30 @@ export default class HudLayout extends Component<HudLayoutProps> {
 
   private actionTitle(): string | null {
     const leaf = this.ingame.leafState;
+    const has = (cls: unknown): boolean => this.ingame.hasChildGameState(cls);
+
+    // Lances acontecem em dois momentos diferentes do jogo
+    if (leaf instanceof BiddingGameState) {
+      if (has(WildlingsAttackGameState)) return t("hud.title.wildlingBidding");
+      if (has(ClashOfKingsGameState)) return t("hud.title.clashBidding");
+    }
+    if (leaf instanceof ResolveTiesGameState) return t("hud.title.ties");
+
     const found = ACTION_TITLES.find(
       ([cls]) => leaf instanceof (cls as new (...args: never[]) => unknown)
     );
-    return found ? t(found[1]) : null;
+    if (found) return t(found[1]);
+
+    // Sem título específico: usa a etapa maior em que a partida está
+    if (has(CombatGameState)) return t("hud.title.combat");
+    if (has(WildlingsAttackGameState)) return t("hud.title.wildlingsAttack");
+    if (has(ClashOfKingsGameState)) return t("hud.title.clashOfKings");
+    if (has(WesterosGameState))
+      return t("phase.label", { phase: t("phase.westeros") });
+    if (has(PlanningGameState))
+      return t("phase.label", { phase: t("phase.planning") });
+    if (has(DraftGameState)) return t("hud.title.draft");
+    return null;
   }
 
   render(): ReactNode {
@@ -422,7 +453,7 @@ export default class HudLayout extends Component<HudLayoutProps> {
                   <b>{h.name}</b>
                   <br />
                   {t("hud.houses.victoryPoints", {
-                    n: this.ingame.game.getVictoryPoints(h)
+                    n: displayedVictoryPoints(this.ingame.game, h)
                   })}
                   <br />
                   {t("hud.houses.power", { n: h.powerTokens })}
@@ -430,7 +461,7 @@ export default class HudLayout extends Component<HudLayoutProps> {
               }
             />
             <span className="hud-house-vp">
-              {this.ingame.game.getVictoryPoints(h)}
+              {displayedVictoryPoints(this.ingame.game, h)}
             </span>
           </div>
         ))}

@@ -47,6 +47,23 @@ export default class HudTracks extends Component<HudTracksProps> {
       tr("auto.HouseInfoColumn.8")
     ];
 
+    // Quem tem a ficha de cada trilha. Normalmente é o 1º colocado, mas com
+    // vassalos (ou cartas que trocam o dono) pode ser outro, então
+    // perguntamos ao jogo em vez de supor.
+    const holderOf = (get: () => House): House | null => {
+      try {
+        return get();
+      } catch {
+        // durante o draft ainda não há dono
+        return null;
+      }
+    };
+    const holders = [
+      holderOf(() => game.ironThroneHolder),
+      holderOf(() => game.valyrianSteelBladeHolder),
+      holderOf(() => game.ravenHolder)
+    ];
+
     return (
       <div className="hud-panel hud-tracks" aria-label={t("hud.tracks.title")}>
         {this.props.tracks.map((track, i) => (
@@ -72,6 +89,14 @@ export default class HudTracks extends Component<HudTracksProps> {
             <span className="hud-track-houses">
               {track.trackToShow.map((h, j) => (
                 <span className="hud-track-slot" key={`hud-track-${i}-${j}`}>
+                  {h && h == holders[i] && (
+                    <img
+                      className="hud-track-holder"
+                      src={icons[i]}
+                      alt=""
+                      aria-hidden="true"
+                    />
+                  )}
                   {h ? (
                     <HouseChip
                       house={h}
@@ -82,7 +107,7 @@ export default class HudTracks extends Component<HudTracksProps> {
                           <b>{h.name}</b>
                           <br />
                           {t("hud.tracks.position", { n: j + 1 })}
-                          {j == 0 && (
+                          {h == holders[i] && (
                             <>
                               <br />
                               {t(

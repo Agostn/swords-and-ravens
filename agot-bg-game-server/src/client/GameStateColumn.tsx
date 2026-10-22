@@ -476,8 +476,8 @@ export default class GameStateColumn extends Component<GameStateColumnProps> {
               rootClose
             >
               <button type="button" className="hud-text-button">
-                <span className="hud-muted">{t("hud.status.phase")}</span>{" "}
-                <b>{activePhaseName}</b>
+                <b>{t("phase.label", { phase: activePhaseName })}</b>
+                <span className="hud-caret" aria-hidden="true">▾</span>
               </button>
             </OverlayTrigger>
           </>
