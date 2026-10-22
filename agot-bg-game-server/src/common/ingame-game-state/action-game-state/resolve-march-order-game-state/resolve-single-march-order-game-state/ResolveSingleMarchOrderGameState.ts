@@ -70,7 +70,27 @@ export default class ResolveSingleMarchOrderGameState extends GameState<ResolveM
         return;
       }
 
-      const startingRegion = this.world.regions.get(message.startingRegionId);
+      const startingRegion = this.world.regions.tryGet(
+        message.startingRegionId,
+        null
+      );
+
+      // Ignore messages referring to unknown areas or to units that are not
+      // (anymore) in the starting area, e.g. sent from an outdated client view.
+      // Before, such a message threw an exception and crashed the whole server.
+      if (
+        !startingRegion ||
+        message.moves.some(
+          ([regionId, unitIds]) =>
+            !this.world.regions.has(regionId) ||
+            unitIds.some((uid) => !startingRegion.units.has(uid))
+        )
+      ) {
+        console.warn(
+          `Ignoring invalid "resolve-march-order" message: ${JSON.stringify(message)}`
+        );
+        return;
+      }
 
       const moves = message.moves.map(
         ([regionId, unitIds]) =>
