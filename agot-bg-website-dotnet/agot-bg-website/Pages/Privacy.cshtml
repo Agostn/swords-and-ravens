@@ -1,36 +1,37 @@
 ﻿@page
 @model PrivacyModel
 @{
-    ViewData["Title"] = "Privacy Policy";
-    ViewData["Description"] = "Privacy policy for Swords and Ravens, the free online Game of Thrones: The Board Game platform.";
+    ViewData["Title"] = "Política de Privacidade";
+    ViewData["Description"] = "Política de privacidade do Swords and Ravens, a plataforma gratuita para jogar Game of Thrones: The Board Game online.";
 }
 <div class="max-w-3xl space-y-4 [&_h2]:text-secondary [&_h2]:text-xl [&_h2]:font-semibold [&_h2]:mt-6 [&_p]:text-base-content/80">
 <h1 class="text-3xl font-bold text-primary mb-2">@ViewData["Title"]</h1>
 
 <p>
-    This page summarizes what account and cookie data Swords and Ravens stores
-    about you, and how you can request it be removed.
+    Esta página resume quais dados da sua conta e quais cookies o Swords and Ravens guarda
+    sobre você, e como pedir que eles sejam apagados.
 </p>
 
-<h2>Account data</h2>
+<h2>Dados da conta</h2>
 <p>
-    When you register, or sign in via Google, Discord, or Facebook, we store your username,
-    e-mail address (if provided by the sign-in method), and gameplay-related settings and
-    statistics (game history, win rate). If you sign in with an external provider, we never see or
-    store your password on that provider — only the profile fields it explicitly shares with us.
+    Quando você cria uma conta, ou entra com Google, Discord ou Facebook, guardamos seu nome de usuário,
+    seu e-mail (se o serviço de login informar) e as configurações e estatísticas das suas partidas
+    (histórico de partidas, taxa de vitória). Se você entrar por um serviço externo, nunca vemos nem
+    guardamos a sua senha desse serviço — só os dados do perfil que ele compartilha com a gente.
 </p>
 
 <h2>Cookies</h2>
 <p>
-    We use a session/authentication cookie to keep you signed in; this cookie is essential and is
-    set as soon as you sign in, independent of the consent banner. We do not use analytics or
-    advertising cookies of our own. If you sign in via an external OAuth provider, that provider
-    may set its own cookies during the redirect — see their respective privacy policies.
+    Usamos um cookie de sessão/login para manter você conectado; esse cookie é essencial e é
+    criado assim que você entra, independente do aviso de cookies. Não usamos cookies próprios de
+    estatísticas nem de anúncios. Se você entrar por um serviço externo (OAuth), esse serviço
+    pode criar os próprios cookies durante o redirecionamento — veja a política de privacidade dele.
 </p>
 
-<h2>Your rights</h2>
+<h2>Seus direitos</h2>
 <p>
-    You can review and update your profile settings from your account page at any time. To request
-    a full export or deletion of your account data, contact the site operator.
+    Você pode ver e mudar as configurações do seu perfil na página da sua conta a qualquer momento.
+    Também pode baixar ou apagar seus dados em <a class="link" asp-area="Identity" asp-page="/Account/Manage/PersonalData">Sua conta → Dados pessoais</a>.
+    Para outros pedidos sobre seus dados, use a página de <a class="link" asp-page="/Contact">Contato</a>.
 </p>
 </div>

@@ -3,10 +3,10 @@
 @using agot_bg_website.Domain
 @using agot_bg_website.Infrastructure
 @{
-    ViewData["Title"] = "Admin - Edit game";
+    ViewData["Title"] = "Admin - Editar partida";
 }
 
-<h1 class="text-2xl font-bold mb-4">Edit game — @Model.GameEntity.Name</h1>
+<h1 class="text-2xl font-bold mb-4">Editar partida — @Model.GameEntity.Name</h1>
 
 <partial name="_StatusMessage" for="StatusMessage" />
 <div asp-validation-summary="All" class="text-error mb-4"></div>
@@ -23,53 +23,53 @@
     <div class="flex flex-col gap-1 mb-3">
         <div class="flex items-center justify-between flex-wrap gap-2">
             <label class="label" asp-for="RawSerializedGameJson">
-                Raw serialized game (backup — untouched, unindented, exactly as stored)
+                Partida salva original (cópia de segurança — sem mexer, exatamente como está no banco)
             </label>
             <button type="button" class="btn btn-xs" id="copyRawSerializedGameJsonBtn"
                     onclick="copyTextareaToClipboard('RawSerializedGameJson', this)">
-                Copy to clipboard
+                Copiar
             </button>
         </div>
         <textarea asp-for="RawSerializedGameJson" readonly rows="4"
                    class="textarea font-mono text-xs w-full bg-base-200"
                    onclick="this.select();"></textarea>
         <span class="text-xs opacity-70">
-            Read-only. Copy this before editing below, in case a manual edit or our reordering
-            below ever goes wrong.
+            Só leitura. Copie isto antes de editar abaixo, caso a edição manual ou a
+            reorganização dê errado.
         </span>
     </div>
     <div class="flex flex-col gap-1 mb-3">
         <div class="flex items-center justify-between flex-wrap gap-2">
             <label class="label" asp-for="SerializedGameJson">
-                Serialized game (raw JSON, editable — minified by default; the game log inside can
-                get huge for very long games)
+                Partida salva (JSON, editável — compactado por padrão; o histórico dentro dele pode
+                ficar enorme em partidas muito longas)
             </label>
             <div class="flex gap-2">
                 <button type="button" class="btn btn-xs"
                         onclick="formatJsonTextarea('SerializedGameJson', 2)">
-                    Pretty-print
+                    Formatar
                 </button>
                 <button type="button" class="btn btn-xs"
                         onclick="formatJsonTextarea('SerializedGameJson', 0)">
-                    Minify
+                    Compactar
                 </button>
             </div>
         </div>
         <textarea asp-for="SerializedGameJson" rows="20" class="textarea font-mono text-xs w-full"></textarea>
     </div>
     <div class="flex flex-col gap-1 mb-3">
-        <label class="label" asp-for="ViewOfGameJson">View of game (raw JSON)</label>
+        <label class="label" asp-for="ViewOfGameJson">Resumo da partida (JSON)</label>
         <textarea asp-for="ViewOfGameJson" rows="10" class="textarea font-mono text-xs w-full"></textarea>
     </div>
     <div class="flex gap-2">
-        <button type="submit" class="btn btn-primary">Save</button>
-        <a class="btn" asp-page="./Index">Back</a>
+        <button type="submit" class="btn btn-primary">Salvar</button>
+        <a class="btn" asp-page="./Index">Voltar</a>
     </div>
 </form>
 
 <form method="post" asp-page-handler="CancelGame" class="mt-4"
-      onsubmit="return confirm('Are you sure you want to cancel this game?');">
-    <button type="submit" class="btn btn-error">Cancel game</button>
+      onsubmit="return confirm('Tem certeza de que quer cancelar esta partida?');">
+    <button type="submit" class="btn btn-error">Cancelar partida</button>
 </form>
 
 @section Scripts {
@@ -83,7 +83,7 @@
                 const parsed = JSON.parse(el.value);
                 el.value = indent > 0 ? JSON.stringify(parsed, null, indent) : JSON.stringify(parsed);
             } catch (e) {
-                alert("Cannot format: invalid JSON (" + e.message + ")");
+                alert("Não deu para formatar: JSON inválido (" + e.message + ")");
             }
         }
 
@@ -106,7 +106,7 @@
             }
 
             const originalText = button.textContent;
-            button.textContent = copied ? "Copied!" : "Copy failed";
+            button.textContent = copied ? "Copiado!" : "Não deu para copiar";
             setTimeout(() => {
                 button.textContent = originalText;
             }, 1500);

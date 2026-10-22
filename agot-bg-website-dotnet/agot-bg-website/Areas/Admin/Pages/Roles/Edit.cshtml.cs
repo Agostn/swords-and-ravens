@@ -87,7 +87,7 @@ public class EditModel(
             }
         }
 
-        StatusMessage = $"Permissions for role {roleName} updated.";
+        StatusMessage = $"Permissões da função {roleName} atualizadas.";
         return RedirectToPage("./Index");
     }
 }

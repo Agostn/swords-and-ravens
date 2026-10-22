@@ -1,6 +1,8 @@
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.DataAnnotations;
 using Microsoft.AspNetCore.Mvc.ModelBinding.Metadata;
+using Microsoft.Extensions.Localization;
 
 namespace agot_bg_website.Infrastructure.Localization;
 
@@ -21,20 +23,33 @@ public sealed class PtBrValidationMetadataProvider : IValidationMetadataProvider
                 continue;
             }
 
-            // Mensagem própria (ou de arquivo de recursos) já definida: não mexe.
-            if (
-                !string.IsNullOrEmpty(attribute.ErrorMessage)
-                || !string.IsNullOrEmpty(attribute.ErrorMessageResourceName)
-            )
-            {
-                continue;
-            }
+            Translate(attribute);
+        }
+    }
 
-            var message = MessageFor(attribute);
-            if (message is not null)
-            {
-                attribute.ErrorMessage = message;
-            }
+    /// <summary>
+    /// Troca a mensagem do atributo pela versão em português, a não ser que alguém já tenha
+    /// escrito uma mensagem própria. Atenção: alguns atributos ([EmailAddress], [Phone], [Url])
+    /// já vêm com um texto padrão em inglês ("The {0} field is not a valid..."), que também
+    /// conta como "não personalizado".
+    /// </summary>
+    internal static void Translate(ValidationAttribute attribute)
+    {
+        if (!string.IsNullOrEmpty(attribute.ErrorMessageResourceName))
+        {
+            return;
+        }
+        var current = attribute.ErrorMessage;
+        var isDefault =
+            string.IsNullOrEmpty(current) || current.StartsWith("The {0} field", StringComparison.Ordinal);
+        if (!isDefault)
+        {
+            return;
+        }
+        var message = MessageFor(attribute);
+        if (message is not null)
+        {
+            attribute.ErrorMessage = message;
         }
     }
 
@@ -81,5 +96,24 @@ public sealed class PtBrValidationMetadataProvider : IValidationMetadataProvider
         messages.SetValueIsInvalidAccessor(value => $"O valor '{value}' é inválido.");
         messages.SetValueMustBeANumberAccessor(field => $"O campo {field} precisa ser um número.");
         messages.SetValueMustNotBeNullAccessor(value => $"O valor '{value}' é inválido.");
+    }
+}
+
+/// <summary>
+/// Passa por aqui toda validação (no servidor e no navegador), inclusive os [Required] que o
+/// MVC cria sozinho para campos que não podem ficar vazios (ex.: caixas de marcar). Traduz a
+/// mensagem e depois entrega para o provedor padrão do .NET.
+/// </summary>
+public sealed class PtBrValidationAttributeAdapterProvider : IValidationAttributeAdapterProvider
+{
+    private readonly ValidationAttributeAdapterProvider _inner = new();
+
+    public IAttributeAdapter? GetAttributeAdapter(
+        ValidationAttribute attribute,
+        IStringLocalizer? stringLocalizer
+    )
+    {
+        PtBrValidationMetadataProvider.Translate(attribute);
+        return _inner.GetAttributeAdapter(attribute, stringLocalizer);
     }
 }

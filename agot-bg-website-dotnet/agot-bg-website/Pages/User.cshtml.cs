@@ -119,9 +119,9 @@ public class UserModel(
     /// <see cref="ApplicationUser.CachedReplacerLossesExcludedCount"/>.</summary>
     public int ReplacerLossesExcludedCount { get; set; }
 
-    public string WinRateDisplay { get; set; } = "n/a";
+    public string WinRateDisplay { get; set; } = "—";
 
-    public string AveragePbemResponseTimeDisplay { get; set; } = "n/a";
+    public string AveragePbemResponseTimeDisplay { get; set; } = "—";
 
     public string RelativeLastActivity => RelativeTimeFormatter.Format(ViewedUser.LastActivity);
 
@@ -149,7 +149,7 @@ public class UserModel(
         var viewedUserRoles = await userManager.GetRolesAsync(viewedUser);
         UserGroups = GroupBadgeClasses
             .Where(kv => viewedUserRoles.Contains(kv.Key))
-            .Select(kv => (kv.Key, kv.Value))
+            .Select(kv => (RoleBadges.DisplayName(kv.Key), kv.Value))
             .ToList();
 
         await LoadGamesAsync(id);
@@ -341,9 +341,7 @@ public class UserModel(
             ReplacerGamesCount = ViewedUser.CachedReplacerGamesCount ?? 0;
             ReplacerWinsCount = ViewedUser.CachedReplacerWinsCount ?? 0;
             ReplacerLossesExcludedCount = ViewedUser.CachedReplacerLossesExcludedCount ?? 0;
-            WinRateDisplay = ViewedUser.CachedWinRate.HasValue
-                ? $"{(ViewedUser.CachedWinRate.Value * 100).ToString("F1", CultureInfo.InvariantCulture)} %"
-                : "n/a";
+            WinRateDisplay = RoleBadges.FormatWinRate(ViewedUser.CachedWinRate);
         }
         else
         {
@@ -357,7 +355,7 @@ public class UserModel(
             .Select(p => p.ResponseTime)
             .ToListAsync();
         var average = PbemResponseTimeCalculator.CalculateAverage(responseTimes);
-        AveragePbemResponseTimeDisplay = average.HasValue ? FormatTimeSpan(average.Value) : "n/a";
+        AveragePbemResponseTimeDisplay = average.HasValue ? FormatTimeSpan(average.Value) : "—";
     }
 
     private static string? GetStringProperty(System.Text.Json.JsonDocument? doc, string name)

@@ -1,0 +1,33 @@
+{
+"Pages/Contact.cshtml": [
+ ["ViewData[\"Title\"] = \"Contact\";", "ViewData[\"Title\"] = \"Contato\";"],
+ ["\"Get in touch with the Swords and Ravens staff.\"", "\"Fale com a equipe do Swords and Ravens.\""],
+ [">Contact Swords and Ravens</h1>", ">Fale com a gente</h1>"],
+ ["\n        The contact form isn't available right now. Please try again later.\n    ", "\n        O formulário de contato não está disponível agora. Tente de novo mais tarde.\n    "],
+ ["\n        Questions, bug reports or feedback? Send us a message and we'll get back to you by email.\n        You can send up to @Model.MaxMessagesPerDay messages per day.\n    ", "\n        Dúvidas, bugs ou sugestões? Mande uma mensagem que a gente responde por e-mail.\n        Você pode mandar até @Model.MaxMessagesPerDay mensagens por dia.\n    "],
+ ["placeholder=\"Your name\"", "placeholder=\"Seu nome\""],
+ ["placeholder=\"name@example.com\"", "placeholder=\"nome@exemplo.com\""],
+ ["placeholder=\"Subject\"", "placeholder=\"Assunto\""],
+ ["placeholder=\"How can we help?\"", "placeholder=\"Como podemos ajudar?\""],
+ [">Send message</button>", ">Enviar mensagem</button>"]
+],
+"Pages/Contact.cshtml.cs": [
+ ["[Display(Name = \"Your name\")]", "[Display(Name = \"Seu nome\")]"],
+ ["[Display(Name = \"Your email\")]", "[Display(Name = \"Seu e-mail\")]"],
+ ["[Display(Name = \"Subject\")]", "[Display(Name = \"Assunto\")]"],
+ ["[Display(Name = \"Message\")]", "[Display(Name = \"Mensagem\")]"],
+ ["\"The contact form isn't available right now. Please try again later.\"", "\"Erro: o formulário de contato não está disponível agora. Tente de novo mais tarde.\""],
+ ["\"Your message could not be sent.\"", "\"Erro: não foi possível enviar sua mensagem.\""],
+ ["\"Please complete the human verification challenge and try again.\"", "\"Complete a verificação de que você não é um robô e tente de novo.\""],
+ ["$\"You can send at most {MaxMessagesPerDay} messages per day. Please try again tomorrow.\"", "$\"Você pode mandar no máximo {MaxMessagesPerDay} mensagens por dia. Tente de novo amanhã.\""],
+ ["\"Thanks for reaching out! Your message has been sent.\"", "\"Obrigado pelo contato! Sua mensagem foi enviada.\""],
+ ["var statusLabel = isAuthenticated ? \"verified account\" : \"not logged in\";", "var statusLabel = isAuthenticated ? \"conta verificada\" : \"sem login\";"],
+ ["<p>A message was sent through the contact form on Swords and Ravens.</p>\n            <p><strong>From:</strong> {senderLine}<br />\n            <strong>Subject:</strong>", "<p>Chegou uma mensagem pelo formulário de contato do Swords and Ravens.</p>\n            <p><strong>De:</strong> {senderLine}<br />\n            <strong>Assunto:</strong>"]
+],
+"Pages/Error.cshtml": [
+ ["\"Error\"", "\"Erro\""],
+ ["Error.<", "Erro.<"],
+ ["An error occurred while processing your request.", "Aconteceu um erro ao processar o seu pedido."],
+ ["Request ID:", "ID do pedido:"]
+]
+}

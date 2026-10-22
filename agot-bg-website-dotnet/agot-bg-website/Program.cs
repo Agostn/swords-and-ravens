@@ -108,6 +108,10 @@ builder.Services.PostConfigure<Microsoft.AspNetCore.Mvc.MvcOptions>(options =>
     options.ModelMetadataDetailsProviders.Add(new PtBrValidationMetadataProvider());
     PtBrValidationMetadataProvider.ConfigureBindingMessages(options);
 });
+builder.Services.AddSingleton<
+    Microsoft.AspNetCore.Mvc.DataAnnotations.IValidationAttributeAdapterProvider,
+    PtBrValidationAttributeAdapterProvider
+>();
 builder.Services.AddCoreAdmin(RoleNames.Admin);
 
 // GDPR: require explicit cookie consent (via _CookieConsentPartial.cshtml) before any

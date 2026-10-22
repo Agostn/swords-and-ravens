@@ -102,9 +102,9 @@ public class EditModel(
         {
             ModelState.AddModelError(
                 nameof(SerializedGameJson),
-                $"Serialized game JSON is {SerializedGameJson.Length:N0} characters, which exceeds "
-                    + $"the {MaxJsonFieldLength:N0} character limit. This shouldn't normally happen - "
-                    + "double check for an accidental paste/duplication before saving."
+                $"O JSON da partida tem {SerializedGameJson.Length:N0} caracteres, mais que o "
+                    + $"limite de {MaxJsonFieldLength:N0}. Isso normalmente não acontece - "
+                    + "confira se não colou algo duas vezes antes de salvar."
             );
         }
 
@@ -112,9 +112,9 @@ public class EditModel(
         {
             ModelState.AddModelError(
                 nameof(ViewOfGameJson),
-                $"View of game JSON is {ViewOfGameJson.Length:N0} characters, which exceeds the "
-                    + $"{MaxJsonFieldLength:N0} character limit. This shouldn't normally happen - "
-                    + "double check for an accidental paste/duplication before saving."
+                $"O JSON do resumo tem {ViewOfGameJson.Length:N0} caracteres, mais que o "
+                    + $"limite de {MaxJsonFieldLength:N0}. Isso normalmente não acontece - "
+                    + "confira se não colou algo duas vezes antes de salvar."
             );
         }
 
@@ -158,9 +158,9 @@ public class EditModel(
         await db.SaveChangesAsync();
 
         StatusMessage =
-            $"Game '{game.Name}' saved. Note: if the game server has this game loaded "
-            + "in memory, it will overwrite this on its next save — restart/reload the game server "
-            + "session first if you need this edit to stick.";
+            $"Partida '{game.Name}' salva. Atenção: se o servidor do jogo estiver com esta partida aberta "
+            + "na memória, ele vai sobrescrever isto no próximo salvamento — reinicie o servidor do jogo "
+            + "antes, se quiser que a edição fique.";
         return RedirectToPage(new { id });
     }
 

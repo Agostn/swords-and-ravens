@@ -147,7 +147,7 @@ public class IndexModel(
             result = await userManager.RemoveFromRoleAsync(user, RoleNames.Banned);
             if (result.Succeeded)
             {
-                StatusMessage = $"{user.UserName} has been unbanned.";
+                StatusMessage = $"{user.UserName} foi desbanido.";
             }
         }
         else
@@ -157,14 +157,14 @@ public class IndexModel(
             {
                 // Force the user out of any active session immediately, mirroring the PlayApi banned check.
                 await userManager.UpdateSecurityStampAsync(user);
-                StatusMessage = $"{user.UserName} has been banned.";
+                StatusMessage = $"{user.UserName} foi banido.";
             }
         }
 
         if (!result.Succeeded)
         {
             StatusMessage =
-                $"Failed to update ban status for {user.UserName}: {DescribeErrors(result)}";
+                $"Erro ao mudar o banimento de {user.UserName}: {DescribeErrors(result)}";
         }
 
         return RedirectToPage(
@@ -190,8 +190,8 @@ public class IndexModel(
         var displayName = user.DisplayName;
         var result = await accountDeletionService.DeleteAccountAsync(user);
         StatusMessage = result.Succeeded
-            ? $"{displayName} has Took the Black - their account has been deleted."
-            : $"Failed to delete {displayName}: {DescribeErrors(result)}";
+            ? $"{displayName} vestiu o negro (Took the Black) - a conta foi apagada."
+            : $"Erro ao apagar {displayName}: {DescribeErrors(result)}";
 
         return RedirectToPage(
             new
@@ -225,7 +225,7 @@ public class IndexModel(
         }
 
         await userStatsService.RecalculateAsync(id);
-        StatusMessage = $"Recalculated cached win-rate stats for {user.DisplayName}.";
+        StatusMessage = $"Estatísticas de vitória de {user.DisplayName} recalculadas.";
 
         return RedirectToPage(
             new
@@ -256,7 +256,7 @@ public class IndexModel(
             .ToListAsync();
         userStatsQueue.EnqueueAll(userIds);
         StatusMessage =
-            $"Queued cached stats recalculation for {userIds.Count} user(s). This runs in the background and may take a while.";
+            $"Recálculo das estatísticas de {userIds.Count} usuário(s) na fila. Roda em segundo plano e pode demorar.";
 
         return RedirectToPage(
             new

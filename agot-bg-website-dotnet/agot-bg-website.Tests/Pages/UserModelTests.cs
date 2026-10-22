@@ -259,7 +259,7 @@ public class UserModelTests : IDisposable
         Assert.Equal(1, model.WonCount);
         Assert.Equal(3, model.FinishedCount);
         Assert.Equal(1, model.RemovedFromGameCount);
-        Assert.Equal("33.3 %", model.WinRateDisplay);
+        Assert.Equal("33,3%", model.WinRateDisplay);
         Assert.Equal(1, model.OngoingCount);
 
         // Faceless games are hidden from the games list entirely; the rest (won/lost/tutorial/
@@ -428,7 +428,7 @@ public class UserModelTests : IDisposable
         Assert.IsType<PageResult>(result);
         // Never counted towards any cached stat.
         Assert.Equal(0, model.RemovedFromGameCount);
-        Assert.Equal("n/a", model.WinRateDisplay);
+        Assert.Equal("—", model.WinRateDisplay);
         // But still visible, badge-able as Cancelled via its own State.
         var row = Assert.Single(model.PreviouslyParticipatedGames);
         Assert.Equal(cancelledGame.Id, row.GameId);
@@ -483,7 +483,7 @@ public class UserModelTests : IDisposable
         Assert.IsType<PageResult>(result);
         // Never counted towards any cached stat.
         Assert.Equal(0, model.RemovedFromGameCount);
-        Assert.Equal("n/a", model.WinRateDisplay);
+        Assert.Equal("—", model.WinRateDisplay);
         // But still visible, flagged as a replacer removal.
         var row = Assert.Single(model.PreviouslyParticipatedGames);
         Assert.Equal(game.Id, row.GameId);
@@ -512,7 +512,7 @@ public class UserModelTests : IDisposable
         Assert.Equal(0, model.WonCount);
         Assert.Equal(0, model.FinishedCount);
         Assert.Equal(0, model.RemovedFromGameCount);
-        Assert.Equal("n/a", model.WinRateDisplay);
+        Assert.Equal("—", model.WinRateDisplay);
 
         await using var enumerator = _userStatsQueue
             .ReadAllAsync(CancellationToken.None)

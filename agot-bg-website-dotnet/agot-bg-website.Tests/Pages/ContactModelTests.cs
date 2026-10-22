@@ -170,7 +170,7 @@ public class ContactModelTests : IDisposable
         Assert.Equal(["staff@swordsandravens.net"], sent.BccAddresses);
         Assert.Equal("[Contact] A question", sent.Subject);
         Assert.Contains("robb@winterfell.example", sent.HtmlMessage);
-        Assert.Equal("Thanks for reaching out! Your message has been sent.", model.StatusMessage);
+        Assert.Equal("Obrigado pelo contato! Sua mensagem foi enviada.", model.StatusMessage);
     }
 
     [Fact]
@@ -297,7 +297,7 @@ public class ContactModelTests : IDisposable
         var sent = Assert.Single(emailSender.Sent);
         Assert.Contains("Robb Stark", sent.HtmlMessage);
         Assert.Contains("robb@winterfell.example", sent.HtmlMessage);
-        Assert.Contains("(not logged in)", sent.HtmlMessage);
+        Assert.Contains("(sem login)", sent.HtmlMessage);
     }
 
     [Fact]
@@ -353,7 +353,7 @@ public class ContactModelTests : IDisposable
         Assert.Contains("&lt;script&gt;", html);
         Assert.Contains("&lt;b&gt;hi&lt;/b&gt;", html);
         Assert.Contains("line one<br />line two", html);
-        Assert.Contains("(not logged in)", html);
+        Assert.Contains("(sem login)", html);
     }
 
     [Fact]
@@ -370,7 +370,7 @@ public class ContactModelTests : IDisposable
             isAuthenticated: true
         );
 
-        Assert.Contains("(verified account)", html);
+        Assert.Contains("(conta verificada)", html);
     }
 
     [Fact]

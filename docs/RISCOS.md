@@ -12,7 +12,8 @@ Gravidade: 🔴 alta · 🟠 média · 🟡 baixa · Situação: ✅ resolvido �
 2b. **Testes da tradução:** `node_modules/.bin/jest tests/i18n` (paridade de chaves en/pt-BR, parâmetros, tags, cartas e textos do servidor).
 3. **Partida de teste com o bot:** apague `src/server/website-client/local-entire-game.json`, reinicie o servidor, rode `tools/i18n/game.js` e depois `tools/i18n/bot.js` (joga com 3 Casas e tira prints). Confira os prints e o log do servidor.
 4. **Teste de travamento:** `tools/qa/crashtest.js` manda uma mensagem inválida de propósito; o servidor precisa continuar rodando.
-5. **Textos em inglês sobrando:** `node tools/i18n/strings.js <arquivos>`.
+5. **Textos em inglês sobrando:** `node tools/i18n/strings.js <arquivos>` (jogo) e `python3 tools/i18n/site/extract.py <arquivos>` (site .NET; linhas marcadas "EN?").
+5b. **Site .NET:** `dotnet build` e `dotnet test agot-bg-website.Tests` (precisa dar 0 falhas). O .NET fica em `/root/.dotnet` no ambiente do Claude.
 6. **Não salvar no Git** o arquivo `src/server/website-client/local-entire-game.json` (ele é do projeto original e o teste local sobrescreve). Antes de cada commit: `git checkout -- agot-bg-game-server/src/server/website-client/local-entire-game.json`.
 
 ## Servidor e estabilidade
@@ -40,6 +41,18 @@ Gravidade: 🔴 alta · 🟠 média · 🟡 baixa · Situação: ✅ resolvido �
 | B1 | Habilidade do Renly mostrava "NaN" no texto (bug do original: `+ +" (or one..."`). | 🟡 | ✅ 22/out | Corrigido em `houseCardAbilities.ts`. |
 | T5 | Se faltar tradução de uma chave, aparece o texto em inglês. O TypeScript acusa só nos arquivos de chaves manuais e automáticas; textos novos escritos direto no código (sem `t()`) passam batido. | 🟡 | ⏳ | Rodar `tools/i18n/strings.js` antes de cada entrega. |
 | T6 | Atualizações do projeto original (upstream) vão gerar conflitos nos arquivos traduzidos, porque quase todo componente mudou. | 🟠 | ⏳ | Trazer atualizações com cuidado, arquivo por arquivo, e rodar os codemods de novo nos trechos novos. |
+
+## Site (.NET)
+
+| # | Risco | Grav. | Situação | O que fazer |
+|---|---|---|---|---|
+| W1 | Site traduzido direto nos arquivos (sem arquivos de idioma). Atualizar do projeto original vai dar conflito em quase toda página. | 🟠 | ⏳ | Ao trazer atualizações do original, usar `tools/i18n/site/pt/*.json` como referência do que foi traduzido e reaplicar com `apply.py`. |
+| W2 | O aviso vermelho/verde das mensagens de status depende do texto começar com "Erro". Mensagem de erro nova que não comece assim aparece verde. | 🟡 | 🛡️ | Ao escrever mensagem de erro nova, começar com "Erro". |
+| W3 | Nomes das funções (Admin, Banned...) ficam em inglês no banco; só a tela traduz (`RoleBadges.DisplayName`). Traduzir no banco quebraria as permissões. | 🟠 | 🛡️ | Nunca mudar `RoleNames`. |
+| W4 | Mensagens padrão de validação do .NET vinham em inglês. | 🟡 | ✅ 22/out | Tradutor global (`Infrastructure/Localization`) + testes `PtBrValidationTests`. |
+| W5 | Cultura pt-BR muda formato de números (vírgula). Onde número vai para CSS/JS/API, tem que usar `InvariantCulture`. | 🟡 | 🛡️ | Conferido: código já usa `InvariantCulture`/`"O"` nesses pontos. Cuidar em código novo. |
+| W6 | Se o fork for juntado no `master`, o GitHub Actions (`deploy.yml`) tenta publicar no servidor do projeto original e falha (sem as senhas). | 🟡 | ⏳ | Desativar/ajustar `deploy.yml` antes da etapa de hospedagem. |
+| W7 | Visual: títulos dos cartões da página inicial quase invisíveis; texto de exemplo dos campos alinhado à direita. | 🟡 | ⏳ | Etapa de design. |
 
 ## Imagens, direitos e legal
 

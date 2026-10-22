@@ -5,7 +5,7 @@
 @using agot_bg_website.Infrastructure
 @using agot_bg_website.Infrastructure.Auth
 @{
-    ViewData["Title"] = "Users";
+    ViewData["Title"] = "Jogadores";
     // Wider container (1800px) when the action-buttons column is visible (Model.CanManageUserStatus);
     // otherwise a slightly narrower one (1600px) since the table has fewer columns to show.
     ViewData["WideContainer"] = Model.CanManageUserStatus ? (object)true : "md";
@@ -32,7 +32,7 @@
     }
 }
 
-<h1 class="text-2xl font-bold mb-4">Users</h1>
+<h1 class="text-2xl font-bold mb-4">Jogadores</h1>
 
 <partial name="_StatusMessage" for="StatusMessage" />
 
@@ -40,32 +40,32 @@
     <input type="hidden" name="pageSize" value="@Model.PageSize" />
     <input type="hidden" name="SortBy" value="@Model.SortBy" />
     <input type="hidden" name="SortDir" value="@Model.SortDir" />
-    <input type="text" name="Search" value="@Model.Search" class="input" placeholder="Search by username" />
+    <input type="text" name="Search" value="@Model.Search" class="input" placeholder="Buscar pelo nome" />
     @if (Model.CanManageUserStatus)
     {
         <select name="StatusFilter" class="select" onchange="this.form.submit()">
-            <option value="" selected="@(string.IsNullOrEmpty(Model.StatusFilter))">All statuses</option>
-            <option value="probation" selected="@(Model.StatusFilter == "probation")">On probation</option>
-            <option value="tongueless" selected="@(Model.StatusFilter == "tongueless")">Tongueless</option>
-            <option value="banned" selected="@(Model.StatusFilter == "banned")">Banned</option>
+            <option value="" selected="@(string.IsNullOrEmpty(Model.StatusFilter))">Todas as situações</option>
+            <option value="probation" selected="@(Model.StatusFilter == "probation")">Em observação</option>
+            <option value="tongueless" selected="@(Model.StatusFilter == "tongueless")">Sem Língua</option>
+            <option value="banned" selected="@(Model.StatusFilter == "banned")">Banidos</option>
         </select>
     }
-    <button type="submit" class="btn btn-primary">Search</button>
+    <button type="submit" class="btn btn-primary">Buscar</button>
 </form>
 
 <div class="overflow-x-auto">
     <table class="table">
         <thead>
             <tr>
-                <th class="whitespace-nowrap">@SortHeader("username", "Username")</th>
-                <th class="text-right whitespace-nowrap">@SortHeader("ongoing", "Ongoing games")</th>
-                <th class="text-right whitespace-nowrap">@SortHeader("finished", "Finished games")</th>
-                <th class="text-right whitespace-nowrap">@SortHeader("won", "Won games")</th>
-                <th class="text-right whitespace-nowrap">@SortHeader("winrate", "Win rate")</th>
-                <th class="text-right whitespace-nowrap">@SortHeader("removed", "Replaced games")</th>
-                <th class="text-right whitespace-nowrap">@SortHeader("replacer", "Replacer games")</th>
-                <th class="whitespace-nowrap">@SortHeader("created", "Created")</th>
-                <th class="whitespace-nowrap">@SortHeader("activity", "Last activity")</th>
+                <th class="whitespace-nowrap">@SortHeader("username", "Nome")</th>
+                <th class="text-right whitespace-nowrap">@SortHeader("ongoing", "Em andamento")</th>
+                <th class="text-right whitespace-nowrap">@SortHeader("finished", "Terminadas")</th>
+                <th class="text-right whitespace-nowrap">@SortHeader("won", "Vitórias")</th>
+                <th class="text-right whitespace-nowrap">@SortHeader("winrate", "Taxa de vitória")</th>
+                <th class="text-right whitespace-nowrap">@SortHeader("removed", "Substituído")</th>
+                <th class="text-right whitespace-nowrap">@SortHeader("replacer", "Como substituto")</th>
+                <th class="whitespace-nowrap">@SortHeader("created", "Conta criada")</th>
+                <th class="whitespace-nowrap">@SortHeader("activity", "Última atividade")</th>
                 @if (Model.CanManageUserStatus)
                 {
                     <th></th>
@@ -84,16 +84,14 @@
                 var isBanned = roles.Contains(RoleNames.Banned);
                 var isOnProbation = roles.Contains(RoleNames.OnProbation);
                 var isTongueless = roles.Contains(RoleNames.Tongueless);
-                var winRateDisplay = user.CachedWinRate.HasValue
-                    ? $"{(user.CachedWinRate.Value * 100).ToString("F1", CultureInfo.InvariantCulture)} %"
-                    : "n/a";
+                var winRateDisplay = RoleBadges.FormatWinRate(user.CachedWinRate);
                 <tr>
                     <td class="whitespace-nowrap">
                         <div class="flex flex-nowrap items-center gap-1">
                             <a class="link link-hover" href="/user/@user.Id">@user.DisplayName</a>
                             @foreach (var role in displayRoles)
                             {
-                                <span class="badge badge-sm @RoleBadges.Classes.GetValueOrDefault(role, "badge-neutral")">@role</span>
+                                <span class="badge badge-sm @RoleBadges.Classes.GetValueOrDefault(role, "badge-neutral")">@RoleBadges.DisplayName(role)</span>
                             }
                         </div>
                     </td>
@@ -111,23 +109,23 @@
                             <div class="flex flex-nowrap items-center gap-2 h-8">
                                 @if (isProtected)
                                 {
-                                    <span class="opacity-50 text-sm whitespace-nowrap">Protected</span>
+                                    <span class="opacity-50 text-sm whitespace-nowrap">Protegido</span>
                                 }
                                 else
                                 {
                                     <form method="post" asp-page-handler="ToggleStatus" asp-route-id="@user.Id" asp-route-role="@RoleNames.OnProbation" asp-route-Search="@Model.Search" asp-route-PageNumber="@Model.PageNumber" asp-route-PageSize="@Model.PageSize" asp-route-SortBy="@Model.SortBy" asp-route-SortDir="@Model.SortDir" asp-route-StatusFilter="@Model.StatusFilter">
                                         <button type="submit" class="btn btn-sm whitespace-nowrap @(isOnProbation ? "btn-success" : "btn-warning")">
-                                            @(isOnProbation ? "Remove probation" : "On probation")
+                                            @(isOnProbation ? "Tirar observação" : "Em observação")
                                         </button>
                                     </form>
                                     <form method="post" asp-page-handler="ToggleStatus" asp-route-id="@user.Id" asp-route-role="@RoleNames.Tongueless" asp-route-Search="@Model.Search" asp-route-PageNumber="@Model.PageNumber" asp-route-PageSize="@Model.PageSize" asp-route-SortBy="@Model.SortBy" asp-route-SortDir="@Model.SortDir" asp-route-StatusFilter="@Model.StatusFilter">
                                         <button type="submit" class="btn btn-sm whitespace-nowrap @(isTongueless ? "btn-success" : "btn-warning")">
-                                            @(isTongueless ? "Remove tongueless" : "Tongueless")
+                                            @(isTongueless ? "Devolver a língua" : "Sem Língua")
                                         </button>
                                     </form>
                                     <form method="post" asp-page-handler="ToggleStatus" asp-route-id="@user.Id" asp-route-role="@RoleNames.Banned" asp-route-Search="@Model.Search" asp-route-PageNumber="@Model.PageNumber" asp-route-PageSize="@Model.PageSize" asp-route-SortBy="@Model.SortBy" asp-route-SortDir="@Model.SortDir" asp-route-StatusFilter="@Model.StatusFilter">
                                         <button type="submit" class="btn btn-sm whitespace-nowrap @(isBanned ? "btn-success" : "btn-error")">
-                                            @(isBanned ? "Unban" : "Ban")
+                                            @(isBanned ? "Desbanir" : "Banir")
                                         </button>
                                     </form>
                                 }

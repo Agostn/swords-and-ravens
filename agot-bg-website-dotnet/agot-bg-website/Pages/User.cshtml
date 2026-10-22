@@ -15,7 +15,7 @@
         <span>@Model.ViewedUser.DisplayName</span>
         @if (!string.IsNullOrEmpty(Model.ViewedUser.LastWonTournament))
         {
-            <span class="tooltip tooltip-bottom text-warning" data-tip="Winner of @Model.ViewedUser.LastWonTournament">🏆</span>
+            <span class="tooltip tooltip-bottom text-warning" data-tip="Vencedor de @Model.ViewedUser.LastWonTournament">🏆</span>
         }
         @if (!string.IsNullOrEmpty(Model.ViewedUser.CustomUserBadge))
         {
@@ -24,7 +24,7 @@
     </h1>
     @if (!string.IsNullOrEmpty(Model.ViewedUser.ProfileText))
     {
-        <p class="mt-2"><b>Personal profile text:</b> @Model.ViewedUser.ProfileText</p>
+        <p class="mt-2"><b>Sobre:</b> @Model.ViewedUser.ProfileText</p>
     }
 </div>
 
@@ -33,47 +33,47 @@
         <div class="card bg-base-200 shadow-md border border-base-300 p-6">
             <ul class="flex flex-col divide-y divide-base-300">
                 <li class="flex items-center justify-between gap-3 py-2.5">
-                    <span class="font-semibold">Last activity</span>
+                    <span class="font-semibold">Última atividade</span>
                     <span class="text-base-content/80 text-right">@Model.RelativeLastActivity</span>
                 </li>
                 <li class="flex items-center justify-between gap-3 py-2.5">
-                    <span class="font-semibold">Joined on</span>
-                    <span class="text-base-content/80 text-right">@Model.ViewedUser.CreatedAt.ToLocalTime().ToString("MMM d, yyyy")</span>
+                    <span class="font-semibold">Entrou em</span>
+                    <span class="text-base-content/80 text-right">@Model.ViewedUser.CreatedAt.ToLocalTime().ToString("d 'de' MMM 'de' yyyy")</span>
                 </li>
                 <li class="flex items-center justify-between gap-3 py-2.5">
-                    <span class="font-semibold">Ongoing games</span>
+                    <span class="font-semibold">Em andamento</span>
                     <span class="badge badge-warning badge-lg">@Model.OngoingCount</span>
                 </li>
                 <li class="flex items-center justify-between gap-3 py-2.5">
-                    <span class="font-semibold">Finished games</span>
+                    <span class="font-semibold">Terminadas</span>
                     <span class="badge badge-lg">@Model.FinishedCount</span>
                 </li>
                 <li class="flex items-center justify-between gap-3 py-2.5">
-                    <span class="font-semibold">Won games</span>
+                    <span class="font-semibold">Vitórias</span>
                     <span class="badge badge-success badge-lg">@Model.WonCount</span>
                 </li>
                 <li class="flex items-center justify-between gap-3 py-2.5">
-                    <span class="font-semibold">Replacer games</span>
-                    <span class="badge badge-lg" title="Games joined by seating into an existing house, helping a game that would otherwise have stalled continue.">@Model.ReplacerGamesCount</span>
+                    <span class="font-semibold">Como substituto</span>
+                    <span class="badge badge-lg" title="Partidas em que entrou no lugar de alguém numa Casa que já existia, ajudando uma partida que ia travar a continuar.">@Model.ReplacerGamesCount</span>
                 </li>
                 <li class="flex items-center justify-between gap-3 py-2.5 pl-4 text-sm opacity-80">
-                    <span>&#8627; Replacer wins</span>
-                    <span class="badge badge-success badge-sm" title="Already included in Won games above.">@Model.ReplacerWinsCount</span>
+                    <span>&#8627; Vitórias como substituto</span>
+                    <span class="badge badge-success badge-sm" title="Já contadas em Vitórias, acima.">@Model.ReplacerWinsCount</span>
                 </li>
                 <li class="flex items-center justify-between gap-3 py-2.5 pl-4 text-sm opacity-80">
-                    <span>&#8627; Replacer losses (excluded)</span>
-                    <span class="badge badge-ghost badge-sm" title="Excluded entirely from Win rate below - jumping in to help never hurts your win rate.">@Model.ReplacerLossesExcludedCount</span>
+                    <span>&#8627; Derrotas como substituto (não contam)</span>
+                    <span class="badge badge-ghost badge-sm" title="Não entram na Taxa de vitória abaixo: entrar para ajudar nunca piora sua taxa.">@Model.ReplacerLossesExcludedCount</span>
                 </li>
                 <li class="flex items-center justify-between gap-3 py-2.5">
-                    <span class="font-semibold">Replaced / left&nbsp;early</span>
+                    <span class="font-semibold">Substituído / saiu&nbsp;antes</span>
                     <span class="badge badge-error badge-lg">@Model.RemovedFromGameCount</span>
                 </li>
                 <li class="flex items-center justify-between gap-3 py-2.5">
-                    <span class="font-semibold">Win rate</span>
+                    <span class="font-semibold">Taxa de vitória</span>
                     <span class="badge badge-info badge-lg">@Model.WinRateDisplay</span>
                 </li>
                 <li class="flex items-center justify-between gap-3 py-2.5">
-                    <span class="font-semibold">Average PBEM<br />response time</span>
+                    <span class="font-semibold">Tempo médio de<br />resposta (PBEM)</span>
                     <span class="text-base-content/80 text-right">@Model.AveragePbemResponseTimeDisplay</span>
                 </li>
             </ul>
@@ -83,12 +83,12 @@
     <div class="lg:col-span-9 flex flex-col gap-4">
         <details class="collapse collapse-arrow bg-base-200 shadow-md border border-base-300" data-collapse-key="user-games"@(Model.Request.IsCollapseSectionOpen("user-games", true) ? " open" : "")>
             <summary class="collapse-title text-lg font-semibold">
-                Games <span class="badge badge-lg align-middle ml-1">@Model.GamesOfUser.Count</span>
+                Partidas <span class="badge badge-lg align-middle ml-1">@Model.GamesOfUser.Count</span>
             </summary>
             <div class="collapse-content">
                 @if (Model.GamesOfUser.Count == 0)
                 {
-                    <p class="opacity-70">No games</p>
+                    <p class="opacity-70">Nenhuma partida</p>
                 }
                 else
                 {
@@ -107,8 +107,8 @@
                             <thead>
                                 <tr>
                                     <th></th>
-                                    <th>Name</th>
-                                    <th>Players</th>
+                                    <th>Nome</th>
+                                    <th>Jogadores</th>
                                     <th></th>
                                     @if (Model.CanPlayAsAnotherPlayer)
                                     {
@@ -123,24 +123,24 @@
                                         <td class="text-center">
                                             @if (game.State == GameState.InLobby)
                                             {
-                                                <span class="badge badge-success">Open</span>
+                                                <span class="badge badge-success">Aberta</span>
                                             }
                                             else if (game.State == GameState.Ongoing)
                                             {
-                                                <span class="badge badge-warning">Ongoing</span>
+                                                <span class="badge badge-warning">Em andamento</span>
                                             }
                                             else if (game.IsWinner == true)
                                             {
-                                                <i class="fa-solid fa-crown text-2xl align-middle" title="Won" aria-label="Won"></i>
+                                                <i class="fa-solid fa-crown text-2xl align-middle" title="Venceu" aria-label="Venceu"></i>
                                             }
                                         </td>
                                         <td class="whitespace-normal break-words">
-                                            <span class="badge @(game.IsPbem ? "badge-info" : "badge-success") align-middle" title="@(game.IsPbem ? "Play By E-Mail - players receive an e-mail when it is their turn" : "Live game")">
-                                                @(game.IsPbem ? "PBEM" : "Live")
+                                            <span class="badge @(game.IsPbem ? "badge-info" : "badge-success") align-middle" title="@(game.IsPbem ? "Por turnos (PBEM): cada jogador recebe um e-mail quando chega a vez dele" : "Partida ao vivo")">
+                                                @(game.IsPbem ? "PBEM" : "Ao vivo")
                                             </span>
                                             @if (game.IsReplacer)
                                             {
-                                                <span class="badge align-middle" title="You joined this game as a replacer, seating into an existing house.">Replacer</span>
+                                                <span class="badge align-middle" title="Entrou nesta partida como substituto, no lugar de alguém numa Casa que já existia.">Substituto</span>
                                             }
                                             @if (!string.IsNullOrEmpty(game.House))
                                             {
@@ -154,7 +154,7 @@
                                             @game.PlayersCount@(game.MaxPlayerCount is not null && game.PlayersCount != game.MaxPlayerCount ? $"/{game.MaxPlayerCount}" : "")
                                         </td>
                                         <td class="whitespace-nowrap">
-                                            <button type="button" class="btn btn-ghost btn-sm btn-square js-game-settings-btn" title="View game settings" aria-label="View game settings"
+                                            <button type="button" class="btn btn-ghost btn-sm btn-square js-game-settings-btn" title="Ver opções da partida" aria-label="Ver opções da partida"
                                                     data-game-name="@game.Name" data-setup-name="@game.SetupName" data-player-count="@game.PlayersCount@(game.MaxPlayerCount is not null && game.PlayersCount != game.MaxPlayerCount ? $"/{game.MaxPlayerCount}" : "")"
                                                     data-owner-name="@game.OwnerDisplayName"
                                                     data-is-faceless="false"
@@ -171,7 +171,7 @@
                                         {
                                             <td class="whitespace-nowrap">
                                                 <a class="btn btn-outline btn-sm" href="/play/@game.GameId/@Model.ViewedUser.Id" target="_blank" rel="noopener noreferrer">
-                                                    Join as
+                                                    Entrar como
                                                 </a>
                                             </td>
                                         }
@@ -188,7 +188,7 @@
         {
             <details class="collapse collapse-arrow bg-base-200 shadow-md border border-base-300" data-collapse-key="user-cancelled-games"@(Model.Request.IsCollapseSectionOpen("user-cancelled-games", false) ? " open" : "")>
                 <summary class="collapse-title text-lg font-semibold">
-                    Cancelled games <span class="badge badge-lg align-middle ml-1">@Model.CancelledGames.Count</span>
+                    Partidas canceladas <span class="badge badge-lg align-middle ml-1">@Model.CancelledGames.Count</span>
                 </summary>
                 <div class="collapse-content">
                     <div class="overflow-x-auto overflow-y-auto rounded-box border border-base-300 bg-base-100" style="max-height: 1000px;">
@@ -204,8 +204,8 @@
                             </colgroup>
                             <thead>
                                 <tr>
-                                    <th>Name</th>
-                                    <th>Players</th>
+                                    <th>Nome</th>
+                                    <th>Jogadores</th>
                                     <th></th>
                                     @if (Model.CanPlayAsAnotherPlayer)
                                     {
@@ -218,18 +218,18 @@
                                 {
                                     <tr>
                                         <td class="whitespace-normal break-words">
-                                            <span class="badge @(game.IsPbem ? "badge-info" : "badge-success") align-middle" title="@(game.IsPbem ? "Play By E-Mail - players receive an e-mail when it is their turn" : "Live game")">
-                                                @(game.IsPbem ? "PBEM" : "Live")
+                                            <span class="badge @(game.IsPbem ? "badge-info" : "badge-success") align-middle" title="@(game.IsPbem ? "Por turnos (PBEM): cada jogador recebe um e-mail quando chega a vez dele" : "Partida ao vivo")">
+                                                @(game.IsPbem ? "PBEM" : "Ao vivo")
                                             </span>
                                             @if (game.IsReplacer)
                                             {
-                                                <span class="badge align-middle" title="You joined this game as a replacer, seating into an existing house.">Replacer</span>
+                                                <span class="badge align-middle" title="Entrou nesta partida como substituto, no lugar de alguém numa Casa que já existia.">Substituto</span>
                                             }
                                             <a class="link font-semibold text-base text-base-content" href="/play/@game.GameId" target="_blank" rel="noopener noreferrer">@game.Name</a>
                                         </td>
                                         <td class="text-center whitespace-nowrap">@game.PlayersCount</td>
                                         <td class="whitespace-nowrap">
-                                            <button type="button" class="btn btn-ghost btn-sm btn-square js-game-settings-btn" title="View game settings" aria-label="View game settings"
+                                            <button type="button" class="btn btn-ghost btn-sm btn-square js-game-settings-btn" title="Ver opções da partida" aria-label="Ver opções da partida"
                                                     data-game-name="@game.Name" data-setup-name="@game.SetupName" data-player-count="@game.PlayersCount"
                                                     data-owner-name="@game.OwnerDisplayName"
                                                     data-is-faceless="false"
@@ -245,7 +245,7 @@
                                         {
                                             <td class="whitespace-nowrap">
                                                 <a class="btn btn-outline btn-sm" href="/play/@game.GameId/@Model.ViewedUser.Id" target="_blank" rel="noopener noreferrer">
-                                                    Join as
+                                                    Entrar como
                                                 </a>
                                             </td>
                                         }
@@ -262,10 +262,10 @@
         {
             <details class="collapse collapse-arrow bg-base-200 shadow-md border border-base-300" data-collapse-key="user-previous-games"@(Model.Request.IsCollapseSectionOpen("user-previous-games", false) ? " open" : "")>
                 <summary class="collapse-title text-lg font-semibold">
-                    Previously participated games <span class="badge badge-lg align-middle ml-1">@Model.PreviouslyParticipatedGames.Count</span>
+                    Partidas que deixou <span class="badge badge-lg align-middle ml-1">@Model.PreviouslyParticipatedGames.Count</span>
                 </summary>
                 <div class="collapse-content">
-                    <p class="opacity-70 text-sm mb-3">Games you were replaced or removed from before they ended.</p>
+                    <p class="opacity-70 text-sm mb-3">Partidas em que você foi substituído ou removido antes do fim.</p>
                     <div class="overflow-x-auto overflow-y-auto rounded-box border border-base-300 bg-base-100" style="max-height: 1000px;">
                         <table class="table table-zebra table-fixed w-full">
                             <colgroup>
@@ -278,9 +278,9 @@
                             <thead>
                                 <tr>
                                     <th></th>
-                                    <th>Name</th>
-                                    <th>Players</th>
-                                    <th>Reason</th>
+                                    <th>Nome</th>
+                                    <th>Jogadores</th>
+                                    <th>Motivo</th>
                                     <th></th>
                                 </tr>
                             </thead>
@@ -291,16 +291,16 @@
                                         <td class="text-center">
                                             @if (game.State == GameState.Cancelled)
                                             {
-                                                <span class="badge badge-neutral" title="This game was later cancelled - it never counted towards your stats.">Cancelled</span>
+                                                <span class="badge badge-neutral" title="Esta partida foi cancelada depois e nunca contou nas suas estatísticas.">Cancelada</span>
                                             }
                                         </td>
                                         <td class="whitespace-normal break-words">
-                                            <span class="badge @(game.IsPbem ? "badge-info" : "badge-success") align-middle" title="@(game.IsPbem ? "Play By E-Mail - players receive an e-mail when it is their turn" : "Live game")">
-                                                @(game.IsPbem ? "PBEM" : "Live")
+                                            <span class="badge @(game.IsPbem ? "badge-info" : "badge-success") align-middle" title="@(game.IsPbem ? "Por turnos (PBEM): cada jogador recebe um e-mail quando chega a vez dele" : "Partida ao vivo")">
+                                                @(game.IsPbem ? "PBEM" : "Ao vivo")
                                             </span>
                                             @if (game.IsReplacer)
                                             {
-                                                <span class="badge align-middle" title="You had joined this game as a replacer - this removal is excluded from your Removed count and win rate.">Replacer</span>
+                                                <span class="badge align-middle" title="Você tinha entrado como substituto: esta saída não conta nas suas substituições nem na taxa de vitória.">Substituto</span>
                                             }
                                             <a class="link font-semibold text-base text-base-content" href="/play/@game.GameId" target="_blank" rel="noopener noreferrer">@game.Name</a>
                                         </td>
@@ -310,13 +310,13 @@
                                         <td class="whitespace-nowrap">
                                             @(game.Reason switch
                                             {
-                                                PlayerReplacementReason.Vote => "Voted out",
-                                                PlayerReplacementReason.ClockTimeout => "Clock timeout",
-                                                _ => "Unknown",
+                                                PlayerReplacementReason.Vote => "Tirado por votação",
+                                                PlayerReplacementReason.ClockTimeout => "Tempo esgotado",
+                                                _ => "Desconhecido",
                                             })
                                         </td>
                                         <td class="whitespace-nowrap">
-                                            <button type="button" class="btn btn-ghost btn-sm btn-square js-game-settings-btn" title="View game settings" aria-label="View game settings"
+                                            <button type="button" class="btn btn-ghost btn-sm btn-square js-game-settings-btn" title="Ver opções da partida" aria-label="Ver opções da partida"
                                                     data-game-name="@game.Name" data-setup-name="@game.SetupName" data-player-count="@game.PlayersCount@(game.MaxPlayerCount is not null && game.PlayersCount != game.MaxPlayerCount ? $"/{game.MaxPlayerCount}" : "")"
                                                     data-owner-name="@game.OwnerDisplayName"
                                                     data-is-faceless="@game.IsFaceless"

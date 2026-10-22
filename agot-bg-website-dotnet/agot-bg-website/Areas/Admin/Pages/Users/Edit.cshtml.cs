@@ -130,8 +130,8 @@ public class EditModel(UserManager<ApplicationUser> userManager) : PageModel
 
         StatusMessage =
             errors.Count > 0
-                ? $"Some changes for {user.UserName} could not be saved: {string.Join("; ", errors)}"
-                : $"Roles and permissions for {user.UserName} updated.";
+                ? $"Erro: algumas mudanças de {user.UserName} não foram salvas: {string.Join("; ", errors)}"
+                : $"Funções e permissões de {user.UserName} atualizadas.";
         return RedirectToPage("./Index");
     }
 }

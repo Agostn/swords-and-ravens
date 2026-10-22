@@ -420,7 +420,7 @@ public class UsersModel(
         {
             // Refuse to touch Admins/High Members here, even if the caller crafted the request
             // manually - the UI never renders these buttons for them in the first place.
-            StatusMessage = $"{user.UserName}'s status cannot be changed here.";
+            StatusMessage = $"Erro: a situação de {user.UserName} não pode ser mudada aqui.";
             return RedirectToPage(
                 new
                 {
@@ -436,20 +436,20 @@ public class UsersModel(
 
         var roleLabel = role switch
         {
-            RoleNames.OnProbation => "on probation",
-            RoleNames.Tongueless => "tongueless",
-            _ => "banned",
+            RoleNames.OnProbation => "em observação",
+            RoleNames.Tongueless => "sem língua",
+            _ => "banido",
         };
 
         if (existingRoles.Contains(role))
         {
             await userManager.RemoveFromRoleAsync(user, role);
-            StatusMessage = $"{user.UserName} is no longer {roleLabel}.";
+            StatusMessage = $"{user.UserName} não está mais {roleLabel}.";
         }
         else
         {
             await userManager.AddToRoleAsync(user, role);
-            StatusMessage = $"{user.UserName} is now {roleLabel}.";
+            StatusMessage = $"{user.UserName} agora está {roleLabel}.";
         }
 
         // Force the user out of any active session immediately, mirroring the Admin ban toggle and

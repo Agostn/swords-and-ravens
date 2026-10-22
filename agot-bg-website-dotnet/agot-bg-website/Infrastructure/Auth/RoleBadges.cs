@@ -19,4 +19,26 @@ public static class RoleBadges
         [RoleNames.OnProbation] = "badge-warning",
         [RoleNames.Tongueless] = "badge-warning",
     };
+
+    /// <summary>
+    /// Nome da função mostrado na tela, em português. O nome guardado no banco (RoleNames)
+    /// continua em inglês: não traduzir lá, senão as permissões param de funcionar.
+    /// </summary>
+    public static string DisplayName(string role) =>
+        role switch
+        {
+            RoleNames.Member => "Membro",
+            RoleNames.Admin => "Admin",
+            RoleNames.HighMember => "Membro Ilustre",
+            RoleNames.Banned => "Banido",
+            RoleNames.OnProbation => "Em observação",
+            RoleNames.Tongueless => "Sem Língua",
+            _ => role,
+        };
+
+    /// <summary>Taxa de vitória no formato brasileiro (ex.: "45,5%"); "—" quando não há.</summary>
+    public static string FormatWinRate(double? winRate) =>
+        winRate.HasValue
+            ? (winRate.Value * 100).ToString("F1", System.Globalization.CultureInfo.GetCultureInfo("pt-BR")) + "%"
+            : "—";
 }

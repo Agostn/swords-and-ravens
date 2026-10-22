@@ -1,0 +1,132 @@
+{
+"Areas/Admin/Pages/Index.cshtml": [
+ [">Users<", ">Usuários<"],
+ ["Search users, ban/unban, edit roles.", "Buscar usuários, banir/desbanir, editar funções."],
+ [">Games<", ">Partidas<"],
+ ["Search games, view/edit the raw serialized game, cancel a game.", "Buscar partidas, ver/editar o JSON salvo da partida, cancelar uma partida."],
+ [">Rooms<", ">Salas de chat<"],
+ ["Browse chat rooms (public/issues/per-game).", "Ver as salas de chat (geral/problemas/de cada partida)."],
+ [">Messages<", ">Mensagens<"],
+ ["Browse chat messages for a specific room.", "Ver as mensagens de uma sala."]
+],
+"Areas/Admin/Pages/_AdminNav.cshtml": [
+ [">Users<", ">Usuários<"], [">Roles<", ">Funções<"], [">Games<", ">Partidas<"], [">Rooms<", ">Salas<"], [">Messages<", ">Mensagens<"]
+],
+"Areas/Admin/Pages/Games/Index.cshtml": [
+ [">Games<", ">Partidas<"],
+ ["placeholder=\"Search by name or id\"", "placeholder=\"Buscar por nome ou id\""],
+ [">Search<", ">Buscar<"],
+ ["@SortHeader(\"name\", \"Name\")", "@SortHeader(\"name\", \"Nome\")"],
+ ["@SortHeader(\"owner\", \"Owner\")", "@SortHeader(\"owner\", \"Criador\")"],
+ ["@SortHeader(\"state\", \"State\")", "@SortHeader(\"state\", \"Situação\")"],
+ ["@SortHeader(\"lastActive\", \"Last active\")", "@SortHeader(\"lastActive\", \"Última atividade\")"],
+ [">View / Edit<", ">Ver / Editar<"]
+],
+"Areas/Admin/Pages/Games/Edit.cshtml": [
+ ["\"Admin - Edit game\"", "\"Admin - Editar partida\""],
+ ["Edit game — @Model.GameEntity.Name", "Editar partida — @Model.GameEntity.Name"],
+ ["\n                Raw serialized game (backup — untouched, unindented, exactly as stored)\n            ", "\n                Partida salva original (cópia de segurança — sem mexer, exatamente como está no banco)\n            "],
+ ["\n                Copy to clipboard\n            ", "\n                Copiar\n            "],
+ ["\n            Read-only. Copy this before editing below, in case a manual edit or our reordering\n            below ever goes wrong.\n        ", "\n            Só leitura. Copie isto antes de editar abaixo, caso a edição manual ou a\n            reorganização dê errado.\n        "],
+ ["\n                Serialized game (raw JSON, editable — minified by default; the game log inside can\n                get huge for very long games)\n            ", "\n                Partida salva (JSON, editável — compactado por padrão; o histórico dentro dele pode\n                ficar enorme em partidas muito longas)\n            "],
+ ["\n                    Pretty-print\n                ", "\n                    Formatar\n                "],
+ ["\n                    Minify\n                ", "\n                    Compactar\n                "],
+ [">View of game (raw JSON)<", ">Resumo da partida (JSON)<"],
+ [">Save<", ">Salvar<"],
+ [">Back<", ">Voltar<"],
+ ["\"return confirm('Are you sure you want to cancel this game?');\"", "\"return confirm('Tem certeza de que quer cancelar esta partida?');\""],
+ [">Cancel game<", ">Cancelar partida<"],
+ ["\"Cannot format: invalid JSON (\"", "\"Não deu para formatar: JSON inválido (\""],
+ ["copied ? \"Copied!\" : \"Copy failed\"", "copied ? \"Copiado!\" : \"Não deu para copiar\""]
+],
+"Areas/Admin/Pages/Games/Edit.cshtml.cs": [
+ ["$\"Serialized game JSON is {SerializedGameJson.Length:N0} characters, which exceeds \"\n", "$\"O JSON da partida tem {SerializedGameJson.Length:N0} caracteres, mais que o \"\n"],
+ ["$\"the {MaxJsonFieldLength:N0} character limit. This shouldn't normally happen - \"\n                    + \"double check for an accidental paste/duplication before saving.\"", "$\"limite de {MaxJsonFieldLength:N0}. Isso normalmente não acontece - \"\n                    + \"confira se não colou algo duas vezes antes de salvar.\""],
+ ["$\"View of game JSON is {ViewOfGameJson.Length:N0} characters, which exceeds the \"\n", "$\"O JSON do resumo tem {ViewOfGameJson.Length:N0} caracteres, mais que o \"\n"],
+ ["$\"{MaxJsonFieldLength:N0} character limit. This shouldn't normally happen - \"\n                    + \"double check for an accidental paste/duplication before saving.\"", "$\"limite de {MaxJsonFieldLength:N0}. Isso normalmente não acontece - \"\n                    + \"confira se não colou algo duas vezes antes de salvar.\""],
+ ["$\"Game '{game.Name}' saved. Note: if the game server has this game loaded \"", "$\"Partida '{game.Name}' salva. Atenção: se o servidor do jogo estiver com esta partida aberta \""],
+ ["\"in memory, it will overwrite this on its next save — restart/reload the game server \"", "\"na memória, ele vai sobrescrever isto no próximo salvamento — reinicie o servidor do jogo \""],
+ ["\"session first if you need this edit to stick.\"", "\"antes, se quiser que a edição fique.\""]
+],
+"Areas/Admin/Pages/Messages/Index.cshtml": [
+ [">Messages<", ">Mensagens<"],
+ [">-- Select a room --<", ">-- Escolha uma sala --<"],
+ ["placeholder=\"Search room name\"", "placeholder=\"Buscar sala\""],
+ [">Search rooms<", ">Buscar salas<"],
+ ["placeholder=\"Search message text\"", "placeholder=\"Buscar no texto\""],
+ [">Go<", ">Ir<"],
+ ["Select a room above to browse its messages.", "Escolha uma sala acima para ver as mensagens."],
+ ["Room not found.", "Sala não encontrada."],
+ [">User<", ">Usuário<"], [">Text<", ">Texto<"], [">Created<", ">Criada<"]
+],
+"Areas/Admin/Pages/Roles/Edit.cshtml": [
+ ["\"Admin - Edit role permissions\"", "\"Admin - Permissões da função\""],
+ ["Edit permissions — @Model.RoleName", "Editar permissões — @Model.RoleName"],
+ [">Save<", ">Salvar<"], [">Cancel<", ">Cancelar<"]
+],
+"Areas/Admin/Pages/Roles/Edit.cshtml.cs": [
+ ["$\"Permissions for role {roleName} updated.\"", "$\"Permissões da função {roleName} atualizadas.\""]
+],
+"Areas/Admin/Pages/Roles/Index.cshtml": [
+ [">Roles &amp; permissions<", ">Funções e permissões<"],
+ ["\n    Grant a permission to every member of a role here. To grant a permission to a single user\n    without changing their roles, use ", "\n    Aqui você dá uma permissão a todos que têm uma função. Para dar uma permissão a um só usuário\n    sem mudar as funções dele, use "],
+ ["\n    on that user instead.\n", "\n    nesse usuário.\n"],
+ [">Edit roles<", ">Editar funções<"],
+ [">Role<", ">Função<"], [">Permissions<", ">Permissões<"], [">Edit permissions<", ">Editar permissões<"]
+],
+"Areas/Admin/Pages/Rooms/Index.cshtml": [
+ [">Rooms<", ">Salas de chat<"],
+ ["placeholder=\"Search by name or id\"", "placeholder=\"Buscar por nome ou id\""],
+ [">Search<", ">Buscar<"],
+ ["@SortHeader(\"name\", \"Name\")", "@SortHeader(\"name\", \"Nome\")"],
+ ["@SortHeader(\"public\", \"Public\")", "@SortHeader(\"public\", \"Pública\")"],
+ ["@SortHeader(\"maxRetrieveCount\", \"Max retrieve count\")", "@SortHeader(\"maxRetrieveCount\", \"Máx. de mensagens carregadas\")"],
+ [">Messages<", ">Mensagens<"],
+ ["@SortHeader(\"created\", \"Created\")", "@SortHeader(\"created\", \"Criada\")"],
+ ["@(room.Public ? \"Yes\" : \"No\")", "@(room.Public ? \"Sim\" : \"Não\")"],
+ [">View messages<", ">Ver mensagens<"]
+],
+"Areas/Admin/Pages/Users/Edit.cshtml": [
+ ["\"Admin - Edit user roles\"", "\"Admin - Funções do usuário\""],
+ ["Edit roles — @Model.TargetUser.UserName", "Editar funções — @Model.TargetUser.UserName"],
+ [">Roles<", ">Funções<"],
+ [">Direct permission overrides<", ">Permissões só deste usuário<"],
+ ["\n        Granted to this user only, on top of whatever their roles above already grant. Prefer\n        ", "\n        Valem só para este usuário, além do que as funções acima já dão. Prefira\n        "],
+ ["\n        instead when the grant should apply to everyone with that role.\n    ", "\n        quando a permissão deve valer para todos com aquela função.\n    "],
+ [">editing a role's permissions<", ">editar as permissões da função<"],
+ [">Save<", ">Salvar<"], [">Cancel<", ">Cancelar<"]
+],
+"Areas/Admin/Pages/Users/Edit.cshtml.cs": [
+ ["$\"Some changes for {user.UserName} could not be saved: {string.Join(\"; \", errors)}\"", "$\"Erro: algumas mudanças de {user.UserName} não foram salvas: {string.Join(\"; \", errors)}\""],
+ ["$\"Roles and permissions for {user.UserName} updated.\"", "$\"Funções e permissões de {user.UserName} atualizadas.\""]
+],
+"Areas/Admin/Pages/Users/Index.cshtml": [
+ [">Users<", ">Usuários<"],
+ ["placeholder=\"Search by username, email or id\"", "placeholder=\"Buscar por nome, e-mail ou id\""],
+ [">Search<", ">Buscar<"],
+ ["onsubmit=\"return confirm('Queue a cached stats recalculation for every user? This runs in the background and may take a while for a large user base.');\"", "onsubmit=\"return confirm('Recalcular as estatísticas de todos os usuários? Isso roda em segundo plano e pode demorar se houver muitos usuários.');\""],
+ ["title=\"Recalculate cached win-rate stats for every user in the background\"", "title=\"Recalcular em segundo plano as estatísticas de vitória de todos\""],
+ [">Recalculate stats for all users<", ">Recalcular estatísticas de todos<"],
+ ["@SortHeader(\"username\", \"Username\")", "@SortHeader(\"username\", \"Nome\")"],
+ ["@SortHeader(\"email\", \"Email\")", "@SortHeader(\"email\", \"E-mail\")"],
+ [">Roles<", ">Funções<"],
+ ["@SortHeader(\"created\", \"Created\")", "@SortHeader(\"created\", \"Criado\")"],
+ [">Deleted<", ">Apagado<"],
+ ["\"(unconfirmed)\"", "\"(não confirmado)\""],
+ [">Edit roles<", ">Editar funções<"],
+ ["title=\"Force an immediate recalculation of this user's cached win-rate stats\"", "title=\"Recalcular agora as estatísticas de vitória deste usuário\""],
+ [">Recalc stats<", ">Recalcular<"],
+ ["@(isBanned ? \"Unban\" : \"Ban\")", "@(isBanned ? \"Desbanir\" : \"Banir\")"],
+ ["onsubmit=\"return confirm('Permanently delete this account? This cannot be undone.');\"", "onsubmit=\"return confirm('Apagar esta conta para sempre? Isso não pode ser desfeito.');\""],
+ [">Delete<", ">Apagar<"]
+],
+"Areas/Admin/Pages/Users/Index.cshtml.cs": [
+ ["$\"{user.UserName} has been unbanned.\"", "$\"{user.UserName} foi desbanido.\""],
+ ["$\"{user.UserName} has been banned.\"", "$\"{user.UserName} foi banido.\""],
+ ["$\"Failed to update ban status for {user.UserName}: {DescribeErrors(result)}\"", "$\"Erro ao mudar o banimento de {user.UserName}: {DescribeErrors(result)}\""],
+ ["$\"{displayName} has Took the Black - their account has been deleted.\"", "$\"{displayName} vestiu o negro (Took the Black) - a conta foi apagada.\""],
+ ["$\"Failed to delete {displayName}: {DescribeErrors(result)}\"", "$\"Erro ao apagar {displayName}: {DescribeErrors(result)}\""],
+ ["$\"Recalculated cached win-rate stats for {user.DisplayName}.\"", "$\"Estatísticas de vitória de {user.DisplayName} recalculadas.\""],
+ ["$\"Queued cached stats recalculation for {userIds.Count} user(s). This runs in the background and may take a while.\"", "$\"Recálculo das estatísticas de {userIds.Count} usuário(s) na fila. Roda em segundo plano e pode demorar.\""]
+]
+}

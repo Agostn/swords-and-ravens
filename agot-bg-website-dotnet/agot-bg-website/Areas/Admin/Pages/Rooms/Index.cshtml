@@ -2,7 +2,7 @@
 @model agot_bg_website.Areas.Admin.Pages.Rooms.IndexModel
 @using Microsoft.AspNetCore.Html
 @{
-    ViewData["Title"] = "Admin - Rooms";
+    ViewData["Title"] = "Admin - Salas";
 
     // Builds a sortable column header link that preserves the current search/page-size and
     // resets back to page 1 (sorting differently makes the previous page number meaningless).
@@ -27,25 +27,25 @@
 
 <partial name="_AdminNav" />
 
-<h1 class="text-2xl font-bold mb-4">Rooms</h1>
+<h1 class="text-2xl font-bold mb-4">Salas de chat</h1>
 
 <form method="get" class="mb-4 flex gap-2">
     <input type="hidden" name="pageSize" value="@Model.PageSize" />
     <input type="hidden" name="SortBy" value="@Model.SortBy" />
     <input type="hidden" name="SortDir" value="@Model.SortDir" />
-    <input type="text" name="Search" value="@Model.Search" class="input" placeholder="Search by name or id" />
-    <button type="submit" class="btn btn-primary">Search</button>
+    <input type="text" name="Search" value="@Model.Search" class="input" placeholder="Buscar por nome ou id" />
+    <button type="submit" class="btn btn-primary">Buscar</button>
 </form>
 
 <div class="overflow-x-auto">
     <table class="table">
         <thead>
             <tr>
-                <th>@SortHeader("name", "Name")</th>
-                <th>@SortHeader("public", "Public")</th>
-                <th>@SortHeader("maxRetrieveCount", "Max retrieve count")</th>
-                <th>Messages</th>
-                <th>@SortHeader("created", "Created")</th>
+                <th>@SortHeader("name", "Nome")</th>
+                <th>@SortHeader("public", "Pública")</th>
+                <th>@SortHeader("maxRetrieveCount", "Máx. de mensagens carregadas")</th>
+                <th>Mensagens</th>
+                <th>@SortHeader("created", "Criada")</th>
                 <th></th>
             </tr>
         </thead>
@@ -54,12 +54,12 @@
             {
                 <tr>
                     <td>@room.Name</td>
-                    <td>@(room.Public ? "Yes" : "No")</td>
+                    <td>@(room.Public ? "Sim" : "Não")</td>
                     <td>@(room.MaxRetrieveCount?.ToString() ?? "-")</td>
                     <td>@Model.MessageCountByRoomId.GetValueOrDefault(room.Id, 0).ToString("N0")</td>
                     <td>@room.CreatedAt.ToLocalTime().ToString("g")</td>
                     <td>
-                        <a class="btn btn-sm" asp-area="Admin" asp-page="/Messages/Index" asp-route-roomId="@room.Id">View messages</a>
+                        <a class="btn btn-sm" asp-area="Admin" asp-page="/Messages/Index" asp-route-roomId="@room.Id">Ver mensagens</a>
                     </td>
                 </tr>
             }

@@ -49,22 +49,22 @@ public class ContactModel(
     {
         [Required]
         [StringLength(100, MinimumLength = 2)]
-        [Display(Name = "Your name")]
+        [Display(Name = "Seu nome")]
         public string Name { get; set; } = string.Empty;
 
         [Required]
         [EmailAddress]
-        [Display(Name = "Your email")]
+        [Display(Name = "Seu e-mail")]
         public string Email { get; set; } = string.Empty;
 
         [Required]
         [StringLength(150, MinimumLength = 3)]
-        [Display(Name = "Subject")]
+        [Display(Name = "Assunto")]
         public string Subject { get; set; } = string.Empty;
 
         [Required]
         [StringLength(5000, MinimumLength = 10)]
-        [Display(Name = "Message")]
+        [Display(Name = "Mensagem")]
         public string Message { get; set; } = string.Empty;
 
         // Real visitors never see or fill this field, but simple spam bots populate every form
@@ -87,7 +87,7 @@ public class ContactModel(
             );
             ModelState.AddModelError(
                 string.Empty,
-                "The contact form isn't available right now. Please try again later."
+                "Erro: o formulário de contato não está disponível agora. Tente de novo mais tarde."
             );
             return Page();
         }
@@ -111,7 +111,7 @@ public class ContactModel(
 
         if (!string.IsNullOrWhiteSpace(Input.Website))
         {
-            ModelState.AddModelError(string.Empty, "Your message could not be sent.");
+            ModelState.AddModelError(string.Empty, "Erro: não foi possível enviar sua mensagem.");
             return Page();
         }
 
@@ -126,7 +126,7 @@ public class ContactModel(
         {
             ModelState.AddModelError(
                 string.Empty,
-                "Please complete the human verification challenge and try again."
+                "Complete a verificação de que você não é um robô e tente de novo."
             );
             return Page();
         }
@@ -141,7 +141,7 @@ public class ContactModel(
             Response.StatusCode = StatusCodes.Status429TooManyRequests;
             ModelState.AddModelError(
                 string.Empty,
-                $"You can send at most {MaxMessagesPerDay} messages per day. Please try again tomorrow."
+                $"Você pode mandar no máximo {MaxMessagesPerDay} mensagens por dia. Tente de novo amanhã."
             );
             return Page();
         }
@@ -152,7 +152,7 @@ public class ContactModel(
             BuildEmailHtml(Input, isAuthenticated)
         );
 
-        StatusMessage = "Thanks for reaching out! Your message has been sent.";
+        StatusMessage = "Obrigado pelo contato! Sua mensagem foi enviada.";
         return RedirectToPage();
     }
 
@@ -202,7 +202,7 @@ public class ContactModel(
     /// </summary>
     internal static string BuildEmailHtml(InputModel input, bool isAuthenticated)
     {
-        var statusLabel = isAuthenticated ? "verified account" : "not logged in";
+        var statusLabel = isAuthenticated ? "conta verificada" : "sem login";
         var senderLine =
             $"{WebUtility.HtmlEncode(input.Name)} &lt;{WebUtility.HtmlEncode(input.Email)}&gt; ({statusLabel})";
 
@@ -212,9 +212,9 @@ public class ContactModel(
             .Replace("\n", "<br />", StringComparison.Ordinal);
 
         return $"""
-            <p>A message was sent through the contact form on Swords and Ravens.</p>
-            <p><strong>From:</strong> {senderLine}<br />
-            <strong>Subject:</strong> {WebUtility.HtmlEncode(input.Subject)}</p>
+            <p>Chegou uma mensagem pelo formulário de contato do Swords and Ravens.</p>
+            <p><strong>De:</strong> {senderLine}<br />
+            <strong>Assunto:</strong> {WebUtility.HtmlEncode(input.Subject)}</p>
             <p>{message}</p>
             """;
     }

@@ -1,13 +1,13 @@
 @page "{id:guid}"
 @model agot_bg_website.Areas.Admin.Pages.Users.EditModel
 @{
-    ViewData["Title"] = "Admin - Edit user roles";
+    ViewData["Title"] = "Admin - Funções do usuário";
 }
 
-<h1 class="text-2xl font-bold mb-4">Edit roles — @Model.TargetUser.UserName</h1>
+<h1 class="text-2xl font-bold mb-4">Editar funções — @Model.TargetUser.UserName</h1>
 
 <form method="post">
-    <h2 class="text-lg font-semibold mb-2">Roles</h2>
+    <h2 class="text-lg font-semibold mb-2">Funções</h2>
     <div class="flex flex-col gap-2 mb-4">
         @foreach (var role in Model.AllRoles)
         {
@@ -19,11 +19,11 @@
         }
     </div>
 
-    <h2 class="text-lg font-semibold mb-2">Direct permission overrides</h2>
+    <h2 class="text-lg font-semibold mb-2">Permissões só deste usuário</h2>
     <p class="text-sm opacity-70 mb-2">
-        Granted to this user only, on top of whatever their roles above already grant. Prefer
-        <a class="link" asp-area="Admin" asp-page="/Roles/Index">editing a role's permissions</a>
-        instead when the grant should apply to everyone with that role.
+        Valem só para este usuário, além do que as funções acima já dão. Prefira
+        <a class="link" asp-area="Admin" asp-page="/Roles/Index">editar as permissões da função</a>
+        quando a permissão deve valer para todos com aquela função.
     </p>
     <div class="flex flex-col gap-2 mb-4">
         @foreach (var permission in Model.AllPermissions)
@@ -36,6 +36,6 @@
         }
     </div>
 
-    <button type="submit" class="btn btn-primary">Save</button>
-    <a class="btn" asp-page="./Index">Cancel</a>
+    <button type="submit" class="btn btn-primary">Salvar</button>
+    <a class="btn" asp-page="./Index">Cancelar</a>
 </form>

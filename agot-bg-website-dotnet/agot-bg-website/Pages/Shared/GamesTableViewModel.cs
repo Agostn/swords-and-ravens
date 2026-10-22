@@ -32,5 +32,5 @@ public sealed class GamesTableViewModel
 
     public bool OnProbation { get; init; }
 
-    public string EmptyMessage { get; init; } = "There are no games to show.";
+    public string EmptyMessage { get; init; } = "Nenhuma partida para mostrar.";
 }

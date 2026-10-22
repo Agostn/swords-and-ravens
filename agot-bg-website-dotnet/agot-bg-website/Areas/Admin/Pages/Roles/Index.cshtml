@@ -1,16 +1,16 @@
 @page
 @model agot_bg_website.Areas.Admin.Pages.Roles.IndexModel
 @{
-    ViewData["Title"] = "Admin - Roles";
+    ViewData["Title"] = "Admin - Funções";
 }
 
 <partial name="_AdminNav" />
 
-<h1 class="text-2xl font-bold mb-4">Roles &amp; permissions</h1>
+<h1 class="text-2xl font-bold mb-4">Funções e permissões</h1>
 <p class="mb-4 text-sm opacity-70">
-    Grant a permission to every member of a role here. To grant a permission to a single user
-    without changing their roles, use <a class="link" asp-area="Admin" asp-page="/Users/Index">Edit roles</a>
-    on that user instead.
+    Aqui você dá uma permissão a todos que têm uma função. Para dar uma permissão a um só usuário
+    sem mudar as funções dele, use <a class="link" asp-area="Admin" asp-page="/Users/Index">Editar funções</a>
+    nesse usuário.
 </p>
 
 <partial name="_StatusMessage" for="StatusMessage" />
@@ -19,8 +19,8 @@
     <table class="table">
         <thead>
             <tr>
-                <th>Role</th>
-                <th>Permissions</th>
+                <th>Função</th>
+                <th>Permissões</th>
                 <th></th>
             </tr>
         </thead>
@@ -30,7 +30,7 @@
                 <tr>
                     <td>@role.Name</td>
                     <td>@(role.Permissions.Count == 0 ? "—" : string.Join(", ", role.Permissions))</td>
-                    <td><a class="btn btn-sm" asp-page="./Edit" asp-route-roleName="@role.Name">Edit permissions</a></td>
+                    <td><a class="btn btn-sm" asp-page="./Edit" asp-route-roleName="@role.Name">Editar permissões</a></td>
                 </tr>
             }
         </tbody>
