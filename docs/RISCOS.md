@@ -8,7 +8,8 @@ Gravidade: 🔴 alta · 🟠 média · 🟡 baixa · Situação: ✅ resolvido �
 ## Como verificar antes de cada entrega
 
 1. **Checagem de tipos:** `cd agot-bg-game-server && node_modules/.bin/tsc --noEmit -p .` (precisa dar 0 erros).
-2. **Build do cliente:** `yarn run run-client` precisa terminar com "compiled successfully".
+2. **Build do cliente:** `yarn run run-client` precisa terminar com "compiled successfully". **Obrigatório:** o `tsc` não acusa expressão regular inválida (ex.: `a)` sem escape); só o build do webpack pega.
+2b. **Testes da tradução:** `node_modules/.bin/jest tests/i18n` (paridade de chaves en/pt-BR, parâmetros, tags, cartas e textos do servidor).
 3. **Partida de teste com o bot:** apague `src/server/website-client/local-entire-game.json`, reinicie o servidor, rode `tools/i18n/game.js` e depois `tools/i18n/bot.js` (joga com 3 Casas e tira prints). Confira os prints e o log do servidor.
 4. **Teste de travamento:** `tools/qa/crashtest.js` manda uma mensagem inválida de propósito; o servidor precisa continuar rodando.
 5. **Textos em inglês sobrando:** `node tools/i18n/strings.js <arquivos>`.
@@ -33,7 +34,10 @@ Gravidade: 🔴 alta · 🟠 média · 🟡 baixa · Situação: ✅ resolvido �
 | T1 | Os textos convertidos automaticamente usam chaves numeradas por arquivo (`auto.Arquivo.N`). Se o arquivo mudar muito, fica difícil saber qual chave é qual. | 🟡 | ⏳ | Ao editar um componente, dar nomes descritivos às chaves que mudar. |
 | T2 | Algumas frases foram montadas em pedaços no código original ("A Casa X deixou" + "para trás" + ...). Em português a ordem das palavras às vezes fica estranha. | 🟠 | ⏳ | Revisar o histórico da partida jogando; reescrever o código dessas frases para uma frase inteira com parâmetros. |
 | T3 | Plurais feitos com `+ "s"` no código. Funciona para "Fichas", "Cavaleiros", mas não para palavras como "ordens" ou "Soldados" vindo de "Footm-a-n". | 🟡 | ⏳ | Trocar pelo plural do sistema de tradução: `{n|ficha|fichas}`. |
-| T4 | Textos que o **servidor** gera (ex.: mensagens automáticas no chat, e-mails do site) continuam em inglês. | 🟠 | ⏳ | Levantar na tradução do site (.NET) e do servidor. |
+| T4 | Textos que o **servidor** gera (perguntas de escolha, votações, mensagens automáticas, e-mails do site) vêm em inglês. | 🟠 | 🛡️ 22/out | Perguntas/opções (SimpleChoice) e verbos das votações são traduzidos no cliente por `src/client/i18n/serverText.ts` (lista exata + modelos com regex). Texto novo que não estiver lá aparece em inglês sem quebrar. Falta: e-mails e páginas do site .NET. |
+| T7 | Textos das cartas ficam nos dados do jogo em inglês; o cliente troca pela tradução pelo id (`dataText`). Se o projeto original mudar o id ou o texto de uma carta, a tradução pode ficar desatualizada. | 🟡 | 🛡️ | Teste jest confere que toda carta tem tradução. Rodar `tools/i18n/dump-card-texts.ts` depois de atualizar do upstream e comparar. |
+| T8 | As imagens das cartas e do mapa têm o texto em inglês gravado na arte (ex.: dica da carta de Westeros mostra "Mustering"). | 🟠 | ⏳ | Etapa das imagens: recriar com texto em PT-BR, aprovar amostra antes. |
+| B1 | Habilidade do Renly mostrava "NaN" no texto (bug do original: `+ +" (or one..."`). | 🟡 | ✅ 22/out | Corrigido em `houseCardAbilities.ts`. |
 | T5 | Se faltar tradução de uma chave, aparece o texto em inglês. O TypeScript acusa só nos arquivos de chaves manuais e automáticas; textos novos escritos direto no código (sem `t()`) passam batido. | 🟡 | ⏳ | Rodar `tools/i18n/strings.js` antes de cada entrega. |
 | T6 | Atualizações do projeto original (upstream) vão gerar conflitos nos arquivos traduzidos, porque quase todo componente mudou. | 🟠 | ⏳ | Trazer atualizações com cuidado, arquivo por arquivo, e rodar os codemods de novo nos trechos novos. |
 
