@@ -781,7 +781,30 @@ $hud-display-font: "IM Fell English SC", Georgia, serif;
 .hud-orders-tokens {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 8px;
+}
+
+// um grupo por tipo de ordem: 2 fichas comuns + 1 especial (★)
+.hud-order-family {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 4px 6px 3px;
+  border: 1px solid $hud-line;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.hud-order-family-tokens {
+  display: flex;
+  gap: 2px;
+}
+
+.hud-order-family-count {
+  font-size: 10px;
+  color: $hud-muted;
+  white-space: nowrap;
 }
 
 .hud-order-token {
@@ -799,9 +822,9 @@ $hud-display-font: "IM Fell English SC", Georgia, serif;
   &.restricted::after {
     content: "";
     position: absolute;
-    left: 2px;
-    top: 19px;
-    width: 36px;
+    left: 0;
+    top: 16px;
+    width: 34px;
     height: 3px;
     background: $hud-red;
     transform: rotate(-45deg);
@@ -810,8 +833,8 @@ $hud-display-font: "IM Fell English SC", Georgia, serif;
 }
 
 .hud-order-img {
-  width: 40px !important;
-  height: 40px !important;
+  width: 34px !important;
+  height: 34px !important;
 }
 
 .hud-order-count {

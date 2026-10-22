@@ -141,6 +141,8 @@ const ptBRIngame: { [key in keyof typeof enIngame]: string } = {
   "hud.orders.progress": "{done} de {total}",
   "hud.orders.starred": "Ordens especiais (★) usadas",
   "hud.orders.restricted": "Proibida nesta rodada por uma carta de Westeros",
+  "hud.orders.familyLeft": "restam {n} de {total}",
+  "hud.orders.special": "ordem especial ★",
   "hud.orders.left": "Restam {n} de {total}",
   "hud.title.placeOrders": "Coloque suas ordens",
   "hud.title.raven": "Corvo Mensageiro",

@@ -8,6 +8,7 @@ import * as _ from "lodash";
 import PlaceOrdersGameState from "../../common/ingame-game-state/planning-game-state/place-orders-game-state/PlaceOrdersGameState";
 import House from "../../common/ingame-game-state/game-data-structure/House";
 import orderImages from "../orderImages";
+import OrderType from "../../common/ingame-game-state/game-data-structure/order-types/OrderType";
 import { t } from "../i18n/i18n";
 
 interface HudOrdersStripProps {
@@ -22,6 +23,47 @@ interface HudOrdersStripProps {
  */
 @observer
 export default class HudOrdersStrip extends Component<HudOrdersStripProps> {
+  private renderToken(g: {
+    restricted: boolean;
+    type: OrderType;
+    total: number;
+    left: number;
+  }): ReactNode {
+    return (
+      <OverlayTrigger
+        key={`hud-order-${g.type.id}`}
+        placement="top"
+        overlay={
+          <Tooltip id={`hud-order-tip-${g.type.id}`}>
+            <b>{g.type.name}</b>
+            {g.type.starred && <> ({t("hud.orders.special")})</>}
+            <br />
+            {t("hud.orders.left", { n: g.left, total: g.total })}
+            {g.restricted && (
+              <>
+                <br />
+                {t("hud.orders.restricted")}
+              </>
+            )}
+          </Tooltip>
+        }
+      >
+        <span
+          className={classNames("hud-order-token", {
+            used: g.left == 0,
+            restricted: g.restricted
+          })}
+        >
+          <span
+            className="order-icon hud-order-img"
+            style={{ backgroundImage: `url(${orderImages.get(g.type.id)})` }}
+          />
+          <span className="hud-order-count">×{g.left}</span>
+        </span>
+      </OverlayTrigger>
+    );
+  }
+
   render(): ReactNode {
     const { placeOrders, house } = this.props;
     const all = placeOrders.getOrdersList(house);
@@ -47,6 +89,35 @@ export default class HudOrdersStrip extends Component<HudOrdersStripProps> {
       total: all.filter((x) => x.type.id == o.type.id).length,
       left: available.filter((x) => x.type.id == o.type.id).length
     }));
+
+    // Cada Casa tem 3 fichas de cada tipo de ordem (2 comuns + 1 especial ★).
+    // As fichas ficam juntas por tipo (Marcha, Defesa, Apoio, Consolidar
+    // Poder, Incursão) para isso ficar claro.
+    // (compara a classe da ordem, não o nome: no build de produção os
+    // nomes das classes são encurtados e podem se repetir)
+    const familyList: {
+      key: string;
+      members: typeof groups;
+      total: number;
+      left: number;
+    }[] = [];
+    groups.forEach((g) => {
+      const family = familyList.find(
+        (f) => f.members[0].type.constructor == g.type.constructor
+      );
+      if (family) {
+        family.members.push(g);
+        family.total += g.total;
+        family.left += g.left;
+      } else {
+        familyList.push({
+          key: g.type.id,
+          members: [g],
+          total: g.total,
+          left: g.left
+        });
+      }
+    });
 
     return (
       <div className="hud-orders-strip">
@@ -74,39 +145,15 @@ export default class HudOrdersStrip extends Component<HudOrdersStripProps> {
           </b>
         </div>
         <div className="hud-orders-tokens">
-          {groups.map((g) => (
-            <OverlayTrigger
-              key={`hud-order-${g.type.id}`}
-              placement="top"
-              overlay={
-                <Tooltip id={`hud-order-tip-${g.type.id}`}>
-                  <b>{g.type.name}</b>
-                  <br />
-                  {t("hud.orders.left", { n: g.left, total: g.total })}
-                  {g.restricted && (
-                    <>
-                      <br />
-                      {t("hud.orders.restricted")}
-                    </>
-                  )}
-                </Tooltip>
-              }
-            >
-              <span
-                className={classNames("hud-order-token", {
-                  used: g.left == 0,
-                  restricted: g.restricted
-                })}
-              >
-                <span
-                  className="order-icon hud-order-img"
-                  style={{
-                    backgroundImage: `url(${orderImages.get(g.type.id)})`
-                  }}
-                />
-                <span className="hud-order-count">×{g.left}</span>
+          {familyList.map((f) => (
+            <div className="hud-order-family" key={`hud-family-${f.key}`}>
+              <div className="hud-order-family-tokens">
+                {f.members.map((g) => this.renderToken(g))}
+              </div>
+              <span className="hud-order-family-count">
+                {t("hud.orders.familyLeft", { n: f.left, total: f.total })}
               </span>
-            </OverlayTrigger>
+            </div>
           ))}
         </div>
       </div>

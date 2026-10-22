@@ -140,6 +140,8 @@ const enIngame = {
   "hud.orders.progress": "{done} of {total}",
   "hud.orders.starred": "Special orders (★) used",
   "hud.orders.restricted": "Forbidden this round by a Westeros card",
+  "hud.orders.familyLeft": "{n} of {total} left",
+  "hud.orders.special": "special order ★",
   "hud.orders.left": "{n} of {total} left",
   "hud.title.placeOrders": "Place your orders",
   "hud.title.raven": "Messenger Raven",
