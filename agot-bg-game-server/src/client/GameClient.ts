@@ -275,10 +275,18 @@ export default class GameClient {
   }
 
   start(): void {
+    // GitHub Codespaces publica cada porta num endereço próprio, ex.:
+    // "<nome>-8080.app.github.dev" (cliente) e "<nome>-5000.app.github.dev"
+    // (servidor do jogo). Assim dá para testar o jogo direto no navegador.
+    const codespacesMatch = location.hostname.match(
+      /^(.+)-\d+\.(app\.github\.dev)$/
+    );
     const websocketHost =
       location.hostname == "localhost"
         ? "ws://localhost:5000"
-        : "wss://play." + location.hostname;
+        : codespacesMatch
+          ? `wss://${codespacesMatch[1]}-5000.${codespacesMatch[2]}`
+          : "wss://play." + location.hostname;
 
     console.log(`Connecting to ${websocketHost}`);
 

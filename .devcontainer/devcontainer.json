@@ -1,0 +1,16 @@
+{
+  "name": "Swords and Ravens PT-BR (teste)",
+  "image": "mcr.microsoft.com/devcontainers/base:bookworm",
+  "features": {
+    "ghcr.io/devcontainers/features/node:1": { "version": "24" },
+    "ghcr.io/devcontainers/features/github-cli:1": {}
+  },
+  "hostRequirements": { "cpus": 2, "memory": "8gb" },
+  "postCreateCommand": "bash .devcontainer/instalar.sh",
+  "postAttachCommand": "bash .devcontainer/iniciar.sh",
+  "forwardPorts": [8080, 5000],
+  "portsAttributes": {
+    "8080": { "label": "Jogo (abra este)", "onAutoForward": "notify" },
+    "5000": { "label": "Servidor do jogo", "onAutoForward": "silent" }
+  }
+}
