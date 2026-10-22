@@ -1,10 +1,13 @@
 import { Component, ReactNode } from "react";
 import IngameGameState from "../common/ingame-game-state/IngameGameState";
 import * as React from "react";
-import westerosImage from "../../public/images/westeros.jpg";
-import westeros7pImage from "../../public/images/westeros-7p.jpg";
-import westerosWithEssosImage from "../../public/images/westeros-with-essos.jpg";
-import ffcEyrieWithPortImage from "../../public/images/ffc-eyrie-with-port.jpg";
+import {
+  westerosImage,
+  westeros7pImage,
+  westerosWithEssosImage,
+  ffcEyrieWithPortImage,
+  localizeMapImage
+} from "./mapImages";
 import castleDegradeImage from "../../public/images/region-modifications/CastleDegrade.png";
 import castleUpgradeImage from "../../public/images/region-modifications/CastleUpgrade.png";
 import barrelImage from "../../public/images/region-modifications/Barrel.png";
@@ -59,7 +62,12 @@ interface WorldSnapshotComponentProps {
 
 @observer
 export default class WorldSnapshotComponent extends Component<WorldSnapshotComponentProps> {
-  backgroundImage: string = westerosImage;
+  baseBackgroundImage: string = westerosImage;
+
+  // mapa com os nomes no idioma escolhido
+  get backgroundImage(): string {
+    return localizeMapImage(this.baseBackgroundImage);
+  }
   mapWidth: number = MAP_WIDTH;
 
   get ingame(): IngameGameState {
@@ -84,7 +92,7 @@ export default class WorldSnapshotComponent extends Component<WorldSnapshotCompo
     super(props);
     const settings = this.ingame.entireGame.gameSettings;
 
-    this.backgroundImage = settings.addPortToTheEyrie
+    this.baseBackgroundImage = settings.addPortToTheEyrie
       ? ffcEyrieWithPortImage
       : this.ingame.entireGame.gameSettings.playerCount == 7
         ? westeros7pImage

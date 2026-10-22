@@ -133,6 +133,8 @@ def best_match(text, names):
 
 def repaint(bgr, box, pt_text, ink=(34, 40, 58)):
     x, y, w, h = box
+    if h >= 40 and " " in pt_text and len(pt_text) > 12:
+        return repaint_two_lines(bgr, box, pt_text, ink)
     pad = 2
     plaque = bgr[y:y + h, x:x + w].copy()
     gray = cv2.cvtColor(plaque, cv2.COLOR_BGR2GRAY).astype(np.int16)
@@ -169,6 +171,40 @@ def repaint(bgr, box, pt_text, ink=(34, 40, 58)):
     d.text(((nw - tw) / 2, h / 2 + 1), pt_text, font=font, fill=ink, anchor="lm")
     d.text(((nw - tw) / 2 + 0.6, h / 2 + 1), pt_text, font=font, fill=ink, anchor="lm")
     bgr[y:y + h, nx:nx + nw] = cv2.cvtColor(np.array(pil), cv2.COLOR_RGB2BGR)
+
+
+def repaint_two_lines(bgr, box, pt_text, ink):
+    """Plaquinha alta (nome em duas linhas): apaga e escreve em duas linhas equilibradas."""
+    x, y, w, h = box
+    plaque = bgr[y:y + h, x:x + w].copy()
+    gray = cv2.cvtColor(plaque, cv2.COLOR_BGR2GRAY).astype(np.int16)
+    bg = np.median(gray[h // 5:-h // 5, w // 6:-w // 6])
+    letters = (gray < bg - 40).astype(np.uint8) * 255
+    e = max(3, h // 8)
+    letters[:e, :] = 0; letters[-e:, :] = 0; letters[:, :e * 2] = 0; letters[:, -e * 2:] = 0
+    letters = cv2.dilate(letters, np.ones((3, 3), np.uint8), iterations=1)
+    clean = cv2.inpaint(plaque, letters, 4, cv2.INPAINT_TELEA)
+    words = pt_text.split()
+    best = None
+    for k in range(1, len(words)):
+        a, b = " ".join(words[:k]), " ".join(words[k:])
+        diff = abs(len(a) - len(b))
+        if best is None or diff < best[0]:
+            best = (diff, a, b)
+    lines = [best[1], best[2]]
+    pil = Image.fromarray(cv2.cvtColor(clean, cv2.COLOR_BGR2RGB))
+    d = ImageDraw.Draw(pil)
+    size = int(h * 0.36)
+    font = ImageFont.truetype(FONT, size)
+    while max(d.textlength(l, font=font) for l in lines) > w - e * 4 and size > 8:
+        size -= 1
+        font = ImageFont.truetype(FONT, size)
+    for i, l in enumerate(lines):
+        tw = d.textlength(l, font=font)
+        yy = h * (0.32 if i == 0 else 0.70)
+        d.text(((w - tw) / 2, yy), l, font=font, fill=ink, anchor="lm")
+        d.text(((w - tw) / 2 + 0.6, yy), l, font=font, fill=ink, anchor="lm")
+    bgr[y:y + h, x:x + w] = cv2.cvtColor(np.array(pil), cv2.COLOR_RGB2BGR)
 
 
 def main():
