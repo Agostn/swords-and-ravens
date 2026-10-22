@@ -1,6 +1,7 @@
 import HouseCardAbility from "./HouseCardAbility";
 import houseCardAbilities from "./houseCardAbilities";
 import { observable } from "mobx";
+import { dataText } from "../../../dataText";
 
 export enum HouseCardState {
   AVAILABLE,
@@ -9,7 +10,8 @@ export enum HouseCardState {
 
 export default class HouseCard {
   id: string;
-  name: string;
+  // Original (English) name. Use `name`, which is translated on the client.
+  nameEn: string;
   combatStrength: number;
   swordIcons: number;
   towerIcons: number;
@@ -30,7 +32,7 @@ export default class HouseCard {
     houseId: string | undefined = undefined
   ) {
     this.id = id;
-    this.name = name;
+    this.nameEn = name;
     this.combatStrength = combatStrength;
     this.swordIcons = swordIcons;
     this.towerIcons = towerIcons;
@@ -41,10 +43,14 @@ export default class HouseCard {
     this.houseId = houseId;
   }
 
+  get name(): string {
+    return dataText("houseCard.name", this.id, this.nameEn);
+  }
+
   serializeToClient(): SerializedHouseCard {
     return {
       id: this.id,
-      name: this.name,
+      name: this.nameEn,
       combatStrength: this.combatStrength,
       swordIcons: this.swordIcons != 0 ? this.swordIcons : undefined,
       towerIcons: this.towerIcons != 0 ? this.towerIcons : undefined,

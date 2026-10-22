@@ -13,7 +13,21 @@ export type DataTextKind =
   | "region"
   | "unit.name"
   | "unit.description"
-  | "order.name";
+  | "order.name"
+  | "houseCard.name"
+  | "houseCardAbility.description"
+  | "westeros.name"
+  | "westeros.description"
+  | "westeros.shortDescription"
+  | "wildling.name"
+  | "wildling.lowest"
+  | "wildling.everyone"
+  | "wildling.nightsWatch"
+  | "loan.name"
+  | "loan.description"
+  | "objective.name"
+  | "objective.description"
+  | "track.name";
 
 export type DataTextTranslator = (
   kind: DataTextKind,

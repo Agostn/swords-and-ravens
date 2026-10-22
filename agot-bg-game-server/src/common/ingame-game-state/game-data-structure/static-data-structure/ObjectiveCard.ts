@@ -1,20 +1,30 @@
 import BetterMap from "../../../../utils/BetterMap";
 import IngameGameState from "../../IngameGameState";
 import House from "../House";
+import { dataText } from "../../../dataText";
 
 export class ObjectiveCard {
     id: string;
-    name: string;
-    description: string;
+    // Original (English) texts. Use name/description, translated on the client.
+    nameEn: string;
+    descriptionEn: string;
     victoryPointsPerHouse: BetterMap<string, number> = new BetterMap();
     completedCondition: (house: House, ingame: IngameGameState) => boolean;
 
     constructor(id: string, name: string, description: string, victoryPointsPerHouse: [string, number][], completedCondition: (house: House, ingame: IngameGameState) => boolean) {
         this.id = id;
-        this.name = name;
-        this.description = description;
+        this.nameEn = name;
+        this.descriptionEn = description;
         victoryPointsPerHouse.forEach(([h, vp]) => this.victoryPointsPerHouse.set(h, vp));
         this.completedCondition = completedCondition;
+    }
+
+    get name(): string {
+        return dataText("objective.name", this.id, this.nameEn);
+    }
+
+    get description(): string {
+        return dataText("objective.description", this.id, this.descriptionEn);
     }
 
     getVictoryPointsForHouse(house: House): number {

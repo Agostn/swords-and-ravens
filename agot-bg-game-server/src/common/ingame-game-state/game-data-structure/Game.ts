@@ -31,6 +31,7 @@ import Player from "../Player";
 import { ObjectiveCard } from "./static-data-structure/ObjectiveCard";
 import { objectiveCards } from "./static-data-structure/objectiveCards";
 import IGameSnapshot from "../../../client/game-replay/IGameSnapshot";
+import { dataText } from "../../dataText";
 
 export const MAX_WILDLING_STRENGTH = 12;
 export const MAX_LOYALTY_TOKEN_COUNT = 20;
@@ -432,11 +433,11 @@ export default class Game {
 
   getNameInfluenceTrack(i: number): string {
     if (i == 0) {
-      return "Iron Throne";
+      return dataText("track.name", "0", "Iron Throne");
     } else if (i == 1) {
-      return "Fiefdoms";
+      return dataText("track.name", "1", "Fiefdoms");
     } else if (i == 2) {
-      return "King's Court";
+      return dataText("track.name", "2", "King's Court");
     } else {
       throw new Error();
     }

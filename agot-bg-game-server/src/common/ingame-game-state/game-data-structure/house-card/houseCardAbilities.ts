@@ -112,7 +112,7 @@ export const serDavosSeaworth = new SerDavosSeaworthHouseCardAbility(
 export const renlyBaratheon = new RenlyBaratheonHouseCardAbility(
   "renly-baratheon",
   "If you win this combat, you may upgrade one of your participating Footmen" +
-    +" (or one supporting Baratheon Footmen) to a Knight."
+    " (or one supporting Baratheon Footmen) to a Knight."
 );
 export const tywinLannister = new TywinLannisterHouseCardAbility(
   "tywin-lannister",

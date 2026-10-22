@@ -21,6 +21,7 @@ import getUserLinkOrLabel from "./utils/getIngameUserLinkOrLabel";
 import { observer } from "mobx-react";
 import { ReplacePlayer } from "../common/ingame-game-state/vote-system/VoteType";
 import { t, tr } from "./i18n/i18n";
+import { translateServerText } from "./i18n/serverText";
 
 interface VoteComponentProps {
   vote: Vote;
@@ -89,7 +90,7 @@ export default class VoteComponent extends Component<VoteComponentProps> {
           </OverlayTrigger>
         </Col>
         <Col>
-          {tr("auto.VoteComponent.0", { p0: (<b>{getUserLinkOrLabel(this.vote.initiator, false, showBanButton)}</b>), p1: (<b>{this.vote.type.verb()}</b>), p2: (this.vote.positiveCountToPass), p3: (this.vote.positiveCountToPass != 1 ? "s" : "") })}<Row className="mt-1">
+          {tr("auto.VoteComponent.0", { p0: (<b>{getUserLinkOrLabel(this.vote.initiator, false, showBanButton)}</b>), p1: (<b>{translateServerText(this.vote.type.verb())}</b>), p2: (this.vote.positiveCountToPass), p3: (this.vote.positiveCountToPass != 1 ? "s" : "") })}<Row className="mt-1">
             <Col
               xs="auto"
               className={classNames({

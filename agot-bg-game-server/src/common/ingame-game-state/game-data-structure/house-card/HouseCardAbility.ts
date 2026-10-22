@@ -1,6 +1,7 @@
 import CombatGameState from "../../action-game-state/resolve-march-order-game-state/combat-game-state/CombatGameState";
 import House from "../House";
 import HouseCard from "./HouseCard";
+import { dataText } from "../../../dataText";
 import AfterWinnerDeterminationGameState from "../../action-game-state/resolve-march-order-game-state/combat-game-state/post-combat-game-state/after-winner-determination-game-state/AfterWinnerDeterminationGameState";
 import Unit from "../Unit";
 import ImmediatelyHouseCardAbilitiesResolutionGameState from "../../action-game-state/resolve-march-order-game-state/combat-game-state/immediately-house-card-abilities-resolution-game-state/ImmediatelyHouseCardAbilitiesResolutionGameState";
@@ -12,11 +13,16 @@ import BeforeCombatHouseCardAbilitiesGameState from "../../action-game-state/res
 
 export default class HouseCardAbility {
   id: string;
-  description: string;
+  // Original (English) text. Use `description`, which is translated on the client.
+  descriptionEn: string;
 
   constructor(id: string, description: string) {
     this.id = id;
-    this.description = description;
+    this.descriptionEn = description;
+  }
+
+  get description(): string {
+    return dataText("houseCardAbility.description", this.id, this.descriptionEn);
   }
 
   cancel(

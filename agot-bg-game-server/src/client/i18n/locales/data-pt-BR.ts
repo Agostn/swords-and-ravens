@@ -4,7 +4,7 @@ import { DataDictionary } from "../dataTranslations";
 // Lugares: nomes da série da HBO; quando o lugar não aparece na série, nome
 // dos livros em português. Lista completa e fontes: glossário do projeto.
 
-const ptBRData: DataDictionary = {
+const ptBRData: Omit<DataDictionary, "cards"> = {
   regions: {
     // Westeros — terra
     Winterfell: "Winterfell",
@@ -74,6 +74,11 @@ const ptBRData: DataDictionary = {
     "The Orange Shore": "Costa Laranja"
   },
   portFormat: "Porto de {region}",
+  trackNames: {
+    "0": "Trono de Ferro",
+    "1": "Feudos",
+    "2": "Corte do Rei"
+  },
   ports: {
     "Port of White Harbor": "Porto Branco (porto)",
     "Port of The Eyrie": "Porto do Ninho da Águia"
