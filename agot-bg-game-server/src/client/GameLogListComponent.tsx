@@ -59,11 +59,26 @@ import { t, tr } from "./i18n/i18n";
 const fogOfWarRegion = "a region";
 const fogOfWarUnit = "unit";
 
+// Acontecimentos que viram blocos grandes (cabeçalhos, tabelas, cartas)
+// e não cabem no resumo da tela nova.
+const HUD_SKIPPED_LOG_TYPES: string[] = [
+  "turn-begin",
+  "orders-revealed",
+  "combat-result",
+  "westeros-cards-drawn",
+  "wildling-card-revealed",
+  "wildling-bidding",
+  "clash-of-kings-bidding-done",
+  "clash-of-kings-final-ordering"
+];
+
 interface GameLogListComponentProps {
   ingameGameState: IngameGameState;
   gameClient: GameClient;
   currentlyViewed: boolean;
   scrollToLog?: number;
+  // Tela nova: mostra só os últimos N acontecimentos, sem cabeçalhos
+  onlyLast?: number;
 }
 
 @observer
@@ -114,6 +129,17 @@ export default class GameLogListComponent extends Component<GameLogListComponent
       : null;
 
     this.currentRound = 0;
+
+    if (this.props.onlyLast) {
+      const recent = this.logManager.logs
+        .filter((l) => !HUD_SKIPPED_LOG_TYPES.includes(l.data.type))
+        .slice(-this.props.onlyLast);
+      return recent.map((l, i) => (
+        <div key={`hud-log_${i}`} className="hud-log-line">
+          {this.renderGameLogData(l.data, this.game.turn)}
+        </div>
+      ));
+    }
 
     const highlightLog = (i: number): boolean => {
       return this.replayManager.isReplayMode

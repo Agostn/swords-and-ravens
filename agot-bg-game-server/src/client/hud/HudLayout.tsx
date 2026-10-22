@@ -2,7 +2,7 @@ import * as React from "react";
 import { Component, ReactNode } from "react";
 import { observer } from "mobx-react";
 import { observable } from "mobx";
-import { OverlayTrigger, Tooltip } from "react-bootstrap";
+import { OverlayTrigger, Popover } from "react-bootstrap";
 import { OverlayChildren } from "react-bootstrap/esm/Overlay";
 import classNames from "classnames";
 import * as _ from "lodash";
@@ -16,15 +16,28 @@ import MapComponent, {
   DELUXE_MAT_WIDTH
 } from "../MapComponent";
 import GameStateColumn from "../GameStateColumn";
-import HouseInfoColumn from "../HouseInfoColumn";
 import GameTabsComponent from "../GameTabsComponent";
+import GameLogListComponent from "../GameLogListComponent";
 import { InfluenceTrackDetails } from "../IngameComponent";
 import CancelledGameState from "../../common/cancelled-game-state/CancelledGameState";
 import GameEndedGameState from "../../common/ingame-game-state/game-ended-game-state/GameEndedGameState";
 import House from "../../common/ingame-game-state/game-data-structure/House";
+import { HouseCardState } from "../../common/ingame-game-state/game-data-structure/house-card/HouseCard";
 import User from "../../server/User";
 import { Channel } from "../chat-client/ChatClient";
-import houseIconImages from "../houseIconImages";
+import HouseCardComponent from "../game-state-panel/utils/HouseCardComponent";
+import PlaceOrdersGameState from "../../common/ingame-game-state/planning-game-state/place-orders-game-state/PlaceOrdersGameState";
+import ResolveSingleMarchOrderGameState from "../../common/ingame-game-state/action-game-state/resolve-march-order-game-state/resolve-single-march-order-game-state/ResolveSingleMarchOrderGameState";
+import BiddingGameState from "../../common/ingame-game-state/westeros-game-state/bidding-game-state/BiddingGameState";
+import PlayerMusteringGameState from "../../common/ingame-game-state/westeros-game-state/mustering-game-state/player-mustering-game-state/PlayerMusteringGameState";
+import ChooseHouseCardGameState from "../../common/ingame-game-state/action-game-state/resolve-march-order-game-state/combat-game-state/choose-house-card-game-state/ChooseHouseCardGameState";
+import DeclareSupportGameState from "../../common/ingame-game-state/action-game-state/resolve-march-order-game-state/combat-game-state/declare-support-game-state/DeclareSupportGameState";
+import ResolveSingleRaidOrderGameState from "../../common/ingame-game-state/action-game-state/resolve-raid-order-game-state/resolve-single-raid-order-game-state/ResolveSingleRaidOrderGameState";
+import ResolveSingleConsolidatePowerGameState from "../../common/ingame-game-state/action-game-state/resolve-consolidate-power-game-state/resolve-single-consolidate-power-game-state/ResolveSingleConsolidatePowerGameState";
+import ResolveRetreatGameState from "../../common/ingame-game-state/action-game-state/resolve-march-order-game-state/combat-game-state/post-combat-game-state/resolve-retreat-game-state/ResolveRetreatGameState";
+import ChooseCasualtiesGameState from "../../common/ingame-game-state/action-game-state/resolve-march-order-game-state/combat-game-state/post-combat-game-state/choose-casualties-game-state/ChooseCasualtiesGameState";
+import ReplaceOrderGameState from "../../common/ingame-game-state/action-game-state/use-raven-game-state/replace-order-game-state/ReplaceOrderGameState";
+import UseValyrianSteelBladeGameState from "../../common/ingame-game-state/action-game-state/resolve-march-order-game-state/combat-game-state/use-valyrian-steel-blade-game-state/UseValyrianSteelBladeGameState";
 import {
   westerosImage,
   westeros7pImage,
@@ -33,8 +46,12 @@ import {
   localizeMapImage
 } from "../mapImages";
 import MapViewport from "./MapViewport";
+import HudTracks from "./HudTracks";
+import HudHouseList from "./HudHouseList";
+import HudOrdersStrip from "./HudOrdersStrip";
+import HouseChip from "./HouseChip";
 import hudSettings from "./hudSettings";
-import { t } from "../i18n/i18n";
+import { t, TranslationKey } from "../i18n/i18n";
 
 import settingsKnobsImage from "../../../public/images/icons/settings-knobs.svg";
 import speakerImage from "../../../public/images/icons/speaker.svg";
@@ -50,23 +67,48 @@ interface HudLayoutProps {
 }
 
 const TOP_BAR_HEIGHT = 64;
+const LEFT_DOCK_WIDTH = 320;
+
+// Título curto do painel da jogada, conforme o que está acontecendo.
+// (instanceof em vez do nome da classe, que some no build de produção)
+const ACTION_TITLES: [unknown, TranslationKey][] = [
+  [PlaceOrdersGameState, "hud.title.placeOrders"],
+  [ReplaceOrderGameState, "hud.title.raven"],
+  [ResolveSingleMarchOrderGameState, "hud.title.march"],
+  [DeclareSupportGameState, "hud.title.support"],
+  [UseValyrianSteelBladeGameState, "hud.title.blade"],
+  [ChooseHouseCardGameState, "hud.title.houseCard"],
+  [ChooseCasualtiesGameState, "hud.title.casualties"],
+  [ResolveRetreatGameState, "hud.title.retreat"],
+  [ResolveSingleRaidOrderGameState, "hud.title.raid"],
+  [ResolveSingleConsolidatePowerGameState, "hud.title.consolidate"],
+  [BiddingGameState, "hud.title.bidding"],
+  [PlayerMusteringGameState, "hud.title.mustering"]
+];
 
 /**
  * Tela da partida "mapa em tela cheia" (proposta B do redesign).
  * Reaproveita os componentes de sempre (painel da fase, Casas, chat e
- * histórico); só muda onde e como cada um aparece.
+ * histórico); muda onde e como cada um aparece.
  */
 @observer
 export default class HudLayout extends Component<HudLayoutProps> {
   @observable chatOpen = false;
+  @observable chatTab: string | undefined = undefined;
   @observable windowWidth = window.innerWidth;
 
-  // Painel das Casas: mais largo em telas grandes para a trilha de
-  // suprimento caber numa linha só.
+  private get gameClient(): GameClient {
+    return this.props.gameClient;
+  }
+
+  private get ingame(): IngameGameState {
+    return this.props.ingame;
+  }
+
+  // Painel das Casas: lista compacta, então pode ser estreito.
   private get rightPanelWidth(): number {
-    if (this.windowWidth >= 1800) return 560;
-    if (this.windowWidth >= 1600) return 520;
-    return this.windowWidth >= 1280 ? 460 : 400;
+    if (this.windowWidth >= 1800) return 360;
+    return this.windowWidth >= 1280 ? 330 : 300;
   }
 
   private onResize = (): void => {
@@ -79,14 +121,6 @@ export default class HudLayout extends Component<HudLayoutProps> {
 
   componentWillUnmount(): void {
     window.removeEventListener("resize", this.onResize);
-  }
-
-  private get gameClient(): GameClient {
-    return this.props.gameClient;
-  }
-
-  private get ingame(): IngameGameState {
-    return this.props.ingame;
   }
 
   private get publicChatRoom(): Channel | null {
@@ -131,7 +165,7 @@ export default class HudLayout extends Component<HudLayoutProps> {
     };
   }
 
-  private get minimapImage(): string {
+  private get mapImage(): string {
     const settings = this.ingame.entireGame.gameSettings;
     const base = settings.addPortToTheEyrie
       ? ffcEyrieWithPortImage
@@ -141,6 +175,10 @@ export default class HudLayout extends Component<HudLayoutProps> {
           ? westerosWithEssosImage
           : westerosImage;
     return localizeMapImage(base);
+  }
+
+  private get myHouse(): House | null {
+    return this.gameClient.authenticatedPlayer?.house ?? null;
   }
 
   private waitedHouseNames(): string[] {
@@ -157,13 +195,22 @@ export default class HudLayout extends Component<HudLayoutProps> {
     );
   }
 
+  private actionTitle(): string | null {
+    const leaf = this.ingame.leafState;
+    const found = ACTION_TITLES.find(
+      ([cls]) => leaf instanceof (cls as new (...args: never[]) => unknown)
+    );
+    return found ? t(found[1]) : null;
+  }
+
   render(): ReactNode {
     const rightOpen = hudSettings.rightPanelOpen;
+    const rightSpace = rightOpen ? this.rightPanelWidth + 24 : 72;
     const insets = {
       top: TOP_BAR_HEIGHT,
-      right: rightOpen ? this.rightPanelWidth + 24 : 84,
-      bottom: 24,
-      left: 12
+      right: rightSpace,
+      bottom: 0,
+      left: 0
     };
 
     return (
@@ -171,16 +218,24 @@ export default class HudLayout extends Component<HudLayoutProps> {
         className="hud-root"
         style={
           {
-            "--hud-right-panel-width": `${this.rightPanelWidth}px`
+            "--hud-right-panel-width": `${this.rightPanelWidth}px`,
+            "--hud-left-dock-width": `${LEFT_DOCK_WIDTH}px`,
+            "--hud-right-space": `${rightSpace}px`
           } as React.CSSProperties
         }
       >
+        {/* fundo: o próprio mapa, desfocado, para não sobrar faixa preta */}
+        <div
+          className="hud-backdrop"
+          style={{ backgroundImage: `url(${this.mapImage})` }}
+          aria-hidden="true"
+        />
         <MapViewport
           contentWidth={this.mapSize.width}
           contentHeight={this.mapSize.height}
-          minimapImage={this.minimapImage}
+          minimapImage={this.mapImage}
           insets={insets}
-          controlsRight={rightOpen ? this.rightPanelWidth + 24 : 84}
+          controlsRight={rightSpace}
         >
           <MapComponent
             gameClient={this.gameClient}
@@ -188,6 +243,7 @@ export default class HudLayout extends Component<HudLayoutProps> {
             mapControls={this.props.mapControls}
           />
         </MapViewport>
+        <div className="hud-vignette" aria-hidden="true" />
 
         <div className="hud-top-left">
           <GameStateColumn
@@ -197,12 +253,17 @@ export default class HudLayout extends Component<HudLayoutProps> {
             onColumnSwapClick={this.props.onColumnSwapClick}
             hudPart="status"
           />
+          <HudTracks
+            ingame={this.ingame}
+            tracks={this.props.tracks}
+            myHouse={this.myHouse}
+          />
         </div>
 
         {this.renderTopRight()}
         {rightOpen ? this.renderRightPanel() : this.renderHouseStrip()}
-        {this.renderActionDock()}
-        {this.renderChatDock()}
+        {this.renderActionDock(rightSpace)}
+        {this.renderLeftDock()}
       </div>
     );
   }
@@ -210,6 +271,21 @@ export default class HudLayout extends Component<HudLayoutProps> {
   private renderTopRight(): ReactNode {
     return (
       <div className="hud-top-right">
+        <OverlayTrigger
+          overlay={this.renderHelpPopover()}
+          placement="bottom-end"
+          trigger="click"
+          rootClose
+        >
+          <button
+            type="button"
+            className="hud-icon-button"
+            aria-label={t("hud.help.title")}
+            title={t("hud.help.title")}
+          >
+            ?
+          </button>
+        </OverlayTrigger>
         <OverlayTrigger
           overlay={this.props.gameControlsPopover}
           placement="bottom-end"
@@ -240,15 +316,31 @@ export default class HudLayout extends Component<HudLayoutProps> {
             alt=""
           />
         </button>
-        <button
-          type="button"
-          className="hud-icon-button hud-text-icon-button"
-          title={t("hud.menu.classicLayoutHint")}
-          onClick={() => hudSettings.setClassicLayout(true)}
-        >
-          {t("hud.menu.classicLayout")}
-        </button>
       </div>
+    );
+  }
+
+  private renderHelpPopover(): OverlayChildren {
+    return (
+      <Popover id="hud-help-popover" className="hud-help-popover">
+        <Popover.Title as="h3">{t("hud.help.title")}</Popover.Title>
+        <Popover.Content>
+          <ul>
+            <li>{t("hud.help.zoom")}</li>
+            <li>{t("hud.help.drag")}</li>
+            <li>{t("hud.help.minimap")}</li>
+            <li>{t("hud.help.houses")}</li>
+            <li>{t("hud.help.tracks")}</li>
+          </ul>
+          <button
+            type="button"
+            className="btn btn-sm btn-outline-light"
+            onClick={() => hudSettings.setClassicLayout(true)}
+          >
+            {t("hud.menu.classicLayout")}
+          </button>
+        </Popover.Content>
+      </Popover>
     );
   }
 
@@ -281,28 +373,19 @@ export default class HudLayout extends Component<HudLayoutProps> {
           </button>
         </div>
         <div className="hud-panel-body">
-          {/* As linhas das Casas precisam de uns 580px. Em painéis mais
-              estreitos, o conteúdo é reduzido por igual em vez de cortado. */}
-          <div style={{ zoom: Math.min(1, (this.rightPanelWidth - 14) / 580) }}>
-            <HouseInfoColumn
-              ingame={this.ingame}
-              gameClient={this.gameClient}
-              mapControls={this.props.mapControls}
-              gameControlsPopover={this.props.gameControlsPopover}
-              tracks={this.props.tracks}
-              showGameControls={false}
-              onColumnSwapClick={this.props.onColumnSwapClick}
-            />
-          </div>
+          <HudHouseList
+            gameClient={this.gameClient}
+            ingame={this.ingame}
+            mapControls={this.props.mapControls}
+          />
         </div>
       </aside>
     );
   }
 
-  // Painel das Casas recolhido: só o brasão, os Pontos de Vitória e o Poder.
+  // Painel das Casas recolhido: só o brasão e os Pontos de Vitória.
   private renderHouseStrip(): ReactNode {
     const houses: House[] = this.gameClient.getPotentialWinners();
-    const me = this.gameClient.authenticatedPlayer?.house;
     return (
       <aside className="hud-house-strip" aria-label={t("hud.houses.title")}>
         <button
@@ -325,49 +408,45 @@ export default class HudLayout extends Component<HudLayoutProps> {
           </svg>
         </button>
         {houses.map((h) => (
-          <OverlayTrigger
+          <div
             key={`hud-strip-${h.id}`}
-            placement="left"
-            overlay={
-              <Tooltip id={`hud-strip-tooltip-${h.id}`}>
-                <b>{h.name}</b>
-                <br />
-                {t("hud.houses.victoryPoints", {
-                  n: this.ingame.game.getVictoryPoints(h)
-                })}
-                <br />
-                {t("hud.houses.power", { n: h.powerTokens })}
-              </Tooltip>
-            }
+            className={classNames("hud-house-chip", {
+              mine: h == this.myHouse
+            })}
           >
-            <div
-              className={classNames("hud-house-chip", { mine: h == me })}
-              style={{ borderColor: h == me ? undefined : h.color }}
-            >
-              <span
-                className="hud-house-icon"
-                style={{ backgroundColor: h.color }}
-              >
-                {houseIconImages.has(h.id) && (
-                  <img src={houseIconImages.get(h.id)} alt="" />
-                )}
-              </span>
-              <span className="hud-house-vp">
-                {this.ingame.game.getVictoryPoints(h)}
-              </span>
-            </div>
-          </OverlayTrigger>
+            <HouseChip
+              house={h}
+              size={30}
+              tooltip={
+                <>
+                  <b>{h.name}</b>
+                  <br />
+                  {t("hud.houses.victoryPoints", {
+                    n: this.ingame.game.getVictoryPoints(h)
+                  })}
+                  <br />
+                  {t("hud.houses.power", { n: h.powerTokens })}
+                </>
+              }
+            />
+            <span className="hud-house-vp">
+              {this.ingame.game.getVictoryPoints(h)}
+            </span>
+          </div>
         ))}
       </aside>
     );
   }
 
-  private renderActionDock(): ReactNode {
+  private renderActionDock(rightSpace: number): ReactNode {
     const ownTurn = this.isOwnTurn;
     const ended = this.ingame.childGameState instanceof GameEndedGameState;
     const cancelled = this.ingame.childGameState instanceof CancelledGameState;
     const waited = ownTurn ? [] : this.waitedHouseNames();
     const minimized = hudSettings.actionDockMinimized;
+    const title = ended || cancelled ? null : this.actionTitle();
+    const leaf = this.ingame.leafState;
+    const me = this.myHouse;
 
     const badge = ended
       ? { cls: "ended", text: t("hud.action.ended") }
@@ -377,30 +456,29 @@ export default class HudLayout extends Component<HudLayoutProps> {
           ? { cls: "own-turn", text: t("hud.action.yourTurn") }
           : { cls: "waiting", text: t("hud.action.waiting") };
 
+    const summary =
+      !ownTurn && waited.length > 0
+        ? t("hud.action.waitingFor", { houses: waited.join(", ") })
+        : ownTurn && minimized
+          ? t("hud.action.minimizedHint")
+          : null;
+
     return (
       <section
         className={classNames("hud-panel hud-action-dock", {
           "own-turn": ownTurn,
           minimized: minimized
         })}
-        style={{
-          right: hudSettings.rightPanelOpen ? this.rightPanelWidth + 24 : 12
-        }}
+        style={{ right: rightSpace }}
         aria-label={t("hud.action.title")}
       >
         <div className="hud-action-header">
           <span className={classNames("hud-badge", badge.cls)}>
             {badge.text}
           </span>
-          <span className="hud-action-summary">
-            {!ownTurn && waited.length > 0
-              ? t("hud.action.waitingFor", {
-                  houses: waited.join(", ")
-                })
-              : ownTurn && minimized
-                ? t("hud.action.minimizedHint")
-                : null}
-          </span>
+          {title && <b className="hud-action-title">{title}</b>}
+          <span className="hud-action-summary">{summary}</span>
+          {me && this.renderCardsButton(me)}
           <button
             type="button"
             className="hud-icon-button small"
@@ -428,6 +506,11 @@ export default class HudLayout extends Component<HudLayoutProps> {
         </div>
         {!minimized && (
           <div className="hud-action-body">
+            {leaf instanceof PlaceOrdersGameState &&
+              me &&
+              !this.ingame.isVassalHouse(me) && (
+                <HudOrdersStrip placeOrders={leaf} house={me} />
+              )}
             <GameStateColumn
               ingame={this.ingame}
               gameClient={this.gameClient}
@@ -441,14 +524,56 @@ export default class HudLayout extends Component<HudLayoutProps> {
     );
   }
 
-  private renderChatDock(): ReactNode {
+  // Botão "Cartas (n)": mostra as cartas de Casa do jogador num balão.
+  private renderCardsButton(house: House): ReactNode {
+    const cards = _.sortBy(house.houseCards.values, (c) => c.combatStrength);
+    const available = cards.filter((c) => c.state == HouseCardState.AVAILABLE);
+    if (cards.length == 0) return null;
+    return (
+      <OverlayTrigger
+        trigger="click"
+        placement="top"
+        rootClose
+        overlay={
+          <Popover id="hud-my-cards" className="hud-cards-popover">
+            <Popover.Title as="h3">
+              {t("hud.cards.title", { n: available.length })}
+            </Popover.Title>
+            <Popover.Content>
+              <div className="hud-cards-grid">
+                {cards.map((c) => (
+                  <HouseCardComponent
+                    key={`hud-card-${c.id}`}
+                    houseCard={c}
+                    size="small"
+                    unavailable={c.state != HouseCardState.AVAILABLE}
+                  />
+                ))}
+              </div>
+            </Popover.Content>
+          </Popover>
+        }
+      >
+        <button type="button" className="hud-cards-button">
+          {t("hud.cards.button", { n: available.length })}
+        </button>
+      </OverlayTrigger>
+    );
+  }
+
+  private openDrawer(tab?: string): void {
+    this.chatTab = tab;
+    this.chatOpen = true;
+  }
+
+  private renderLeftDock(): ReactNode {
     const unread = this.unreadPublicMessages;
     const privateUnread = this.hasUnreadPrivateMessages;
     const lastMessage = _.last(this.publicChatRoom?.messages ?? []);
 
-    return (
-      <div className="hud-chat-dock">
-        {this.chatOpen && (
+    if (this.chatOpen) {
+      return (
+        <div className="hud-left-dock">
           <div className="hud-panel hud-chat-panel">
             <div className="hud-panel-header">
               <b>{t("hud.chat.title")}</b>
@@ -464,18 +589,45 @@ export default class HudLayout extends Component<HudLayoutProps> {
             </div>
             <div className="hud-chat-body">
               <GameTabsComponent
+                key={`hud-tabs-${this.chatTab ?? "default"}`}
                 gameClient={this.gameClient}
                 ingame={this.ingame}
                 mapControls={this.props.mapControls}
+                initialTab={this.chatTab}
               />
             </div>
           </div>
-        )}
-        {!this.chatOpen && (
+        </div>
+      );
+    }
+
+    return (
+      <div className="hud-left-dock">
+        <div className="hud-panel hud-recent">
+          <div className="hud-recent-head">
+            <b>{t("hud.recent.title")}</b>
+            <button
+              type="button"
+              className="hud-link-button"
+              onClick={() => this.openDrawer("game-logs")}
+            >
+              {t("hud.recent.history")}
+            </button>
+          </div>
+          <div className="hud-recent-body">
+            <GameLogListComponent
+              ingameGameState={this.ingame}
+              gameClient={this.gameClient}
+              currentlyViewed={false}
+              onlyLast={2}
+            />
+          </div>
+        </div>
+        <div className="hud-left-buttons">
           <button
             type="button"
             className="hud-panel hud-chat-button"
-            onClick={() => (this.chatOpen = true)}
+            onClick={() => this.openDrawer("chat")}
             aria-label={t("hud.chat.open")}
           >
             <svg
@@ -496,15 +648,23 @@ export default class HudLayout extends Component<HudLayoutProps> {
                   <span className="hud-muted">{lastMessage.text}</span>
                 </>
               ) : (
-                t("hud.chat.open")
+                t("hud.chat.label")
               )}
             </span>
             {unread > 0 && <span className="hud-count">{unread}</span>}
+          </button>
+          <button
+            type="button"
+            className="hud-panel hud-ravens-button"
+            onClick={() => this.openDrawer("chat")}
+            title={t("hud.chat.ravensHint")}
+          >
+            {t("hud.chat.ravens")}
             {privateUnread && (
               <span className="hud-dot" title={t("hud.chat.privateUnread")} />
             )}
           </button>
-        )}
+        </div>
       </div>
     );
   }

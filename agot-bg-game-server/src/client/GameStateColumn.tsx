@@ -156,7 +156,9 @@ export default class GameStateColumn extends Component<GameStateColumnProps> {
 
     const phaseAndState = (
               <ListGroup variant="flush">
-                {phases.some((phase) => isPhaseActive(phase)) && (
+                {/* Na tela nova a fase já aparece na barra do topo */}
+                {this.props.hudPart != "action" &&
+                  phases.some((phase) => isPhaseActive(phase)) && (
                   <ListGroupItem>
                     <Row className="justify-content-between align-items-center">
                       <Col

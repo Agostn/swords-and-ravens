@@ -30,7 +30,7 @@ interface MapViewportProps {
 const MIN_ZOOM_FACTOR = 0.9; // em relação a "caber inteiro"
 const MAX_ZOOM = 2.5;
 const DRAG_THRESHOLD = 6;
-const STORAGE_KEY = "hud-map-view";
+const STORAGE_KEY = "hud-map-view-v2";
 
 interface SavedView {
   scale: number;
@@ -299,12 +299,12 @@ export default class MapViewport extends Component<MapViewportProps> {
     this.clamp();
   }
 
-  // Visão inicial: o mapa ocupa a largura livre (sem passar de 1,35x),
+  // Visão inicial: o mapa ocupa toda a largura livre (até 1,9x),
   // mostrando o Norte primeiro.
   private showDefaultView(): void {
     const free = this.freeArea;
     const byWidth = free.width / this.props.contentWidth;
-    this.scale = Math.max(this.fitScale, Math.min(1.35, byWidth));
+    this.scale = Math.max(this.fitScale, Math.min(1.9, byWidth));
     this.x =
       free.left + (free.width - this.props.contentWidth * this.scale) / 2;
     this.y = free.top;

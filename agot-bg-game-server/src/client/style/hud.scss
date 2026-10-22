@@ -1,15 +1,17 @@
 // Tela nova da partida: mapa em tela cheia com painéis flutuantes (proposta B).
 
-$hud-bg: rgba(23, 19, 15, 0.94);
-$hud-bg-solid: #1e1914;
+$hud-bg: rgba(23, 19, 15, 0.93);
 $hud-line: #3a3128;
+$hud-line-soft: #2a231c;
 $hud-text: #ede6d8;
 $hud-muted: #a99e8b;
 $hud-gold: #e2b65a;
 $hud-gold-ink: #1a140c;
 $hud-blue: #3e7bd6;
 $hud-red: #c9473b;
+$hud-green: #7fb77e;
 $hud-gap: 12px;
+$hud-display-font: "IM Fell English SC", Georgia, serif;
 
 .hud-root {
   position: fixed;
@@ -21,6 +23,31 @@ $hud-gap: 12px;
 }
 
 // ---------- mapa ----------
+
+// O próprio mapa, grande e desfocado, preenche o fundo da tela.
+.hud-backdrop {
+  position: absolute;
+  inset: -40px;
+  background-size: cover;
+  background-position: center;
+  filter: blur(22px) brightness(0.38) saturate(0.8);
+  transform: scale(1.1);
+  pointer-events: none;
+}
+
+.hud-vignette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+  background: linear-gradient(
+    180deg,
+    rgba(12, 10, 8, 0.6) 0%,
+    rgba(12, 10, 8, 0) 12%,
+    rgba(12, 10, 8, 0) 74%,
+    rgba(12, 10, 8, 0.65) 100%
+  );
+}
 
 .hud-map-viewport {
   position: absolute;
@@ -44,7 +71,7 @@ $hud-gap: 12px;
 
   .map {
     border-radius: 6px;
-    box-shadow: 0 0 60px rgba(0, 0, 0, 0.6);
+    box-shadow: 0 0 80px rgba(0, 0, 0, 0.7);
   }
 }
 
@@ -71,7 +98,7 @@ $hud-gap: 12px;
   border: 1px solid #4a4036;
   background-size: 100% 100%;
   background-color: #0c0a08;
-  opacity: 0.9;
+  opacity: 0.92;
   cursor: pointer;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
 }
@@ -106,7 +133,7 @@ $hud-gap: 12px;
   border: 1px solid $hud-line;
   background: $hud-bg;
   color: $hud-text;
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 600;
   line-height: 1;
   display: inline-flex;
@@ -134,12 +161,6 @@ $hud-gap: 12px;
   }
 }
 
-.hud-text-icon-button {
-  font-size: 13px;
-  font-weight: 500;
-  padding: 0 12px;
-}
-
 .hud-text-button {
   display: inline-flex;
   align-items: center;
@@ -155,6 +176,20 @@ $hud-gap: 12px;
 
   &:hover {
     background: rgba(255, 255, 255, 0.06);
+  }
+}
+
+.hud-link-button {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  color: $hud-gold;
+  font-size: 12px;
+  cursor: pointer;
+
+  &:hover {
+    color: #f3d28c;
+    text-decoration: underline;
   }
 }
 
@@ -174,6 +209,51 @@ $hud-gap: 12px;
   font-size: 14px;
 }
 
+.hud-meter {
+  width: 64px;
+  height: 6px;
+  border-radius: 3px;
+  background: #2e2720;
+  overflow: hidden;
+  display: inline-block;
+
+  &.wide {
+    width: 110px;
+  }
+}
+
+.hud-meter-fill {
+  display: block;
+  height: 100%;
+  background: #c9773b;
+
+  &.gold {
+    background: $hud-gold;
+  }
+
+  &.warning {
+    background: #f39c12;
+  }
+
+  &.critical {
+    background: #e74c3c;
+  }
+}
+
+.hud-house-chip-circle {
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.35);
+
+  &.mine {
+    outline: 2px solid $hud-gold;
+    outline-offset: 1px;
+  }
+}
+
 // ---------- topo ----------
 
 .hud-top-left {
@@ -181,6 +261,11 @@ $hud-gap: 12px;
   top: $hud-gap;
   left: $hud-gap;
   z-index: 4;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 10px;
+  max-width: calc(100vw - 460px);
 }
 
 .hud-status {
@@ -196,30 +281,87 @@ $hud-gap: 12px;
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-weight: 600;
+  font-family: $hud-display-font;
+  font-size: 17px;
+  color: $hud-gold;
   white-space: nowrap;
 }
 
-.hud-meter {
-  width: 64px;
-  height: 6px;
-  border-radius: 3px;
-  background: #2e2720;
-  overflow: hidden;
-  display: inline-block;
+.hud-tracks {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 6px 12px;
+  min-height: 44px;
 }
 
-.hud-meter-fill {
-  display: block;
-  height: 100%;
-  background: #c9773b;
+.hud-track {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
 
-  &.warning {
-    background: #f39c12;
+.hud-track-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: $hud-muted;
+  font-size: 11px;
+  line-height: 1.15;
+
+  img {
+    filter: brightness(0) invert(0.85);
   }
+}
 
-  &.critical {
-    background: #e74c3c;
+// O nome da trilha só aparece em telas largas; o ícone basta nas outras.
+.hud-track-name {
+  max-width: 58px;
+  display: none;
+}
+
+@media (min-width: 1900px) {
+  .hud-track-name {
+    display: inline;
+  }
+}
+
+.hud-track-houses {
+  display: flex;
+  gap: 3px;
+}
+
+.hud-track-slot {
+  position: relative;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.hud-track-open {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px dashed #6b5e4c;
+  color: $hud-muted;
+  font-size: 12px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hud-track-stars {
+  position: absolute;
+  bottom: -9px;
+  font-size: 8px;
+  line-height: 1;
+  color: #ffc107;
+  letter-spacing: -1px;
+  white-space: nowrap;
+
+  &.empty {
+    display: none;
   }
 }
 
@@ -232,22 +374,37 @@ $hud-gap: 12px;
   gap: 8px;
 }
 
-// O cabeçalho da partida (relógio, nome, avisos) vira uma faixa no topo, ao centro.
+.hud-help-popover {
+  max-width: 340px;
+
+  ul {
+    padding-left: 18px;
+    margin-bottom: 10px;
+  }
+
+  li {
+    margin-bottom: 4px;
+  }
+}
+
+// O cabeçalho da partida (relógio, nome, avisos) vira uma faixa no topo,
+// à esquerda dos botões.
 .hud-game-header {
   position: fixed !important;
   top: $hud-gap;
-  left: 50%;
-  transform: translateX(-50%);
+  right: 164px;
   z-index: 11;
   width: auto !important;
-  max-width: calc(100vw - 900px);
-  min-width: 260px;
-  padding: 2px 12px !important;
+  max-width: 420px;
+  padding: 2px 10px !important;
   background: $hud-bg;
   border: 1px solid $hud-line;
   border-radius: 12px;
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.45);
   flex: none !important;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
 
   > .row {
     flex-wrap: nowrap;
@@ -255,28 +412,34 @@ $hud-gap: 12px;
   }
 
   h4 {
-    font-size: 15px;
+    font-size: 14px;
     margin: 0;
-    max-width: 100%;
+    max-width: 180px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
 
   .col-auto {
-    padding-left: 6px !important;
-    padding-right: 6px !important;
+    padding-left: 4px !important;
+    padding-right: 4px !important;
   }
 
   img {
-    max-height: 26px;
+    max-height: 24px;
     width: auto;
   }
 }
 
-@media (max-width: 1400px) {
-  .hud-game-header {
-    max-width: calc(100vw - 760px);
+// Em telas menores o nome da partida sai da faixa (fica o relógio e os avisos).
+// (o nome fica na coluna "px-3" do cabeçalho; relógio e selos também usam h4)
+@media (max-width: 1699px) {
+  .hud-game-header .px-3 > h4 {
+    display: none;
+  }
+
+  .hud-game-header .px-3 {
+    display: none;
   }
 }
 
@@ -286,8 +449,8 @@ $hud-gap: 12px;
   position: absolute;
   top: 64px;
   right: $hud-gap;
-  bottom: $hud-gap;
-  width: var(--hud-right-panel-width, 420px);
+  max-height: calc(100vh - 76px);
+  width: var(--hud-right-panel-width, 330px);
   display: flex;
   flex-direction: column;
   z-index: 3;
@@ -299,23 +462,132 @@ $hud-gap: 12px;
   min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 6px;
+}
 
-  // O HouseInfoColumn foi feito para uma coluna; aqui ele rola dentro do painel.
-  .flex-ratio-container {
-    height: auto;
+.hud-house-list-head,
+.hud-house-line {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 30px 40px 38px 40px;
+  gap: 2px;
+  align-items: center;
+}
+
+.hud-house-list-head {
+  padding: 8px 12px 4px;
+  font-size: 11px;
+  color: $hud-muted;
+
+  span:not(:first-child) {
+    text-align: center;
+  }
+}
+
+.hud-house-line {
+  width: 100%;
+  padding: 8px 12px;
+  border: 0;
+  border-top: 1px solid $hud-line-soft;
+  background: transparent;
+  color: $hud-text;
+  text-align: left;
+  cursor: pointer;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.04);
   }
 
-  .card {
+  &.mine {
+    background: rgba(226, 182, 90, 0.08);
+  }
+}
+
+.hud-house-who {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.hud-house-names {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.25;
+}
+
+.hud-house-name {
+  font-size: 14px;
+  filter: brightness(1.25);
+}
+
+.hud-house-player {
+  font-size: 11px;
+  color: $hud-muted;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.hud-house-status {
+  font-size: 11px;
+
+  &.ready {
+    color: $hud-green;
+  }
+
+  &.playing {
+    color: $hud-muted;
+  }
+
+  &.mine {
+    color: $hud-gold;
+    font-weight: 600;
+  }
+}
+
+.hud-house-num {
+  text-align: center;
+  font-size: 14px;
+}
+
+.hud-house-popover {
+  max-width: 640px;
+  width: 600px;
+
+  .list-group-item {
     background: transparent;
-    border-color: $hud-line;
   }
+}
 
-  .flex-fill-remaining,
-  .flex-sized-to-content {
-    flex: none;
-    overflow: visible;
+.hud-section-toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  border: 0;
+  border-top: 1px solid $hud-line;
+  background: transparent;
+  color: $hud-text;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.04);
   }
+}
+
+.hud-supply {
+  padding: 6px 4px 10px;
+  zoom: 0.62;
+}
+
+.hud-spectators {
+  padding: 8px 12px 12px;
+  font-size: 11px;
+  color: $hud-muted;
+  border-top: 1px solid $hud-line-soft;
 }
 
 .hud-house-strip {
@@ -333,28 +605,13 @@ $hud-gap: 12px;
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 4px 8px 4px 4px;
+  padding: 3px 8px 3px 3px;
   border-radius: 999px;
   background: $hud-bg;
   border: 2px solid $hud-line;
 
   &.mine {
     border-color: $hud-gold;
-  }
-}
-
-.hud-house-icon {
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  img {
-    width: 20px;
-    height: 20px;
-    filter: invert(1);
   }
 }
 
@@ -370,14 +627,15 @@ $hud-gap: 12px;
 .hud-action-dock {
   position: absolute;
   bottom: $hud-gap;
-  left: 356px; // depois do chat
+  left: calc(var(--hud-left-dock-width, 320px) + 24px);
   margin-left: auto;
   margin-right: auto;
-  max-width: 900px;
+  max-width: 820px;
   z-index: 5;
   display: flex;
   flex-direction: column;
   border-width: 2px;
+  border-radius: 16px;
   background: rgba(30, 25, 20, 0.97);
 
   &.own-turn {
@@ -389,11 +647,7 @@ $hud-gap: 12px;
 
   // Minimizado: só uma faixa curta no centro, com o aviso de vez.
   &.minimized {
-    left: 50% !important;
-    right: auto !important;
-    transform: translateX(-50%);
-    width: min(520px, calc(100vw - 720px));
-    min-width: 280px;
+    max-width: 560px;
   }
 }
 
@@ -405,10 +659,16 @@ $hud-gap: 12px;
   font-size: 14px;
 }
 
+.hud-action-title {
+  font-size: 15px;
+  white-space: nowrap;
+}
+
 .hud-action-summary {
   flex: 1;
   min-width: 0;
   color: $hud-muted;
+  font-size: 13px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -435,42 +695,205 @@ $hud-gap: 12px;
   }
 
   &.ended {
-    background: #7fb77e;
+    background: $hud-green;
     color: #10180f;
   }
 }
 
+.hud-cards-button {
+  flex: none;
+  height: 32px;
+  padding: 0 12px;
+  border-radius: 8px;
+  border: 1px solid #4a4036;
+  background: #1a1612;
+  color: $hud-text;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+
+  &:hover {
+    border-color: $hud-gold;
+  }
+}
+
+.hud-cards-popover {
+  max-width: 560px;
+}
+
+.hud-cards-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+}
+
 .hud-action-body {
   max-height: 38vh;
+
+  .text-large {
+    font-size: 1rem;
+  }
+
   overflow-y: auto;
   border-top: 1px solid $hud-line;
 
   .list-group-item {
     background: transparent;
+    padding-top: 8px;
+    padding-bottom: 8px;
   }
 }
 
-// ---------- chat e histórico (embaixo, à esquerda) ----------
+.hud-orders-strip {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 10px 14px;
+  border-bottom: 1px solid $hud-line-soft;
+}
 
-.hud-chat-dock {
+.hud-orders-progress {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  color: $hud-muted;
+
+  b {
+    color: $hud-text;
+    font-size: 14px;
+  }
+}
+
+.hud-orders-tokens {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.hud-order-token {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+
+  &.used {
+    opacity: 0.32;
+  }
+}
+
+.hud-order-img {
+  width: 40px !important;
+  height: 40px !important;
+}
+
+.hud-order-count {
+  font-size: 11px;
+  color: $hud-muted;
+}
+
+// ---------- acontecimentos, chat e corvos (embaixo, à esquerda) ----------
+
+.hud-left-dock {
   position: absolute;
   left: $hud-gap;
   bottom: $hud-gap;
   z-index: 6;
+  width: var(--hud-left-dock-width, 320px);
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
+.hud-recent {
+  padding: 10px 12px;
+  font-size: 12px;
+  line-height: 1.45;
+  color: #d8d0c2;
+}
+
+.hud-recent-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+  color: $hud-text;
+  font-size: 13px;
+}
+
+.hud-recent-body {
+  max-height: 96px;
+  overflow: hidden;
+}
+
+.hud-log-line {
+  max-height: 44px;
+  overflow: hidden;
+  margin-bottom: 4px;
+
+  // alguns acontecimentos usam títulos grandes; aqui tudo fica do mesmo tamanho
+  * {
+    font-size: 12px !important;
+    line-height: 1.4 !important;
+    text-align: left !important;
+    margin: 0 !important;
+  }
+
+  // os acontecimentos podem ter figuras; aqui ficam pequenas
+  img,
+  .house-card,
+  .westeros-card,
+  .wildling-card {
+    max-height: 18px !important;
+    width: auto !important;
+  }
+
+  .row {
+    margin: 0;
+  }
+
+  .col,
+  [class*="col-"] {
+    padding: 0 2px;
+  }
+
+  p {
+    margin: 0;
+  }
+}
+
+.hud-left-buttons {
+  display: flex;
+  gap: 8px;
+}
+
 .hud-chat-button {
-  width: 332px;
-  height: 52px;
+  flex: 1;
+  min-width: 0;
+  height: 48px;
   display: flex;
   align-items: center;
   gap: 10px;
   padding: 0 12px;
   font-size: 13px;
   text-align: left;
+  cursor: pointer;
+
+  &:hover {
+    border-color: $hud-gold;
+  }
+}
+
+.hud-ravens-button {
+  height: 48px;
+  padding: 0 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 500;
   cursor: pointer;
 
   &:hover {
@@ -509,6 +932,7 @@ $hud-gap: 12px;
 }
 
 .hud-chat-panel {
+  background: #17130f; // opaco: o painel da jogada não aparece por trás
   width: min(460px, calc(100vw - 24px));
   height: min(640px, calc(100vh - 100px));
   display: flex;
@@ -522,6 +946,10 @@ $hud-gap: 12px;
   display: flex;
   flex-direction: column;
 
+  .text-large {
+    font-size: 0.95rem;
+  }
+
   > .card {
     flex: 1;
     height: 100% !important;
@@ -529,15 +957,6 @@ $hud-gap: 12px;
     border: 0;
     border-radius: 0;
     background: transparent;
-  }
-}
-
-// ---------- telas menores ----------
-
-@media (max-width: 1280px) {
-  .hud-action-dock {
-    left: $hud-gap;
-    bottom: 76px;
   }
 }
 
@@ -560,5 +979,14 @@ $hud-gap: 12px;
 @keyframes march-arrow-dash {
   to {
     stroke-dashoffset: -22;
+  }
+}
+
+// ---------- telas menores ----------
+
+@media (max-width: 1280px) {
+  .hud-action-dock {
+    left: $hud-gap;
+    bottom: 130px;
   }
 }

@@ -55,6 +55,8 @@ interface GameTabsComponentProps {
   gameClient: GameClient;
   mapControls: MapControls;
   border?: string; // used if it is the own turn in full sceen mode
+  // Tela nova: aba que abre primeiro (ex.: "game-logs" pelo botão Histórico)
+  initialTab?: string;
 }
 
 @observer
@@ -68,7 +70,8 @@ export default class GameTabsComponent extends Component<GameTabsComponentProps>
   private ingame = this.props.ingame;
   private gameSettings = this.ingame.entireGame.gameSettings;
 
-  @observable currentOpenedTab = this.user?.settings.lastOpenedTab ?? "chat";
+  @observable currentOpenedTab =
+    this.props.initialTab ?? this.user?.settings.lastOpenedTab ?? "chat";
   @observable unseenNotes = false;
 
   @observable gameRoundElems: ReactNode | null = null;
