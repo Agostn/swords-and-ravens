@@ -55,6 +55,10 @@ class Card:
         x0, y0, x1, y1 = box
         return int(x0 * self.W), int(y0 * self.H), int(x1 * self.W), int(y1 * self.H)
 
+    def median_gray(self, box):
+        x0, y0, x1, y1 = self._px(box)
+        return float(np.median(cv2.cvtColor(self.bgr, cv2.COLOR_BGR2GRAY)[y0:y1, x0:x1]))
+
     def erase(self, box, darker=30, light_text=False, grow=2, max_blob=0.8):
         """Apaga as letras dentro da área. darker = quanto a letra é mais escura que o fundo.
         light_text=True para letra clara sobre fundo escuro.
@@ -63,7 +67,9 @@ class Card:
         x0, y0, x1, y1 = self._px(box)
         gray = cv2.cvtColor(self.bgr, cv2.COLOR_BGR2GRAY)
         region = gray[y0:y1, x0:x1].astype(np.int16)
-        bg = np.median(region)
+        # fundo medido só no miolo da área (as bordas podem pegar moldura escura)
+        h, w = region.shape
+        bg = np.median(region[h // 10: h - h // 10, w // 8: w - w // 8])
         if light_text:
             m = region > bg + darker
         else:
@@ -152,11 +158,10 @@ class Card:
         for p in paras:
             words = []
             for text, st in p:
-                for part in text.split("\n"):
-                    if part == "" and words:
-                        continue
+                pieces = text.split("\n")
+                for k, part in enumerate(pieces):
                     words += [(w, st) for w in part.split()]
-                    if "\n" in text:
+                    if k < len(pieces) - 1:
                         words.append(("\n", st))
             cur = []
             for w in words:

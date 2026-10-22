@@ -30,4 +30,34 @@ const loanCardImages = new BetterMap([
     ["back", loanCardBack]
 ]);
 
-export default loanCardImages;
+// --- imagens em PT-BR (gerado por tools/cards/wire.py) ---
+import { localizeImages } from "./i18n/localizedImages";
+import customsOfficer_ptBR from "../../public/images/pt-BR/loan-cards/CustomsOfficer.png";
+import expertArtificer_ptBR from "../../public/images/pt-BR/loan-cards/ExpertArtificer.png";
+import fullHost_ptBR from "../../public/images/pt-BR/loan-cards/FullHost.png";
+import loyalMaester_ptBR from "../../public/images/pt-BR/loan-cards/LoyalMaester.png";
+import masterAtArms_ptBR from "../../public/images/pt-BR/loan-cards/MasterAtArms.png";
+import pyromancer_ptBR from "../../public/images/pt-BR/loan-cards/Pyromancer.png";
+import savvySteward_ptBR from "../../public/images/pt-BR/loan-cards/SavvySteward.png";
+import seaRaiders_ptBR from "../../public/images/pt-BR/loan-cards/SeaRaiders.png";
+import siegeEngineers_ptBR from "../../public/images/pt-BR/loan-cards/SiegeEngineers.png";
+import spymaster_ptBR from "../../public/images/pt-BR/loan-cards/Spymaster.png";
+import theFacelessMen_ptBR from "../../public/images/pt-BR/loan-cards/TheFacelessMen.png";
+import vanguardCavalry_ptBR from "../../public/images/pt-BR/loan-cards/VanguardCavalry.png";
+
+const loanCardImagesLocalized = localizeImages(loanCardImages, new Map<string, string>([
+  [customsOfficer, customsOfficer_ptBR],
+  [expertArtificer, expertArtificer_ptBR],
+  [fullHost, fullHost_ptBR],
+  [loyalMaester, loyalMaester_ptBR],
+  [masterAtArms, masterAtArms_ptBR],
+  [pyromancer, pyromancer_ptBR],
+  [savvySteward, savvySteward_ptBR],
+  [seaRaiders, seaRaiders_ptBR],
+  [siegeEngineers, siegeEngineers_ptBR],
+  [spymaster, spymaster_ptBR],
+  [theFacelessMen, theFacelessMen_ptBR],
+  [vanguardCavalry, vanguardCavalry_ptBR]
+]));
+
+export default loanCardImagesLocalized;

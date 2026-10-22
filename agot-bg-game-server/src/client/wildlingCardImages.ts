@@ -22,4 +22,28 @@ const wildlingCardImages = new BetterMap([
     ["preemptive-raid", preemptive]
 ]);
 
-export default wildlingCardImages;
+// --- imagens em PT-BR (gerado por tools/cards/wire.py) ---
+import { localizeImages } from "./i18n/localizedImages";
+import crowKillers_ptBR from "../../public/images/pt-BR/wildling-cards/CrowKillersLarge.png";
+import hordeDescends_ptBR from "../../public/images/pt-BR/wildling-cards/HordeDescendsLarge.png";
+import kingBeyond_ptBR from "../../public/images/pt-BR/wildling-cards/KingBeyondLarge.png";
+import mammoth_ptBR from "../../public/images/pt-BR/wildling-cards/Mammothlarge.png";
+import milkwater_ptBR from "../../public/images/pt-BR/wildling-cards/MilkwaterLarge.png";
+import preemptive_ptBR from "../../public/images/pt-BR/wildling-cards/PreemptiveLarge.png";
+import rattleshirt_ptBR from "../../public/images/pt-BR/wildling-cards/RattleshirtLarge.png";
+import silence_ptBR from "../../public/images/pt-BR/wildling-cards/SilenceLarge.png";
+import skinChangerLarge_ptBR from "../../public/images/pt-BR/wildling-cards/SkinchangerLarge.png";
+
+const wildlingCardImagesLocalized = localizeImages(wildlingCardImages, new Map<string, string>([
+  [crowKillers, crowKillers_ptBR],
+  [hordeDescends, hordeDescends_ptBR],
+  [kingBeyond, kingBeyond_ptBR],
+  [mammoth, mammoth_ptBR],
+  [milkwater, milkwater_ptBR],
+  [preemptive, preemptive_ptBR],
+  [rattleshirt, rattleshirt_ptBR],
+  [silence, silence_ptBR],
+  [skinChangerLarge, skinChangerLarge_ptBR]
+]));
+
+export default wildlingCardImagesLocalized;
