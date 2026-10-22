@@ -9,6 +9,7 @@ import { Row, Col, Button } from "react-bootstrap";
 import SelectRegionGameState from "../../common/ingame-game-state/select-region-game-state/SelectRegionGameState";
 import { RegionOnMapProperties } from "../MapControls";
 import PartialRecursive from "../../utils/PartialRecursive";
+import { t, tr } from "../i18n/i18n";
 
 @observer
 export default class SelectRegionComponent extends Component<
@@ -28,7 +29,7 @@ export default class SelectRegionComponent extends Component<
             <>
               {this.selectedRegion && (
                 <p className="text-center">
-                  Selected area: <b>{this.selectedRegion.name}</b>
+                  {tr("auto.game-state-panel.SelectRegionComponent.0", { p0: (<b>{this.selectedRegion.name}</b>) })}
                 </p>
               )}
               <Row className="justify-content-center">
@@ -39,7 +40,7 @@ export default class SelectRegionComponent extends Component<
                     onClick={() => this.confirm()}
                     disabled={this.selectedRegion == null}
                   >
-                    Confirm
+                    {t("common.confirm")}
                   </Button>
                 </Col>
                 <Col xs="auto">
@@ -49,21 +50,16 @@ export default class SelectRegionComponent extends Component<
                     onClick={() => this.reset()}
                     disabled={this.selectedRegion == null}
                   >
-                    Reset
+                    {t("common.reset")}
                   </Button>
                 </Col>
               </Row>
             </>
           ) : (
             <div className="text-center">
-              Waiting for{" "}
-              {
-                this.props.gameState.ingame.getControllerOfHouse(
+              {tr("auto.game-state-panel.SelectRegionComponent.1", { p0: (this.props.gameState.ingame.getControllerOfHouse(
                   this.props.gameState.house
-                ).house.name
-              }
-              ...
-            </div>
+                ).house.name) })}</div>
           )}
         </Col>
       </>

@@ -21,6 +21,11 @@ import ptBR from "./locales/pt-BR";
 export type Language = "pt-BR" | "en";
 export type TranslationKey = keyof typeof en;
 export type TranslationParams = { [name: string]: string | number };
+/** Parâmetros de tr(): além de texto e números, aceitam elementos React
+ * (ex.: o nome de uma Casa em negrito e colorido). */
+export type RichTranslationParams = {
+  [name: string]: string | number | React.ReactNode;
+};
 
 const dictionaries: {
   [lang in Language]: { [key in TranslationKey]: string };
@@ -95,10 +100,31 @@ function interpolate(text: string, params?: TranslationParams): string {
   if (!params) {
     return text;
   }
-  return text.replace(/\{(\w+)\}/g, (match, name: string) =>
-    Object.prototype.hasOwnProperty.call(params, name)
-      ? String(params[name])
-      : match
+  return applyPlurals(text, params).replace(
+    /\{(\w+)\}/g,
+    (match, name: string) =>
+      Object.prototype.hasOwnProperty.call(params, name)
+        ? String(params[name])
+        : match
+  );
+}
+
+/**
+ * Plural simples: "{n|ficha|fichas}" vira "ficha" quando n == 1 e "fichas"
+ * nos outros casos. Pode ser usado junto com "{n}": "{n} {n|ficha|fichas}".
+ */
+function applyPlurals(
+  text: string,
+  params: { [name: string]: unknown }
+): string {
+  return text.replace(
+    /\{(\w+)\|([^|{}]*)\|([^|{}]*)\}/g,
+    (match, name: string, singular: string, plural: string) =>
+      Object.prototype.hasOwnProperty.call(params, name)
+        ? Number(params[name]) == 1
+          ? singular
+          : plural
+        : match
   );
 }
 
@@ -155,13 +181,49 @@ function parseRichText(template: string): RichNode {
   return root;
 }
 
+function renderRichText(
+  text: string,
+  params: RichTranslationParams | undefined
+): React.ReactNode {
+  if (!params) {
+    return text;
+  }
+  const withPlurals = applyPlurals(text, params);
+  const parts: React.ReactNode[] = [];
+  const pattern = /\{(\w+)\}/g;
+  let lastIndex = 0;
+  let match: RegExpExecArray | null;
+  while ((match = pattern.exec(withPlurals)) != null) {
+    const name = match[1];
+    if (!Object.prototype.hasOwnProperty.call(params, name)) {
+      continue;
+    }
+    if (match.index > lastIndex) {
+      parts.push(withPlurals.substring(lastIndex, match.index));
+    }
+    const value = params[name];
+    parts.push(
+      typeof value == "string" || typeof value == "number"
+        ? String(value)
+        : React.createElement(React.Fragment, { key: parts.length }, value)
+    );
+    lastIndex = pattern.lastIndex;
+  }
+  if (lastIndex < withPlurals.length) {
+    parts.push(withPlurals.substring(lastIndex));
+  }
+  return parts.length == 1 && typeof parts[0] == "string"
+    ? parts[0]
+    : React.createElement(React.Fragment, null, ...parts);
+}
+
 function renderRichNode(
   node: RichNode | string,
-  params: TranslationParams | undefined,
+  params: RichTranslationParams | undefined,
   key: number
 ): React.ReactNode {
   if (typeof node == "string") {
-    return interpolate(node, params);
+    return renderRichText(node, params);
   }
   const children = node.children.map((child, i) =>
     renderRichNode(child, params, i)
@@ -178,7 +240,7 @@ function renderRichNode(
 /** Texto traduzido com formatação (<b>, <i>, <br/>…) como ReactNode. */
 export function tr(
   key: TranslationKey,
-  params?: TranslationParams
+  params?: RichTranslationParams
 ): React.ReactNode {
   return renderRichNode(parseRichText(getTemplate(key)), params, 0);
 }

@@ -10,6 +10,7 @@ import SelectUnitsGameState from "../../../common/ingame-game-state/select-units
 import SelectUnitsComponent from "../SelectUnitsComponent";
 import React from "react";
 import { Col } from "react-bootstrap";
+import { t } from "../../i18n/i18n";
 
 @observer
 export default class PreemptiveRaidWildlingVictoryComponent extends Component<GameStateComponentProps<PreemptiveRaidWildlingVictoryGameState>> {
@@ -17,11 +18,9 @@ export default class PreemptiveRaidWildlingVictoryComponent extends Component<Ga
         return <>
             {this.props.gameState.childGameState instanceof SelectUnitsGameState
             ?   <Col xs={12} className="text-center">
-                    The lowest bidder destroys 2 units anywhere.
-                </Col>
+                    {t("auto.game-state-panel.wildlings-attack-component.PreemptiveRaidWildlingVictoryComponent.0")}</Col>
             :   <Col xs={12} className="text-center">
-                    The lowest bidder destroys 2 units or is reduced 2 positions on their highest influence track.
-                </Col>}
+                    {t("auto.game-state-panel.wildlings-attack-component.PreemptiveRaidWildlingVictoryComponent.1")}</Col>}
             {renderChildGameState(this.props, [
                 [SimpleChoiceGameState, SimpleChoiceComponent],
                 [SelectUnitsGameState, SelectUnitsComponent]

@@ -50,6 +50,7 @@ import HouseNumberResultsComponent from "../../../client/HouseNumberResultsCompo
 import mammothImage from "../../../../public/images/icons/mammoth.svg";
 import TakeControlOfEnemyPortGameState from "../../../common/ingame-game-state/take-control-of-enemy-port-game-state/TakeControlOfEnemyPortGameState";
 import TakeControlOfEnemyPortComponent from "../TakeControlOfEnemyPortComponent";
+import { t, tr } from "../../i18n/i18n";
 
 @observer
 export default class WildlingsAttackComponent extends Component<GameStateComponentProps<WildlingsAttackGameState>> {
@@ -61,10 +62,10 @@ export default class WildlingsAttackComponent extends Component<GameStateCompone
         return (
             <>
                 {!this.props.gameState.biddingResults && <Row className="justify-content-center mt-2 mb-1">
-                    <img src={mammothImage} width="40px" className="mr-2" /><h4 className="mt-2">Wildlings Attack</h4><img src={mammothImage} width="40px" className="ml-2" />
+                    <img src={mammothImage} width="40px" className="mr-2" /><h4 className="mt-2">{t("auto.game-state-panel.wildlings-attack-component.WildlingsAttackComponent.0")}</h4><img src={mammothImage} width="40px" className="ml-2" />
                 </Row>}
                 {this.props.gameState.biddingResults && <h5 className="text-center mt-1">
-                    {this.props.gameState.nightsWatchWon ? "Night's Watch Victory" : "Wildling Victory"}
+                    {this.props.gameState.nightsWatchWon ? t("auto2.game-state-panel.wildlings-attack-component.WildlingsAttackComponent.0") : t("auto2.game-state-panel.wildlings-attack-component.WildlingsAttackComponent.1")}
                 </h5>}
                 {wildlingCardType && (
                     <Row className="justify-content-center">
@@ -76,14 +77,12 @@ export default class WildlingsAttackComponent extends Component<GameStateCompone
                 <Row>
                     {this.props.gameState.childGameState instanceof BiddingGameState ? (
                         <Col xs={12} className="text-center mb-3">
-                            <b>All player houses</b>{this.props.gameState.excludedHouses.length > 0 &&
-                                (<> except {joinReactNodes(this.props.gameState.excludedHouses.map(h =>
-                                    <b key={`wildling_excluded-house_${h.id}`}>{h.name}</b>), ", ")}</>)} bid Power tokens to overcome the Wildlings,
-                                    which are attacking with a strength of <b style={{ fontSize: "2rem" }}>{this.props.gameState.wildlingStrength}</b>!
-                        </Col>
+                            {tr("auto.game-state-panel.wildlings-attack-component.WildlingsAttackComponent.1")}{this.props.gameState.excludedHouses.length > 0 &&
+                                (<> {" "}{tr("auto.game-state-panel.wildlings-attack-component.WildlingsAttackComponent.2", { p0: (joinReactNodes(this.props.gameState.excludedHouses.map(h =>
+                                    <b key={`wildling_excluded-house_${h.id}`}>{h.name}</b>), ", ")) })}</>)} {" "}{tr("auto.game-state-panel.wildlings-attack-component.WildlingsAttackComponent.3", { p0: (<b style={{ fontSize: "2rem" }}>{this.props.gameState.wildlingStrength}</b>) })}</Col>
                     ) : results ?
                         <Col xs={12} className="no-space-around">
-                            <div className="text-center mb-1">Bidding results:</div>
+                            <div className="text-center mb-1">{t("auto.game-state-panel.wildlings-attack-component.WildlingsAttackComponent.4")}</div>
                             <div className="d-flex justify-content-center">
                                 <HouseNumberResultsComponent results={results} keyPrefix="wildlings" />
                             </div>
@@ -91,12 +90,12 @@ export default class WildlingsAttackComponent extends Component<GameStateCompone
                         : <></>}
                     {this.props.gameState._highestBidder && <Col xs={12} className="justify-content-center">
                         <div className="text-center mt-1">
-                            Highest Bidder: <b style={{ "color": this.props.gameState._highestBidder.color }}>{this.props.gameState._highestBidder.name}</b>
+                            {tr("auto.game-state-panel.wildlings-attack-component.WildlingsAttackComponent.5", { p0: (<b style={{ "color": this.props.gameState._highestBidder.color }}>{this.props.gameState._highestBidder.name}</b>) })}
                         </div>
                     </Col>}
                     {this.props.gameState._lowestBidder && <Col xs={12} className="justify-content-center">
                         <div className="text-center mt-1">
-                            Lowest Bidder: <b style={{ "color": this.props.gameState._lowestBidder.color }}>{this.props.gameState._lowestBidder.name}</b>
+                            {tr("auto.game-state-panel.wildlings-attack-component.WildlingsAttackComponent.6", { p0: (<b style={{ "color": this.props.gameState._lowestBidder.color }}>{this.props.gameState._lowestBidder.name}</b>) })}
                         </div>
                     </Col>}
                     {this.props.gameState.childGameState && renderChildGameState<WildlingsAttackGameState>(this.props, [

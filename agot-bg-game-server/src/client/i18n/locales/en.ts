@@ -4,7 +4,14 @@
 // Allowed formatting tags inside texts: <b> <i> <small> <br/> <p> <ul> <li>.
 // Parameters: {name}.
 
+import enIngame from "./en-ingame";
+import enAuto from "./en-auto";
+
 const en = {
+  // Textos da partida ficam em en-ingame.ts
+  ...enIngame,
+  ...enAuto,
+
   // ---------- Language ----------
   "language.label": "Language",
 

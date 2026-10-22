@@ -13,6 +13,7 @@ import EntireGame from "../common/EntireGame";
 import IngameGameState from "../common/ingame-game-state/IngameGameState";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faRotateRight } from "@fortawesome/free-solid-svg-icons";
+import { t, tr } from "./i18n/i18n";
 
 interface AppProps {
   gameClient: GameClient;
@@ -80,21 +81,21 @@ export default class App extends Component<AppProps> {
           ConnectionState.INITIALIZING ? (
             <Col xs="auto" className="m-4 p-3 text-center">
               <h4>
-                <span className="loader">Initializing</span>
+                <span className="loader">{t("auto.App.0")}</span>
               </h4>
             </Col>
           ) : this.props.gameClient.connectionState ==
             ConnectionState.CONNECTING ? (
             <Col xs="auto" className="m-4 p-3 text-center">
               <h4>
-                <span className="loader">Connecting</span>
+                <span className="loader">{t("auto.App.1")}</span>
               </h4>
             </Col>
           ) : this.props.gameClient.connectionState ==
             ConnectionState.AUTHENTICATING ? (
             <Col xs="auto" className="m-4 p-3 text-center">
               <h4>
-                <span className="loader">Authenticating</span>
+                <span className="loader">{t("auto.App.2")}</span>
               </h4>
             </Col>
           ) : this.isConnected ? (
@@ -108,10 +109,7 @@ export default class App extends Component<AppProps> {
               <Col xs="auto" className="m-4 p-3 text-center">
                 <Alert variant="danger">
                   <h4>
-                    The connection to the server is lost.
-                    <br />
-                    Please reload this page.
-                  </h4>
+                    {tr("auto.App.3")}</h4>
                   <button
                     type="submit"
                     className="btn btn-outline-dark mt-3"
@@ -120,7 +118,7 @@ export default class App extends Component<AppProps> {
                     }}
                   >
                     <FontAwesomeIcon icon={faRotateRight} size="lg" />
-                    <h5 className="ml-2 d-inline">Reload</h5>
+                    <h5 className="ml-2 d-inline">{t("auto.App.4")}</h5>
                   </button>
                 </Alert>
               </Col>
@@ -129,12 +127,12 @@ export default class App extends Component<AppProps> {
             ConnectionState.BANNED ? (
             <Col xs="auto" className="m-4 p-3 text-center">
               <Alert variant="danger">
-                <h4>The game host has banned you from this game.</h4>
+                <h4>{t("auto.App.5")}</h4>
               </Alert>
             </Col>
           ) : (
             <Col xs="auto" className="m-4 p-3 text-center">
-              <span className="loader">Error</span>
+              <span className="loader">{t("auto.App.6")}</span>
             </Col>
           )}
         </Row>

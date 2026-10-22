@@ -9,6 +9,7 @@ import preventOverflow from "@popperjs/core/lib/modifiers/preventOverflow";
 import braavosInitialLoanCostReduceImage from "../../public/images/garrisons/braavos-initial-loan-cost-reduce.png";
 import ironBankImage from "../../public/images/ironBank.jpg";
 import IIronBankSnapshot from "./game-replay/IronBankSnapshot";
+import { t, tr } from "./i18n/i18n";
 
 interface IronBankSnapshotComponentProps {
   ingame: IngameGameState;
@@ -77,9 +78,7 @@ export default class IronBankSnapshotComponent extends Component<IronBankSnapsho
                 placement="auto"
                 overlay={
                   <Tooltip id="braavos-controller-tooltip">
-                    The controller of Braavos receives a <b>-1</b> to the{" "}
-                    <b>initial cost</b> of the loan.
-                  </Tooltip>
+                    {tr("auto.IronBankSnapshotComponent.0", { p0: (<b>-1</b>) })}</Tooltip>
                 }
                 popperConfig={{ modifiers: [preventOverflow] }}
               >
@@ -107,30 +106,14 @@ export default class IronBankSnapshotComponent extends Component<IronBankSnapsho
                     className="tooltip-w-100"
                   >
                     <Col>
-                      At the beginning of the Westeros Phase, any player having
-                      received loans
-                      <br />
-                      must pay one Power token per loan as interest, resolving
-                      in turn order.
-                      <br />
-                      For every token the player cannot pay, the Valyrian Steel
-                      Blade holder
-                      <br />
-                      destroys one of that player&apos;s units anywhere on the
-                      map.
-                      <br />
-                      If the player holds the Valyrian Steel Blade, the next
-                      highest player
-                      <br />
-                      on the Fiefdoms track will make this choice instead.
-                    </Col>
+                      {tr("auto.IronBankSnapshotComponent.2")}</Col>
                   </Tooltip>
                 }
                 placement="auto"
                 popperConfig={{ modifiers: [preventOverflow] }}
               >
                 <Col xs={12} className="py-1">
-                  <h5 className="text-center">Interest per round</h5>
+                  <h5 className="text-center">{t("auto.IronBankSnapshotComponent.1")}</h5>
                 </Col>
               </OverlayTrigger>
               <Col xs="auto" className="py-0">

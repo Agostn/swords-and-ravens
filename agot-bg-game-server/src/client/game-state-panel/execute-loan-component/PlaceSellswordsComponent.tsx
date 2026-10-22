@@ -15,6 +15,7 @@ import Unit from "../../../common/ingame-game-state/game-data-structure/Unit";
 import PlaceSellswordsGameState from "../../../common/ingame-game-state/action-game-state/resolve-consolidate-power-game-state/execute-loan-game-state/place-sellwords-game-state/PlaceSellswordsGameState";
 import UnitType from "../../../common/ingame-game-state/game-data-structure/UnitType";
 import UnitIconComponent from "../../../client/UnitIconComponent";
+import { t, tr } from "../../i18n/i18n";
 
 @observer
 export default class PlaceSellswordsComponent extends Component<
@@ -50,7 +51,7 @@ export default class PlaceSellswordsComponent extends Component<
             {this.placedSellswords.size > 0 && (
               <Col xs={12}>
                 <>
-                  {this.placedSellswords.size > 0 && <p>Your placements:</p>}
+                  {this.placedSellswords.size > 0 && <p>{t("auto.game-state-panel.execute-loan-component.PlaceSellswordsComponent.0")}</p>}
                   {this.placedSellswords.entries.map(([r, placements]) => (
                     <div key={`sellsword-placements_${r.id}`}>
                       <b>{r.name}</b>
@@ -75,11 +76,9 @@ export default class PlaceSellswordsComponent extends Component<
               <Col xs={12} className="text-center">
                 {this.props.gameState.regions.length == 1 ? (
                   <>
-                    Click into <b>{this.props.gameState.regions[0].name}</b> to
-                    place a sellsword there.
-                  </>
+                    {tr("auto.game-state-panel.execute-loan-component.PlaceSellswordsComponent.1", { p0: (<b>{this.props.gameState.regions[0].name}</b>) })}</>
                 ) : (
-                  <>Click on a area to place a sellsword there.</>
+                  <>{t("auto.game-state-panel.execute-loan-component.PlaceSellswordsComponent.2")}</>
                 )}
               </Col>
             )}
@@ -92,7 +91,7 @@ export default class PlaceSellswordsComponent extends Component<
                     disabled={!this.canSubmit()}
                     onClick={() => this.submit()}
                   >
-                    Submit
+                    {t("common.submit")}
                   </Button>
                 </Col>
                 <Col xs="auto">
@@ -102,7 +101,7 @@ export default class PlaceSellswordsComponent extends Component<
                     disabled={this.placedSellswords.size == 0}
                     onClick={() => this.reset()}
                   >
-                    Reset
+                    {t("common.reset")}
                   </Button>
                 </Col>
               </Row>
@@ -112,7 +111,7 @@ export default class PlaceSellswordsComponent extends Component<
         {(!this.doesControlCurrentHouse ||
           this.props.gameState.ingame.isVassalHouse(this.house)) && (
           <Col xs={12} className="text-center">
-            Waiting for {this.house.name}...
+            {t("common.waitingFor", { who: this.house.name })}
           </Col>
         )}
       </>
@@ -145,7 +144,7 @@ export default class PlaceSellswordsComponent extends Component<
   submit(): void {
     if (this.props.gameState.anyPlacementPossible(this.placedSellswordTypes)) {
       if (
-        !confirm("You have not placed all of your sellswords. Continue anyway?")
+        !confirm(t("auto2.game-state-panel.execute-loan-component.PlaceSellswordsComponent.0"))
       ) {
         return;
       }

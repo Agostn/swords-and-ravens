@@ -11,6 +11,7 @@ import { OverlayChildren } from "react-bootstrap/esm/Overlay";
 import ImagePopover from "../../utils/ImagePopover";
 import trageImage from "../../../../public/images/icons/trade.svg";
 import { Tooltip } from "react-bootstrap";
+import { tr } from "../../i18n/i18n";
 
 interface WesterosCardProps {
     cardType: WesterosCardType;
@@ -54,7 +55,7 @@ export default class WesterosCardComponent extends Component<WesterosCardProps> 
                 {this.props.wasReshuffled &&
                 <div className="mt-1 text-center">
                     <OverlayTrigger
-                        overlay={<Tooltip id={`was-reshuffled-${this.props.westerosDeckI}`}>Drawn after <b>Winter&nbsp;is&nbsp;Coming</b> was executed</Tooltip>}
+                        overlay={<Tooltip id={`was-reshuffled-${this.props.westerosDeckI}`}>{tr("auto.game-state-panel.utils.WesterosCardComponent.0")}</Tooltip>}
                         popperConfig={{modifiers: [preventOverflow]}}
                         delay={{show: 250, hide: 0}}
                         placement="auto"

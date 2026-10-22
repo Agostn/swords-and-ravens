@@ -11,6 +11,7 @@ import ObjectiveCardComponent from "./utils/ObjectiveCardComponent";
 import { ObjectiveCard } from "../../common/ingame-game-state/game-data-structure/static-data-structure/ObjectiveCard";
 import House from "../../common/ingame-game-state/game-data-structure/House";
 import _ from "lodash";
+import { t } from "../i18n/i18n";
 
 @observer
 export default class SelectObjectiveCardsComponent extends Component<GameStateComponentProps<SelectObjectiveCardsGameState<any>>> {
@@ -53,13 +54,13 @@ export default class SelectObjectiveCardsComponent extends Component<GameStateCo
                         </Col>
                         <Col xs="auto">
                             <Button type="button" variant="success" onClick={() => this.confirm()} disabled={(!this.gameState.canBeSkipped && this.selectedObjectiveCards.length != this.gameState.count) || this.selectedObjectiveCards.length > this.gameState.count}>
-                                Confirm
+                                {t("common.confirm")}
                             </Button>
                         </Col>
                     </Row>
                 </Col>}
                 <Col xs={12} className="text-center">
-                    Waiting for {this.gameState.notReadyHouses.map(h => h.name).join(", ")}
+                    {t("common.waitingFor", { who: this.gameState.notReadyHouses.map(h => h.name).join(", ") })}
                 </Col>
             </>
         );
@@ -71,7 +72,7 @@ export default class SelectObjectiveCardsComponent extends Component<GameStateCo
         }
 
         if (this.gameState.canBeSkipped && this.choosableObjectives.length > 0 && this.selectedObjectiveCards.length == 0) {
-            if (!window.confirm("Are you sure you don't want to score an Objective card?")) {
+            if (!window.confirm(t("auto2.game-state-panel.SelectObjectiveCardsComponent.0"))) {
                 return;
             }
         }

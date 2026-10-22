@@ -18,6 +18,7 @@ import IngameGameState from "../../../common/ingame-game-state/IngameGameState";
 import { observable } from "mobx";
 import _ from "lodash";
 import GameClient from "../../GameClient";
+import { t, tr } from "../../i18n/i18n";
 
 interface SupplyTrackComponentProps {
   gameClient: GameClient;
@@ -46,20 +47,11 @@ export default class SupplyTrackComponent extends Component<SupplyTrackComponent
           <OverlayTrigger
             overlay={
               <Tooltip id="supply-track">
-                <b>Supply Track</b>
-                <br />
-                Each supply track column contains a list of numbers illustrating
-                the maximum size and count of each player&apos;s armies. (An
-                army is made up of two or more units within the same land or sea
-                area.) The supply track is updated from game effects, such as
-                the &quot;Supply&quot; Westeros card. The updated supply
-                position is determined by the number of Supply icons printed in
-                areas that the player controls.
-              </Tooltip>
+                {tr("auto.game-state-panel.utils.SupplyTrackComponent.0")}</Tooltip>
             }
             placement="right"
           >
-            <img width="32px" src={barrelImage} alt="Supply" />
+            <img width="32px" src={barrelImage} alt={t("auto2.game-state-panel.utils.SupplyTrackComponent.0")} />
           </OverlayTrigger>
         </Col>
         <Col>
@@ -76,47 +68,25 @@ export default class SupplyTrackComponent extends Component<SupplyTrackComponent
                       <Tooltip id={`supply-track-col-${i}`}>
                         {i == 0 ? (
                           <>
-                            Players may have two armies with a maximum size of 2
-                            units each.
-                          </>
+                            {t("auto.game-state-panel.utils.SupplyTrackComponent.1")}</>
                         ) : i == 1 ? (
                           <>
-                            Players may have two armies. One with a maximum size
-                            of 3 units and another with a maximum size of 2
-                            units.
-                          </>
+                            {t("auto.game-state-panel.utils.SupplyTrackComponent.2")}</>
                         ) : i == 2 ? (
                           <>
-                            Players may have three armies. One with a maximum
-                            size of 3 units and two others with a maximum size
-                            of 2 units each.
-                          </>
+                            {t("auto.game-state-panel.utils.SupplyTrackComponent.3")}</>
                         ) : i == 3 ? (
                           <>
-                            Players may have four armies. One with a maximum
-                            size of 3 units and three others with a maximum size
-                            of 2 units each.
-                          </>
+                            {t("auto.game-state-panel.utils.SupplyTrackComponent.4")}</>
                         ) : i == 4 ? (
                           <>
-                            Players may have four armies. Two with a maximum
-                            size of 3 units each and two others with a maximum
-                            size of 2 units each.
-                          </>
+                            {t("auto.game-state-panel.utils.SupplyTrackComponent.5")}</>
                         ) : i == 5 ? (
                           <>
-                            Players may have four armies. One with a maximum
-                            size of 4 units, another with a maximum size of 3
-                            units, and two others with a maximum size of 2 units
-                            each.
-                          </>
+                            {t("auto.game-state-panel.utils.SupplyTrackComponent.6")}</>
                         ) : (
                           <>
-                            Players may have five armies. One with a maximum
-                            size of 4 units, another with a maximum size of 3
-                            units, and three others with a maximum size of 2
-                            units each.
-                          </>
+                            {t("auto.game-state-panel.utils.SupplyTrackComponent.7")}</>
                         )}
                       </Tooltip>
                     }

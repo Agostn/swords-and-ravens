@@ -14,6 +14,7 @@ import HouseIconComponent from "./utils/HouseIconComponent";
 import HouseNumberResultsComponent from "../HouseNumberResultsComponent";
 import { faAngleDown, faAngleUp } from "@fortawesome/free-solid-svg-icons";
 import BetterMap from "../../utils/BetterMap";
+import { t, tr } from "../i18n/i18n";
 
 @observer
 export default class ResolveTiesComponent extends Component<GameStateComponentProps<DistributePowerTokensGameState>> {
@@ -34,11 +35,10 @@ export default class ResolveTiesComponent extends Component<GameStateComponentPr
         return (
             <>
                 <Col xs={12} className="text-center">
-                    <b>{this.props.gameState.house.name}</b> can distribute their bid of {this.props.gameState.bidOfDistributor} to other houses.
-                </Col>
+                    {tr("auto.game-state-panel.DistributePowerTokensComponent.0", { p0: (<b>{this.props.gameState.house.name}</b>), p1: (this.props.gameState.bidOfDistributor) })}</Col>
                 {this.props.gameClient.doesControlHouse(this.props.gameState.house) ? (
                     <>
-                        <Col xs={12} className="text-center">Available Power tokens: {this.availablePowerTokensForDistribution}</Col>
+                        <Col xs={12} className="text-center">{tr("auto.game-state-panel.DistributePowerTokensComponent.1", { p0: (this.availablePowerTokensForDistribution) })}</Col>
                         <Col xs={12}>
                             <Row className="justify-content-center">
                                 {this.currentBidResults.entries.map(([h, bid]) => (
@@ -68,19 +68,19 @@ export default class ResolveTiesComponent extends Component<GameStateComponentPr
                             </Row>
                             <Row className="justify-content-center mt-5">
                                 <Col xs="auto">
-                                    <Button type="button" variant="success" onClick={() => this.submit()}>Submit</Button>
+                                    <Button type="button" variant="success" onClick={() => this.submit()}>{t("common.submit")}</Button>
                                 </Col>
                             </Row>
                         </Col>
                     </>
                 ) : <>
                     <Col xs={12}>
-                        <p className="text-center">Bidding results:</p>
+                        <p className="text-center">{t("auto.game-state-panel.DistributePowerTokensComponent.2")}</p>
                         <div className="d-flex justify-content-center">
                             <HouseNumberResultsComponent results={results} keyPrefix="cok"/>
                         </div>
                     </Col>
-                    <Col xs={12} className="text-center">Waiting for {this.props.gameState.house.name}...</Col>
+                    <Col xs={12} className="text-center">{t("common.waitingFor", { who: this.props.gameState.house.name })}</Col>
                 </>}
             </>
         );
@@ -113,7 +113,7 @@ export default class ResolveTiesComponent extends Component<GameStateComponentPr
 
     submit(): void {
         if (this.availablePowerTokensForDistribution > 0) {
-            if (!window.confirm("You haven't distributed all your Power tokens yet. Continue anyway?")) {
+            if (!window.confirm(t("auto2.game-state-panel.DistributePowerTokensComponent.0"))) {
                 return;
             }
         }

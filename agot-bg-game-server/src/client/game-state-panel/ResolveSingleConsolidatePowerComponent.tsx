@@ -15,6 +15,7 @@ import IronBankOrderType from "../../common/ingame-game-state/game-data-structur
 import DefenseMusterOrderType from "../../common/ingame-game-state/game-data-structure/order-types/DefenseMusterOrderType";
 import IronBank from "../../common/ingame-game-state/game-data-structure/IronBank";
 import _ from "lodash";
+import { t, tr } from "../i18n/i18n";
 
 @observer
 export default class ResolveSingleConsolidatePowerComponent extends Component<
@@ -67,27 +68,20 @@ export default class ResolveSingleConsolidatePowerComponent extends Component<
         <Col xs={12} className="text-center">
           {this.gameState.ingame.isVassalHouse(this.house) ? (
             <>
-              Vassal house <b>{this.house.name}</b> must resolve their
-              Muster&nbsp;order
-              {this.defenseMusterOrderRegion && (
+              {tr("auto.game-state-panel.ResolveSingleConsolidatePowerComponent.0", { p0: (<b>{this.house.name}</b>) })}{this.defenseMusterOrderRegion && (
                 <>
-                  {" "}
-                  in <b>{this.defenseMusterOrderRegion.name}</b>
+                  {" "}{tr("auto.game-state-panel.ResolveSingleConsolidatePowerComponent.1", { p0: (<b>{this.defenseMusterOrderRegion.name}</b>) })}
                 </>
               )}
               .
             </>
           ) : (
             <>
-              House <b>{this.house.name}</b> must resolve one of its
-              Consolidate&nbsp;Power
-              {availableOrders.values.some(
+              {tr("auto.game-state-panel.ResolveSingleConsolidatePowerComponent.2", { p0: (<b>{this.house.name}</b>), p1: (availableOrders.values.some(
                 (ot) => ot instanceof IronBankOrderType
               )
-                ? " or Iron\xa0Bank"
-                : ""}{" "}
-              orders.
-            </>
+                ? t("auto2.game-state-panel.ResolveSingleConsolidatePowerComponent.0")
+                : "") })}</>
           )}
         </Col>
         {this.doesControlCurrentHouse ? (
@@ -99,7 +93,7 @@ export default class ResolveSingleConsolidatePowerComponent extends Component<
               )
             ) : (
               <Col xs={12} className="text-center">
-                <p>Click the order you want to resolve.</p>
+                <p>{t("auto.game-state-panel.ResolveSingleConsolidatePowerComponent.3")}</p>
               </Col>
             )}
             <Col xs={12} className="d-flex justify-content-center">
@@ -108,16 +102,13 @@ export default class ResolveSingleConsolidatePowerComponent extends Component<
                 variant="danger"
                 onClick={() => this.reset()}
               >
-                Reset
+                {t("common.reset")}
               </Button>
             </Col>
           </>
         ) : (
           <Col xs={12} className="text-center">
-            Waiting for{" "}
-            {this.gameState.ingame.getControllerOfHouse(this.house).house.name}
-            ...
-          </Col>
+            {tr("auto.game-state-panel.ResolveSingleConsolidatePowerComponent.4", { p0: (this.gameState.ingame.getControllerOfHouse(this.house).house.name) })}</Col>
         )}
       </>
     );
@@ -134,7 +125,7 @@ export default class ResolveSingleConsolidatePowerComponent extends Component<
       <>
         <Col xs={12} className="text-center">
           <p>
-            <b>{orderType.name}</b> in <b>{orderRegion.name}</b>
+            {tr("auto.game-state-panel.ResolveSingleConsolidatePowerComponent.5", { p0: (<b>{orderType.name}</b>), p1: (<b>{orderRegion.name}</b>) })}
           </p>
         </Col>
         <Col xs={12}>
@@ -150,7 +141,7 @@ export default class ResolveSingleConsolidatePowerComponent extends Component<
                       this.reset();
                     }}
                   >
-                    Muster in {orderRegion.name}
+                    {tr("auto.game-state-panel.ResolveSingleConsolidatePowerComponent.6", { p0: (orderRegion.name) })}
                   </Button>
                 </Col>
                 <Col xs={12} className="d-flex justify-content-center">
@@ -162,8 +153,7 @@ export default class ResolveSingleConsolidatePowerComponent extends Component<
                       this.reset();
                     }}
                   >
-                    Ignore and remove order
-                  </Button>
+                    {t("auto.game-state-panel.ResolveSingleConsolidatePowerComponent.7")}</Button>
                 </Col>
               </>
             )}
@@ -179,7 +169,7 @@ export default class ResolveSingleConsolidatePowerComponent extends Component<
                         this.reset();
                       }}
                     >
-                      Muster in {orderRegion.name}
+                      {tr("auto.game-state-panel.ResolveSingleConsolidatePowerComponent.8", { p0: (orderRegion.name) })}
                     </Button>
                   </Col>
                 )}
@@ -224,9 +214,7 @@ export default class ResolveSingleConsolidatePowerComponent extends Component<
                           this.reset();
                         }}
                       >
-                        Pay {purchasable.costs} Power token
-                        {purchasable.costs != 1 ? "s" : ""} to purchase{" "}
-                        {purchasable.loan.name}
+                        {tr("auto.game-state-panel.ResolveSingleConsolidatePowerComponent.9", { p0: (purchasable.costs), p1: (purchasable.costs != 1 ? "s" : ""), p2: (purchasable.loan.name) })}
                       </Button>
                     </Col>
                   ))}
@@ -239,8 +227,7 @@ export default class ResolveSingleConsolidatePowerComponent extends Component<
                       this.reset();
                     }}
                   >
-                    Ignore and remove order
-                  </Button>
+                    {t("auto.game-state-panel.ResolveSingleConsolidatePowerComponent.10")}</Button>
                 </Col>
               </>
             )}
@@ -251,7 +238,7 @@ export default class ResolveSingleConsolidatePowerComponent extends Component<
   }
 
   private getPowerTokenButtonText(powerTokenCount: number): string {
-    return `Gain ${powerTokenCount} Power token${powerTokenCount != 1 ? "s" : ""}`;
+    return t("consolidate.gainPowerTokens", { n: powerTokenCount });
   }
 
   private modifyOrdersOnMap(): [

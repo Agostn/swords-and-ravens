@@ -13,6 +13,7 @@ import CombatGameState from "../../common/ingame-game-state/action-game-state/re
 import Player from "../../common/ingame-game-state/Player";
 import { FormCheck, OverlayTrigger, Tooltip } from "react-bootstrap";
 import House from "../../common/ingame-game-state/game-data-structure/House";
+import { t, tr } from "../i18n/i18n";
 
 @observer
 export default class ChooseHouseCardComponent extends Component<
@@ -89,8 +90,7 @@ export default class ChooseHouseCardComponent extends Component<
     ) : (
       <>
         <Col xs={12} className="text-center">
-          The attacker and the defender must choose a House&nbsp;card
-        </Col>
+          {t("auto.game-state-panel.ChooseHouseCardComponent.0")}</Col>
         {this.shouldChooseHouseCard() && (
           <>
             <Col xs={12}>
@@ -133,20 +133,12 @@ export default class ChooseHouseCardComponent extends Component<
                           <OverlayTrigger
                             overlay={
                               <Tooltip id="donst-skip-vsb-tooltip">
-                                In case the +1 bonus won&apos;t affect the
-                                outcome of the battle, the game usually will
-                                skip the question of whether to use the blade or
-                                not.
-                                <br />
-                                In case you might want to be asked anyway, you
-                                can pre-mark it here.
-                                <br />
+                                {tr("auto.game-state-panel.ChooseHouseCardComponent.4")}
                               </Tooltip>
                             }
                           >
                             <label htmlFor="dont-skip-vsb-question">
-                              Don&apos;t skip VSB bonus question
-                            </label>
+                              {t("auto.game-state-panel.ChooseHouseCardComponent.3")}</label>
                           </OverlayTrigger>
                         }
                         checked={this.dontSkipVsbQuestion}
@@ -166,7 +158,7 @@ export default class ChooseHouseCardComponent extends Component<
                     onClick={() => this.chooseHouseCard()}
                     disabled={!this.dirty || this.selectedHouseCard == null}
                   >
-                    Confirm
+                    {t("common.confirm")}
                   </Button>
                 </Col>
               </Row>
@@ -181,15 +173,14 @@ export default class ChooseHouseCardComponent extends Component<
                           onClick={() => {
                             if (
                               window.confirm(
-                                "Are you sure you want to refuse all the support you have received?",
+                                t("support.confirmRefuseAll"),
                               )
                             ) {
                               this.props.gameState.refuseSupport();
                             }
                           }}
                         >
-                          Refuse ALL received support
-                        </Button>
+                          {t("auto.game-state-panel.ChooseHouseCardComponent.1")}</Button>
                       </Col>
                     )}
                     {supportingHouses.map((supportingHouse) => (
@@ -204,8 +195,10 @@ export default class ChooseHouseCardComponent extends Component<
                             if (
                               window.confirm(
                                 commandedHouse == supportingHouse
-                                  ? "Are you sure you want to refuse your own support?"
-                                  : `Are you sure you want to refuse the support you have received from House ${supportingHouse.name}?`,
+                                  ? t("support.confirmRefuseOwn")
+                                  : t("support.confirmRefuseFrom", {
+                                      house: supportingHouse.name
+                                    }),
                               )
                             ) {
                               this.props.gameState.refuseSupport(
@@ -215,8 +208,8 @@ export default class ChooseHouseCardComponent extends Component<
                           }}
                         >
                           {commandedHouse == supportingHouse
-                            ? "Refuse own support"
-                            : `Refuse support from ${supportingHouse.name}`}
+                            ? t("auto2.game-state-panel.ChooseHouseCardComponent.0")
+                            : t("support.refuseFrom", { house: supportingHouse.name })}
                         </Button>
                       </Col>
                     ))}
@@ -227,17 +220,13 @@ export default class ChooseHouseCardComponent extends Component<
         )}
         <Col xs={12} className="text-center">
           <div>
-            Waiting for{" "}
-            {waitingFor
+            {tr("auto.game-state-panel.ChooseHouseCardComponent.2", { p0: (waitingFor
               .map(
                 (h) =>
                   this.combat.ingameGameState.getControllerOfHouse(h).house
                     .name,
               )
-              .join(" and ")}{" "}
-            to choose their House&nbsp;card{waitingFor.length != 1 ? "s" : ""}
-            ...
-          </div>
+              .join(t("auto2.game-state-panel.ChooseHouseCardComponent.1"))), p1: (waitingFor.length != 1 ? "s" : "") })}</div>
         </Col>
       </>
     );

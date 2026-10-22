@@ -11,13 +11,14 @@ import SelectHouseCardGameState
     from "../../../common/ingame-game-state/select-house-card-game-state/SelectHouseCardGameState";
 import SelectHouseCardComponent from "../SelectHouseCardComponent";
 import { Col } from "react-bootstrap";
+import { t } from "../../i18n/i18n";
 
 @observer
 export default class MammothRidersNightsWatchVictoryComponent extends Component<GameStateComponentProps<MammothRidersNightsWatchVictoryGameState>> {
     render(): ReactNode {
         return (
             <>
-                <Col xs={12} className="text-center">The highest bidder may retrieve one House card of their choice from their House card discard pile.</Col>
+                <Col xs={12} className="text-center">{t("auto.game-state-panel.wildlings-attack-component.MammothRidersNightsWatchVictoryComponent.0")}</Col>
                 {renderChildGameState(this.props, [
                     [SimpleChoiceGameState, SimpleChoiceComponent],
                     [SelectHouseCardGameState, SelectHouseCardComponent],

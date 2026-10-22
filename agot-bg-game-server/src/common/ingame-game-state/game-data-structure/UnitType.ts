@@ -1,9 +1,11 @@
 import RegionKind from "./RegionKind";
+import { dataText } from "../../dataText";
 
 export default class UnitType {
     id: string;
-    name: string;
-    description: string;
+    // Textos originais (inglês). Use `name`/`description`, que já vêm traduzidos.
+    nameEn: string;
+    descriptionEn: string;
     combatStrength: number;
     combatStrengthOnAttackStructure: number | null;
     walksOn: RegionKind;
@@ -23,13 +25,21 @@ export default class UnitType {
         visibilityRange = 1
     ) {
         this.id = id;
-        this.name = name;
-        this.description = description;
+        this.nameEn = name;
+        this.descriptionEn = description;
         this.walksOn = walksOn;
         this.canTransport = canTransport;
         this.combatStrength = combatStrength;
         this.combatStrengthOnAttackStructure = combatStrengthOnAttackStructure;
         this.canRetreat = canRetreat;
         this.visibilityRange = visibilityRange;
+    }
+
+    get name(): string {
+        return dataText("unit.name", this.id, this.nameEn);
+    }
+
+    get description(): string {
+        return dataText("unit.description", this.id, this.descriptionEn);
     }
 }

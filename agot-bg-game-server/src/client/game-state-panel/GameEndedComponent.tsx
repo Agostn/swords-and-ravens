@@ -8,6 +8,7 @@ import Row from "react-bootstrap/Row";
 import crownImage from "../../../public/images/icons/crown.svg";
 import HouseIconComponent from "./utils/HouseIconComponent";
 import { houseColorFilters } from "../houseColorFilters";
+import { tr } from "../i18n/i18n";
 
 @observer
 export default class GameEndedComponent extends Component<GameStateComponentProps<GameEndedGameState>> {
@@ -48,7 +49,7 @@ export default class GameEndedComponent extends Component<GameStateComponentProp
                 <Col xs="12">
                     <Row className="justify-content-center">
                             <Col xs="12" className="d-flex justify-content-center">
-                                <h3><b>Game has ended!</b></h3>
+                                <h3>{tr("auto.game-state-panel.GameEndedComponent.0")}</h3>
                             </Col>
                             <Col xs="12" className="d-flex justify-content-center" style={{ marginTop: "-40px"}} >
                                 <div>
@@ -57,7 +58,7 @@ export default class GameEndedComponent extends Component<GameStateComponentProp
                                 </div>
                             </Col>
                             <Col xs="12" className="d-flex justify-content-center">
-                                <h5>House <b>{winner.name}</b> has won this Game of Thrones.</h5>
+                                <h5>{tr("auto.game-state-panel.GameEndedComponent.1", { p0: (<b>{winner.name}</b>) })}</h5>
                             </Col>
                     </Row>
                 </Col>

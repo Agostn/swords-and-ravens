@@ -15,6 +15,7 @@ import DistributePowerTokensComponent from "./DistributePowerTokensComponent";
 import stoneThroneImage from "../../../public/images/icons/stone-throne.svg";
 import ravenImage from "../../../public/images/icons/raven.svg";
 import diamondHiltImage from "../../../public/images/icons/diamond-hilt.svg";
+import { t, tr } from "../i18n/i18n";
 
 @observer
 export default class ClashOfKingsComponent extends Component<
@@ -33,17 +34,14 @@ export default class ClashOfKingsComponent extends Component<
       <>
         <Row className="justify-content-center mt-2 mb-1">
           <img src={image} width="40px" className="mr-2" />
-          <h4 className="mt-2">Clash of Kings</h4>
+          <h4 className="mt-2">{t("auto.game-state-panel.ClashOfKingsComponent.0")}</h4>
           <img src={image} width="40px" className="ml-2" />
         </Row>
         <Row className="justify-content-center">
           <Col xs={12} className="text-center">
-            Houses bid for the{" "}
-            <strong>
+            {tr("auto.game-state-panel.ClashOfKingsComponent.1", { p0: (<strong>
               {this.props.gameState.game.getNameInfluenceTrack(currentTrackI)}
-            </strong>{" "}
-            track.
-          </Col>
+            </strong>) })}</Col>
           <Fragment key={`clash-of-kings-comp_${currentTrackI}`}>
             {renderChildGameState(this.props, [
               [BiddingGameState, BiddingComponent],

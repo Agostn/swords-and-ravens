@@ -8,6 +8,7 @@ import JonSnowBaratheonAbilityGameState
     from "../../../common/ingame-game-state/action-game-state/resolve-march-order-game-state/combat-game-state/post-combat-game-state/after-winner-determination-game-state/jon-snow-baratheon-ability-game-state/JonSnowBaratheonAbilityGameState";
 import SimpleChoiceGameState from "../../../common/ingame-game-state/simple-choice-game-state/SimpleChoiceGameState";
 import SimpleChoiceComponent from "../SimpleChoiceComponent";
+import { tr } from "../../i18n/i18n";
 
 @observer
 export default class JonSnowBaratheonAbilityComponent extends Component<GameStateComponentProps<JonSnowBaratheonAbilityGameState>> {
@@ -15,8 +16,7 @@ export default class JonSnowBaratheonAbilityComponent extends Component<GameStat
         return (
             <>
                 <Col xs={12} className="text-center">
-                    <b>Jon Snow:</b> House <b>{this.props.gameState.childGameState.house.name}</b> may decrease or increase the Wildling track by one space (to a minimum of 0 and a maximum of 10).
-                </Col>
+                    {tr("auto.game-state-panel.house-card-abilities.JonSnowBaratheonAbilityComponent.0", { p0: (<b>{this.props.gameState.childGameState.house.name}</b>) })}</Col>
                 {renderChildGameState(this.props, [
                     [SimpleChoiceGameState, SimpleChoiceComponent],
                 ])}

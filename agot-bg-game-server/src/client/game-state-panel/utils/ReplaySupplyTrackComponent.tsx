@@ -6,6 +6,7 @@ import Row from "react-bootstrap/Row";
 import houseInfluenceImages from "../../houseInfluenceImages";
 import barrelImage from "../../../../public/images/icons/barrel.svg";
 import HouseSnapshot from "../../game-replay/HouseSnapshot";
+import { t } from "../../i18n/i18n";
 
 interface ReplaySupplyTrackComponentProps {
   supplyRestrictions: number[][];
@@ -20,7 +21,7 @@ export default class ReplaySupplyTrackComponent extends Component<ReplaySupplyTr
     return (
       <Row>
         <Col xs="auto">
-          <img width="32px" src={barrelImage} alt="Supply" />
+          <img width="32px" src={barrelImage} alt={t("auto2.game-state-panel.utils.ReplaySupplyTrackComponent.0")} />
         </Col>
         <Col>
           <Row className="justify-content-center">

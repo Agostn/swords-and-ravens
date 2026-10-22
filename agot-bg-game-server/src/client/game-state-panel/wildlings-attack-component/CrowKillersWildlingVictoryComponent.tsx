@@ -12,6 +12,7 @@ import React from "react";
 import TakeControlOfEnemyPortGameState from "../../../common/ingame-game-state/take-control-of-enemy-port-game-state/TakeControlOfEnemyPortGameState";
 import TakeControlOfEnemyPortComponent from "../TakeControlOfEnemyPortComponent";
 import { Row } from "react-bootstrap";
+import { t, tr } from "../../i18n/i18n";
 
 @observer
 export default class CrowKillersWildlingVictoryComponent extends Component<
@@ -26,19 +27,13 @@ export default class CrowKillersWildlingVictoryComponent extends Component<
         {this.props.gameState.childGameState instanceof SelectUnitsGameState &&
           (this.props.gameState.step == CrowKillersStep.DEGRADING_KNIGHTS ? (
             <Col xs={12}>
-              <b>{this.props.gameState.childGameState.house.name}</b> replaces{" "}
-              {this.props.gameState.childGameState.count} of their Knights with
-              available Footmen.
-            </Col>
+              {tr("auto.game-state-panel.wildlings-attack-component.CrowKillersWildlingVictoryComponent.0", { p0: (<b>{this.props.gameState.childGameState.house.name}</b>), p1: (this.props.gameState.childGameState.count) })}</Col>
           ) : this.props.gameState.step ==
             CrowKillersStep.DESTROYING_KNIGHTS ? (
             <Col xs={12}>
-              <b>{this.props.gameState.childGameState.house.name}</b> has to
-              destroy {this.props.gameState.childGameState.count} of their
-              Knights before the rest can be replaced with Footmen.
-            </Col>
+              {tr("auto.game-state-panel.wildlings-attack-component.CrowKillersWildlingVictoryComponent.1", { p0: (<b>{this.props.gameState.childGameState.house.name}</b>), p1: (this.props.gameState.childGameState.count) })}</Col>
           ) : (
-            <Col xs={12}>Invalid CrowKillersStep!</Col>
+            <Col xs={12}>{t("auto.game-state-panel.wildlings-attack-component.CrowKillersWildlingVictoryComponent.2")}</Col>
           ))}
         {renderChildGameState(this.props, [
           [SelectUnitsGameState, SelectUnitsComponent],

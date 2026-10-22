@@ -7,6 +7,7 @@ import House from "../../common/ingame-game-state/game-data-structure/House";
 import { FormCheck, Button, Row } from "react-bootstrap";
 import { observable } from "mobx";
 import _ from "lodash";
+import { t, tr } from "../i18n/i18n";
 
 @observer
 export default class ClaimVassalComponent extends Component<GameStateComponentProps<ClaimVassalGameState>> {
@@ -16,8 +17,7 @@ export default class ClaimVassalComponent extends Component<GameStateComponentPr
         return (
             <>
                 <Col xs={12} className="text-center">
-                    <b>{this.props.gameState.house.name}</b> may command <b>{this.props.gameState.count}</b> Vassal house{this.props.gameState.count != 1 ? "s" : ""} this turn.
-                </Col>
+                    {tr("auto.game-state-panel.ClaimVassalComponent.0", { p0: (<b>{this.props.gameState.house.name}</b>), p1: (<b>{this.props.gameState.count}</b>), p2: (this.props.gameState.count != 1 ? "s" : "") })}</Col>
                 <Col xs={12}>
                     {this.props.gameClient.doesControlHouse(this.props.gameState.house) ? (
                         <Row className="justify-content-center">
@@ -36,17 +36,17 @@ export default class ClaimVassalComponent extends Component<GameStateComponentPr
                             <Col xs={12}>
                                 <Row className="justify-content-center">
                                     <Col xs="auto">
-                                        <Button type="button" variant="success" disabled={this.selectedVassals.length == 0} onClick={() => this.onClaimClick()}>Claim</Button>
+                                        <Button type="button" variant="success" disabled={this.selectedVassals.length == 0} onClick={() => this.onClaimClick()}>{t("auto.game-state-panel.ClaimVassalComponent.1")}</Button>
                                     </Col>
                                     <Col xs="auto">
-                                        <Button type="button" variant="danger" onClick={() => this.onPassClick()}>Pass</Button>
+                                        <Button type="button" variant="danger" onClick={() => this.onPassClick()}>{t("auto.game-state-panel.ClaimVassalComponent.2")}</Button>
                                     </Col>
                                 </Row>
                             </Col>
                         </Row>
                     ) : (
                         <Col xs={12} className="text-center">
-                            Waiting for {this.props.gameState.house.name}...
+                            {t("common.waitingFor", { who: this.props.gameState.house.name })}
                         </Col>
                     )}
                 </Col>

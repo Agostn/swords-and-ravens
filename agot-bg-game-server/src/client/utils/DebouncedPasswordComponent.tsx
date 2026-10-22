@@ -7,6 +7,7 @@ import _ from "lodash";
 import { OverlayTrigger, Tooltip } from "react-bootstrap";
 import { OverlayChildren } from "react-bootstrap/esm/Overlay";
 import ConditionalWrap from "./ConditionalWrap";
+import { t } from "../i18n/i18n";
 
 interface DebouncedPasswordComponentProps {
     onChangeCallback: (value: string) => void;
@@ -45,7 +46,7 @@ export default class DebouncedPasswordComponent extends Component<DebouncedPassw
             </ConditionalWrap>
             <OverlayTrigger
                 overlay={<Tooltip id="show-hide-pw-tooltip">
-                    {this.revealed ? "Hide password" : "Show password"}</Tooltip>
+                    {this.revealed ? t("auto2.utils.DebouncedPasswordComponent.0") : t("auto2.utils.DebouncedPasswordComponent.1")}</Tooltip>
                 }
                 placement="top"
             >

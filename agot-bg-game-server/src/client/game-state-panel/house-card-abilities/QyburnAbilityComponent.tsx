@@ -11,6 +11,7 @@ import SelectHouseCardGameState
 import SelectHouseCardComponent from "../SelectHouseCardComponent";
 import SimpleChoiceGameState from "../../../common/ingame-game-state/simple-choice-game-state/SimpleChoiceGameState";
 import SimpleChoiceComponent from "../SimpleChoiceComponent";
+import { tr } from "../../i18n/i18n";
 
 @observer
 export default class QyburnAbilityComponent extends Component<GameStateComponentProps<QyburnAbilityGameState>> {
@@ -18,10 +19,7 @@ export default class QyburnAbilityComponent extends Component<GameStateComponent
         return (
             <>
                 <Col xs={12} className="text-center">
-                    <b>Qyburn</b>: House <b>{this.props.gameState.childGameState.house.name}</b> may discard two of available Power tokens
-                    to choose a House card in any player&apos;s discard pile.
-                    Qyburn gains the printed combat strength and combat icons of that card, ignoring its text ability.
-                </Col>
+                    {tr("auto.game-state-panel.house-card-abilities.QyburnAbilityComponent.0", { p0: (<b>{this.props.gameState.childGameState.house.name}</b>) })}</Col>
                 {renderChildGameState(this.props, [
                     [SimpleChoiceGameState, SimpleChoiceComponent],
                     [SelectHouseCardGameState, SelectHouseCardComponent]

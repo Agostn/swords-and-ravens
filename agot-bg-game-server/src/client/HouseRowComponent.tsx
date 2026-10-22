@@ -55,6 +55,7 @@ import { toast } from "react-toastify";
 import getUserLinkOrLabel from "./utils/getIngameUserLinkOrLabel";
 import ChooseHouseCardGameState from "../common/ingame-game-state/action-game-state/resolve-march-order-game-state/combat-game-state/choose-house-card-game-state/ChooseHouseCardGameState";
 import houseCardsBackImages from "./houseCardsBackImages";
+import { t, tr } from "./i18n/i18n";
 
 interface HouseRowComponentProps {
   house: House;
@@ -162,13 +163,12 @@ export default class HouseRowComponent extends Component<HouseRowComponentProps>
 
     const vassalTitle = this.suzerainHouse ? (
       <>
-        Commanded by{" "}
-        <span style={{ color: this.suzerainHouse.color }}>
+        {tr("auto.HouseRowComponent.0", { p0: (<span style={{ color: this.suzerainHouse.color }}>
           {this.suzerainHouse.name}
-        </span>
+        </span>) })}
       </>
     ) : (
-      <>Up for grab</>
+      <>{t("auto.HouseRowComponent.1")}</>
     );
 
     const victoryImage = this.props.ingame.entireGame.isFeastForCrows
@@ -259,11 +259,7 @@ export default class HouseRowComponent extends Component<HouseRowComponentProps>
                   placement="right"
                   overlay={
                     <Tooltip id={"vassal-house-" + this.house.id}>
-                      <b>Vassal</b>
-                      <br />
-                      At the beginning of the Planning Phase, each player, in
-                      order, can pick a vassal to command this turn.
-                    </Tooltip>
+                      {tr("auto.HouseRowComponent.2")}</Tooltip>
                   }
                 >
                   <img
@@ -476,8 +472,7 @@ export default class HouseRowComponent extends Component<HouseRowComponentProps>
                     placement="right"
                     overlay={
                       <Tooltip id={"knows-things-house-" + this.house.id}>
-                        <b>{this.house.name}</b> knows things.
-                      </Tooltip>
+                        {tr("auto.HouseRowComponent.3", { p0: (<b>{this.house.name}</b>) })}</Tooltip>
                     }
                   >
                     <img
@@ -548,8 +543,7 @@ export default class HouseRowComponent extends Component<HouseRowComponentProps>
           <Card.Body className="d-flex align-items-center">
             <img src={stopwatchImage} width={64} className="dye-critical" />
             <h4 className="d-inline ml-3" style={{ color: "white" }}>
-              {getUserLinkOrLabel(player.user)} is running out of time!
-            </h4>
+              {tr("auto.HouseRowComponent.4", { p0: (getUserLinkOrLabel(player.user)) })}</h4>
           </Card.Body>
         </Card>
       </div>,
@@ -641,23 +635,23 @@ export default class HouseRowComponent extends Component<HouseRowComponentProps>
               overlay={
                 <Tooltip id="replace-player-tooltip">
                   {reason == "game-paused"
-                    ? "The game must be resumed first"
+                    ? t("auto2.HouseRowComponent.0")
                     : reason == "house-timed-out"
-                      ? "The timer of this vassal house has run out and therefore it can no longer be replaced by a player"
+                      ? t("auto2.HouseRowComponent.1")
                       : reason == "already-playing"
-                        ? "You are already playing in this game"
+                        ? t("auto2.HouseRowComponent.2")
                         : reason == "ongoing-vote"
-                          ? "A vote is already ongoing"
+                          ? t("auto2.HouseRowComponent.3")
                           : reason == "game-cancelled"
-                            ? "The game has been cancelled"
+                            ? t("auto2.HouseRowComponent.4")
                             : reason == "game-ended"
-                              ? "The game has ended"
+                              ? t("auto2.HouseRowComponent.5")
                               : reason == "not-a-vassal" ||
                                   reason == "not-a-replaced-vassal"
-                                ? "Only vassals who have replaced a player can be replaced by a player again"
+                                ? t("auto2.HouseRowComponent.6")
                                 : reason == "forbidden-in-tournament-mode"
-                                  ? "Undoing vassal replacement is not allowed in tournaments"
-                                  : "Vote not possible"}
+                                  ? t("auto2.HouseRowComponent.7")
+                                  : t("auto2.HouseRowComponent.8")}
                 </Tooltip>
               }
               placement="auto"
@@ -671,8 +665,7 @@ export default class HouseRowComponent extends Component<HouseRowComponentProps>
               onClick={() => this.onLaunchReplaceVassalVoteClick()}
               disabled={!result}
             >
-              Offer to replace this vassal
-            </NavDropdown.Item>
+              {t("auto.HouseRowComponent.5")}</NavDropdown.Item>
           </div>
         </ConditionalWrap>
       </>
@@ -682,7 +675,7 @@ export default class HouseRowComponent extends Component<HouseRowComponentProps>
   onLaunchReplaceVassalVoteClick(): void {
     if (
       window.confirm(
-        `Do you want to launch a vote to replace Vassal house ${this.house.name}?`
+        t("vote.confirm.replaceVassal", { house: this.house.name })
       )
     ) {
       this.props.ingame.launchReplaceVassalByPlayerVote(this.house);
@@ -779,7 +772,7 @@ export default class HouseRowComponent extends Component<HouseRowComponentProps>
         id={this.house.id + "-victory-tooltip"}
         className="tooltip-w-100"
       >
-        <h5 className="text-center mx-2">Total Land Areas</h5>
+        <h5 className="text-center mx-2">{t("auto.HouseRowComponent.6")}</h5>
         <h4 className="text-center">
           <b>{this.getTotalControlledLandRegions()}</b>
         </h4>
@@ -787,65 +780,56 @@ export default class HouseRowComponent extends Component<HouseRowComponentProps>
           <>
             <br />
             <h5 className="text-center">
-              Additional Information
-              <br />
-              <small>
-                &nbsp;&nbsp;(Does not count in case of a tie)&nbsp;&nbsp;
-              </small>
+              {tr("auto.HouseRowComponent.7")}
             </h5>
             <br />
             <h5 className="text-center">
-              Castles:{" "}
-              <b>
+              {tr("auto.HouseRowComponent.8", { p0: (<b>
                 {
                   regions.filter(
                     (r) => r.castleLevel == 1 && r.getController() == this.house
                   ).length
                 }
-              </b>
+              </b>) })}
             </h5>
             <h5 className="text-center">
-              Strongholds:{" "}
-              <b>
+              {tr("auto.HouseRowComponent.9", { p0: (<b>
                 {
                   regions.filter(
                     (r) => r.castleLevel == 2 && r.getController() == this.house
                   ).length
                 }
-              </b>
+              </b>) })}
             </h5>
             <h5 className="text-center">
-              Sea Areas:{" "}
-              <b>
+              {tr("auto.HouseRowComponent.10", { p0: (<b>
                 {
                   regions.filter(
                     (r) => r.type == sea && r.getController() == this.house
                   ).length
                 }
-              </b>
+              </b>) })}
             </h5>
             <h5 className="text-center">
-              Ports:{" "}
-              <b>
+              {tr("auto.HouseRowComponent.11", { p0: (<b>
                 {
                   regions.filter(
                     (r) => r.type == port && r.getController() == this.house
                   ).length
                 }
-              </b>
+              </b>) })}
             </h5>
           </>
         )}
         {this.house == this.game.targaryen && (
           <div className="text-center">
             <br />
-            <h5>Loyalty tokens</h5>
+            <h5>{t("auto.HouseRowComponent.12")}</h5>
             <h6>
-              On the board: <b>{loyaltyTokensOnBoardCount}</b>
+              {tr("auto.HouseRowComponent.13", { p0: (<b>{loyaltyTokensOnBoardCount}</b>) })}
             </h6>
             <h6>
-              Loyalty Pool:{" "}
-              <b>{MAX_LOYALTY_TOKEN_COUNT - loyaltyTokensOnBoardCount}</b>
+              {tr("auto.HouseRowComponent.14", { p0: (<b>{MAX_LOYALTY_TOKEN_COUNT - loyaltyTokensOnBoardCount}</b>) })}
             </h6>
           </div>
         )}
@@ -862,18 +846,18 @@ export default class HouseRowComponent extends Component<HouseRowComponentProps>
       <Popover id={this.house.id + "-power-popover"} className="px-3 pt-2">
         <Col>
           <Row className="justify-content-center">
-            <h4>{this.house.name}&apos;s Power</h4>
+            <h4>{tr("auto.HouseRowComponent.15", { p0: (this.house.name) })}</h4>
           </Row>
           <Row className="justify-content-center">
             <Col xs="auto">
               <h5>
-                <small>Available:</small> <b>{availablePower}</b>
+                {tr("auto.HouseRowComponent.16", { p0: (<b>{availablePower}</b>) })}
               </h5>
               <h5>
-                <small>On the board:</small> <b>{powerTokensOnBoard}</b>
+                {tr("auto.HouseRowComponent.17", { p0: (<b>{powerTokensOnBoard}</b>) })}
               </h5>
               <h5>
-                <small>Power Pool:</small> <b>{powerInPool}</b>
+                {tr("auto.HouseRowComponent.18", { p0: (<b>{powerInPool}</b>) })}
               </h5>
             </Col>
           </Row>
@@ -904,16 +888,16 @@ export default class HouseRowComponent extends Component<HouseRowComponentProps>
   ): OverlayChildren {
     return (
       <Tooltip id={this.house.id + "-power-tooltip"} className="tooltip-w-100">
-        <h4>{this.house.name}&apos;s Power</h4>
+        <h4>{tr("auto.HouseRowComponent.19", { p0: (this.house.name) })}</h4>
         <div className="text-center">
           <h5>
-            <small>Available:</small> <b>{availablePower}</b>
+            {tr("auto.HouseRowComponent.20", { p0: (<b>{availablePower}</b>) })}
           </h5>
           <h5>
-            <small>On the board:</small> <b>{powerTokensOnBoard}</b>
+            {tr("auto.HouseRowComponent.21", { p0: (<b>{powerTokensOnBoard}</b>) })}
           </h5>
           <h5>
-            <small>Power Pool:</small> <b>{powerInPool}</b>
+            {tr("auto.HouseRowComponent.22", { p0: (<b>{powerInPool}</b>) })}
           </h5>
         </div>
       </Tooltip>

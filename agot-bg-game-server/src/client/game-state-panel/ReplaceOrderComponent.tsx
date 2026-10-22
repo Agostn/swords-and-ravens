@@ -12,6 +12,7 @@ import Col from "react-bootstrap/Col";
 import OrderGridComponent from "./utils/OrderGridComponent";
 import { OrderOnMapProperties } from "../MapControls";
 import PartialRecursive from "../../utils/PartialRecursive";
+import { t, tr } from "../i18n/i18n";
 
 @observer
 export default class ReplaceOrderComponent extends Component<
@@ -26,22 +27,17 @@ export default class ReplaceOrderComponent extends Component<
     return (
       <>
         <Col xs={12} className="text-center">
-          The holder of the Raven token may now choose to replace one of its
-          Order tokens or to look at the top card of the Wildling deck.
-        </Col>
+          {t("auto.game-state-panel.ReplaceOrderComponent.0")}</Col>
         {this.props.gameClient.doesControlHouse(
           this.props.gameState.ravenHolder
         ) ? (
           <>
             {this.selectedRegion == null ? (
               <Col xs={12} className="text-center">
-                Click the Order token on the map you want to replace.
-              </Col>
+                {t("auto.game-state-panel.ReplaceOrderComponent.1")}</Col>
             ) : (
               <Col xs={12} className="text-center">
-                Choose which Order token to place on{" "}
-                <b>{this.selectedRegion.name}</b>:<br />
-                <OrderGridComponent
+                {tr("auto.game-state-panel.ReplaceOrderComponent.2", { p0: (<b>{this.selectedRegion.name}</b>), p1: (<OrderGridComponent
                   orders={this.props.gameState.ingameGameState.game.getOrdersListForHouse(
                     this.props.gameState.ravenHolder
                   )}
@@ -56,7 +52,7 @@ export default class ReplaceOrderComponent extends Component<
                     true
                   )}
                   onOrderClick={(o) => this.selectOrder(o)}
-                />
+                />) })}
               </Col>
             )}
             <Col xs={12}>
@@ -69,8 +65,7 @@ export default class ReplaceOrderComponent extends Component<
                     this.selectedOrder == null || this.selectedRegion == null
                   }
                 >
-                  Confirm Order token replacement
-                </Button>
+                  {t("auto.game-state-panel.ReplaceOrderComponent.3")}</Button>
               </Col>
               <Col xs={12} className="d-flex justify-content-center">
                 <Button
@@ -78,8 +73,7 @@ export default class ReplaceOrderComponent extends Component<
                   onClick={() => this.seeTopWildlingCardInstead()}
                   disabled={this.selectedOrder != null}
                 >
-                  Look at the Top Wildling Card instead
-                </Button>
+                  {t("auto.game-state-panel.ReplaceOrderComponent.4")}</Button>
               </Col>
               <Col xs={12} className="d-flex justify-content-center">
                 <Button
@@ -90,14 +84,14 @@ export default class ReplaceOrderComponent extends Component<
                   }
                   onClick={() => this.reset()}
                 >
-                  Reset
+                  {t("common.reset")}
                 </Button>
               </Col>
             </Col>
           </>
         ) : (
           <Col xs={12} className="text-center">
-            Waiting for {this.props.gameState.ravenHolder.name}...
+            {t("common.waitingFor", { who: this.props.gameState.ravenHolder.name })}
           </Col>
         )}
       </>
@@ -135,7 +129,7 @@ export default class ReplaceOrderComponent extends Component<
       ) {
         if (
           !window.confirm(
-            "Your replaced order is restricted and will be removed afterwards. Do you want to continue?"
+            t("auto2.game-state-panel.ReplaceOrderComponent.0")
           )
         ) {
           return;

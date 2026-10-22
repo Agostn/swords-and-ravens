@@ -6,6 +6,7 @@ import GameStateComponentProps from "./GameStateComponentProps";
 import Button from "react-bootstrap/Button";
 import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
+import { t } from "../i18n/i18n";
 
 @observer
 export default class SimpleChoiceComponent extends Component<GameStateComponentProps<SimpleChoiceGameState>> {
@@ -30,7 +31,7 @@ export default class SimpleChoiceComponent extends Component<GameStateComponentP
                             })}
                         </Row>
                     ) : (
-                        <>Waiting for {this.props.gameState.parentGameState.ingame.getControllerOfHouse(this.props.gameState.house).house.name}...</>
+                        <>{t("common.waitingFor", { who: this.props.gameState.parentGameState.ingame.getControllerOfHouse(this.props.gameState.house).house.name })}</>
                     )}
                 </Col>
             </>

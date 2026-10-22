@@ -10,6 +10,7 @@ import SimpleChoiceComponent from "./SimpleChoiceComponent";
 import SpymasterGameState from "../../common/ingame-game-state/action-game-state/resolve-consolidate-power-game-state/execute-loan-game-state/spymaster-game-state/SpymasterGameState";
 import ResolveSpymasterGameState from "../../common/ingame-game-state/action-game-state/resolve-consolidate-power-game-state/execute-loan-game-state/spymaster-game-state/resolve-spymaster-game-state/ResolveSpymasterGameState";
 import ResolveSpymasterComponent from "./ResolveSpymasterComponent";
+import { t } from "../i18n/i18n";
 
 
 @observer
@@ -28,7 +29,7 @@ export default class SpymasterComponent extends Component<GameStateComponentProp
                     ])}
             </>
             ) : (
-                <Col xs={12} className="text-center">Waiting for {this.house.name}...</Col>
+                <Col xs={12} className="text-center">{t("common.waitingFor", { who: this.house.name })}</Col>
             )
         );
     }

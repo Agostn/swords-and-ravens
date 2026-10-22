@@ -9,6 +9,7 @@ import SelectUnitsGameState from "../../../common/ingame-game-state/select-units
 import SelectUnitsComponent from "../SelectUnitsComponent";
 import SimpleChoiceGameState from "../../../common/ingame-game-state/simple-choice-game-state/SimpleChoiceGameState";
 import SimpleChoiceComponent from "../SimpleChoiceComponent";
+import { tr } from "../../i18n/i18n";
 
 @observer
 export default class ArianneMartell1stAbilityComponent extends Component<
@@ -20,16 +21,10 @@ export default class ArianneMartell1stAbilityComponent extends Component<
         {this.props.gameState.childGameState instanceof
         SimpleChoiceGameState ? (
           <Col xs={12} className="text-center">
-            <b>Arianne Martell</b>: House{" "}
-            <b>{this.props.gameState.house.name}</b> may kill an army unit of
-            House <b>{this.props.gameState.enemy.name}</b>.
-          </Col>
+            {tr("auto.game-state-panel.house-card-abilities.ArianneMartell1stAbilityComponent.0", { p0: (<b>{this.props.gameState.house.name}</b>), p1: (<b>{this.props.gameState.enemy.name}</b>) })}</Col>
         ) : (
           <Col xs={12} className="text-center">
-            <b>Arianne Martell</b>: House{" "}
-            <b>{this.props.gameState.enemy.name}</b> must choose a unit to
-            destroy.
-          </Col>
+            {tr("auto.game-state-panel.house-card-abilities.ArianneMartell1stAbilityComponent.1", { p0: (<b>{this.props.gameState.enemy.name}</b>) })}</Col>
         )}
         {renderChildGameState(this.props, [
           [SimpleChoiceGameState, SimpleChoiceComponent],

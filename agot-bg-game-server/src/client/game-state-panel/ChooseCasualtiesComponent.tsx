@@ -8,6 +8,7 @@ import Col from "react-bootstrap/Col";
 import renderChildGameState from "../utils/renderChildGameState";
 import SelectUnitsGameState from "../../common/ingame-game-state/select-units-game-state/SelectUnitsGameState";
 import SelectUnitsComponent from "./SelectUnitsComponent";
+import { tr } from "../i18n/i18n";
 
 @observer
 export default class ChooseCasualtiesComponent extends Component<GameStateComponentProps<ChooseCasualtiesGameState>> {
@@ -15,8 +16,7 @@ export default class ChooseCasualtiesComponent extends Component<GameStateCompon
         return (
             <>
                 <Col xs={12} className="text-center">
-                    House <b>{this.props.gameState.childGameState.house.name}</b> must choose <b>{this.props.gameState.childGameState.count}</b> of their units as casualties of the fight.
-                </Col>
+                    {tr("auto.game-state-panel.ChooseCasualtiesComponent.0", { p0: (<b>{this.props.gameState.childGameState.house.name}</b>), p1: (<b>{this.props.gameState.childGameState.count}</b>) })}</Col>
                 {renderChildGameState(this.props, [
                     [SelectUnitsGameState, SelectUnitsComponent]
                 ])}

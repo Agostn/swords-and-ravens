@@ -9,6 +9,7 @@ import MoveLoyaltyTokensGameState from "../../../common/ingame-game-state/wester
 import ResolveMoveLoyaltyTokenGameState from "../../../common/ingame-game-state/westeros-game-state/westeros-deck-4-game-state/move-loyalty-tokens-game-state/resolve-move-loyalty-token-game-state/ResolveMoveLoyaltyTokenGameState";
 import ResolveMoveLoyaltyTokenComponent from "./ResolveMoveLoyaltyTokenComponent";
 import { Col, FormCheck, OverlayTrigger, Tooltip } from "react-bootstrap";
+import { t } from "../../i18n/i18n";
 
 @observer
 export default class MoveLoyaltyTokensComponent extends Component<GameStateComponentProps<MoveLoyaltyTokensGameState>> {
@@ -31,12 +32,11 @@ export default class MoveLoyaltyTokensComponent extends Component<GameStateCompo
                         label={
                             <OverlayTrigger overlay={
                                 <Tooltip id="accept-all-movements-switch-tooltip">
-                                    If this option is enabled, all loyalty token movements will be accepted automatically.
-                                </Tooltip>}
+                                    {t("auto.game-state-panel.westeros-deck-4-component.MoveLoyaltyTokensComponent.1")}</Tooltip>}
                                 placement="auto"
                                 delay={{ show: 250, hide: 100 }}
                             >
-                                <label htmlFor="accept-all-movements-switch">Accept all movements</label>
+                                <label htmlFor="accept-all-movements-switch">{t("auto.game-state-panel.westeros-deck-4-component.MoveLoyaltyTokensComponent.0")}</label>
                             </OverlayTrigger>}
                         checked={this.props.gameState.acceptAllMovements}
                         onChange={() => this.onAcceptAllMovementsChange()}

@@ -12,6 +12,7 @@ import ResolveSpymasterGameState from "../../common/ingame-game-state/action-gam
 import _ from "lodash";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowsAltH } from "@fortawesome/free-solid-svg-icons";
+import { t, tr } from "../i18n/i18n";
 
 @observer
 export default class ResolveSpymasterComponent extends Component<GameStateComponentProps<ResolveSpymasterGameState<any>>> {
@@ -26,8 +27,7 @@ export default class ResolveSpymasterComponent extends Component<GameStateCompon
                             <Col xs="12">
                                 <Row className="justify-content-center">
                                     <Col xs={12} className="text-center">
-                                        Select the card(s) to put on bottom of the deck:<br/>
-                                        <small>(Don&apos;t select any to put them on top)</small>
+                                        {tr("auto.game-state-panel.ResolveSpymasterComponent.0")}
                                     </Col>
                                 </Row>
                                 <Row className="justify-content-center mt-1">
@@ -60,15 +60,14 @@ export default class ResolveSpymasterComponent extends Component<GameStateCompon
                                 <Row className="justify-content-center mt-4">
                                     <Col xs="auto">
                                         <Button type="button" variant="success" onClick={() => this.confirm()}>
-                                            Put selected cards to bottom of the deck
-                                        </Button>
+                                            {t("auto.game-state-panel.ResolveSpymasterComponent.1")}</Button>
                                     </Col>
                                 </Row>
                             </Col>
                         </Row>
                     ) : (
                         <div className="text-center">
-                            Waiting for {this.props.gameState.house.name}...
+                            {t("common.waitingFor", { who: this.props.gameState.house.name })}
                         </div>
                     )}
                 </Col>

@@ -39,6 +39,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import ColumnSwapButton from "./game-state-panel/utils/ColumnSwapButton";
 import { observer } from "mobx-react";
 import { observable } from "mobx";
+import { t, tr } from "./i18n/i18n";
 
 interface ReplayGameStateColumnProps {
   gameClient: GameClient;
@@ -100,7 +101,7 @@ export default class ReplayGameStateColumn extends Component<ReplayGameStateColu
                 overlay={
                   <Tooltip id="round-tooltip">
                     <h5>
-                      Round {gameSnapshot?.round} / {ingame.game.maxTurns}
+                      {tr("auto.ReplayGameStateColumn.0", { p0: (gameSnapshot?.round), p1: (ingame.game.maxTurns) })}
                     </h5>
                   </Tooltip>
                 }
@@ -207,7 +208,7 @@ export default class ReplayGameStateColumn extends Component<ReplayGameStateColu
               <Nav.Item>
                 <Nav.Link eventKey="game-logs">
                   <OverlayTrigger
-                    overlay={<Tooltip id="logs-tooltip">Game Logs</Tooltip>}
+                    overlay={<Tooltip id="logs-tooltip">{t("auto.ReplayGameStateColumn.1")}</Tooltip>}
                     placement="top"
                   >
                     <span>
@@ -226,8 +227,7 @@ export default class ReplayGameStateColumn extends Component<ReplayGameStateColu
                       <OverlayTrigger
                         overlay={
                           <Tooltip id="iron-bank-tooltip">
-                            The Iron Bank
-                          </Tooltip>
+                            {t("auto.ReplayGameStateColumn.2")}</Tooltip>
                         }
                         placement="top"
                       >
@@ -244,7 +244,7 @@ export default class ReplayGameStateColumn extends Component<ReplayGameStateColu
               <Nav.Item>
                 <Nav.Link eventKey="settings">
                   <OverlayTrigger
-                    overlay={<Tooltip id="settings-tooltip">Settings</Tooltip>}
+                    overlay={<Tooltip id="settings-tooltip">{t("auto.ReplayGameStateColumn.3")}</Tooltip>}
                     placement="top"
                   >
                     <span>
@@ -330,8 +330,7 @@ export default class ReplayGameStateColumn extends Component<ReplayGameStateColu
               </Nav.Item>
               <Dropdown className="ml-auto mt-1">
                 <Dropdown.Toggle variant="secondary" size="sm">
-                  Jump to
-                </Dropdown.Toggle>
+                  {t("auto.ReplayGameStateColumn.4")}</Dropdown.Toggle>
                 <Dropdown.Menu>{this.roundDropDownItems}</Dropdown.Menu>
               </Dropdown>
             </Nav>
@@ -407,7 +406,7 @@ export default class ReplayGameStateColumn extends Component<ReplayGameStateColu
             });
           }}
         >
-          Round {round}
+          {tr("auto.ReplayGameStateColumn.5", { p0: (round) })}
         </Dropdown.Item>
       );
     });

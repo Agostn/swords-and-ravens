@@ -37,6 +37,7 @@ import { tidesOfBattleCards } from "../../common/ingame-game-state/game-data-str
 import unitTypes from "../../common/ingame-game-state/game-data-structure/unitTypes";
 import SelectUnitsGameState from "../../common/ingame-game-state/select-units-game-state/SelectUnitsGameState";
 import AfterCombatHouseCardAbilitiesGameState from "../../common/ingame-game-state/action-game-state/resolve-march-order-game-state/combat-game-state/post-combat-game-state/after-combat-house-card-abilities-game-state/AfterCombatHouseCardAbilitiesGameState";
+import { t, tr } from "../i18n/i18n";
 
 @observer
 export default class CombatComponent extends Component<
@@ -150,8 +151,7 @@ export default class CombatComponent extends Component<
         <Col xs={12}>
           <div style={{ display: "flex", justifyContent: "center" }}>
             <h5>
-              Battle {this.combatStats.length > 0 && "results "} for{" "}
-              <b>{this.combat.defendingRegion.name}</b>
+              {tr("auto.game-state-panel.CombatComponent.0", { p0: (this.combatStats.length > 0 && t("auto2.game-state-panel.CombatComponent.0")), p1: (<b>{this.combat.defendingRegion.name}</b>) })}
             </h5>
           </div>
           <div style={{ display: "flex", justifyContent: "center" }}>
@@ -160,7 +160,7 @@ export default class CombatComponent extends Component<
         </Col>
         {winner && (
           <Col xs={12} className="text-center">
-            Winner: <b style={{ color: winner.color }}>{winner.name}</b>
+            {tr("auto.game-state-panel.CombatComponent.1", { p0: (<b style={{ color: winner.color }}>{winner.name}</b>) })}
           </Col>
         )}
         {renderChildGameState(this.props, [

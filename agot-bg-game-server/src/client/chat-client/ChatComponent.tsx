@@ -39,6 +39,7 @@ import spikedDragonHeadImage from "../../../public/images/icons/spiked-dragon-he
 import barrelImage from "../../../public/images/icons/barrel.svg";
 import mammothImage from "../../../public/images/icons/mammoth.svg";
 import crownImage from "../../../public/images/icons/crown.svg";
+import { t } from "../i18n/i18n";
 
 interface ChatComponentProps {
   gameClient: GameClient;
@@ -312,7 +313,7 @@ export default class ChatComponent extends Component<ChatComponentProps> {
                 <OverlayTrigger
                   overlay={
                     <Tooltip id="close-chat-tooltip">
-                      <>Close chat</>
+                      <>{t("auto.chat-client.ChatComponent.0")}</>
                     </Tooltip>
                   }
                 >
@@ -334,9 +335,9 @@ export default class ChatComponent extends Component<ChatComponentProps> {
                   overlay={
                     <Tooltip id="load-more-tooltip">
                       {this.noMoreMessages ? (
-                        <>There are no more messages</>
+                        <>{t("auto.chat-client.ChatComponent.1")}</>
                       ) : (
-                        <>Load more messages</>
+                        <>{t("auto.chat-client.ChatComponent.2")}</>
                       )}
                     </Tooltip>
                   }
@@ -350,9 +351,7 @@ export default class ChatComponent extends Component<ChatComponentProps> {
         {!this.channel.connected ? (
           <div className="flex-nowrap justify-content-center">
             <Alert variant="warning" className="text-center">
-              This chat is not connected. Please wait until the connection is
-              established or reload the page.
-            </Alert>
+              {t("auto.chat-client.ChatComponent.3")}</Alert>
           </div>
         ) : (
           <Form>
@@ -401,11 +400,11 @@ export default class ChatComponent extends Component<ChatComponentProps> {
                         categories={[
                           {
                             category: Categories.SUGGESTED,
-                            name: "Recently Used"
+                            name: t("auto2.chat-client.ChatComponent.0")
                           },
                           {
                             category: Categories.CUSTOM,
-                            name: "Swords and Ravens",
+                            name: t("auto2.chat-client.ChatComponent.1"),
                             icon: (
                               <img
                                 src={ravenImage}
@@ -431,27 +430,27 @@ export default class ChatComponent extends Component<ChatComponentProps> {
                           },
                           {
                             category: Categories.SMILEYS_PEOPLE,
-                            name: "Smileys & People"
+                            name: t("auto2.chat-client.ChatComponent.2")
                           },
                           {
                             category: Categories.ANIMALS_NATURE,
-                            name: "Animals & Nature"
+                            name: t("auto2.chat-client.ChatComponent.3")
                           },
                           {
                             category: Categories.FOOD_DRINK,
-                            name: "Food & Drink"
+                            name: t("auto2.chat-client.ChatComponent.4")
                           },
                           {
                             category: Categories.TRAVEL_PLACES,
-                            name: "Travel & Places"
+                            name: t("auto2.chat-client.ChatComponent.5")
                           },
                           {
                             category: Categories.ACTIVITIES,
-                            name: "Activities"
+                            name: t("auto2.chat-client.ChatComponent.6")
                           },
                           {
                             category: Categories.OBJECTS,
-                            name: "Objects"
+                            name: t("auto2.chat-client.ChatComponent.7")
                           }
                         ]}
                       />
@@ -476,8 +475,7 @@ export default class ChatComponent extends Component<ChatComponentProps> {
                     e.preventDefault();
                   }}
                 >
-                  Send
-                </Button>
+                  {t("auto.chat-client.ChatComponent.4")}</Button>
               </Col>
             </Row>
           </Form>

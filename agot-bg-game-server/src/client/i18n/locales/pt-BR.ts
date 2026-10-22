@@ -1,4 +1,6 @@
 import en from "./en";
+import ptBRIngame from "./pt-BR-ingame";
+import ptBRAuto from "./pt-BR-auto";
 
 // Textos em português do Brasil.
 // O tipo abaixo obriga a traduzir TODAS as chaves de en.ts: se faltar uma
@@ -7,12 +9,17 @@ import en from "./en";
 // Terminologia (edição brasileira de A Guerra dos Tronos: Board Game):
 // Fichas de Poder, Pontos de Vitória (PV), Cartas de Casa, Cartas de
 // Westeros, Trilhas de Influência, Vassalos, Banco de Ferro, Marés de
-// Batalha, Guarnições, Cavaleiros, Soldados, Navios, Convocação.
+// Batalha, Guarnições, Cavaleiros, Soldados, Navios, Recrutamento (Mustering),
+// ordens: Marcha, Defesa, Apoio, Incursão (Raid), Consolidar Poder.
 // Expansões: Mãe dos Dragões (MdD), A Dança dos Dragões, O Festim dos
 // Corvos, A Tormenta de Espadas (1ª ed.), A Fúria dos Reis (1ª ed.).
 // Lugares: nomes da série da HBO (ver glossário do projeto).
 
 const ptBR: { [key in keyof typeof en]: string } = {
+  // Textos da partida ficam em pt-BR-ingame.ts
+  ...ptBRIngame,
+  ...ptBRAuto,
+
   // ---------- Idioma ----------
   "language.label": "Idioma",
 
@@ -186,7 +193,7 @@ const ptBR: { [key in keyof typeof en]: string } = {
     "Com esta opção ativada, o baralho de Marés de Batalha tem só duas cartas de valor 2 em vez de quatro.",
   "settings.mixedWd1.label": "Baralho de Westeros I misto",
   "settings.mixedWd1.tooltip":
-    "Com esta opção ativada, uma carta <b>Convocação</b> é trocada por <b>Reunir os Homens</b>, uma carta <b>Um Trono de Lâminas</b> por <b>O Fardo do Poder</b> e a carta <b>Últimos Dias de Verão</b> por <b>Fome</b>.",
+    "Com esta opção ativada, uma carta <b>Recrutamento</b> é trocada por <b>Reunir os Homens</b>, uma carta <b>Um Trono de Lâminas</b> por <b>O Fardo do Poder</b> e a carta <b>Últimos Dias de Verão</b> por <b>Fome</b>.",
   "settings.cokWesterosPhase.label": "Fase de Westeros de A Fúria dos Reis",
   "settings.cokWesterosPhase.tooltip":
     "Os jogadores podem ver as próximas 3 cartas de cada baralho de Westeros a qualquer momento.",
@@ -203,9 +210,9 @@ const ptBR: { [key in keyof typeof en]: string } = {
   "settings.noPrivateChats.label": "Desativar chats privados",
   "settings.noPrivateChats.tooltip":
     "Os jogadores não podem criar salas de chat privadas.",
-  "settings.precedingMustering.label": "Convocação antes do início",
+  "settings.precedingMustering.label": "Recrutamento antes do início",
   "settings.precedingMustering.tooltip":
-    "Antes da partida começar, todos os jogadores podem recrutar unidades nos seus castelos, como numa carta de Convocação.",
+    "Antes da partida começar, todos os jogadores podem recrutar unidades nos seus castelos, como numa carta de Recrutamento.",
   "settings.randomStartPositions.label": "Posições iniciais aleatórias",
   "settings.randomStartPositions.tooltip":
     "As Casas trocam de posição inicial aleatoriamente.",

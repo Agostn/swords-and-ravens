@@ -8,6 +8,7 @@ import ReekAbilityGameState
     from "../../../common/ingame-game-state/action-game-state/resolve-march-order-game-state/combat-game-state/post-combat-game-state/after-winner-determination-game-state/reek-ability-game-state/ReekAbilityGameState";
 import SimpleChoiceGameState from "../../../common/ingame-game-state/simple-choice-game-state/SimpleChoiceGameState";
 import SimpleChoiceComponent from "../SimpleChoiceComponent";
+import { tr } from "../../i18n/i18n";
 
 @observer
 export default class ReekAbilityComponent extends Component<GameStateComponentProps<ReekAbilityGameState>> {
@@ -15,8 +16,7 @@ export default class ReekAbilityComponent extends Component<GameStateComponentPr
         return (
             <>
                 <Col xs={12} className="text-center">
-                    <b>Reek</b>: House <b>{this.props.gameState.childGameState.house.name}</b> may return Reek to their hand.
-                </Col>
+                    {tr("auto.game-state-panel.house-card-abilities.ReekAbilityComponent.0", { p0: (<b>{this.props.gameState.childGameState.house.name}</b>) })}</Col>
                 {renderChildGameState(this.props, [
                     [SimpleChoiceGameState, SimpleChoiceComponent],
                 ])}

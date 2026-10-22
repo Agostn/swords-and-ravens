@@ -3,6 +3,7 @@ import React from "react";
 import { Col } from "react-bootstrap";
 import IngameGameState from "../common/ingame-game-state/IngameGameState";
 import HouseNumberResultsComponent from "./HouseNumberResultsComponent";
+import { t } from "./i18n/i18n";
 
 interface PossiblePowerTokenGainsComponentProps {
     ingame: IngameGameState;
@@ -22,8 +23,7 @@ export default class PossiblePowerTokenGainsComponent extends Component<Possible
 
         return <>
             <Col xs="12" className="text-center">
-                Possible gains for choosing Game of Thrones
-            </Col>
+                {t("auto.PossiblePowerTokenGainsComponent.0")}</Col>
             <Col xs="auto">
                 <HouseNumberResultsComponent results={gains.entries} />
             </Col>

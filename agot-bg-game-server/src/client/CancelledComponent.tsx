@@ -9,6 +9,7 @@ import ChatComponent from "./chat-client/ChatComponent";
 import CancelledGameState from "../common/cancelled-game-state/CancelledGameState";
 import {faTimes} from "@fortawesome/free-solid-svg-icons/faTimes";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { tr } from "./i18n/i18n";
 
 
 interface CancelledComponentProps {
@@ -25,9 +26,7 @@ export default class CancelledComponent extends Component<CancelledComponentProp
                     <Col className="text-center">
                         <Card border="danger" bg="danger">
                             <Card.Body className="text-center">
-                                <FontAwesomeIcon icon={faTimes} size="3x"/><br/>
-                                This game has been cancelled
-                            </Card.Body>
+                                {tr("auto.CancelledComponent.0", { p0: (<FontAwesomeIcon icon={faTimes} size="3x"/>) })}</Card.Body>
                         </Card>
                     </Col>
                 </Row>

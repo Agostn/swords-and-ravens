@@ -11,6 +11,7 @@ import SelectHouseCardGameState from "../../../common/ingame-game-state/select-h
 import SelectHouseCardComponent from "../SelectHouseCardComponent";
 import joinReactNodes from "../../../client/utils/joinReactNodes";
 import House from "../../../common/ingame-game-state/game-data-structure/House";
+import { t, tr } from "../../i18n/i18n";
 
 @observer
 export default class RobertArrynAbilityComponent extends Component<GameStateComponentProps<RobertArrynAbilityGameState>> {
@@ -36,15 +37,11 @@ export default class RobertArrynAbilityComponent extends Component<GameStateComp
             <>
                 {this.simpleChoice && (
                     <Col xs={12} className="text-center">
-                        <b>Robert Arryn</b>: House <b>{this.house.name}</b> may
-                        remove <b>Robert Arryn</b> and {joinReactNodes(possibleHouseCardToRemove.map(hc => <b key={`robert-arryn_${hc.id}`}>{hc.name}</b>), " or ")} from
-                        the game.
-                    </Col>
+                        {tr("auto.game-state-panel.house-card-abilities.RobertArrynAbilityComponent.0", { p0: (<b>{this.house.name}</b>), p1: (joinReactNodes(possibleHouseCardToRemove.map(hc => <b key={`robert-arryn_${hc.id}`}>{hc.name}</b>), t("auto2.game-state-panel.house-card-abilities.RobertArrynAbilityComponent.0"))) })}</Col>
                 )}
                 {this.selectHouseCard && (
                     <Col xs={12} className="text-center">
-                        <b>Robert Arryn</b>: House <b>{this.house.name}</b> has to decide which House card to remove from the game.
-                    </Col>
+                        {tr("auto.game-state-panel.house-card-abilities.RobertArrynAbilityComponent.1", { p0: (<b>{this.house.name}</b>) })}</Col>
                 )}
                 {renderChildGameState(this.props, [
                     [SimpleChoiceGameState, SimpleChoiceComponent],

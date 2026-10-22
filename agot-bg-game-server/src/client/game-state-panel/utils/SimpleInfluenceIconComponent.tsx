@@ -6,6 +6,7 @@ import { LobbyHouse } from "../../../common/lobby-game-state/LobbyGameState";
 import { preventOverflow } from "@popperjs/core";
 import classNames from "classnames";
 import HouseSnapshot from "../../../client/game-replay/HouseSnapshot";
+import { t } from "../../i18n/i18n";
 
 interface SimpleInfluenceIconComponentProps {
   house: LobbyHouse | null;
@@ -31,7 +32,7 @@ export default class SimpleInfluenceIconComponent extends Component<SimpleInflue
       <OverlayTrigger
         overlay={
           <Tooltip id="influence-icon">
-            <b>{this.house?.name ?? "Unknown house"}</b>
+            <b>{this.house?.name ?? t("auto2.game-state-panel.utils.SimpleInfluenceIconComponent.0")}</b>
           </Tooltip>
         }
         placement="bottom"

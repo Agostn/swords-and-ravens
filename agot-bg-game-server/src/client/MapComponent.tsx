@@ -57,6 +57,7 @@ import renderLoanCardsToolTip from "./loanCardsTooltip";
 import Xarrow from "react-xarrows";
 import { getClassNameForDragonStrength } from "./WorldSnapshotComponent";
 import House from "../common/ingame-game-state/game-data-structure/House";
+import { t, tr } from "./i18n/i18n";
 
 export const MAP_HEIGHT = 1378;
 export const MAP_WIDTH = 741;
@@ -454,16 +455,11 @@ export default class MapComponent extends Component<MapComponentProps> {
                   overlay={
                     <Tooltip id={"power-token-" + r.id}>
                       <div className="text-center">
-                        <b>Printed Power token</b>
-                        <small>
-                          {" "}
-                          of{" "}
-                          <b>
+                        {tr("auto.MapComponent.0", { p0: (<b>
                             {r.overwrittenSuperControlPowerToken.name}
                             <br />
                             {r.name}
-                          </b>
-                        </small>
+                          </b>) })}
                       </div>
                     </Tooltip>
                   }
@@ -487,16 +483,11 @@ export default class MapComponent extends Component<MapComponentProps> {
                   overlay={
                     <Tooltip id={"power-token-" + r.id}>
                       <div className="text-center">
-                        <b>Power token</b>
-                        <small>
-                          {" "}
-                          of{" "}
-                          <b>
+                        {tr("auto.MapComponent.1", { p0: (<b>
                             {r.controlPowerToken.name}
                             <br />
                             {r.name}
-                          </b>
-                        </small>
+                          </b>) })}
                       </div>
                     </Tooltip>
                   }
@@ -804,11 +795,11 @@ export default class MapComponent extends Component<MapComponentProps> {
       return dragonStrength <= -1 ? (
         <></>
       ) : dragonStrength <= 1 ? (
-        <>Baby </>
+        <>{t("auto.MapComponent.2")}{" "}</>
       ) : dragonStrength <= 3 ? (
         <></>
       ) : dragonStrength <= 5 ? (
-        <>Monster </>
+        <>{t("auto.MapComponent.3")}{" "}</>
       ) : (
         <></>
       );
@@ -899,16 +890,10 @@ export default class MapComponent extends Component<MapComponentProps> {
                       className="tooltip-w-100"
                     >
                       <div className="text-center">
-                        <b>
+                        {tr("auto.MapComponent.4", { p0: (<b>
                           {getDragonPrefix(dragonStrength)}
                           {u.type.name}
-                        </b>
-                        <small>
-                          {" "}
-                          of <b>{controller?.name ?? "Unknown"}</b>
-                          <br />
-                          <b>{r.name}</b>
-                        </small>
+                        </b>), p1: (<b>{controller?.name ?? t("auto2.MapComponent.0")}</b>), p2: (<b>{r.name}</b>) })}
                       </div>
                     </Tooltip>
                   }
@@ -992,18 +977,13 @@ export default class MapComponent extends Component<MapComponentProps> {
                 <Tooltip id={"garrison-tooltip-" + r.id}>
                   <div className="text-center">
                     {this.allRegionsWithControllers.get(r) == null ? (
-                      <b>Neutral Force token</b>
+                      <b>{t("auto.MapComponent.5")}</b>
                     ) : (
                       <>
-                        <b>Garrison</b>
-                        <small>
-                          {" "}
-                          of{" "}
-                          <b>
+                        {tr("auto.MapComponent.6", { p0: (<b>
                             {this.allRegionsWithControllers.get(r)?.name ??
-                              "Unknown"}
-                          </b>
-                        </small>
+                              t("auto2.MapComponent.1")}
+                          </b>) })}
                       </>
                     )}
                     <br />
@@ -1050,11 +1030,9 @@ export default class MapComponent extends Component<MapComponentProps> {
               overlay={
                 <Tooltip id={"loyalty-tooltip-" + r.id}>
                   <div className="text-center">
-                    <b>Loyalty token</b>
-                    <br />
-                    <small>
+                    {tr("auto.MapComponent.7", { p0: (<small>
                       <b>{r.name}</b>
-                    </small>
+                    </small>) })}
                   </div>
                 </Tooltip>
               }
@@ -1401,16 +1379,11 @@ export default class MapComponent extends Component<MapComponentProps> {
     return (
       <Tooltip id={"order-info"} className="tooltip-w-100">
         <div className="text-center">
-          <b>{order ? order.type.name : "Order token"}</b>
-          <small>
-            {" "}
-            of{" "}
-            <b>
-              {controller?.name ?? "Unknown"}
+          {tr("auto.MapComponent.8", { p0: (<b>{order ? order.type.name : t("auto2.MapComponent.2")}</b>), p1: (<b>
+              {controller?.name ?? t("auto2.MapComponent.3")}
               <br />
               {region.name}
-            </b>
-          </small>
+            </b>) })}
         </div>
       </Tooltip>
     );

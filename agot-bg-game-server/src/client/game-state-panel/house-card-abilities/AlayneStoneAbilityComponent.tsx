@@ -7,6 +7,7 @@ import Col from "react-bootstrap/Col";
 import SimpleChoiceGameState from "../../../common/ingame-game-state/simple-choice-game-state/SimpleChoiceGameState";
 import SimpleChoiceComponent from "../SimpleChoiceComponent";
 import AlayneStoneAbilityGameState from "../../../common/ingame-game-state/action-game-state/resolve-march-order-game-state/combat-game-state/post-combat-game-state/after-winner-determination-game-state/alayne-stone-ability-game-state/AlayneStoneAbilityGameState";
+import { tr } from "../../i18n/i18n";
 
 @observer
 export default class AlayneStoneAbilityComponent extends Component<GameStateComponentProps<AlayneStoneAbilityGameState>> {
@@ -14,8 +15,7 @@ export default class AlayneStoneAbilityComponent extends Component<GameStateComp
         return (
             <>
                 <Col xs={12} className="text-center">
-                    <b>Alayne Stone</b>: House <b>{this.props.gameState.childGameState.house.name}</b> may discard 2 Power tokens to force their opponent to discard all their available Power tokens.
-                </Col>
+                    {tr("auto.game-state-panel.house-card-abilities.AlayneStoneAbilityComponent.0", { p0: (<b>{this.props.gameState.childGameState.house.name}</b>) })}</Col>
                 {renderChildGameState(this.props, [
                     [SimpleChoiceGameState, SimpleChoiceComponent],
                 ])}

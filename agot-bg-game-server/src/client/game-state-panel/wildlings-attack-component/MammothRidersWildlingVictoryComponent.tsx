@@ -10,13 +10,14 @@ import MammothRidersWildlingVictoryGameState
 import { Col } from "react-bootstrap";
 import TakeControlOfEnemyPortGameState from "../../../common/ingame-game-state/take-control-of-enemy-port-game-state/TakeControlOfEnemyPortGameState";
 import TakeControlOfEnemyPortComponent from "../TakeControlOfEnemyPortComponent";
+import { t } from "../../i18n/i18n";
 
 @observer
 export default class MammothRidersWildlingVictoryComponent extends Component<GameStateComponentProps<MammothRidersWildlingVictoryGameState>> {
     render(): ReactNode {
         return (
             <>
-                {this.props.gameState.childGameState instanceof SelectUnitsGameState && <Col xs={12} className="text-center">Houses must destroy units.</Col>}
+                {this.props.gameState.childGameState instanceof SelectUnitsGameState && <Col xs={12} className="text-center">{t("auto.game-state-panel.wildlings-attack-component.MammothRidersWildlingVictoryComponent.0")}</Col>}
                 {renderChildGameState(this.props, [
                     [SelectUnitsGameState, SelectUnitsComponent],
                     [TakeControlOfEnemyPortGameState, TakeControlOfEnemyPortComponent]

@@ -24,6 +24,7 @@ import { renderRegionTooltip } from "../regionTooltip";
 import { preventOverflow } from "@popperjs/core";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faInfo } from "@fortawesome/free-solid-svg-icons";
+import { t } from "../i18n/i18n";
 
 @observer
 export default class PlaceOrdersComponent extends Component<GameStateComponentProps<PlaceOrdersGameState>> {
@@ -59,8 +60,7 @@ export default class PlaceOrdersComponent extends Component<GameStateComponentPr
             <>
                 <Row className="justify-content-center">
                     <Col xs={12} className="text-center">
-                        Players must now place orders in every area where they have at least one unit.
-                    </Col>
+                        {t("auto.game-state-panel.PlaceOrdersComponent.0")}</Col>
                     {this.placeOrders.parentGameState.planningRestrictions.map(pr => this.restrictionToWesterosCardTypeMap.tryGet(pr, null))
                         .map(prWc => prWc != null ?
                             <Col xs={12} key={`prwc_${prWc.westerosCardType.id}`} className="d-flex flex-column align-items-center">
@@ -76,7 +76,7 @@ export default class PlaceOrdersComponent extends Component<GameStateComponentPr
                                         onClick={() => this.onReadyClick()}
                                         variant="success"
                                     >
-                                        Ready
+                                        {t("common.ready")}
                                     </Button>
                                 </Col>
                                 <Col xs="auto">
@@ -85,14 +85,14 @@ export default class PlaceOrdersComponent extends Component<GameStateComponentPr
                                         onClick={() => this.onUnreadyClick()}
                                         variant="danger"
                                     >
-                                        Unready
+                                        {t("common.unready")}
                                     </Button>
                                 </Col>
                             </Row>
                         )}
                         <Row>
                             <Col xs={12} className="text-center" style={{ marginTop: 10 }}>
-                                Waiting for {this.placeOrders.getNotReadyPlayers().map(p => p.house.name).join(', ')}...
+                                {t("common.waitingFor", { who: this.placeOrders.getNotReadyPlayers().map(p => p.house.name).join(', ') })}
                             </Col>
                         </Row>
                     </Col>
@@ -197,7 +197,7 @@ export default class PlaceOrdersComponent extends Component<GameStateComponentPr
         if (this.placeOrders.getHousesToPutOrdersForPlayer(this.props.gameClient.authenticatedPlayer).some(
             h => this.placeOrders.game.getPlacedOrders(this.placeOrders.placedOrders, h).entries.some(
                 ([region, order]) => this.placeOrders.game.isOrderRestricted(region, order, this.placeOrders.planningGameState.planningRestrictions)))) {
-            if (!window.confirm("You have placed restricted orders. They will be removed after the messenger raven has been used. Do you want to continue?")) {
+            if (!window.confirm(t("auto2.game-state-panel.PlaceOrdersComponent.0"))) {
                 return;
             }
         }

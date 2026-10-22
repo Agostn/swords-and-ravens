@@ -11,6 +11,7 @@ import SelectHouseCardGameState
 import SelectHouseCardComponent from "../SelectHouseCardComponent";
 import SimpleChoiceGameState from "../../../common/ingame-game-state/simple-choice-game-state/SimpleChoiceGameState";
 import SimpleChoiceComponent from "../SimpleChoiceComponent";
+import { tr } from "../../i18n/i18n";
 
 @observer
 export default class ViserysTargaryenAbilityComponent extends Component<GameStateComponentProps<QyburnAbilityGameState>> {
@@ -18,9 +19,7 @@ export default class ViserysTargaryenAbilityComponent extends Component<GameStat
         return (
             <>
                 <Col xs={12} className="text-center">
-                    <b>Viserys Targaryen</b>: House <b>{this.props.gameState.childGameState.house.name}</b> may discard a House card
-                    from their hand to add its printed combat strength to Viserys Targaryens&apos;s combat strength.
-                </Col>
+                    {tr("auto.game-state-panel.house-card-abilities.ViserysTargaryenAbilityComponent.0", { p0: (<b>{this.props.gameState.childGameState.house.name}</b>) })}</Col>
                 {renderChildGameState(this.props, [
                     [SimpleChoiceGameState, SimpleChoiceComponent],
                     [SelectHouseCardGameState, SelectHouseCardComponent]

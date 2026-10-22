@@ -10,6 +10,7 @@ import PartialRecursive from "../../../utils/PartialRecursive";
 import { RegionOnMapProperties } from "../../MapControls";
 import IngameGameState from "../../../common/ingame-game-state/IngameGameState";
 import ResolveMoveLoyaltyTokenGameState from "../../../common/ingame-game-state/westeros-game-state/westeros-deck-4-game-state/move-loyalty-tokens-game-state/resolve-move-loyalty-token-game-state/ResolveMoveLoyaltyTokenGameState";
+import { t, tr } from "../../i18n/i18n";
 
 @observer
 export default class ResolveMoveLoyaltyTokenComponent extends Component<
@@ -40,17 +41,15 @@ export default class ResolveMoveLoyaltyTokenComponent extends Component<
     return (
       <>
         <Col xs={12} className="text-center">
-          House <b>{this.gameState.house.name}</b> must move a
-          loyalty&nbsp;token to an adjacent land area.
-        </Col>
+          {tr("auto.game-state-panel.westeros-deck-4-component.ResolveMoveLoyaltyTokenComponent.0", { p0: (<b>{this.gameState.house.name}</b>) })}</Col>
         <Col xs={12} className="mt-2">
           {this.props.gameClient.doesControlHouse(this.gameState.house) ? (
             <>
               <p className="text-center">
-                Move a loyalty&nbsp;token from{" "}
+                {t("auto.game-state-panel.westeros-deck-4-component.ResolveMoveLoyaltyTokenComponent.1")}{" "}
                 {this.from ? (
                   <>
-                    <b>{this.from.name}</b> to{" "}
+                    {tr("auto.game-state-panel.westeros-deck-4-component.ResolveMoveLoyaltyTokenComponent.2", { p0: (<b>{this.from.name}</b>) })}{" "}
                   </>
                 ) : (
                   ""
@@ -69,7 +68,7 @@ export default class ResolveMoveLoyaltyTokenComponent extends Component<
                       this.waitingForServer
                     }
                   >
-                    Confirm
+                    {t("common.confirm")}
                   </Button>
                 </Col>
                 <Col xs="auto">
@@ -82,14 +81,14 @@ export default class ResolveMoveLoyaltyTokenComponent extends Component<
                       this.waitingForServer
                     }
                   >
-                    Reset
+                    {t("common.reset")}
                   </Button>
                 </Col>
               </Row>
             </>
           ) : (
             <div className="text-center">
-              Waiting for {this.gameState.house.name}...
+              {t("common.waitingFor", { who: this.gameState.house.name })}
             </div>
           )}
         </Col>

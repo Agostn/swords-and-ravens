@@ -8,6 +8,7 @@ import renderChildGameState from "../utils/renderChildGameState";
 import SelectRegionGameState from "../../common/ingame-game-state/select-region-game-state/SelectRegionGameState";
 import SelectRegionComponent from "./SelectRegionComponent";
 import MasterAtArmsGameState from "../../common/ingame-game-state/action-game-state/resolve-consolidate-power-game-state/execute-loan-game-state/master-at-arms-game-state/MasterAtArmsGameState";
+import { t } from "../i18n/i18n";
 
 
 @observer
@@ -21,14 +22,13 @@ export default class MasterAtArmsComponent extends Component<GameStateComponentP
             this.props.gameClient.doesControlHouse(this.house) ? (
                 <>
                     <Col xs={12} className="text-center">
-                        Select a castle to be upgraded into a stronghold.
-                    </Col>
+                        {t("auto.game-state-panel.MasterAtArmsComponent.0")}</Col>
                     {renderChildGameState(this.props, [
                         [SelectRegionGameState, SelectRegionComponent]
                     ])}
             </>
             ) : (
-                <Col xs={12} className="text-center">Waiting for {this.house.name}...</Col>
+                <Col xs={12} className="text-center">{t("common.waitingFor", { who: this.house.name })}</Col>
             )
         );
     }

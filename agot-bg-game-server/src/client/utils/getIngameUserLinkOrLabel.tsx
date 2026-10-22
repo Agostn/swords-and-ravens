@@ -3,11 +3,12 @@ import User from "../../server/User";
 import ConditionalWrap from "./ConditionalWrap";
 import { OverlayTrigger, Tooltip } from "react-bootstrap";
 import EntireGame from "../../common/EntireGame";
+import { t } from "../i18n/i18n";
 
 function banUser(user: User, entireGame: EntireGame): void {
   if (
     !window.confirm(
-      "Are you sure you want to ban '" + user.name + "' from your game?",
+      t("auto2.utils.getIngameUserLinkOrLabel.0") + user.name + t("auto2.utils.getIngameUserLinkOrLabel.1"),
     )
   ) {
     return;
@@ -36,8 +37,7 @@ export default function getUserLinkOrLabel(
           <OverlayTrigger
             overlay={
               <Tooltip id="user-is-spectator-tooltip">
-                This user does not participate in the game
-              </Tooltip>
+                {t("auto.utils.getIngameUserLinkOrLabel.0")}</Tooltip>
             }
             placement="auto"
             delay={{ show: 250, hide: 0 }}
@@ -68,8 +68,7 @@ export default function getUserLinkOrLabel(
         <OverlayTrigger
           overlay={
             <Tooltip id={`ban-user-${user.id}-tooltip`}>
-              Ban this user from your game.
-            </Tooltip>
+              {t("auto.utils.getIngameUserLinkOrLabel.1")}</Tooltip>
           }
           placement="auto"
           delay={{ show: 250, hide: 0 }}

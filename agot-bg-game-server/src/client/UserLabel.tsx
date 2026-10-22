@@ -18,6 +18,7 @@ import clonesImage from "../../public/images/icons/clones.svg";
 import getElapsedSeconds from "../utils/getElapsedSeconds";
 import { secondsToString } from "./utils/secondsToString";
 import classNames from "classnames";
+import { t, tr } from "./i18n/i18n";
 
 interface UserLabelProps {
   gameClient: GameClient;
@@ -59,7 +60,7 @@ export default class UserLabel extends Component<UserLabelProps> {
             <OverlayTrigger
               overlay={
                 <Tooltip id={`${this.user.id}-connection-tooltip`}>
-                  {this.user.connected ? "Connected" : "Disconnected"}
+                  {this.user.connected ? t("auto2.UserLabel.0") : t("auto2.UserLabel.1")}
                 </Tooltip>
               }
             >
@@ -76,7 +77,7 @@ export default class UserLabel extends Component<UserLabelProps> {
                 <OverlayTrigger
                   overlay={
                     <Tooltip id={`${this.user.id}-owner-tooltip`}>
-                      Game host{!isRealOwner ? " deputy" : ""}
+                      {tr("auto.UserLabel.0", { p0: (!isRealOwner ? t("auto2.UserLabel.2") : "") })}
                     </Tooltip>
                   }
                 >
@@ -119,8 +120,7 @@ export default class UserLabel extends Component<UserLabelProps> {
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  Show profile of
-                  {this.renderNameAndTimeElapsedDropDownItem()}
+                  {tr("auto.UserLabel.1", { p0: (this.renderNameAndTimeElapsedDropDownItem()) })}
                 </NavDropdown.Item>
               )}
               {this.renderIngameDropdownItems()}
@@ -143,9 +143,7 @@ export default class UserLabel extends Component<UserLabelProps> {
             <OverlayTrigger
               overlay={
                 <Tooltip id={`waiting-for-user-${this.user.id}-action-tooltip`}>
-                  <small>
-                    Time elapsed since waiting for player action <i>(hh:mm)</i>
-                  </small>
+                  {tr("auto.UserLabel.2")}
                 </Tooltip>
               }
             >
@@ -170,13 +168,9 @@ export default class UserLabel extends Component<UserLabelProps> {
         placement="auto"
         overlay={
           <Tooltip id={`${this.user.id}-other-users-with-same-ip-tooltip`}>
-            These users {this.ingame ? "play" : "joined"} from the same network
-            as {this.user.name}:
-            <br />
-            <br />
-            {Array.from(this.user.otherUsersFromSameNetwork).map((usr) => (
+            {tr("auto.UserLabel.3", { p0: (this.ingame ? t("auto2.UserLabel.3") : t("auto2.UserLabel.4")), p1: (this.user.name), p2: (Array.from(this.user.otherUsersFromSameNetwork).map((usr) => (
               <div key={`same-network-user_${usr}`}>{usr}</div>
-            ))}
+            ))) })}
           </Tooltip>
         }
       >
@@ -233,19 +227,19 @@ export default class UserLabel extends Component<UserLabelProps> {
               overlay={
                 <Tooltip id="replace-player-tooltip">
                   {canLaunchReplacePlayerVoteReason == "already-playing"
-                    ? "You are already playing in this game"
+                    ? t("auto2.UserLabel.5")
                     : canLaunchReplacePlayerVoteReason == "ongoing-vote"
-                      ? "A vote is already ongoing"
+                      ? t("auto2.UserLabel.6")
                       : canLaunchReplacePlayerVoteReason == "game-cancelled"
-                        ? "The game has been cancelled"
+                        ? t("auto2.UserLabel.7")
                         : canLaunchReplacePlayerVoteReason == "game-ended"
-                          ? "The game has ended"
+                          ? t("auto2.UserLabel.8")
                           : canLaunchReplacePlayerVoteReason == "game-paused"
-                            ? "The game must be resumed first"
+                            ? t("auto2.UserLabel.9")
                             : canLaunchReplacePlayerVoteReason ==
                                 "forbidden-in-tournament-mode"
-                              ? "Replacing players is not allowed in tournaments"
-                              : "Vote not possible"}
+                              ? t("auto2.UserLabel.10")
+                              : t("auto2.UserLabel.11")}
                 </Tooltip>
               }
               placement="auto"
@@ -260,8 +254,7 @@ export default class UserLabel extends Component<UserLabelProps> {
               onClick={() => this.onLaunchReplacePlayerVoteClick()}
               disabled={!canLaunchReplacePlayerVote}
             >
-              Offer to replace this player
-            </NavDropdown.Item>
+              {t("auto.UserLabel.4")}</NavDropdown.Item>
           </div>
         </ConditionalWrap>
         <NavDropdown.Divider />
@@ -272,31 +265,31 @@ export default class UserLabel extends Component<UserLabelProps> {
               overlay={
                 <Tooltip id="replace-player-by-vassal-tooltip">
                   {canLaunchReplacePlayerByVassalVoteReason == "ongoing-vote"
-                    ? "A vote is already ongoing"
+                    ? t("auto2.UserLabel.12")
                     : canLaunchReplacePlayerByVassalVoteReason ==
                         "game-cancelled"
-                      ? "The game has been cancelled"
+                      ? t("auto2.UserLabel.13")
                       : canLaunchReplacePlayerByVassalVoteReason == "game-ended"
-                        ? "The game has ended"
+                        ? t("auto2.UserLabel.14")
                         : canLaunchReplacePlayerByVassalVoteReason ==
                             "only-players-can-vote"
-                          ? "Only players can vote"
+                          ? t("auto2.UserLabel.15")
                           : canLaunchReplacePlayerByVassalVoteReason ==
                               "game-paused"
-                            ? "The game must be resumed first"
+                            ? t("auto2.UserLabel.16")
                             : canLaunchReplacePlayerByVassalVoteReason ==
                                 "min-player-count-reached"
-                              ? "Minimum player count reached"
+                              ? t("auto2.UserLabel.17")
                               : canLaunchReplacePlayerByVassalVoteReason ==
                                   "vassalizing-yourself-is-forbidden"
-                                ? "To avoid abuse you can no longer vassalize yourself"
+                                ? t("auto2.UserLabel.18")
                                 : canLaunchReplacePlayerByVassalVoteReason ==
                                     "only-possible-when-defeated"
-                                  ? "Vassal replacement is allowed only when the house is considered defeated"
+                                  ? t("auto2.UserLabel.19")
                                   : canLaunchReplacePlayerByVassalVoteReason ==
                                       "ongoing-draft"
-                                    ? "During draft mode players cannot be replaced by vassals"
-                                    : "Vote not possible"}
+                                    ? t("auto2.UserLabel.20")
+                                    : t("auto2.UserLabel.21")}
                 </Tooltip>
               }
               placement="auto"
@@ -311,8 +304,7 @@ export default class UserLabel extends Component<UserLabelProps> {
               onClick={() => this.onLaunchReplacePlayerByVassalVoteClick()}
               disabled={!canLaunchReplacePlayerByVassalVote}
             >
-              Launch a vote to replace this player by a vassal
-            </NavDropdown.Item>
+              {t("auto.UserLabel.5")}</NavDropdown.Item>
           </div>
         </ConditionalWrap>
         <NavDropdown.Divider />
@@ -323,24 +315,24 @@ export default class UserLabel extends Component<UserLabelProps> {
               overlay={
                 <Tooltip id="swap-houses-tooltip">
                   {canLaunchSwapHousesVoteReason == "ongoing-vote"
-                    ? "A vote is already ongoing"
+                    ? t("auto2.UserLabel.22")
                     : canLaunchSwapHousesVoteReason == "game-cancelled"
-                      ? "The game has been cancelled"
+                      ? t("auto2.UserLabel.23")
                       : canLaunchSwapHousesVoteReason == "game-ended"
-                        ? "The game has ended"
+                        ? t("auto2.UserLabel.24")
                         : canLaunchSwapHousesVoteReason ==
                             "only-players-can-vote"
-                          ? "Only players can vote"
+                          ? t("auto2.UserLabel.25")
                           : canLaunchSwapHousesVoteReason ==
                               "cannot-swap-with-yourself"
-                            ? "You cannot swap houses with yourself"
+                            ? t("auto2.UserLabel.26")
                             : canLaunchSwapHousesVoteReason ==
                                 "secret-objectives-chosen"
-                              ? `You or ${this.player!.user.name} has already chosen their secret objectives`
+                              ? t("vote.reason.secretObjectivesChosen", { user: this.player!.user.name })
                               : canLaunchSwapHousesVoteReason ==
                                   "forbidden-in-tournament-mode"
-                                ? "Swapping houses is not allowed in tournaments"
-                                : "Vote not possible"}
+                                ? t("auto2.UserLabel.27")
+                                : t("auto2.UserLabel.28")}
                 </Tooltip>
               }
               placement="auto"
@@ -355,8 +347,7 @@ export default class UserLabel extends Component<UserLabelProps> {
               onClick={() => this.onLaunchSwapHousesVoteClick()}
               disabled={!canLaunchSwapHousesVote}
             >
-              Launch a vote to swap houses with this player
-            </NavDropdown.Item>
+              {t("auto.UserLabel.6")}</NavDropdown.Item>
           </div>
         </ConditionalWrap>
         <NavDropdown.Divider />
@@ -367,18 +358,18 @@ export default class UserLabel extends Component<UserLabelProps> {
               overlay={
                 <Tooltip id="declare-winner-tooltip">
                   {canLaunchDeclareWinnerVoteReason == "ongoing-vote"
-                    ? "A vote is already ongoing"
+                    ? t("auto2.UserLabel.29")
                     : canLaunchDeclareWinnerVoteReason == "game-cancelled"
-                      ? "The game has been cancelled"
+                      ? t("auto2.UserLabel.30")
                       : canLaunchDeclareWinnerVoteReason == "game-ended"
-                        ? "The game has ended"
+                        ? t("auto2.UserLabel.31")
                         : canLaunchDeclareWinnerVoteReason ==
                             "only-players-can-vote"
-                          ? "Only players can vote"
+                          ? t("auto2.UserLabel.32")
                           : canLaunchDeclareWinnerVoteReason ==
                               "forbidden-in-tournament-mode"
-                            ? "Declaring a winner is not allowed in tournaments"
-                            : "Vote not possible"}
+                            ? t("auto2.UserLabel.33")
+                            : t("auto2.UserLabel.34")}
                 </Tooltip>
               }
               placement="auto"
@@ -393,8 +384,7 @@ export default class UserLabel extends Component<UserLabelProps> {
               onClick={() => this.onLaunchDeclareWinnerClick()}
               disabled={!canLaunchDeclareWinnerVote}
             >
-              Launch a vote to declare {this.player!.house.name} the winner
-            </NavDropdown.Item>
+              {tr("auto.UserLabel.7", { p0: (this.player!.house.name) })}</NavDropdown.Item>
           </div>
         </ConditionalWrap>
       </>
@@ -410,7 +400,7 @@ export default class UserLabel extends Component<UserLabelProps> {
 
     if (
       window.confirm(
-        `Do you want to launch a vote to replace ${this.player!.user.name} who controls house ${this.player!.house.name}?`,
+        t("vote.confirm.replacePlayer", { user: this.player!.user.name, house: this.player!.house.name }),
       )
     ) {
       this.ingame.launchReplacePlayerVote(this.player!);
@@ -426,7 +416,7 @@ export default class UserLabel extends Component<UserLabelProps> {
 
     if (
       window.confirm(
-        `Do you want to launch a vote to replace ${this.player!.user.name} who controls house ${this.player!.house.name} by a vassal?`,
+        t("vote.confirm.replaceByVassal", { user: this.player!.user.name, house: this.player!.house.name }),
       )
     ) {
       this.ingame.launchReplacePlayerByVassalVote(this.player!);
@@ -442,7 +432,7 @@ export default class UserLabel extends Component<UserLabelProps> {
 
     if (
       window.confirm(
-        `Do you want to launch a vote to swap houses with ${this.player!.user.name} who controls house ${this.player!.house.name}?`,
+        t("vote.confirm.swapHouses", { user: this.player!.user.name, house: this.player!.house.name }),
       )
     ) {
       this.ingame.launchSwapHousesVote(this.player!);
@@ -458,7 +448,7 @@ export default class UserLabel extends Component<UserLabelProps> {
 
     if (
       window.confirm(
-        `Do you want to launch a vote to declare House ${this.player!.house.name} the winner?`,
+        t("vote.confirm.declareWinner", { house: this.player!.house.name }),
       )
     ) {
       this.ingame.launchDeclareWinnerVote(this.player!.house);

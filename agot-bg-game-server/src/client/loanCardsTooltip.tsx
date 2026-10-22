@@ -3,6 +3,7 @@ import React from "react";
 import { Col, Row, Tooltip } from "react-bootstrap";
 import { OverlayChildren } from "react-bootstrap/esm/Overlay";
 import IronBank from "../common/ingame-game-state/game-data-structure/IronBank";
+import { t } from "./i18n/i18n";
 
 export default function renderLoanCardsToolTip(ironBank: IronBank): OverlayChildren {
     const loanSlots = ironBank.loanSlots.filter(lc => lc != null);
@@ -16,7 +17,7 @@ export default function renderLoanCardsToolTip(ironBank: IronBank): OverlayChild
                 {loanSlots.length > 0 &&
                     <Col xs={12} className="mb-3">
                         <Row className="justify-content-center mb-2">
-                            <h4 className='text-center'>Loan slots</h4>
+                            <h4 className='text-center'>{t("auto.loanCardsTooltip.0")}</h4>
                         </Row>
                         {loanSlots.map((lc, i) => <Row key={`loan-slot_${lc?.id}-${i}`}>
                             <b>{lc?.type.name}:&nbsp;</b><p className="white-space-pre-line">{lc?.type.description}</p>
@@ -25,7 +26,7 @@ export default function renderLoanCardsToolTip(ironBank: IronBank): OverlayChild
                 {loanDeck.length > 0 &&
                     <Col xs={12} className="mb-3">
                         <Row className="justify-content-center mb-2">
-                            <h4 className='text-center'>Available loans</h4>
+                            <h4 className='text-center'>{t("auto.loanCardsTooltip.1")}</h4>
                         </Row>
                         {loanDeck.map((lc, i) => <Row key={`available-loan_${lc.id}-${i}`}>
                             <b>{lc.type.name}:&nbsp;</b><p className="white-space-pre-line">{lc.type.description}</p>
@@ -34,7 +35,7 @@ export default function renderLoanCardsToolTip(ironBank: IronBank): OverlayChild
                 {purchasedLoans.size > 0 &&
                     <Col xs={12}>
                         <Row className="justify-content-center mb-2">
-                            <h4 className='text-center'>Purchased loans</h4>
+                            <h4 className='text-center'>{t("auto.loanCardsTooltip.2")}</h4>
                         </Row>
                         {purchasedLoans.map((house, loans) => <Col xs={12} key={`purchased-loans_${house.id}`}>
                             <Row className="justify-content-center mb-2">
@@ -48,7 +49,7 @@ export default function renderLoanCardsToolTip(ironBank: IronBank): OverlayChild
                 {discardedLoans.length > 0 &&
                     <Col xs={12} className="mb-3">
                         <Row className="justify-content-center mb-2">
-                            <h4 className='text-center'>Discarded loans</h4>
+                            <h4 className='text-center'>{t("auto.loanCardsTooltip.3")}</h4>
                         </Row>
                         {discardedLoans.map((lc, i) => <Row key={`discarded-loan-${lc.id}-${i}`}>
                             <b>{lc.type.name}:&nbsp;</b><p className="white-space-pre-line">{lc.type.description}</p>

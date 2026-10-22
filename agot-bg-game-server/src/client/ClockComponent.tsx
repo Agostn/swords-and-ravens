@@ -13,6 +13,7 @@ import GameEndedGameState from "../common/ingame-game-state/game-ended-game-stat
 import { secondsToString } from "./utils/secondsToString";
 import { GameResumed } from "../common/ingame-game-state/game-data-structure/GameLog";
 import { getTimeDeltaInSeconds } from "../utils/getElapsedSeconds";
+import { tr } from "./i18n/i18n";
 
 
 interface ClockComponentProps {
@@ -48,7 +49,7 @@ export default class ClockComponent extends Component<ClockComponentProps> {
                     placement="bottom"
                     overlay={
                         <Tooltip id="game-resumes-tooltip">
-                            <b>Countdown until game resumes</b> <small><i>(hh:mm:ss)</i></small>
+                            {tr("auto.ClockComponent.0")}
                         </Tooltip>}
                     popperConfig={{ modifiers: [preventOverflow] }}
                 >
@@ -82,7 +83,7 @@ export default class ClockComponent extends Component<ClockComponentProps> {
                     placement="bottom"
                     overlay={
                         <Tooltip id="total-playing-time-tooltip">
-                            <b>Total playing time</b> <small><i>(hh:mm)</i></small>
+                            {tr("auto.ClockComponent.1")}
                         </Tooltip>}
                     popperConfig={{ modifiers: [preventOverflow] }}
                 >
@@ -98,7 +99,7 @@ export default class ClockComponent extends Component<ClockComponentProps> {
                     placement="bottom"
                     overlay={
                         <Tooltip id="ready-check-countdown-tooltip">
-                            <b>Countdown for Ready Check</b>
+                            {tr("auto.ClockComponent.2")}
                         </Tooltip>}
                     popperConfig={{ modifiers: [preventOverflow] }}
                 >
@@ -111,7 +112,7 @@ export default class ClockComponent extends Component<ClockComponentProps> {
                     placement="bottom"
                     overlay={
                         <Tooltip id="westeros-time-tooltip">
-                            <b>Current UTC time</b> <small><i>(hh:mm)</i></small>
+                            {tr("auto.ClockComponent.3")}
                         </Tooltip>}
                     popperConfig={{ modifiers: [preventOverflow] }}
                 >

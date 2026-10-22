@@ -14,6 +14,7 @@ import Row from "react-bootstrap/Row";
 import { UnitOnMapProperties } from "../MapControls";
 import PartialRecursive from "../../utils/PartialRecursive";
 import TheFacelessMenGameState from "../../common/ingame-game-state/action-game-state/resolve-consolidate-power-game-state/execute-loan-game-state/the-faceless-men-game-state/TheFacelessMenGameState";
+import { t, tr } from "../i18n/i18n";
 
 @observer
 export default class TheFacelessMenComponent extends Component<
@@ -58,10 +59,7 @@ export default class TheFacelessMenComponent extends Component<
               style={{ paddingBottom: 10 }}
             >
               <div>
-                <b>
-                  {unit.type.name} <small>of {unit.allegiance.name}</small>
-                </b>{" "}
-                in <b>{region.name}</b>
+                {tr("auto.game-state-panel.TheFacelessMenComponent.0", { p0: (unit.type.name), p1: (unit.allegiance.name), p2: (<b>{region.name}</b>) })}
               </div>
             </Row>
           ))}
@@ -72,7 +70,7 @@ export default class TheFacelessMenComponent extends Component<
                 variant="success"
                 onClick={() => this.confirm()}
               >
-                Confirm
+                {t("common.confirm")}
               </Button>
             </Col>
             <Col xs="auto">
@@ -82,7 +80,7 @@ export default class TheFacelessMenComponent extends Component<
                 disabled={this.unitsToRemove.size == 0}
                 onClick={() => this.reset()}
               >
-                Reset
+                {t("common.reset")}
               </Button>
             </Col>
           </Row>
@@ -90,7 +88,7 @@ export default class TheFacelessMenComponent extends Component<
       </>
     ) : (
       <Col xs={12} className="text-center">
-        Waiting for {this.house.name}...
+        {t("common.waitingFor", { who: this.house.name })}
       </Col>
     );
   }
@@ -108,7 +106,7 @@ export default class TheFacelessMenComponent extends Component<
     if (
       this.unitsToRemove.size < 2 &&
       !window.confirm(
-        "You haven't selected all the targets yet. Are you sure you want to continue?"
+        t("auto2.game-state-panel.TheFacelessMenComponent.0")
       )
     ) {
       return;

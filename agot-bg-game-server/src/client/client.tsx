@@ -4,6 +4,10 @@ import * as React from "react";
 import "react-toastify/dist/ReactToastify.css";
 import "./style/custom.scss";
 import GameClient, {AuthData} from "./GameClient";
+import { installDataTranslations } from "./i18n/dataTranslations";
+
+// Traduz nomes de lugares, unidades e ordens vindos dos dados do jogo.
+installDataTranslations();
 
 function getAuthData(): AuthData {
     if (process.env.NODE_ENV == "development") {

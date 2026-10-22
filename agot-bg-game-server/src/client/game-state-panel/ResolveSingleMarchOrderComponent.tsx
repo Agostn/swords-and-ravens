@@ -23,6 +23,7 @@ import { preventOverflow } from "@popperjs/core";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faInfo } from "@fortawesome/free-solid-svg-icons";
 import { OverlayChildren } from "react-bootstrap/esm/Overlay";
+import { t, tr } from "../i18n/i18n";
 
 @observer
 export default class ResolveSingleMarchOrderComponent extends Component<
@@ -120,8 +121,7 @@ export default class ResolveSingleMarchOrderComponent extends Component<
     return (
       <>
         <Col xs={12} className="text-center">
-          House <b>{this.house.name}</b> must resolve one of its March Orders.
-        </Col>
+          {tr("auto.game-state-panel.ResolveSingleMarchOrderComponent.0", { p0: (<b>{this.house.name}</b>) })}</Col>
         {this.props.gameClient.doesControlHouse(this.house) ? (
           <>
             <Col xs={12}>
@@ -129,42 +129,27 @@ export default class ResolveSingleMarchOrderComponent extends Component<
                 <Col xs={10} className="text-center">
                   {this.selectedMarchOrderRegion == null ? (
                     <>
-                      Click on one of your March Orders.
-                      <br />
-                      Double-click the order to select all units in that area.
-                    </>
+                      {tr("auto.game-state-panel.ResolveSingleMarchOrderComponent.1")}</>
                   ) : this.selectedUnits.length == 0 &&
                     !allUnitsWillLeaveStartingRegion ? (
                     <>
-                      Click on a subset of the troops in{" "}
-                      <b>{this.selectedMarchOrderRegion.name}</b>.
-                      <br />
-                      Double-click the march order to select all units in that
-                      area.
-                    </>
+                      {tr("auto.game-state-panel.ResolveSingleMarchOrderComponent.2", { p0: (<b>{this.selectedMarchOrderRegion.name}</b>) })}</>
                   ) : this.selectedUnits.length != 0 &&
                     this.validTargetRegions.length == 0 &&
                     this.usedButStillValidTargetRegions.length == 0 ? (
                     <>
-                      There are no valid target areas for your current
-                      selection!
-                    </>
+                      {t("auto.game-state-panel.ResolveSingleMarchOrderComponent.3")}</>
                   ) : !allUnitsWillLeaveStartingRegion ? (
                     <>
-                      Click on a neighbouring area
-                      {!allUnitsSelected && (
+                      {t("auto.game-state-panel.ResolveSingleMarchOrderComponent.4")}{!allUnitsSelected && (
                         <>
-                          , or click on other units in{" "}
-                          <b>{this.selectedMarchOrderRegion.name}</b>
+                          {tr("auto.game-state-panel.ResolveSingleMarchOrderComponent.5", { p0: (<b>{this.selectedMarchOrderRegion.name}</b>) })}
                         </>
                       )}
                       .
                       {!allUnitsSelected && (
                         <>
-                          <br />
-                          Double-click the march order to select all units in
-                          that area.
-                        </>
+                          {tr("auto.game-state-panel.ResolveSingleMarchOrderComponent.6")}</>
                       )}
                     </>
                   ) : (
@@ -193,9 +178,7 @@ export default class ResolveSingleMarchOrderComponent extends Component<
               <Col xs={12} className="mt-2">
                 <div>
                   <div style={{ marginBottom: "20px" }}>
-                    Planned moves from{" "}
-                    <b>{this.selectedMarchOrderRegion.name}</b>:
-                  </div>
+                    {tr("auto.game-state-panel.ResolveSingleMarchOrderComponent.7", { p0: (<b>{this.selectedMarchOrderRegion.name}</b>) })}</div>
                   {this.plannedMoves.entries.map(([region, units]) => (
                     <div
                       key={`planned-moves_${region.id}`}
@@ -238,7 +221,7 @@ export default class ResolveSingleMarchOrderComponent extends Component<
                         onClick={() => this.confirm()}
                         disabled={this.leavePowerToken == undefined}
                       >
-                        Confirm
+                        {t("common.confirm")}
                       </Button>
                     </Col>
                     <Col xs="auto">
@@ -247,7 +230,7 @@ export default class ResolveSingleMarchOrderComponent extends Component<
                         variant="danger"
                         onClick={() => this.reset()}
                       >
-                        Reset
+                        {t("common.reset")}
                       </Button>
                     </Col>
                   </Row>
@@ -267,8 +250,7 @@ export default class ResolveSingleMarchOrderComponent extends Component<
                           this.callForSupportAgainstNeutralForces()
                         }
                       >
-                        Call for Support against Neutral Forces
-                      </Button>
+                        {t("auto.game-state-panel.ResolveSingleMarchOrderComponent.8")}</Button>
                     </Col>
                   </Row>
                 </Col>
@@ -276,13 +258,8 @@ export default class ResolveSingleMarchOrderComponent extends Component<
           </>
         ) : (
           <Col xs={12} className="text-center">
-            Waiting for{" "}
-            {
-              this.props.gameState.ingame.getControllerOfHouse(this.house).house
-                .name
-            }
-            ...
-          </Col>
+            {tr("auto.game-state-panel.ResolveSingleMarchOrderComponent.9", { p0: (this.props.gameState.ingame.getControllerOfHouse(this.house).house
+                .name) })}</Col>
         )}
       </>
     );
@@ -292,16 +269,13 @@ export default class ResolveSingleMarchOrderComponent extends Component<
     return (
       <Tooltip id={`color-legend-tooltip`} className="tooltip-w-100">
         <Col>
-          <h6>Highlighted units legend</h6>
+          <h6>{t("auto.game-state-panel.ResolveSingleMarchOrderComponent.10")}</h6>
           <div>
-            <b>White</b>: Selectable
-          </div>
+            {tr("auto.game-state-panel.ResolveSingleMarchOrderComponent.11")}</div>
           <div>
-            <b style={{ color: "yellow" }}>Yellow</b>: Selected
-          </div>
+            <b style={{ color: "yellow" }}>{t("auto.game-state-panel.ResolveSingleMarchOrderComponent.12")}</b>{t("auto.game-state-panel.ResolveSingleMarchOrderComponent.13")}</div>
           <div>
-            <b style={{ color: "red" }}>Red</b>: Attacking
-          </div>
+            <b style={{ color: "red" }}>{t("auto.game-state-panel.ResolveSingleMarchOrderComponent.14")}</b>{t("auto.game-state-panel.ResolveSingleMarchOrderComponent.15")}</div>
         </Col>
       </Tooltip>
     );
@@ -357,28 +331,21 @@ export default class ResolveSingleMarchOrderComponent extends Component<
       portRegion != null &&
       hasShipsInPort ? (
         <small>
-          If you do not leave a token, the ships in <b>{portRegion.name}</b>{" "}
-          will be destroyed.
-        </small>
+          {tr("auto.game-state-panel.ResolveSingleMarchOrderComponent.16", { p0: (<b>{portRegion.name}</b>) })}</small>
       ) : moveWillLoseControlOverRegion &&
         superTokenOwner != null &&
         superTokenOwner != unitOwner &&
         portRegion != null &&
         hasShipsInPort ? (
         <small>
-          If you do not leave a token, <b>{superTokenOwnerName}</b> will regain
-          control of <b>{startingRegion.name}</b> and capture your ships in{" "}
-          <b>{portRegion.name}</b>.
-        </small>
+          {tr("auto.game-state-panel.ResolveSingleMarchOrderComponent.17", { p0: (<b>{superTokenOwnerName}</b>), p1: (<b>{startingRegion.name}</b>), p2: (<b>{portRegion.name}</b>) })}</small>
       ) : moveWillLoseControlOverRegion &&
         superTokenOwner != null &&
         superTokenOwner != unitOwner &&
         portRegion != null &&
         !hasShipsInPort ? (
         <small>
-          If you do not leave a token, <b>{superTokenOwnerName}</b> will regain
-          control of <b>{startingRegion.name}</b>.
-        </small>
+          {tr("auto.game-state-panel.ResolveSingleMarchOrderComponent.18", { p0: (<b>{superTokenOwnerName}</b>), p1: (<b>{startingRegion.name}</b>) })}</small>
       ) : null;
 
     const showLeavePowerTokenPrompt = this.canLeavePowerTokenReason == "ok";
@@ -393,9 +360,7 @@ export default class ResolveSingleMarchOrderComponent extends Component<
                   <>
                     <Col xs={12} className="mb-0 pb-0">
                       <Form.Label>
-                        Do you want to leave a Power token in{" "}
-                        <b>{startingRegion.name}</b> to keep control?
-                      </Form.Label>
+                        {tr("auto.game-state-panel.ResolveSingleMarchOrderComponent.19", { p0: (<b>{startingRegion.name}</b>) })}</Form.Label>
                     </Col>
                     <Col xs={12} className="mt-0 pt-0">
                       <Form.Check
@@ -403,7 +368,7 @@ export default class ResolveSingleMarchOrderComponent extends Component<
                         name="leave-pt-radios"
                         inline
                         type="radio"
-                        label="Yes"
+                        label={t("auto2.game-state-panel.ResolveSingleMarchOrderComponent.0")}
                         checked={this.leavePowerToken}
                         onChange={() => this.onLeavePowerTokenChange(true)}
                       />
@@ -412,7 +377,7 @@ export default class ResolveSingleMarchOrderComponent extends Component<
                         name="leave-pt-radios"
                         inline
                         type="radio"
-                        label="No"
+                        label={t("auto2.game-state-panel.ResolveSingleMarchOrderComponent.1")}
                         checked={this.leavePowerToken == false}
                         onChange={() => this.onLeavePowerTokenChange(false)}
                       />
@@ -421,17 +386,12 @@ export default class ResolveSingleMarchOrderComponent extends Component<
                 ) : this.canLeavePowerTokenReason ==
                   "vassals-always-leave-power-token" ? (
                   <Col xs={12} className="text-center mb-0 pb-0">
-                    <small>
-                      Vassals automatically leave a Power token behind to
-                      maintain control of <b>{startingRegion.name}</b>.
-                    </small>
+                    {tr("auto.game-state-panel.ResolveSingleMarchOrderComponent.20", { p0: (<b>{startingRegion.name}</b>) })}
                   </Col>
                 ) : this.canLeavePowerTokenReason ==
                   "no-power-token-available" ? (
                   <Col xs={12} className="text-center mb-0 pb-0">
-                    You don&apos;t have any Power tokens left and will lose
-                    control over {startingRegion.name}!
-                  </Col>
+                    {tr("auto.game-state-panel.ResolveSingleMarchOrderComponent.21", { p0: (startingRegion.name) })}</Col>
                 ) : (
                   <></>
                 )}
@@ -545,7 +505,7 @@ export default class ResolveSingleMarchOrderComponent extends Component<
     }
 
     if (this.plannedMoves.size == 0) {
-      if (!confirm("Do you want to remove your March Order?")) {
+      if (!confirm(t("auto2.game-state-panel.ResolveSingleMarchOrderComponent.2"))) {
         return;
       }
     }

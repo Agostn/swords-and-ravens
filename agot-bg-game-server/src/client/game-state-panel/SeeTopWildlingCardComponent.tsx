@@ -9,6 +9,7 @@ import Button from "react-bootstrap/Button";
 import Row from "react-bootstrap/Row";
 import {SeeTopWildlingCardAction} from "../../messages/ClientMessage";
 import WildlingCardComponent from "./utils/WildlingCardComponent";
+import { t } from "../i18n/i18n";
 
 @observer
 export default class SeeTopWildlingCardComponent extends Component<GameStateComponentProps<SeeTopWildlingCardGameState>> {
@@ -16,10 +17,7 @@ export default class SeeTopWildlingCardComponent extends Component<GameStateComp
         return (
             <>
                 <Col xs={12} className="text-center">
-                    The holder of the Messenger Raven sees the card at the top of the Wildling deck
-                    and may choose to either leave it at the top, or put it at the bottom
-                    of the deck.
-                </Col>
+                    {t("auto.game-state-panel.SeeTopWildlingCardComponent.0")}</Col>
                 <Col xs={12}>
                 {this.props.gameState.topWildlingCard && (
                     <Row className="justify-content-center">
@@ -35,14 +33,14 @@ export default class SeeTopWildlingCardComponent extends Component<GameStateComp
                     {this.props.gameClient.doesControlHouse(this.props.gameState.ravenHolder) ? (
                         <Row className="justify-content-center">
                             <Col xs="auto">
-                                <Button type="button" onClick={() => this.choose(SeeTopWildlingCardAction.LEAVE_AT_THE_TOP)}>Keep at the Top</Button>
+                                <Button type="button" onClick={() => this.choose(SeeTopWildlingCardAction.LEAVE_AT_THE_TOP)}>{t("auto.game-state-panel.SeeTopWildlingCardComponent.1")}</Button>
                             </Col>
                             <Col xs="auto">
-                                <Button type="button" onClick={() => this.choose(SeeTopWildlingCardAction.PUT_AT_BOTTOM)}>Put at the Bottom</Button>
+                                <Button type="button" onClick={() => this.choose(SeeTopWildlingCardAction.PUT_AT_BOTTOM)}>{t("auto.game-state-panel.SeeTopWildlingCardComponent.2")}</Button>
                             </Col>
                         </Row>
                     ) : (
-                        <Col xs={12} className="text-center">Waiting for {this.props.gameState.ravenHolder.name}...</Col>
+                        <Col xs={12} className="text-center">{t("common.waitingFor", { who: this.props.gameState.ravenHolder.name })}</Col>
                     )}
                 </Col>
             </>

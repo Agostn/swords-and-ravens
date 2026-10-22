@@ -11,6 +11,7 @@ import SelectWesterosCardGameState
 import SelectWesterosCardComponent from "../SelectWesterosCardComponent";
 import SimpleChoiceGameState from "../../../common/ingame-game-state/simple-choice-game-state/SimpleChoiceGameState";
 import SimpleChoiceComponent from "../SimpleChoiceComponent";
+import { tr } from "../../i18n/i18n";
 
 @observer
 export default class RodrikTheReaderAbilityComponent extends Component<GameStateComponentProps<RodrikTheReaderAbilityGameState>> {
@@ -18,9 +19,7 @@ export default class RodrikTheReaderAbilityComponent extends Component<GameState
         return (
             <>
                 <Col xs={12} className="text-center">
-                    <b>Rodrik The Reader</b>: House <b>{this.props.gameState.childGameState.house.name}</b> may search any Westeros deck for a card
-                    of his choice and place the chosen card facedown on top of the deck.
-                </Col>
+                    {tr("auto.game-state-panel.house-card-abilities.RodrikTheReaderAbilityComponent.0", { p0: (<b>{this.props.gameState.childGameState.house.name}</b>) })}</Col>
                 {renderChildGameState(this.props, [
                     [SimpleChoiceGameState, SimpleChoiceComponent],
                     [SelectWesterosCardGameState, SelectWesterosCardComponent]

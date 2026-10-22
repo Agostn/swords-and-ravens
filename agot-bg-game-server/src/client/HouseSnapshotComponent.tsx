@@ -23,6 +23,7 @@ import { observer } from "mobx-react";
 import { OverlayChildren } from "react-bootstrap/esm/Overlay";
 import HouseSnapshot from "./game-replay/HouseSnapshot";
 import allKnownHouseCards from "./utils/houseCardHelper";
+import { t, tr } from "./i18n/i18n";
 
 interface HouseSnapshotComponentProps {
   house: HouseSnapshot;
@@ -108,13 +109,12 @@ export default class HouseSnapshotComponent extends Component<HouseSnapshotCompo
               {isVassal &&
                 (this.suzerainHouse ? (
                   <>
-                    Commanded by{" "}
-                    <span style={{ color: this.suzerainHouse.color }}>
+                    {tr("auto.HouseSnapshotComponent.0", { p0: (<span style={{ color: this.suzerainHouse.color }}>
                       {this.suzerainHouse.name}
-                    </span>
+                    </span>) })}
                   </>
                 ) : (
-                  <>Up for grab</>
+                  <>{t("auto.HouseSnapshotComponent.1")}</>
                 ))}
             </Col>
             <Col>

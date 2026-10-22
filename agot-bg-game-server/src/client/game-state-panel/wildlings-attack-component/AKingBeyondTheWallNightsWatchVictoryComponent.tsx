@@ -8,13 +8,14 @@ import SimpleChoiceComponent from "../SimpleChoiceComponent";
 import AKingBeyondTheWallNightsWatchVictoryGameState
     from "../../../common/ingame-game-state/westeros-game-state/wildlings-attack-game-state/a-king-beyond-the-wall-nights-watch-victory-game-state/AKingBeyondTheWallNightsWatchVictoryGameState";
 import { Col } from "react-bootstrap";
+import { t } from "../../i18n/i18n";
 
 @observer
 export default class AKingBeyondTheWallNightsWatchVictoryComponent extends Component<GameStateComponentProps<AKingBeyondTheWallNightsWatchVictoryGameState>> {
     render(): ReactNode {
         return (
             <>
-                <Col xs={12} className="text-center">The highest bidder moves their token to the top of one Influence track of their choice.</Col>
+                <Col xs={12} className="text-center">{t("auto.game-state-panel.wildlings-attack-component.AKingBeyondTheWallNightsWatchVictoryComponent.0")}</Col>
                 {renderChildGameState(this.props, [
                     [SimpleChoiceGameState, SimpleChoiceComponent]
                 ])}

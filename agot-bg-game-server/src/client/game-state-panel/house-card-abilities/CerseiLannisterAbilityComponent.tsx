@@ -10,6 +10,7 @@ import SimpleChoiceGameState from "../../../common/ingame-game-state/simple-choi
 import SimpleChoiceComponent from "../SimpleChoiceComponent";
 import SelectOrdersComponent from "../SelectOrdersComponent";
 import SelectOrdersGameState from "../../../common/ingame-game-state/select-orders-game-state/SelectOrdersGameState";
+import { tr } from "../../i18n/i18n";
 
 @observer
 export default class CerseiLannisterAbilityComponent extends Component<GameStateComponentProps<CerseiLannisterAbilityGameState>> {
@@ -17,9 +18,7 @@ export default class CerseiLannisterAbilityComponent extends Component<GameState
         return (
             <>
                 <Col xs={12} className="text-center">
-                    <b>Cersei Lannister:</b> House <b>{this.props.gameState.childGameState.house.name}</b> can choose to remove one order of
-                    House <b>{this.props.gameState.combatGameState.getEnemy(this.props.gameState.childGameState.house).name}</b>.
-                </Col>
+                    {tr("auto.game-state-panel.house-card-abilities.CerseiLannisterAbilityComponent.0", { p0: (<b>{this.props.gameState.childGameState.house.name}</b>), p1: (<b>{this.props.gameState.combatGameState.getEnemy(this.props.gameState.childGameState.house).name}</b>) })}</Col>
                 {renderChildGameState(this.props, [
                     [SimpleChoiceGameState, SimpleChoiceComponent],
                     [SelectOrdersGameState, SelectOrdersComponent]

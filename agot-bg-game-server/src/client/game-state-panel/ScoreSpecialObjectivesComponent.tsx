@@ -5,6 +5,7 @@ import React from "react";
 import { Button, Col, Row } from "react-bootstrap";
 import ScoreSpecialObjectivesGameState from "../../common/ingame-game-state/action-game-state/score-objectives-game-state/score-special-objectives-game-state/ScoreSpecialObjectivesGameState";
 import Player from "../../common/ingame-game-state/Player";
+import { t } from "../i18n/i18n";
 
 @observer
 export default class ScoreSpecialObjectivesComponent extends Component<GameStateComponentProps<ScoreSpecialObjectivesGameState>> {
@@ -23,26 +24,25 @@ export default class ScoreSpecialObjectivesComponent extends Component<GameState
     render(): ReactNode {
         return <>
             <Col xs={12} className="text-center">
-                Each house may choose to score their Special Objective card if the criterion described is fulfilled.
-            </Col>
+                {t("auto.game-state-panel.ScoreSpecialObjectivesComponent.0")}</Col>
             {this.authenticatedPlayer && this.mustChoose && <Col xs={12}>
                 <Row className="justify-content-center">
                     <Col xs="auto">
-                        <Button type="button" onClick={() => this.choose(true)}>Score</Button>
+                        <Button type="button" onClick={() => this.choose(true)}>{t("auto.game-state-panel.ScoreSpecialObjectivesComponent.1")}</Button>
                     </Col>
                     <Col xs="auto">
-                        <Button type="button" onClick={() => this.choose(false)}>Don&apos;t score</Button>
+                        <Button type="button" onClick={() => this.choose(false)}>{t("auto.game-state-panel.ScoreSpecialObjectivesComponent.2")}</Button>
                     </Col>
                 </Row>
             </Col>}
             <Col xs={12} className="text-center">
-                Waiting for {this.gameState.notReadyHouses.map(h => h.name).join(", ")}
+                {t("common.waitingFor", { who: this.gameState.notReadyHouses.map(h => h.name).join(", ") })}
             </Col>
         </>;
     }
 
     choose(score: boolean): void {
-        if (score == false && !window.confirm("Are you sure not to score your Special Objective card?")) {
+        if (score == false && !window.confirm(t("auto2.game-state-panel.ScoreSpecialObjectivesComponent.0"))) {
             return;
         }
 

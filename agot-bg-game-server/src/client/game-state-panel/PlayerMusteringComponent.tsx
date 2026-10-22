@@ -31,6 +31,7 @@ import {
 import { preventOverflow } from "@popperjs/core";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import UnitIconComponent from "../UnitIconComponent";
+import { t, tr } from "../i18n/i18n";
 
 type MusteringPopoverTrigger = "region" | "order";
 
@@ -66,40 +67,28 @@ export default class PlayerMusteringComponent extends Component<
         <Col xs={12} className="text-center">
           {this.isStarredConsolidatePowerMusteringType ? (
             <>
-              House <b>{this.house.name}</b> can resolve their Special
-              Consolidate Power order in{" "}
-              {this.props.gameState.regions[0]?.name ?? "Unknown"}.
-            </>
+              {tr("auto.game-state-panel.PlayerMusteringComponent.0", { p0: (<b>{this.house.name}</b>), p1: (this.props.gameState.regions[0]?.name ?? t("auto2.game-state-panel.PlayerMusteringComponent.0")) })}</>
           ) : this.props.gameState.type ==
             PlayerMusteringType.MUSTERING_WESTEROS_CARD ? (
             this.props.gameState.ingame.isVassalHouse(this.house) ? (
               <>
-                Vassal house <b>{this.house.name}</b> can muster units in their
-                home area.
-              </>
+                {tr("auto.game-state-panel.PlayerMusteringComponent.1", { p0: (<b>{this.house.name}</b>) })}</>
             ) : (
               <>
-                Players can muster units in their controlled Strongholds and
-                Castles.
-              </>
+                {t("auto.game-state-panel.PlayerMusteringComponent.2")}</>
             )
           ) : this.props.gameState.type ==
             PlayerMusteringType.THE_HORDE_DESCENDS_WILDLING_CARD ? (
             <>
-              House <b>{this.house.name}</b> can muster units in one of their
-              controlled Strongholds or Castles.
-            </>
+              {tr("auto.game-state-panel.PlayerMusteringComponent.3", { p0: (<b>{this.house.name}</b>) })}</>
           ) : this.props.gameState.type ==
             PlayerMusteringType.DEFENSE_MUSTER_ORDER ? (
             <>
-              Vassal house <b>{this.house.name}</b> can resolve their
-              Defense/Muster order in{" "}
-              {this.props.gameState.regions[0]?.name ?? "Unknown"}.
-            </>
+              {tr("auto.game-state-panel.PlayerMusteringComponent.4", { p0: (<b>{this.house.name}</b>), p1: (this.props.gameState.regions[0]?.name ?? t("auto2.game-state-panel.PlayerMusteringComponent.1")) })}</>
           ) : (
             this.props.gameState.type ==
               PlayerMusteringType.RALLY_THE_MEN_WESTEROS_CARD && (
-              <>Players can muster units in their controlled Castles.</>
+              <>{t("auto.game-state-panel.PlayerMusteringComponent.5")}</>
             )
           )}
         </Col>
@@ -109,22 +98,25 @@ export default class PlayerMusteringComponent extends Component<
               <Col xs={12}>
                 <>
                   {this.musterings.values[0].length > 0 && (
-                    <p>Your recruitments:</p>
+                    <p>{t("auto.game-state-panel.PlayerMusteringComponent.6")}</p>
                   )}
                   {this.musterings.entries.map(([r, musterings]) => (
                     <div key={`planned-recruitments_${r.id}`}>
-                      From <b>{r.name}</b>
-                      <ul>
+                      {tr("auto.game-state-panel.PlayerMusteringComponent.7", { p0: (<b>{r.name}</b>), p1: (<ul>
                         {musterings.map(({ region, from, to }, i) => (
                           <li
                             onClick={() => this.removeMustering(musterings, i)}
                             key={`planned-mustering_${i}`}
                           >
-                            {from ? "Upgrading to " : "Recruiting "} a {to.name}
-                            {r != region && " in " + region.name}
+                            {from
+                              ? t("mustering.upgradingTo", { unit: to.name })
+                              : t("mustering.recruiting", { unit: to.name })}
+                            {r != region &&
+                              t("auto2.game-state-panel.PlayerMusteringComponent.4") +
+                                region.name}
                           </li>
                         ))}
-                      </ul>
+                      </ul>) })}
                     </div>
                   ))}
                 </>
@@ -139,24 +131,22 @@ export default class PlayerMusteringComponent extends Component<
               <Col xs={12} className="text-center">
                 {this.props.gameState.regions.length == 1 ? (
                   <>
-                    Click{" "}
+                    {t("auto.game-state-panel.PlayerMusteringComponent.8")}{" "}
                     {this.isStarredConsolidatePowerMusteringType ? (
                       <>
-                        the <b>Special Consolidate Power</b> order or{" "}
+                        {tr("auto.game-state-panel.PlayerMusteringComponent.9")}{" "}
                       </>
                     ) : this.props.gameState.type ==
                       PlayerMusteringType.DEFENSE_MUSTER_ORDER ? (
                       <>
-                        the <b>Defense/Muster</b> order or{" "}
+                        {tr("auto.game-state-panel.PlayerMusteringComponent.10")}{" "}
                       </>
                     ) : (
                       <></>
                     )}
-                    into <b>{this.props.gameState.regions[0].name}</b> to
-                    initiate a recruitment from there.
-                  </>
+                    {tr("auto.game-state-panel.PlayerMusteringComponent.11", { p0: (<b>{this.props.gameState.regions[0].name}</b>) })}</>
                 ) : (
-                  <>Click on a region to initiate a recruitment from there.</>
+                  <>{t("auto.game-state-panel.PlayerMusteringComponent.12")}</>
                 )}
               </Col>
             )}
@@ -169,7 +159,7 @@ export default class PlayerMusteringComponent extends Component<
                     disabled={!this.canSubmit()}
                     onClick={() => this.submit()}
                   >
-                    Submit
+                    {t("common.submit")}
                   </Button>
                 </Col>
                 <Col xs="auto">
@@ -179,7 +169,7 @@ export default class PlayerMusteringComponent extends Component<
                     disabled={this.musterings.size == 0}
                     onClick={() => this.reset()}
                   >
-                    Reset
+                    {t("common.reset")}
                   </Button>
                 </Col>
               </Row>
@@ -187,10 +177,7 @@ export default class PlayerMusteringComponent extends Component<
             {this.isStarredConsolidatePowerMusteringType &&
               this.musterings.size == 0 && (
                 <Col xs={12} className="text-center">
-                  <small>
-                    Note: If you dont recruit any units, your order will be
-                    resolved to gain Power&nbsp;tokens.
-                  </small>
+                  {tr("auto.game-state-panel.PlayerMusteringComponent.13")}
                 </Col>
               )}
           </>
@@ -198,13 +185,8 @@ export default class PlayerMusteringComponent extends Component<
         {(!this.doesControlCurrentHouse ||
           this.props.gameState.ingame.isVassalHouse(this.house)) && (
           <Col xs={12} className="text-center">
-            Waiting for{" "}
-            {
-              this.props.gameState.ingame.getControllerOfHouse(this.house).house
-                .name
-            }
-            ...
-          </Col>
+            {tr("auto.game-state-panel.PlayerMusteringComponent.14", { p0: (this.props.gameState.ingame.getControllerOfHouse(this.house).house
+                .name) })}</Col>
         )}
       </>
     );
@@ -290,7 +272,7 @@ export default class PlayerMusteringComponent extends Component<
     if (this.props.gameState.anyUsablePointsLeft(this.musterings)) {
       if (
         !confirm(
-          "You have not used all of your mustering points. Continue anyway?"
+          t("auto2.game-state-panel.PlayerMusteringComponent.5")
         )
       ) {
         return;
@@ -399,7 +381,7 @@ export default class PlayerMusteringComponent extends Component<
               type="button"
               variant="link"
               className="text-light p-1"
-              aria-label="Close mustering popover"
+              aria-label={t("auto2.game-state-panel.PlayerMusteringComponent.6")}
               onClick={() => this.setOpenMusteringPopover(null)}
             >
               <FontAwesomeIcon icon={faTimes} />
@@ -487,7 +469,7 @@ export default class PlayerMusteringComponent extends Component<
         <UnitIconComponent house={this.house} unitType={rule.to} />
         {initiatingRegion != rule.region && (
           <>
-            &nbsp;to&nbsp;<b>{rule.region.name}</b>
+            {" "}{tr("auto.game-state-panel.PlayerMusteringComponent.15", { p0: (<b>{rule.region.name}</b>) })}
           </>
         )}
         <>

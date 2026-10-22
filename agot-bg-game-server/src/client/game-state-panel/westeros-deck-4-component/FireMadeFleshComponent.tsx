@@ -9,6 +9,7 @@ import SimpleChoiceComponent from "../SimpleChoiceComponent";
 import SelectUnitsGameState from "../../../common/ingame-game-state/select-units-game-state/SelectUnitsGameState";
 import SelectUnitsComponent from "../SelectUnitsComponent";
 import { Col } from "react-bootstrap";
+import { tr } from "../../i18n/i18n";
 
 @observer
 export default class FireMadeFleshComponent extends Component<GameStateComponentProps<FireMadeFleshGameState>> {
@@ -16,8 +17,7 @@ export default class FireMadeFleshComponent extends Component<GameStateComponent
         return (
             <>
                 {this.props.gameState.childGameState instanceof SelectUnitsGameState && <Col className="text-center">
-                    House <b>{this.props.gameState.childGameState.house.name}</b> must select a dragon to destroy.
-                </Col>}
+                    {tr("auto.game-state-panel.westeros-deck-4-component.FireMadeFleshComponent.0", { p0: (<b>{this.props.gameState.childGameState.house.name}</b>) })}</Col>}
                 {renderChildGameState(this.props, [
                     [SimpleChoiceGameState, SimpleChoiceComponent],
                     [SelectUnitsGameState, SelectUnitsComponent]

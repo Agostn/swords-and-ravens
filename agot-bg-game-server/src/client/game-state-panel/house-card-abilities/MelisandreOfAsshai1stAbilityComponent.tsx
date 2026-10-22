@@ -9,6 +9,7 @@ import SelectHouseCardGameState from "../../../common/ingame-game-state/select-h
 import SelectHouseCardComponent from "../SelectHouseCardComponent";
 import SimpleChoiceGameState from "../../../common/ingame-game-state/simple-choice-game-state/SimpleChoiceGameState";
 import SimpleChoiceComponent from "../SimpleChoiceComponent";
+import { tr } from "../../i18n/i18n";
 
 @observer
 export default class MelisandreOfAsshai1stAbilityComponent extends Component<
@@ -18,18 +19,13 @@ export default class MelisandreOfAsshai1stAbilityComponent extends Component<
     return (
       <>
         <Col xs={12} className="text-center">
-          <b>Melisandre of Asshai</b>: House{" "}
-          <b>{this.props.gameState.childGameState.house.name}</b> may choose to
-          expend one Power token to discard one House card of House{" "}
-          <b>
+          {tr("auto.game-state-panel.house-card-abilities.MelisandreOfAsshai1stAbilityComponent.0", { p0: (<b>{this.props.gameState.childGameState.house.name}</b>), p1: (<b>
             {
               this.props.gameState.combat.getEnemy(
                 this.props.gameState.childGameState.house
               ).name
             }
-          </b>
-          .
-        </Col>
+          </b>) })}</Col>
         {renderChildGameState(this.props, [
           [SimpleChoiceGameState, SimpleChoiceComponent],
           [SelectHouseCardGameState, SelectHouseCardComponent]

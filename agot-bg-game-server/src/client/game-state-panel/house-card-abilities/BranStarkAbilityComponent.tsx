@@ -10,6 +10,7 @@ import SelectHouseCardComponent from "../SelectHouseCardComponent";
 import SimpleChoiceGameState from "../../../common/ingame-game-state/simple-choice-game-state/SimpleChoiceGameState";
 import SimpleChoiceComponent from "../SimpleChoiceComponent";
 import BranStarkAbilityGameState from "../../../common/ingame-game-state/action-game-state/resolve-march-order-game-state/combat-game-state/post-combat-game-state/after-combat-house-card-abilities-game-state/bran-stark-ability-game-state/BranStarkAbilityGameState";
+import { tr } from "../../i18n/i18n";
 
 @observer
 export default class BranStarkAbilityComponent extends Component<GameStateComponentProps<BranStarkAbilityGameState>> {
@@ -17,8 +18,7 @@ export default class BranStarkAbilityComponent extends Component<GameStateCompon
         return (
             <>
                 <Col xs={12} className="text-center">
-                    <b>Bran Stark</b>: House <b>{this.props.gameState.childGameState.house.name}</b> may return one House card from their discard pile.
-                </Col>
+                    {tr("auto.game-state-panel.house-card-abilities.BranStarkAbilityComponent.0", { p0: (<b>{this.props.gameState.childGameState.house.name}</b>) })}</Col>
                 {renderChildGameState(this.props, [
                     [SimpleChoiceGameState, SimpleChoiceComponent],
                     [SelectHouseCardGameState, SelectHouseCardComponent]

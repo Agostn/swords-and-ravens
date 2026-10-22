@@ -77,6 +77,7 @@ import { houseThemes } from "./utils/SfxManager";
 import LoanCardComponent from "./game-state-panel/utils/LoanCardComponent";
 import { customsOfficer } from "../common/ingame-game-state/game-data-structure/loan-card/loanCardTypes";
 import { LoanPurchased } from "../common/ingame-game-state/game-data-structure/GameLog";
+import { t, tr } from "./i18n/i18n";
 
 export interface ColumnOrders {
   gameStateColumn: number;
@@ -156,19 +157,19 @@ export default class IngameComponent extends Component<IngameComponentProps> {
     }
     return [
       {
-        name: "Iron Throne",
+        name: t("tracks.ironThrone"),
         trackToShow: influenceTracks[0],
         realTrack: this.game.influenceTracks[0],
         stars: false
       },
       {
-        name: "Fiefdoms",
+        name: t("tracks.fiefdoms"),
         trackToShow: influenceTracks[1],
         realTrack: this.game.influenceTracks[1],
         stars: false
       },
       {
-        name: "King's Court",
+        name: t("tracks.kingsCourt"),
         trackToShow: influenceTracks[2],
         realTrack: this.game.influenceTracks[2],
         stars: true
@@ -392,7 +393,7 @@ export default class IngameComponent extends Component<IngameComponentProps> {
             placement="auto"
             overlay={
               <Tooltip id="ingame-mute-tooltip">
-                {this.gameClient.muted ? "Unmute" : "Mute"}
+                {this.gameClient.muted ? t("lobby.unmute") : t("lobby.mute")}
               </Tooltip>
             }
           >
@@ -549,37 +550,24 @@ export default class IngameComponent extends Component<IngameComponentProps> {
           }}
         >
           <h3 className="text-center" style={{ color: "red" }}>
-            Useful hint!
+            {t("ingame.hint.title")}
             <br />
-            <small>Please read...</small>
+            <small>{t("ingame.hint.subtitle")}</small>
           </h3>
         </Modal.Header>
         <Modal.Body>
           {this.showMapScrollbarInfo ? (
             <div className="text-center">
-              The game is optimized for HD resolutions.
-              <br />
-              You are using a lower display resolution and should try different
-              combinations of your browser&apos;s zoom level and the{" "}
-              <b>Map scrollbar</b> setting to ensure a pleasent gaming
-              experience. The setting can be found in the tab with the gear
-              icon.
+              {tr("ingame.hint.mapScrollbar")}
               <br />
               <br />
               <small>
-                <i>
-                  In your profile settings you can change the default behavior
-                  for this setting
-                  <br />
-                  for all <b>future</b> games.
-                </i>
+                <i>{tr("ingame.hint.profileDefault")}</i>
               </small>
             </div>
           ) : (
             <div className="text-center">
-              Unfortunately, your display resolution is too low to show all
-              elements in a row. Use the function of your browser to zoom out
-              and avoid scrolling all the time.
+              {t("ingame.hint.browserZoom")}
             </div>
           )}
         </Modal.Body>
@@ -595,7 +583,7 @@ export default class IngameComponent extends Component<IngameComponentProps> {
             type="switch"
             label={
               <label htmlFor="dont-show-again-setting">
-                Don&apos;t show again
+                {t("ingame.hint.dontShowAgain")}
               </label>
             }
             onChange={(evt) => {
@@ -611,7 +599,7 @@ export default class IngameComponent extends Component<IngameComponentProps> {
             variant="primary"
             onClick={() => this.closeModal()}
           >
-            Ok
+            {t("common.ok")}
           </Button>
         </Modal.Footer>
       </Modal>
@@ -651,21 +639,21 @@ export default class IngameComponent extends Component<IngameComponentProps> {
         <Col className="m-2 p-2">
           <VolumeSliderComponent
             volume={this.gameClient.notificationsVolume * 100}
-            name="Notifications"
+            name={t("lobby.volume.notifications")}
             onVolumeChange={(val) =>
               this.gameClient.sfxManager.notificationVolumeChanged(val / 100)
             }
           />
           <VolumeSliderComponent
             volume={this.gameClient.musicVolume * 100}
-            name="Music"
+            name={t("lobby.volume.music")}
             onVolumeChange={(val) =>
               this.gameClient.sfxManager.musicVolumeChanged(val / 100)
             }
           />
           <VolumeSliderComponent
             volume={this.gameClient.sfxVolume * 100}
-            name="Sfx"
+            name={t("lobby.volume.sfx")}
             onVolumeChange={(val) =>
               this.gameClient.sfxManager.sfxVolumeChanged(val / 100)
             }
@@ -684,23 +672,23 @@ export default class IngameComponent extends Component<IngameComponentProps> {
                     overlay={
                       <Tooltip id="cancel-game-vote-tooltip">
                         {canLaunchCancelGameVote
-                          ? "Launch a vote to cancel the game"
+                          ? t("vote.launch.cancel")
                           : canLaunchCancelGameVoteReason ==
                               "only-players-can-vote"
-                            ? "Only participating players can vote"
+                            ? t("vote.reason.onlyPlayers")
                             : canLaunchCancelGameVoteReason ==
                                 "already-existing"
-                              ? "A vote to cancel the game is already ongoing"
+                              ? t("vote.reason.cancelOngoing")
                               : canLaunchCancelGameVoteReason ==
                                   "already-cancelled"
-                                ? "Game has already been cancelled"
+                                ? t("vote.reason.alreadyCancelled")
                                 : canLaunchCancelGameVoteReason ==
                                     "already-ended"
-                                  ? "Game has already ended"
+                                  ? t("vote.reason.alreadyEnded")
                                   : canLaunchCancelGameVoteReason ==
                                       "forbidden-in-tournament-mode"
-                                    ? "Canceling games is not allowed in tournaments"
-                                    : "Vote not possible"}
+                                    ? t("vote.reason.cancelTournament")
+                                    : t("vote.reason.notPossible")}
                       </Tooltip>
                     }
                   >
@@ -720,28 +708,28 @@ export default class IngameComponent extends Component<IngameComponentProps> {
                     overlay={
                       <Tooltip id="end-game-vote-tooltip">
                         {canLaunchEndGameVote
-                          ? "Launch a vote to end the game after the current round"
+                          ? t("vote.launch.end")
                           : canLaunchEndGameVoteReason == "game-paused"
-                            ? "The game must be resumed first"
+                            ? t("vote.reason.gamePaused")
                             : canLaunchEndGameVoteReason ==
                                 "only-players-can-vote"
-                              ? "Only participating players can vote"
+                              ? t("vote.reason.onlyPlayers")
                               : canLaunchEndGameVoteReason ==
                                   "already-last-turn"
-                                ? "It is already the last round"
+                                ? t("vote.reason.lastRound")
                                 : canLaunchEndGameVoteReason ==
                                     "already-existing"
-                                  ? "A vote to end the game is already ongoing"
+                                  ? t("vote.reason.endOngoing")
                                   : canLaunchEndGameVoteReason ==
                                       "already-cancelled"
-                                    ? "Game has already been cancelled"
+                                    ? t("vote.reason.alreadyCancelled")
                                     : canLaunchEndGameVoteReason ==
                                         "already-ended"
-                                      ? "Game has already ended"
+                                      ? t("vote.reason.alreadyEnded")
                                       : canLaunchEndGameVoteReason ==
                                           "forbidden-in-tournament-mode"
-                                        ? "Early end is not allowed in tournaments"
-                                        : "Vote not possible"}
+                                        ? t("vote.reason.endTournament")
+                                        : t("vote.reason.notPossible")}
                       </Tooltip>
                     }
                   >
@@ -762,20 +750,20 @@ export default class IngameComponent extends Component<IngameComponentProps> {
                       overlay={
                         <Tooltip id="pause-game-vote-tooltip">
                           {canLaunchPauseGameVote
-                            ? "Launch a vote to pause the game"
+                            ? t("vote.launch.pause")
                             : canLaunchPauseGameVoteReason ==
                                 "only-players-can-vote"
-                              ? "Only participating players can vote"
+                              ? t("vote.reason.onlyPlayers")
                               : canLaunchPauseGameVoteReason ==
                                   "already-existing"
-                                ? "A vote to pause the game is already ongoing"
+                                ? t("vote.reason.pauseOngoing")
                                 : canLaunchPauseGameVoteReason ==
                                     "already-cancelled"
-                                  ? "Game has already been cancelled"
+                                  ? t("vote.reason.alreadyCancelled")
                                   : canLaunchPauseGameVoteReason ==
                                       "already-ended"
-                                    ? "Game has already ended"
-                                    : "Vote not possible"}
+                                    ? t("vote.reason.alreadyEnded")
+                                    : t("vote.reason.notPossible")}
                         </Tooltip>
                       }
                     >
@@ -797,20 +785,20 @@ export default class IngameComponent extends Component<IngameComponentProps> {
                       overlay={
                         <Tooltip id="resume-game-vote-tooltip">
                           {canLaunchResumeGameVote
-                            ? "Launch a vote to resume the game"
+                            ? t("vote.launch.resume")
                             : canLaunchResumeGameVoteReason ==
                                 "only-players-can-vote"
-                              ? "Only participating players can vote"
+                              ? t("vote.reason.onlyPlayers")
                               : canLaunchResumeGameVoteReason ==
                                   "already-existing"
-                                ? "A vote to resume the game is already ongoing"
+                                ? t("vote.reason.resumeOngoing")
                                 : canLaunchResumeGameVoteReason ==
                                     "already-cancelled"
-                                  ? "Game has already been cancelled"
+                                  ? t("vote.reason.alreadyCancelled")
                                   : canLaunchResumeGameVoteReason ==
                                       "already-ended"
-                                    ? "Game has already ended"
-                                    : "Vote not possible"}
+                                    ? t("vote.reason.alreadyEnded")
+                                    : t("vote.reason.notPossible")}
                         </Tooltip>
                       }
                     >
@@ -832,35 +820,35 @@ export default class IngameComponent extends Component<IngameComponentProps> {
                       overlay={
                         <Tooltip id="extend-clocks-vote-tooltip">
                           {canLaunchExtendPlayerClocksVote
-                            ? "Launch a vote to extend all player clocks by 15 minutes"
+                            ? t("vote.launch.extendClocks")
                             : canLaunchExtendPlayerClocksVoteReason ==
                                 "game-paused"
-                              ? "The game must be resumed first"
+                              ? t("vote.reason.gamePaused")
                               : canLaunchExtendPlayerClocksVoteReason ==
                                   "only-players-can-vote"
-                                ? "Only participating players can vote"
+                                ? t("vote.reason.onlyPlayers")
                                 : canLaunchExtendPlayerClocksVoteReason ==
                                     "already-existing"
-                                  ? "A vote to extend all clocks is already ongoing"
+                                  ? t("vote.reason.extendOngoing")
                                   : canLaunchExtendPlayerClocksVoteReason ==
                                       "already-extended"
-                                    ? "Player clocks have already been extended"
+                                    ? t("vote.reason.alreadyExtended")
                                     : canLaunchExtendPlayerClocksVoteReason ==
                                         "max-vote-count-reached"
-                                      ? "The maximum amount of votes was reached"
+                                      ? t("vote.reason.maxVotes")
                                       : canLaunchExtendPlayerClocksVoteReason ==
                                           "already-cancelled"
-                                        ? "Game has already been cancelled"
+                                        ? t("vote.reason.alreadyCancelled")
                                         : canLaunchExtendPlayerClocksVoteReason ==
                                             "already-ended"
-                                          ? "Game has already ended"
+                                          ? t("vote.reason.alreadyEnded")
                                           : canLaunchExtendPlayerClocksVoteReason ==
                                               "forbidden-in-tournament-mode"
-                                            ? "Extending player clocks is not allowed in tournaments"
+                                            ? t("vote.reason.extendTournament")
                                             : canLaunchExtendPlayerClocksVoteReason ==
                                                 "forbidden-by-host"
-                                              ? "Extension of player clocks was deactivated by the game host"
-                                              : "Vote not possible"}
+                                              ? t("vote.reason.extendForbiddenByHost")
+                                              : t("vote.reason.notPossible")}
                         </Tooltip>
                       }
                     >
@@ -908,7 +896,9 @@ export default class IngameComponent extends Component<IngameComponentProps> {
       <div>
         <div style={{ display: "flex", justifyContent: "center" }}>
           <h5>
-            Battle results for <b>{houseCombatDatas[1].region.name}</b>
+            {tr("ingame.toast.battleResults", {
+              region: <b>{houseCombatDatas[1].region.name}</b>
+            })}
           </h5>
         </div>
         <div style={{ display: "flex", justifyContent: "center" }}>
@@ -916,7 +906,9 @@ export default class IngameComponent extends Component<IngameComponentProps> {
         </div>
         {winner && (
           <p className="text-center mt-2">
-            Winner: <b style={{ color: winner.color }}>{winner.name}</b>
+            {tr("ingame.toast.winner", {
+              house: <b style={{ color: winner.color }}>{winner.name}</b>
+            })}
           </p>
         )}
       </div>
@@ -940,7 +932,9 @@ export default class IngameComponent extends Component<IngameComponentProps> {
     return (
       <div>
         <h5 className="text-center mb-2">
-          {highestBidder ? "Night's watch victory" : "Wildling victory"}
+          {highestBidder
+            ? t("wildlings.nightsWatchVictory")
+            : t("wildlings.wildlingVictory")}
         </h5>
         <div className="d-flex justify-content-center">
           <WildlingCardComponent cardType={wildlingCard} />
@@ -955,14 +949,22 @@ export default class IngameComponent extends Component<IngameComponentProps> {
         )}
         {highestBidder && (
           <p className="text-center mt-2">
-            Highest Bidder:{" "}
-            <b style={{ color: highestBidder.color }}>{highestBidder.name}</b>
+            {tr("wildlings.highestBidderIs", {
+              house: (
+                <b style={{ color: highestBidder.color }}>
+                  {highestBidder.name}
+                </b>
+              )
+            })}
           </p>
         )}
         {lowestBidder && (
           <p className="text-center mt-2">
-            Lowest Bidder:{" "}
-            <b style={{ color: lowestBidder.color }}>{lowestBidder.name}</b>
+            {tr("wildlings.lowestBidderIs", {
+              house: (
+                <b style={{ color: lowestBidder.color }}>{lowestBidder.name}</b>
+              )
+            })}
           </p>
         )}
       </div>
@@ -1056,25 +1058,28 @@ export default class IngameComponent extends Component<IngameComponentProps> {
         const house = this.game.houses.get(log.house);
         toast(
           <div>
-            <h5 className="text-center mb-2">Customs Officer purchased</h5>
+            <h5 className="text-center mb-2">
+              {t("ingame.toast.customsOfficerPurchased")}
+            </h5>
             <div className="d-flex justify-content-center">
               <LoanCardComponent loanCard={customsOfficer} />
             </div>
             <div className="d-flex justify-content-center">
               {loanPurchased && region ? (
                 <p className="text-center mt-3">
-                  House <b>{house.name}</b> resolved an <b>Iron Bank</b> order
-                  in <b>{region.name}</b>,<br />
-                  paying <b>{loanPurchased.paid}</b> Power tokens for the{" "}
-                  <b>Customs Officer</b>.<br />
-                  They gained <b>{log.gained}</b> Power&nbsp;token
-                  {log.gained != 1 ? "s" : ""}.
+                  {tr("ingame.toast.customsOfficerDetails", {
+                    house: <b>{house.name}</b>,
+                    region: <b>{region.name}</b>,
+                    paid: <b>{loanPurchased.paid}</b>,
+                    gained: log.gained
+                  })}
                 </p>
               ) : (
                 <p className="text-center mt-3">
-                  House <b>{house.name}</b> gained <b>{log.gained}</b>{" "}
-                  Power&nbsp;token
-                  {log.gained != 1 ? "s" : ""}.
+                  {tr("ingame.toast.powerTokensGained", {
+                    house: <b>{house.name}</b>,
+                    gained: log.gained
+                  })}
                 </p>
               )}
             </div>
@@ -1091,7 +1096,7 @@ export default class IngameComponent extends Component<IngameComponentProps> {
             <Card.Body className="d-flex align-items-center">
               <img src={stopwatchImage} width={64} />
               <h4 className="d-inline ml-3" style={{ color: "white" }}>
-                Game has been paused!
+                {t("ingame.toast.paused")}
               </h4>
             </Card.Body>
           </Card>
@@ -1111,7 +1116,7 @@ export default class IngameComponent extends Component<IngameComponentProps> {
             <Card.Body className="d-flex align-items-center">
               <img src={stopwatchImage} width={64} />
               <h4 className="d-inline ml-3" style={{ color: "white" }}>
-                Game has resumed!
+                {t("ingame.toast.resumed")}
               </h4>
             </Card.Body>
           </Card>

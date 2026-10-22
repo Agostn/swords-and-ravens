@@ -14,6 +14,7 @@ import TidesOfBattleCardComponent from "./game-state-panel/utils/TidesOfBattleCa
 import UnitIconComponent from "./UnitIconComponent";
 import { houseColorFilters } from "./houseColorFilters";
 import FlipIcon from "./FlipIcon";
+import { tr } from "./i18n/i18n";
 
 interface HouseCombatData {
   house: House;
@@ -256,7 +257,7 @@ export default class CombatInfoComponent extends Component<CombatInfoComponentPr
             )}
           </div>
           <div style={{ gridRow: "3", gridColumn: "3" }}>
-            <b>Army</b>
+            {tr("auto.CombatInfoComponent.0")}
           </div>
           <div style={{ gridRow: "3", gridColumn: "4" }}>
             {this.defender.army}
@@ -273,7 +274,7 @@ export default class CombatInfoComponent extends Component<CombatInfoComponentPr
             {this.attacker.support}
           </div>
           <div style={{ gridRow: "4", gridColumn: "3" }}>
-            <b>Support</b>
+            {tr("auto.CombatInfoComponent.1")}
           </div>
           <div style={{ gridRow: "4", gridColumn: "4" }}>
             {this.defender.support}
@@ -283,7 +284,7 @@ export default class CombatInfoComponent extends Component<CombatInfoComponentPr
             {this.attacker.houseCardStrength}
           </div>
           <div style={{ gridRow: "5", gridColumn: "3" }}>
-            <b>House card</b>
+            {tr("auto.CombatInfoComponent.2")}
           </div>
           <div style={{ gridRow: "5", gridColumn: "4" }}>
             {this.defender.houseCardStrength}
@@ -301,11 +302,7 @@ export default class CombatInfoComponent extends Component<CombatInfoComponentPr
             style={{ gridRow: "6", gridColumn: "3" }}
             className={showTob ? "" : "display-none"}
           >
-            <b>
-              Tides
-              <br />
-              of Battle
-            </b>
+            {tr("auto.CombatInfoComponent.3")}
           </div>
           <div
             style={{ gridRow: "6", gridColumn: "4" }}
@@ -326,11 +323,7 @@ export default class CombatInfoComponent extends Component<CombatInfoComponentPr
             style={{ gridRow: "7", gridColumn: "3" }}
             className={showVsb ? "" : "display-none"}
           >
-            <b>
-              Valyrian Steel
-              <br />
-              Blade
-            </b>
+            {tr("auto.CombatInfoComponent.4")}
           </div>
           <div
             style={{ gridRow: "7", gridColumn: "4" }}
@@ -369,7 +362,7 @@ export default class CombatInfoComponent extends Component<CombatInfoComponentPr
             <b>{this.attacker.total}</b>
           </div>
           <div style={{ gridRow: "8", gridColumn: "3" }}>
-            <b>Total</b>
+            {tr("auto.CombatInfoComponent.5")}
           </div>
           <div style={{ gridRow: "8", gridColumn: "4" }}>
             <b>{this.defender.total}</b>

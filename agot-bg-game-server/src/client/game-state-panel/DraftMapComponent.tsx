@@ -23,6 +23,7 @@ import _ from "lodash";
 import UnitIconComponent from "../UnitIconComponent";
 import housePowerTokensImages from "../housePowerTokensImages";
 import getGarrisonToken from "../garrisonTokens";
+import { t, tr } from "../i18n/i18n";
 
 @observer
 export default class DraftMapComponent extends Component<
@@ -49,16 +50,12 @@ export default class DraftMapComponent extends Component<
       <>
         <Row className="justify-content-center">
           <Col xs={12} className="text-center">
-            All players can add and remove pieces according to their unit and
-            supply limits.
-          </Col>
+            {t("auto.game-state-panel.DraftMapComponent.0")}</Col>
         </Row>
         {this.isParticipatingInDraft && this.player != null && (
           <Row className="justify-content-center">
             <Col xs="12" className="text-center text-normal">
-              Click on a piece to remove it, or click on a highlighted region to
-              add pieces.
-            </Col>
+              {t("auto.game-state-panel.DraftMapComponent.1")}</Col>
             <Col xs="auto">
               <Button
                 type="button"
@@ -68,7 +65,7 @@ export default class DraftMapComponent extends Component<
                 onClick={() => this.props.gameState.setReady()}
                 variant="success"
               >
-                Ready
+                {t("common.ready")}
               </Button>
             </Col>
             <Col xs="auto">
@@ -80,20 +77,17 @@ export default class DraftMapComponent extends Component<
                 onClick={() => this.props.gameState.setUnready()}
                 variant="danger"
               >
-                Unready
+                {t("common.unready")}
               </Button>
             </Col>
           </Row>
         )}
         <Row className="mt-3 justify-content-center">
           <Col xs={12} className="text-center">
-            Waiting for{" "}
-            {this.props.gameState
+            {tr("auto.game-state-panel.DraftMapComponent.2", { p0: (this.props.gameState
               .getNotReadyPlayers()
               .map((p) => p.house.name)
-              .join(", ")}
-            ...
-          </Col>
+              .join(", ")) })}</Col>
         </Row>
       </>
     );
@@ -230,8 +224,7 @@ export default class DraftMapComponent extends Component<
                   type="button"
                   onClick={() => this.props.gameState.removePowerToken(region)}
                 >
-                  Remove Power token
-                </Button>
+                  {t("auto.game-state-panel.DraftMapComponent.3")}</Button>
               </Col>
             </Row>
           )}
@@ -276,8 +269,7 @@ export default class DraftMapComponent extends Component<
                   type="button"
                   onClick={() => this.props.gameState.removeGarrison(region)}
                 >
-                  Remove Garrison
-                </Button>
+                  {t("auto.game-state-panel.DraftMapComponent.4")}</Button>
               </Col>
             </Row>
           )}

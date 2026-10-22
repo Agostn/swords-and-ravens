@@ -20,6 +20,7 @@ import ConditionalWrap from "./utils/ConditionalWrap";
 import getUserLinkOrLabel from "./utils/getIngameUserLinkOrLabel";
 import { observer } from "mobx-react";
 import { ReplacePlayer } from "../common/ingame-game-state/vote-system/VoteType";
+import { t, tr } from "./i18n/i18n";
 
 interface VoteComponentProps {
   vote: Vote;
@@ -88,12 +89,7 @@ export default class VoteComponent extends Component<VoteComponentProps> {
           </OverlayTrigger>
         </Col>
         <Col>
-          <b>{getUserLinkOrLabel(this.vote.initiator, false, showBanButton)}</b>{" "}
-          initiated a vote to <b>{this.vote.type.verb()}</b>.{" "}
-          {this.vote.positiveCountToPass}&nbsp;player
-          {this.vote.positiveCountToPass != 1 ? "s" : ""} must accept to pass
-          the vote.
-          <Row className="mt-1">
+          {tr("auto.VoteComponent.0", { p0: (<b>{getUserLinkOrLabel(this.vote.initiator, false, showBanButton)}</b>), p1: (<b>{this.vote.type.verb()}</b>), p2: (this.vote.positiveCountToPass), p3: (this.vote.positiveCountToPass != 1 ? "s" : "") })}<Row className="mt-1">
             <Col
               xs="auto"
               className={classNames({
@@ -111,7 +107,7 @@ export default class VoteComponent extends Component<VoteComponentProps> {
                 disabled={disabled}
                 onClick={() => this.vote.vote(true)}
               >
-                {this.wrapVoteButtons(<>Accept</>, disabled, reason)}
+                {this.wrapVoteButtons(<>{t("auto.VoteComponent.1")}</>, disabled, reason)}
               </Button>
               <br />
               <Button
@@ -122,7 +118,7 @@ export default class VoteComponent extends Component<VoteComponentProps> {
                 disabled={disabled}
                 onClick={() => this.vote.vote(false)}
               >
-                {this.wrapVoteButtons(<>Refuse</>, disabled, reason)}
+                {this.wrapVoteButtons(<>{t("auto.VoteComponent.2")}</>, disabled, reason)}
               </Button>
             </Col>
             <Col>
@@ -178,12 +174,12 @@ export default class VoteComponent extends Component<VoteComponentProps> {
             overlay={
               <Tooltip id="voting-currently-disabled">
                 {reason == "ongoing-combat"
-                  ? "You cannot vote during combat phase"
+                  ? t("auto2.VoteComponent.0")
                   : reason == "ongoing-bidding"
-                    ? "You cannot vote during bidding phase"
+                    ? t("auto2.VoteComponent.1")
                     : reason == "secret-orders-placed"
-                      ? "You cannot vote because the houses to be swapped have already placed orders"
-                      : "Voting is currently not possible"}
+                      ? t("auto2.VoteComponent.2")
+                      : t("auto2.VoteComponent.3")}
               </Tooltip>
             }
             placement="auto"

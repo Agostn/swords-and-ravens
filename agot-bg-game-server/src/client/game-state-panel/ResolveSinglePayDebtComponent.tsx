@@ -15,6 +15,7 @@ import { UnitOnMapProperties } from "../MapControls";
 import PartialRecursive from "../../utils/PartialRecursive";
 import ResolveSinglePayDebtGameState from "../../common/ingame-game-state/pay-debts-game-state/resolve-single-pay-debt-game-state/ResolveSinglePayDebtGameState";
 import joinReactNodes from "../utils/joinReactNodes";
+import { t, tr } from "../i18n/i18n";
 
 @observer
 export default class ResolveSinglePayDebtComponent extends Component<
@@ -52,15 +53,9 @@ export default class ResolveSinglePayDebtComponent extends Component<
       <Row>
         <Col xs={12} className="text-center">
           <p>
-            The holder of the Valyrian Steel Blade destroys one unit for each
-            unpaid interest Power&nbsp;token.
-          </p>
+            {t("auto.game-state-panel.ResolveSinglePayDebtComponent.0")}</p>
           <p>
-            <b>{this.resolver.name}</b> must destroy{" "}
-            <b>{this.props.gameState.debt}</b> unit
-            {this.props.gameState.debt != 1 ? "s" : ""} of House{" "}
-            <b>{this.house.name}</b>.
-          </p>
+            {tr("auto.game-state-panel.ResolveSinglePayDebtComponent.1", { p0: (<b>{this.resolver.name}</b>), p1: (<b>{this.props.gameState.debt}</b>), p2: (this.props.gameState.debt != 1 ? "s" : ""), p3: (<b>{this.house.name}</b>) })}</p>
         </Col>
         {this.props.gameClient.doesControlHouse(this.resolver) ? (
           <>
@@ -72,15 +67,14 @@ export default class ResolveSinglePayDebtComponent extends Component<
                 <ul>
                   {this.unitsToRemove.entries.map(([region, units]) => (
                     <li key={`pay-single-debt_${region.id}`}>
-                      {joinReactNodes(
+                      {tr("auto.game-state-panel.ResolveSinglePayDebtComponent.2", { p0: (joinReactNodes(
                         units.map((u, i) => (
                           <b key={`pay-single-debt_${region.id}_${u.id}_${i}`}>
                             {u.type.name}
                           </b>
                         )),
                         ", "
-                      )}{" "}
-                      in <b>{region.name}</b>
+                      )), p1: (<b>{region.name}</b>) })}
                     </li>
                   ))}
                 </ul>
@@ -93,7 +87,7 @@ export default class ResolveSinglePayDebtComponent extends Component<
                     disabled={notEnough}
                     onClick={() => this.confirm()}
                   >
-                    Confirm
+                    {t("common.confirm")}
                   </Button>
                 </Col>
                 <Col xs="auto">
@@ -103,7 +97,7 @@ export default class ResolveSinglePayDebtComponent extends Component<
                     disabled={this.unitsToRemove.size == 0}
                     onClick={() => this.reset()}
                   >
-                    Reset
+                    {t("common.reset")}
                   </Button>
                 </Col>
               </Row>
@@ -111,7 +105,7 @@ export default class ResolveSinglePayDebtComponent extends Component<
           </>
         ) : (
           <Col xs={12} className="text-center">
-            Waiting for {this.resolver.name}...
+            {t("common.waitingFor", { who: this.resolver.name })}
           </Col>
         )}
       </Row>

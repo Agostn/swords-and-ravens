@@ -10,6 +10,7 @@ import SimpleChoiceGameState from "../../common/ingame-game-state/simple-choice-
 import SelectRegionGameState from "../../common/ingame-game-state/select-region-game-state/SelectRegionGameState";
 import SimpleChoiceComponent from "./SimpleChoiceComponent";
 import SelectRegionComponent from "./SelectRegionComponent";
+import { t } from "../i18n/i18n";
 
 
 @observer
@@ -28,8 +29,7 @@ export default class PyromancerComponent extends Component<GameStateComponentPro
                 <>
                     {this.selectRegion && (
                         <Col xs={12} className="text-center">
-                            Select the castle to degrade.
-                        </Col>
+                            {t("auto.game-state-panel.PyromancerComponent.0")}</Col>
                     )}
                     {renderChildGameState(this.props, [
                         [SimpleChoiceGameState, SimpleChoiceComponent],
@@ -37,7 +37,7 @@ export default class PyromancerComponent extends Component<GameStateComponentPro
                     ])}
             </>
             ) : (
-                <Col xs={12} className="text-center">Waiting for {this.house.name}...</Col>
+                <Col xs={12} className="text-center">{t("common.waitingFor", { who: this.house.name })}</Col>
             )
         );
     }

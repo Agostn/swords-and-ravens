@@ -7,6 +7,7 @@ import Button from "react-bootstrap/Button";
 import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
 import Player from "../../common/ingame-game-state/Player";
+import { t } from "../i18n/i18n";
 
 @observer
 export default class BiddingComponent<ParentGameState extends BiddingGameStateParent> extends Component<GameStateComponentProps<BiddingGameState<ParentGameState>>> {
@@ -72,13 +73,13 @@ export default class BiddingComponent<ParentGameState extends BiddingGameStatePa
                                 variant="success"
                                 className="mt-4"
                             >
-                                Confirm
+                                {t("common.confirm")}
                             </Button>
                         </Col>
                     </>
                 )}
                 <Col xs={12} className="text-center">
-                    Waiting for {this.gameState.getHousesLeftToBid().map(h => this.props.gameState.ingame.getControllerOfHouse(h).house.name).join(", ")}
+                    {t("common.waitingFor", { who: this.gameState.getHousesLeftToBid().map(h => this.props.gameState.ingame.getControllerOfHouse(h).house.name).join(", ") })}
                 </Col>
             </>
         );

@@ -16,6 +16,7 @@ import { faStar } from "@fortawesome/free-solid-svg-icons/faStar";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import HouseIconComponent from "./utils/HouseIconComponent";
 import HouseNumberResultsComponent from "../HouseNumberResultsComponent";
+import { t } from "../i18n/i18n";
 
 @observer
 export default class ResolveTiesComponent extends Component<GameStateComponentProps<ResolveTiesGameState>> {
@@ -32,8 +33,7 @@ export default class ResolveTiesComponent extends Component<GameStateComponentPr
         return (
             <>
                 <Col xs={12} className="text-center">
-                    The holder of the Iron Throne can resolve the ties of the bidding.
-                </Col>
+                    {t("auto.game-state-panel.ResolveTiesComponent.0")}</Col>
                 {this.props.gameClient.doesControlHouse(this.props.gameState.decider) ? (
                         <Col xs={12}>
                             <Row className="justify-content-center align-items-center">
@@ -74,18 +74,18 @@ export default class ResolveTiesComponent extends Component<GameStateComponentPr
                             </Row>
                             <Row className="justify-content-center mt-5">
                                 <Col xs="auto">
-                                    <Button type="button" variant="success" onClick={() => this.submit()}>Resolve</Button>
+                                    <Button type="button" variant="success" onClick={() => this.submit()}>{t("auto.game-state-panel.ResolveTiesComponent.1")}</Button>
                                 </Col>
                             </Row>
                         </Col>
                 ) : <>
                     <Col xs={12}>
-                        <p className="text-center">Bidding results:</p>
+                        <p className="text-center">{t("auto.game-state-panel.ResolveTiesComponent.2")}</p>
                         <div className="d-flex justify-content-center">
                             <HouseNumberResultsComponent results={results} keyPrefix="resolve-ties"/>
                         </div>
                     </Col>
-                    <Col xs={12} className="text-center">Waiting for {this.props.gameState.decider.name}...</Col>
+                    <Col xs={12} className="text-center">{t("common.waitingFor", { who: this.props.gameState.decider.name })}</Col>
                 </>}
             </>
         );

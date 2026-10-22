@@ -10,12 +10,13 @@ import React from "react";
 import { Col } from "react-bootstrap";
 import TakeControlOfEnemyPortGameState from "../../../common/ingame-game-state/take-control-of-enemy-port-game-state/TakeControlOfEnemyPortGameState";
 import TakeControlOfEnemyPortComponent from "../TakeControlOfEnemyPortComponent";
+import { t } from "../../i18n/i18n";
 
 @observer
 export default class TheHordeDescendsWildlingVictoryComponent extends Component<GameStateComponentProps<TheHordeDescendsWildlingVictoryGameState>> {
     render(): ReactNode {
         return <>
-            {this.props.gameState.childGameState instanceof SelectUnitsGameState && <Col xs={12} className="text-center">Houses must destroy units.</Col>}
+            {this.props.gameState.childGameState instanceof SelectUnitsGameState && <Col xs={12} className="text-center">{t("auto.game-state-panel.wildlings-attack-component.TheHordeDescendsWildlingVictoryComponent.0")}</Col>}
             {renderChildGameState(this.props, [
                 [SelectUnitsGameState, SelectUnitsComponent],
                 [TakeControlOfEnemyPortGameState, TakeControlOfEnemyPortComponent]

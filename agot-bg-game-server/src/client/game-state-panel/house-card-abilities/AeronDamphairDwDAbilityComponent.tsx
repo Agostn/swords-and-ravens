@@ -7,6 +7,7 @@ import AeronDamphairDwDAbilityGameState from "../../../common/ingame-game-state/
 import Player from "../../../common/ingame-game-state/Player";
 import { Button, Row } from "react-bootstrap";
 import { observable } from "mobx";
+import { t, tr } from "../../i18n/i18n";
 
 @observer
 export default class AeronDamphairAbilityComponent extends Component<GameStateComponentProps<AeronDamphairDwDAbilityGameState>> {
@@ -22,13 +23,9 @@ export default class AeronDamphairAbilityComponent extends Component<GameStateCo
                 <Col xs={12} className="text-center">
                     {!this.props.gameState.nerfed
                         ? <>
-                            <b>Aeron Damphair:</b> House <b>{this.props.gameState.house.name}</b> may discard any number of available Power tokens
-                            to increase the combat strength of their card by the number of Power tokens discarded.
-                        </>
+                            {tr("auto.game-state-panel.house-card-abilities.AeronDamphairDwDAbilityComponent.0", { p0: (<b>{this.props.gameState.house.name}</b>) })}</>
                         : <>
-                            <b>Aeron Damphair:</b> House <b>{this.props.gameState.house.name}</b> may discard one Power token for each House card
-                            in their discard pile to increase the combat strength of their card by the number of Power tokens discarded.
-                        </>
+                            {tr("auto.game-state-panel.house-card-abilities.AeronDamphairDwDAbilityComponent.1", { p0: (<b>{this.props.gameState.house.name}</b>) })}</>
                     }
 
                 </Col>
@@ -60,13 +57,13 @@ export default class AeronDamphairAbilityComponent extends Component<GameStateCo
                             <Button type="button" variant="success"
                                 onClick={() => this.props.gameState.sendPowerTokens(this.powerTokens)}
                             >
-                                Confirm
+                                {t("common.confirm")}
                             </Button>
                         </Col>
                     </>
                 )}
                 <Col xs={12} className="text-center">
-                    Waiting for {this.props.gameState.house.name} ...
+                    {t("common.waitingFor", { who: this.props.gameState.house.name })}
                 </Col>
             </>
         );

@@ -61,6 +61,7 @@ import mammothImage from "../../public/images/icons/mammoth.svg";
 import spikedDragonHeadImage from "../../public/images/icons/spiked-dragon-head.svg";
 import ClaimVassalsGameState from "../common/ingame-game-state/planning-game-state/claim-vassals-game-state/ClaimVassalsGameState";
 import ClaimVassalsComponent from "./game-state-panel/ClaimVassalsComponent";
+import { t } from "./i18n/i18n";
 
 interface GameStateColumnProps {
   ingame: IngameGameState;
@@ -88,17 +89,17 @@ export default class GameStateColumn extends Component<GameStateColumnProps> {
   render(): ReactNode {
     const phases = [
       {
-        name: "Westeros",
+        name: t("phase.westeros"),
         gameState: WesterosGameState,
         component: WesterosGameStateComponent
       },
       {
-        name: "Planning",
+        name: t("phase.planning"),
         gameState: PlanningGameState,
         component: PlanningComponent
       },
       {
-        name: "Action",
+        name: t("phase.action"),
         gameState: ActionGameState,
         component: ActionComponent
       }
@@ -194,7 +195,7 @@ export default class GameStateColumn extends Component<GameStateColumnProps> {
                               condition={isPhaseActive(phases[0])}
                               wrap={(child) => <b>{child}</b>}
                             >
-                              <>{phases[0].name} phase</>
+                              <>{t("phase.label", { phase: phases[0].name })}</>
                             </ConditionalWrap>
                           </div>
                         </OverlayTrigger>
@@ -216,7 +217,7 @@ export default class GameStateColumn extends Component<GameStateColumnProps> {
                               condition={isPhaseActive(phase)}
                               wrap={(child) => <b>{child}</b>}
                             >
-                              <>{phase.name} phase</>
+                              <>{t("phase.label", { phase: phase.name })}</>
                             </ConditionalWrap>
                           </div>
                         </Col>
@@ -269,7 +270,10 @@ export default class GameStateColumn extends Component<GameStateColumnProps> {
                     overlay={
                       <Tooltip id="round-tooltip">
                         <h5>
-                          Round {this.game.turn} / {this.game.maxTurns}
+                          {t("ingame.roundOf", {
+                            turn: this.game.turn,
+                            max: this.game.maxTurns
+                          })}
                         </h5>
                       </Tooltip>
                     }
@@ -395,7 +399,7 @@ export default class GameStateColumn extends Component<GameStateColumnProps> {
             <>
               <Row className="mt-0">
                 <Col>
-                  <h5 className="text-center">Next Westeros Cards</h5>
+                  <h5 className="text-center">{t("westeros.nextCards")}</h5>
                 </Col>
               </Row>
               <Row>
@@ -404,7 +408,7 @@ export default class GameStateColumn extends Component<GameStateColumnProps> {
                     key={"westeros-deck-" + i + "-header"}
                     className="text-center"
                   >
-                    <b>Deck {i + 1}</b>
+                    <b>{t("westeros.deckN", { n: i + 1 })}</b>
                   </Col>
                 ))}
               </Row>
@@ -436,7 +440,7 @@ export default class GameStateColumn extends Component<GameStateColumnProps> {
           )}
           <Row className={this.gameSettings.cokWesterosPhase ? "mt-4" : "mt-0"}>
             <Col>
-              <h5 className="text-center">Remaining Westeros Cards</h5>
+              <h5 className="text-center">{t("westeros.remainingCards")}</h5>
             </Col>
           </Row>
           <Row>
@@ -445,7 +449,7 @@ export default class GameStateColumn extends Component<GameStateColumnProps> {
                 key={"westeros-deck-" + i + "-header"}
                 className="text-center"
               >
-                <b>Deck {i + 1}</b>
+                <b>{t("westeros.deckN", { n: i + 1 })}</b>
               </Col>
             ))}
           </Row>
@@ -498,7 +502,7 @@ export default class GameStateColumn extends Component<GameStateColumnProps> {
           {knowsWildlingCard && nextWildlingCard && (
             <>
               <Col xs={12} className="mt-0">
-                <h5 className="text-center">Top Wilding Card</h5>
+                <h5 className="text-center">{t("wildlings.topCard")}</h5>
               </Col>
               <Col xs={12} className="mb-2">
                 <Row className="justify-content-center">
@@ -512,7 +516,7 @@ export default class GameStateColumn extends Component<GameStateColumnProps> {
             </>
           )}
           <Col xs={12} className="mt-0">
-            <h5 className="text-center">The Wildling Deck</h5>
+            <h5 className="text-center">{t("wildlings.deck")}</h5>
           </Col>
           <Col xs={12}>
             <Row className="justify-content-center mr-0 ml-0">
@@ -586,10 +590,10 @@ export default class GameStateColumn extends Component<GameStateColumnProps> {
     return (
       <Tooltip id="dragon-strength-tooltip">
         <div className="m-1 text-center">
-          <h5>Current Dragon Strength</h5>
+          <h5>{t("dragons.currentStrength")}</h5>
           {roundsWhenIncreased.length > 0 && (
             <p>
-              Will increase in round
+              {t("dragons.willIncreaseInRound")}
               <br />
               {joinNaturalLanguage(roundsWhenIncreased)}
             </p>

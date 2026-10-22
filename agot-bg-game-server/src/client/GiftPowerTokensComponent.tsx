@@ -9,6 +9,7 @@ import Game from "../common/ingame-game-state/game-data-structure/Game";
 import { observer } from "mobx-react";
 import { observable } from "mobx";
 import { preventOverflow } from "@popperjs/core";
+import { t, tr } from "./i18n/i18n";
 
 interface GiftPowerTokensComponentProps {
     toHouse: House;
@@ -43,7 +44,7 @@ export default class GiftPowerTokensComponent extends Component<GiftPowerTokensC
                     <Col xs="auto">
                         <OverlayTrigger overlay={
                             <Tooltip id="gift-power-tokens-tooltip">
-                                Gift Power tokens to<br/>House <b>{this.toHouse.name}</b>
+                                {tr("auto.GiftPowerTokensComponent.0", { p0: (<b>{this.toHouse.name}</b>) })}
                             </Tooltip>}
                             popperConfig={{modifiers: [preventOverflow]}}
                             placement="auto">
@@ -82,7 +83,7 @@ export default class GiftPowerTokensComponent extends Component<GiftPowerTokensC
                             disabled={!this.canGiftPowerTokens()}
                             variant="success"
                         >
-                            Confirm
+                            {t("common.confirm")}
                         </Button>
                     </Col>
                 </Row>

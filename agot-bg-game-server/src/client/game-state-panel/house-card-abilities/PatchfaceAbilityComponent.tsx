@@ -11,6 +11,7 @@ import SelectHouseCardGameState
 import SelectHouseCardComponent from "../SelectHouseCardComponent";
 import SimpleChoiceGameState from "../../../common/ingame-game-state/simple-choice-game-state/SimpleChoiceGameState";
 import SimpleChoiceComponent from "../SimpleChoiceComponent";
+import { tr } from "../../i18n/i18n";
 
 @observer
 export default class PatchfaceAbilityComponent extends Component<GameStateComponentProps<PatchfaceAbilityGameState>> {
@@ -18,9 +19,7 @@ export default class PatchfaceAbilityComponent extends Component<GameStateCompon
         return (
             <>
                 <Col xs={12} className="text-center">
-                    <b>Patchface</b>: House <b>{this.props.gameState.childGameState.house.name}</b> may choose to discard one House card of
-                    House <b>{this.props.gameState.combat.getEnemy(this.props.gameState.childGameState.house).name}</b>.
-                </Col>
+                    {tr("auto.game-state-panel.house-card-abilities.PatchfaceAbilityComponent.0", { p0: (<b>{this.props.gameState.childGameState.house.name}</b>), p1: (<b>{this.props.gameState.combat.getEnemy(this.props.gameState.childGameState.house).name}</b>) })}</Col>
                 {renderChildGameState(this.props, [
                     [SimpleChoiceGameState, SimpleChoiceComponent],
                     [SelectHouseCardGameState, SelectHouseCardComponent]

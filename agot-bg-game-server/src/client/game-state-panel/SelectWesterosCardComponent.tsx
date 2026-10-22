@@ -10,6 +10,7 @@ import SelectWesterosCardGameState
     from "../../common/ingame-game-state/select-westeros-card-game-state/SelectWesterosCardGameState";
 import WesterosCard from "../../common/ingame-game-state/game-data-structure/westeros-card/WesterosCard";
 import WesterosCardComponent from "./utils/WesterosCardComponent";
+import { t } from "../i18n/i18n";
 
 @observer
 export default class SelectWesterosCardComponent extends Component<GameStateComponentProps<SelectWesterosCardGameState<any>>> {
@@ -38,13 +39,13 @@ export default class SelectWesterosCardComponent extends Component<GameStateComp
                             </Col>
                             <Col xs="auto">
                                 <Button type="button" variant="success" onClick={() => this.confirm()} disabled={this.selectedWesterosCard == null}>
-                                    Confirm
+                                    {t("common.confirm")}
                                 </Button>
                             </Col>
                         </Row>
                     ) : (
                         <div className="text-center">
-                            Waiting for {this.props.gameState.house.name}...
+                            {t("common.waitingFor", { who: this.props.gameState.house.name })}
                         </div>
                     )}
                 </Col>

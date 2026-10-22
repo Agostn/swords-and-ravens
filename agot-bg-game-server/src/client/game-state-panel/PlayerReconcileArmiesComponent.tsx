@@ -16,6 +16,7 @@ import { UnitOnMapProperties } from "../MapControls";
 import PartialRecursive from "../../utils/PartialRecursive";
 import { union } from "lodash";
 import joinReactNodes from "../utils/joinReactNodes";
+import { t, tr } from "../i18n/i18n";
 
 @observer
 export default class PlayerReconcileArmiesComponent extends Component<
@@ -71,9 +72,7 @@ export default class PlayerReconcileArmiesComponent extends Component<
     return (
       <Row className="p-2">
         <Col xs={12} className="text-center">
-          <b>{this.props.gameState.house.name}</b> must reconcile their armies
-          according to their supply limits.
-        </Col>
+          {tr("auto.game-state-panel.PlayerReconcileArmiesComponent.0", { p0: (<b>{this.props.gameState.house.name}</b>) })}</Col>
         {this.props.gameClient.doesControlHouse(this.house) ? (
           <>
             <Col xs={12}>
@@ -84,7 +83,7 @@ export default class PlayerReconcileArmiesComponent extends Component<
                 <ul>
                   {this.unitsToRemove.entries.map(([region, units]) => (
                     <li key={`player-reconcile-armies_${region.id}`}>
-                      {joinReactNodes(
+                      {tr("auto.game-state-panel.PlayerReconcileArmiesComponent.1", { p0: (joinReactNodes(
                         units.map((u, i) => (
                           <b
                             key={`reconcile-component_${region.id}_${u.id}_${i}`}
@@ -93,8 +92,7 @@ export default class PlayerReconcileArmiesComponent extends Component<
                           </b>
                         )),
                         ", "
-                      )}{" "}
-                      in <b>{region.name}</b>
+                      )), p1: (<b>{region.name}</b>) })}
                     </li>
                   ))}
                 </ul>
@@ -107,7 +105,7 @@ export default class PlayerReconcileArmiesComponent extends Component<
                     disabled={notEnough || tooMuch}
                     onClick={() => this.confirm()}
                   >
-                    Confirm
+                    {t("common.confirm")}
                   </Button>
                 </Col>
                 <Col xs="auto">
@@ -117,27 +115,21 @@ export default class PlayerReconcileArmiesComponent extends Component<
                     disabled={this.unitsToRemove.size == 0}
                     onClick={() => this.reset()}
                   >
-                    Reset
+                    {t("common.reset")}
                   </Button>
                 </Col>
               </Row>
               {tooMuch && (
                 <Row className="mt-1 justify-content-center">
-                  You removed too much units!
-                </Row>
+                  {t("auto.game-state-panel.PlayerReconcileArmiesComponent.2")}</Row>
               )}
             </Col>
           </>
         ) : (
           <Col xs={12} className="text-center">
-            Waiting for{" "}
-            {
-              this.props.gameState.parentGameState.ingame.getControllerOfHouse(
+            {tr("auto.game-state-panel.PlayerReconcileArmiesComponent.3", { p0: (this.props.gameState.parentGameState.ingame.getControllerOfHouse(
                 this.house
-              ).house.name
-            }
-            ...
-          </Col>
+              ).house.name) })}</Col>
         )}
       </Row>
     );

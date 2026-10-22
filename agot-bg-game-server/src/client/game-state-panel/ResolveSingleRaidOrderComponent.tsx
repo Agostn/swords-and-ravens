@@ -14,6 +14,7 @@ import { OrderOnMapProperties } from "../MapControls";
 import PartialRecursive from "../../utils/PartialRecursive";
 import RaidSupportOrderType from "../../common/ingame-game-state/game-data-structure/order-types/RaidSupportOrderType";
 import House from "../../common/ingame-game-state/game-data-structure/House";
+import { t, tr } from "../i18n/i18n";
 
 @observer
 export default class ResolveSingleRaidOrderComponent extends Component<
@@ -42,32 +43,26 @@ export default class ResolveSingleRaidOrderComponent extends Component<
     return (
       <>
         <Col xs={12} className="text-center">
-          House <b>{this.house.name}</b> must resolve one of its Raid Orders.
-        </Col>
+          {tr("auto.game-state-panel.ResolveSingleRaidOrderComponent.0", { p0: (<b>{this.house.name}</b>) })}</Col>
         {this.props.gameClient.doesControlHouse(this.house) ? (
           this.selectedOrderRegion == null ? (
             <Col xs={12} className="text-center">
-              Select a Raid Order token to resolve it.
-            </Col>
+              {t("auto.game-state-panel.ResolveSingleRaidOrderComponent.1")}</Col>
           ) : (
             <>
               <Col xs={12} className="text-center">
                 <p>
-                  Chosen Raid order: <b>{this.selectedOrderRegion.name}</b>
+                  {tr("auto.game-state-panel.ResolveSingleRaidOrderComponent.2", { p0: (<b>{this.selectedOrderRegion.name}</b>) })}
                 </p>
                 {this.selectedTargetRegion == null ? (
                   <>
                     <p>
-                      Click the target order to raid it, or click on{" "}
-                      <b>Confirm</b> to{" "}
-                      {this.orderInOrderRegion instanceof RaidSupportOrderType
-                        ? "use the order as Support+1 order"
-                        : "remove your Raid order"}
-                      .
-                    </p>
+                      {tr("auto.game-state-panel.ResolveSingleRaidOrderComponent.3", { p0: (<b>{t("common.confirm")}</b>), p1: (this.orderInOrderRegion instanceof RaidSupportOrderType
+                        ? t("auto2.game-state-panel.ResolveSingleRaidOrderComponent.0")
+                        : t("auto2.game-state-panel.ResolveSingleRaidOrderComponent.1")) })}</p>
                   </>
                 ) : (
-                  <>Target: {this.selectedTargetRegion.name}</>
+                  <>{tr("auto.game-state-panel.ResolveSingleRaidOrderComponent.4", { p0: (this.selectedTargetRegion.name) })}</>
                 )}
               </Col>
               <Col xs={12}>
@@ -78,7 +73,7 @@ export default class ResolveSingleRaidOrderComponent extends Component<
                       variant="success"
                       onClick={() => this.confirm()}
                     >
-                      Confirm
+                      {t("common.confirm")}
                     </Button>
                   </Col>
                   <Col xs="auto">
@@ -87,7 +82,7 @@ export default class ResolveSingleRaidOrderComponent extends Component<
                       variant="danger"
                       onClick={() => this.reset()}
                     >
-                      Reset
+                      {t("common.reset")}
                     </Button>
                   </Col>
                 </Row>
@@ -96,14 +91,9 @@ export default class ResolveSingleRaidOrderComponent extends Component<
           )
         ) : (
           <Col xs={12} className="text-center">
-            Waiting for{" "}
-            {
-              this.props.gameState.ingameGameState.getControllerOfHouse(
+            {tr("auto.game-state-panel.ResolveSingleRaidOrderComponent.5", { p0: (this.props.gameState.ingameGameState.getControllerOfHouse(
                 this.house
-              ).house.name
-            }
-            ...
-          </Col>
+              ).house.name) })}</Col>
         )}
       </>
     );
@@ -112,7 +102,7 @@ export default class ResolveSingleRaidOrderComponent extends Component<
   confirm(): void {
     if (this.selectedOrderRegion) {
       if (!this.selectedTargetRegion) {
-        if (!window.confirm("Are you sure not to use your Raid order?")) {
+        if (!window.confirm(t("auto2.game-state-panel.ResolveSingleRaidOrderComponent.2"))) {
           return;
         }
       }

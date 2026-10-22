@@ -13,6 +13,7 @@ import SelectHouseCardGameState
 import SelectHouseCardComponent from "../SelectHouseCardComponent";
 import CombatGameState from "../../../common/ingame-game-state/action-game-state/resolve-march-order-game-state/combat-game-state/CombatGameState";
 import House from "../../../common/ingame-game-state/game-data-structure/House";
+import { tr } from "../../i18n/i18n";
 
 @observer
 export default class TyrionLannisterAbilityComponent extends Component<GameStateComponentProps<TyrionLannisterAbilityGameState>> {
@@ -51,14 +52,11 @@ export default class TyrionLannisterAbilityComponent extends Component<GameState
             <>
                 {this.simpleChoice && (
                     <Col xs={12} className="text-center">
-                        <b>Tyrion Lannister</b>: House <b>{this.house.name}</b> may
-                        cancel House <b>{this.enemy.name}&apos;s</b> House card.
-                    </Col>
+                        {tr("auto.game-state-panel.house-card-abilities.TyrionLannisterAbilityComponent.0", { p0: (<b>{this.house.name}</b>), p1: (<b>{this.enemy.name}&apos;s</b>) })}</Col>
                 )}
                 {this.selectHouseCards && (
                     <Col xs={12} className="text-center">
-                        <b>Tyrion Lannister</b>: House <b>{this.enemy.name}</b> has to choose a new House card.
-                    </Col>
+                        {tr("auto.game-state-panel.house-card-abilities.TyrionLannisterAbilityComponent.1", { p0: (<b>{this.enemy.name}</b>) })}</Col>
                 )}
                 {renderChildGameState(this.props, [
                     [SimpleChoiceGameState, SimpleChoiceComponent],

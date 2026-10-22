@@ -11,6 +11,7 @@ import House from "../../common/ingame-game-state/game-data-structure/House";
 import OverlayTrigger from "react-bootstrap/OverlayTrigger";
 import Tooltip from "react-bootstrap/Tooltip";
 import ConditionalWrap from "../utils/ConditionalWrap";
+import { t, tr } from "../i18n/i18n";
 
 @observer
 export default class DeclareSupportComponent extends Component<GameStateComponentProps<DeclareSupportGameState>> {
@@ -18,8 +19,7 @@ export default class DeclareSupportComponent extends Component<GameStateComponen
         return (
             <>
                 <Col xs={12} className="text-center">
-                    {this.props.gameState.house.name} may support one belligerent of the fight
-                </Col>
+                    {tr("auto.game-state-panel.DeclareSupportComponent.0", { p0: (this.props.gameState.house.name) })}</Col>
                 <Col xs={12}>
                     {this.props.gameClient.doesControlHouse(this.props.gameState.house) ? (
                         <Row className="justify-content-center">
@@ -31,8 +31,7 @@ export default class DeclareSupportComponent extends Component<GameStateComponen
                                             <OverlayTrigger
                                                 overlay={
                                                     <Tooltip id="support-choice-restricted">
-                                                        You can&apos;t support the enemy in a combat you are involved.
-                                                    </Tooltip>
+                                                        {t("auto.game-state-panel.DeclareSupportComponent.1")}</Tooltip>
                                                 }
                                             >
                                                 {c}
@@ -43,21 +42,19 @@ export default class DeclareSupportComponent extends Component<GameStateComponen
                                             onClick={() => this.choose(h)}
                                             disabled={!this.canChoose(h)}
                                         >
-                                            {h.name} ({h == this.props.gameState.combatGameState.attacker ? "Attacker" : "Defender"})
+                                            {h.name} ({h == this.props.gameState.combatGameState.attacker ? t("auto2.game-state-panel.DeclareSupportComponent.0") : t("auto2.game-state-panel.DeclareSupportComponent.1")})
                                         </Button>
                                     </ConditionalWrap>
                                 </Col>
                             ))}
                             <Col xs="auto">
                                 <Button type="button" variant="danger" onClick={() => this.choose(null)}>
-                                    None
-                                </Button>
+                                    {t("auto.game-state-panel.DeclareSupportComponent.2")}</Button>
                             </Col>
                         </Row>
                     ) : (
                         <div className="text-center">
-                            Waiting for {this.props.gameState.ingameGameState.getControllerOfHouse(this.props.gameState.house).house.name} to declare its support...
-                        </div>
+                            {tr("auto.game-state-panel.DeclareSupportComponent.3", { p0: (this.props.gameState.ingameGameState.getControllerOfHouse(this.props.gameState.house).house.name) })}</div>
                     )}
                 </Col>
             </>

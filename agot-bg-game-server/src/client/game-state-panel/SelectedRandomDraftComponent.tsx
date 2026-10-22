@@ -10,6 +10,7 @@ import { observable } from "mobx";
 import HouseCard from "../../common/ingame-game-state/game-data-structure/house-card/HouseCard";
 import SelectedRandomDraftGameState from "../../common/ingame-game-state/draft-game-state/selected-random-draft-game-state/SelectedRandomDraftGameState";
 import _ from "lodash";
+import { t, tr } from "../i18n/i18n";
 
 @observer
 export default class SelectedRandomDraftComponent extends Component<
@@ -27,35 +28,22 @@ export default class SelectedRandomDraftComponent extends Component<
       <>
         <Row className="justify-content-center">
           <Col xs={12} className="text-center">
-            All houses choose House cards which then are randomly assigned.
-          </Col>
+            {t("auto.game-state-panel.SelectedRandomDraftComponent.0")}</Col>
         </Row>
         <Row>
-          <small>
-            <b>Note</b>: All House cards work in a generic way!
-            <br />
-            That means House card abilities (e.g. Salladhor) referring to
-            specific houses are always available for any house you use.
-            <br />
-            Character references are equivalent to the same-strength character
-            in your hand (e.g. Reek and any 3-strength card).
-            <br />
-            References to capitals always refer to your house&apos;s home
-            territory (e.g. Littlefinger).
-          </small>
+          {tr("auto.game-state-panel.SelectedRandomDraftComponent.1")}
         </Row>
         {this.player &&
         this.props.gameState.unreadyPlayers.includes(this.player) ? (
           <>
             <Row className="mt-3 justify-content-center">
               <Col xs="12" className="text-center">
-                Please select a House card:
-              </Col>
+                {t("auto.game-state-panel.SelectedRandomDraftComponent.2")}</Col>
             </Row>
             <Row className="justify-content-center mb-2">
               <input
                 className="form-control"
-                placeholder="Filter by house card name or strength"
+                placeholder={t("auto2.game-state-panel.SelectedRandomDraftComponent.0")}
                 type="text"
                 value={this.nameFilter}
                 onChange={(e) => (this.nameFilter = e.target.value)}
@@ -97,7 +85,7 @@ export default class SelectedRandomDraftComponent extends Component<
                   onClick={() => this.confirm()}
                   disabled={this.selectedHouseCard == null}
                 >
-                  Confirm
+                  {t("common.confirm")}
                 </Button>
               </Col>
             </Row>
@@ -106,14 +94,13 @@ export default class SelectedRandomDraftComponent extends Component<
           <>
             <Row className="mt-3 justify-content-center">
               <Col xs="12" className="text-center">
-                These are all remaining House cards:
-              </Col>
+                {t("auto.game-state-panel.SelectedRandomDraftComponent.3")}</Col>
             </Row>
             <Col xs="12">
               <Row className="justify-content-center mb-2">
                 <input
                   className="form-control"
-                  placeholder="Filter by house card name or strength"
+                  placeholder={t("auto2.game-state-panel.SelectedRandomDraftComponent.1")}
                   type="text"
                   value={this.nameFilter}
                   onChange={(e) => (this.nameFilter = e.target.value)}
@@ -145,12 +132,9 @@ export default class SelectedRandomDraftComponent extends Component<
         )}
         <Row className="mt-3 justify-content-center">
           <Col xs={12} className="text-center">
-            Waiting for{" "}
-            {this.props.gameState.unreadyPlayers
+            {tr("auto.game-state-panel.SelectedRandomDraftComponent.4", { p0: (this.props.gameState.unreadyPlayers
               .map((p) => p.house.name)
-              .join(", ")}
-            ...
-          </Col>
+              .join(", ")) })}</Col>
         </Row>
       </>
     );

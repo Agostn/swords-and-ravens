@@ -7,6 +7,7 @@ import GameStateComponentProps from "./GameStateComponentProps";
 import SimpleChoiceComponent from "./SimpleChoiceComponent";
 import renderChildGameState from "../utils/renderChildGameState";
 import CallForSupportAgainstNeutralForceGameState from "../../common/ingame-game-state/action-game-state/resolve-march-order-game-state/call-for-support-against-neutral-force-game-state/CallForSupportAgainstNeutralForceGameState";
+import { tr } from "../i18n/i18n";
 
 @observer
 export default class CallForSupportAgainstNeutralForcesComponent extends Component<GameStateComponentProps<CallForSupportAgainstNeutralForceGameState>> {
@@ -14,7 +15,7 @@ export default class CallForSupportAgainstNeutralForcesComponent extends Compone
         return (
             <>
                 <Col xs={12} className="text-center">
-                    <p>House <b>{this.props.gameState.houseThatResolvesMarchOrder.name}</b> calls for support against <b>Neutral Forces</b>.</p>
+                    <p>{tr("auto.game-state-panel.CallForSupportAgainstNeutralForcesComponent.0", { p0: (<b>{this.props.gameState.houseThatResolvesMarchOrder.name}</b>) })}</p>
                 </Col>
                 {renderChildGameState(this.props, [
                     [SimpleChoiceGameState, SimpleChoiceComponent]

@@ -9,6 +9,7 @@ import SelectHouseCardComponent from "../SelectHouseCardComponent";
 import SimpleChoiceGameState from "../../../common/ingame-game-state/simple-choice-game-state/SimpleChoiceGameState";
 import SimpleChoiceComponent from "../SimpleChoiceComponent";
 import MaesterLuwinAbilityGameState from "../../../common/ingame-game-state/action-game-state/resolve-march-order-game-state/combat-game-state/post-combat-game-state/after-winner-determination-game-state/maester-luwin-ability-game-state/MaesterLuwinAbilityGameState";
+import { tr } from "../../i18n/i18n";
 
 @observer
 export default class MaesterLuwinAbilityComponent extends Component<
@@ -18,10 +19,7 @@ export default class MaesterLuwinAbilityComponent extends Component<
     return (
       <>
         <Col xs={12} className="text-center">
-          <b>Maester Luwin</b>: House{" "}
-          <b>{this.props.gameState.childGameState.house.name}</b> may return one
-          House card from their discard pile.
-        </Col>
+          {tr("auto.game-state-panel.house-card-abilities.MaesterLuwinAbilityComponent.0", { p0: (<b>{this.props.gameState.childGameState.house.name}</b>) })}</Col>
         {renderChildGameState(this.props, [
           [SimpleChoiceGameState, SimpleChoiceComponent],
           [SelectHouseCardGameState, SelectHouseCardComponent]

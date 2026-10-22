@@ -14,6 +14,7 @@ import { observer } from "mobx-react";
 import { UnitOnMapProperties } from "../MapControls";
 import PartialRecursive from "../../utils/PartialRecursive";
 import joinReactNodes from "../utils/joinReactNodes";
+import { t, tr } from "../i18n/i18n";
 
 @observer
 export default class SelectUnitsComponent extends Component<
@@ -34,19 +35,18 @@ export default class SelectUnitsComponent extends Component<
               {this.selectedUnits.size > 0 && (
                 <Row className="mx-2 justify-content-center">
                   <div>
-                    <div className="mb-2 text-center">Selected units:</div>
+                    <div className="mb-2 text-center">{t("auto.game-state-panel.SelectUnitsComponent.0")}</div>
                     <ul className="pl-0">
                       {this.selectedUnits.entries.map(([region, units]) => (
                         <li key={`select-units_${region.id}`}>
-                          {joinReactNodes(
+                          {tr("auto.game-state-panel.SelectUnitsComponent.1", { p0: (joinReactNodes(
                             units.map((u, i) => (
                               <b key={`select-units_${region.id}_${u.id}_${i}`}>
                                 {u.type.name}
                               </b>
                             )),
                             ", "
-                          )}{" "}
-                          in <b>{region.name}</b>
+                          )), p1: (<b>{region.name}</b>) })}
                         </li>
                       ))}
                     </ul>
@@ -65,7 +65,7 @@ export default class SelectUnitsComponent extends Component<
                       )
                     }
                   >
-                    Confirm
+                    {t("common.confirm")}
                   </Button>
                 </Col>
                 <Col xs="auto">
@@ -75,21 +75,16 @@ export default class SelectUnitsComponent extends Component<
                     variant="danger"
                     disabled={this.selectedUnits.size == 0}
                   >
-                    Reset
+                    {t("common.reset")}
                   </Button>
                 </Col>
               </Row>
             </>
           ) : (
             <div className="text-center">
-              Waiting for{" "}
-              {
-                this.props.gameState.ingame.getControllerOfHouse(
+              {tr("auto.game-state-panel.SelectUnitsComponent.2", { p0: (this.props.gameState.ingame.getControllerOfHouse(
                   this.props.gameState.house
-                ).house.name
-              }
-              ...
-            </div>
+                ).house.name) })}</div>
           )}
         </Col>
       </>
@@ -103,7 +98,7 @@ export default class SelectUnitsComponent extends Component<
   confirm(): void {
     if (this.selectedUnits.size == 0) {
       if (
-        !window.confirm("You haven't selected any unit yet. Continue anyway?")
+        !window.confirm(t("auto2.game-state-panel.SelectUnitsComponent.0"))
       ) {
         return;
       }
@@ -115,7 +110,7 @@ export default class SelectUnitsComponent extends Component<
     ) {
       if (
         !window.confirm(
-          "You haven't selected all possible units yet. Continue anyway?"
+          t("auto2.game-state-panel.SelectUnitsComponent.1")
         )
       ) {
         return;

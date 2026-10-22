@@ -7,6 +7,7 @@ import Col from "react-bootstrap/Col";
 import SimpleChoiceGameState from "../../../common/ingame-game-state/simple-choice-game-state/SimpleChoiceGameState";
 import SimpleChoiceComponent from "../SimpleChoiceComponent";
 import JonConningtonAbilityGameState from "../../../common/ingame-game-state/action-game-state/resolve-march-order-game-state/combat-game-state/post-combat-game-state/after-combat-house-card-abilities-game-state/jon-connington-ability-game-state/JonConningtonAbilityGameState";
+import { tr } from "../../i18n/i18n";
 
 @observer
 export default class JonConningtonAbilityComponent extends Component<GameStateComponentProps<JonConningtonAbilityGameState>> {
@@ -14,8 +15,7 @@ export default class JonConningtonAbilityComponent extends Component<GameStateCo
         return (
             <>
                 <Col xs={12} className="text-center">
-                    <b>Jon Connington</b>: Vassal house <b>{this.props.gameState.house.name}</b> may muster one knight either in the area it retreated to or its home area.
-                </Col>
+                    {tr("auto.game-state-panel.house-card-abilities.JonConningtonAbilityComponent.0", { p0: (<b>{this.props.gameState.house.name}</b>) })}</Col>
                 {renderChildGameState(this.props, [
                     [SimpleChoiceGameState, SimpleChoiceComponent]
                 ])}

@@ -10,6 +10,7 @@ import SelectUnitsGameState from "../../../common/ingame-game-state/select-units
 import SelectUnitsComponent from "../SelectUnitsComponent";
 import SimpleChoiceGameState from "../../../common/ingame-game-state/simple-choice-game-state/SimpleChoiceGameState";
 import SimpleChoiceComponent from "../SimpleChoiceComponent";
+import { tr } from "../../i18n/i18n";
 
 @observer
 export default class SerGerrisDrinkwaterAbilityComponent extends Component<GameStateComponentProps<SerGerrisDrinkwaterAbilityGameState>> {
@@ -17,9 +18,7 @@ export default class SerGerrisDrinkwaterAbilityComponent extends Component<GameS
         return (
             <>
                 <Col xs={12} className="text-center">
-                    <b>Ser Gerris Drinkwater</b>: House <b>{this.props.gameState.childGameState.house.name}</b> may move one position higher
-                    on one Influence track of their choice.
-                </Col>
+                    {tr("auto.game-state-panel.house-card-abilities.SerGerrisDrinkwaterAbilityComponent.0", { p0: (<b>{this.props.gameState.childGameState.house.name}</b>) })}</Col>
                 {renderChildGameState(this.props, [
                     [SimpleChoiceGameState, SimpleChoiceComponent],
                     [SelectUnitsGameState, SelectUnitsComponent]

@@ -25,6 +25,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faInfo } from "@fortawesome/free-solid-svg-icons";
 import ResolveSinglePlaceOrdersForVassalsGameState from "../../common/ingame-game-state/planning-game-state/place-orders-for-vassals-game-state/resolve-single-place-orders-for-vassals-game-state/ResolveSinglePlaceOrdersForVassalsGameState";
 import joinNaturalLanguage from "../utils/joinNaturalLanguage";
+import { t, tr } from "../i18n/i18n";
 
 @observer
 export default class ResolveSinglePlaceOrdersForVassalsComponent extends Component<GameStateComponentProps<ResolveSinglePlaceOrdersForVassalsGameState>> {
@@ -74,8 +75,7 @@ export default class ResolveSinglePlaceOrdersForVassalsComponent extends Compone
                 <Row className="justify-content-center">
                     <Col xs={12} className="text-center">
                         <>
-                            House <b>{this.house.name}</b> must now place orders for
-                            {houses.length == 1 ? <> House {houses[0]}</> : <> {joinNaturalLanguage(houses)}</>}.
+                            {tr("auto.game-state-panel.ResolveSinglePlaceOrdersForVassalsComponent.0", { p0: (<b>{this.house.name}</b>) })}{houses.length == 1 ? <> {" "}{tr("auto.game-state-panel.ResolveSinglePlaceOrdersForVassalsComponent.1", { p0: (houses[0]) })}</> : <> {joinNaturalLanguage(houses)}</>}.
                         </>
                     </Col>
                     {this.singlePlaceOrders.planningGameState.planningRestrictions.map(pr => this.restrictionToWesterosCardTypeMap.tryGet(pr, null))
@@ -93,14 +93,14 @@ export default class ResolveSinglePlaceOrdersForVassalsComponent extends Compone
                                         onClick={() => this.onSubmitClick()}
                                         variant="success"
                                     >
-                                        Submit
+                                        {t("common.submit")}
                                     </Button>
                                 </Col>
                             </Row>
                         )}
                         <Row>
                             <Col xs={12} className="text-center mt-3">
-                                Waiting for {this.house.name}...
+                                {t("common.waitingFor", { who: this.house.name })}
                             </Col>
                         </Row>
                     </Col>
@@ -205,7 +205,7 @@ export default class ResolveSinglePlaceOrdersForVassalsComponent extends Compone
         const readyState = this.singlePlaceOrders.placeOrdersGameState.canSubmit(this.props.gameClient.authenticatedPlayer);
 
         if (readyState.reason == "not-all-regions-filled") {
-            if (!window.confirm("You may place up to two order tokens per vassal. Are you sure you want to continue with fewer?")) {
+            if (!window.confirm(t("auto2.game-state-panel.ResolveSinglePlaceOrdersForVassalsComponent.0"))) {
                 return;
             }
         }

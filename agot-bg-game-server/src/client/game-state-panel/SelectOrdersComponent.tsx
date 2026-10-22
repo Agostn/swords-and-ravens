@@ -15,6 +15,7 @@ import { OrderOnMapProperties } from "../MapControls";
 import PartialRecursive from "../../utils/PartialRecursive";
 import joinReactNodes from "../utils/joinReactNodes";
 import Order from "../../common/ingame-game-state/game-data-structure/Order";
+import { t, tr } from "../i18n/i18n";
 
 @observer
 export default class SelectOrdersComponent extends Component<
@@ -35,15 +36,13 @@ export default class SelectOrdersComponent extends Component<
               {this.selectedRegions.length > 0 && (
                 <Row className="justify-content-center">
                   <p className="text-center">
-                    Selected Order token
-                    {this.selectedRegions.length != 1 ? "s" : ""}:<br />
+                    {tr("auto.game-state-panel.SelectOrdersComponent.0", { p0: (this.selectedRegions.length != 1 ? "s" : "") })}
                     {joinReactNodes(
                       this.selectedRegions.map((r) => (
                         <span key={`select-order_${r.id}`}>
-                          <b>
-                            {this.getOrderInRegion(r)?.type.name ?? "Unknown"}
-                          </b>{" "}
-                          in <b>{r.name}</b>
+                          {tr("auto.game-state-panel.SelectOrdersComponent.1", { p0: (<b>
+                            {this.getOrderInRegion(r)?.type.name ?? t("auto2.game-state-panel.SelectOrdersComponent.0")}
+                          </b>), p1: (<b>{r.name}</b>) })}
                         </span>
                       )),
                       ", "
@@ -61,7 +60,7 @@ export default class SelectOrdersComponent extends Component<
                       this.selectedRegions.length != this.props.gameState.count
                     }
                   >
-                    Confirm
+                    {t("common.confirm")}
                   </Button>
                 </Col>
                 <Col xs="auto">
@@ -71,14 +70,14 @@ export default class SelectOrdersComponent extends Component<
                     variant="danger"
                     disabled={this.selectedRegions.length == 0}
                   >
-                    Reset
+                    {t("common.reset")}
                   </Button>
                 </Col>
               </Row>
             </>
           ) : (
             <div className="text-center">
-              Waiting for {this.props.gameState.house.name}...
+              {t("common.waitingFor", { who: this.props.gameState.house.name })}
             </div>
           )}
         </Col>

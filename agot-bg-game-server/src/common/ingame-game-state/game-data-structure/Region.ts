@@ -12,6 +12,7 @@ import getStaticWorld from "./static-data-structure/getStaticWorld";
 import { port } from "./regionTypes";
 import Player from "../Player";
 import IRegionSnapshot from "../../../client/game-replay/IRegionSnapshot";
+import { dataText } from "../../dataText";
 
 export const BLOCKED = 1000;
 
@@ -53,7 +54,7 @@ export default class Region {
   }
 
   get name(): string {
-    return this.staticRegion.name;
+    return dataText("region", this.id, this.staticRegion.name);
   }
 
   get castleLevel(): number {

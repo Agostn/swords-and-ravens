@@ -7,6 +7,7 @@ import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTimes } from "@fortawesome/free-solid-svg-icons/faTimes";
+import { tr } from "../i18n/i18n";
 
 @observer
 export default class IngameCancelledComponent extends Component<GameStateComponentProps<CancelledGameState>> {
@@ -16,15 +17,10 @@ export default class IngameCancelledComponent extends Component<GameStateCompone
                 <Row>
                     {this.props.gameState.ingame?.childGameStateBeforeCancellation ? (
                         <Col className="text-center">
-                            <FontAwesomeIcon icon={faTimes} size="3x" /><br />
-                            This game has been cancelled by a moderator.<br />
-                            Only the site administrator could restore it.
-                        </Col>
+                            {tr("auto.game-state-panel.IngameCancelledComponent.0", { p0: (<FontAwesomeIcon icon={faTimes} size="3x" />) })}</Col>
                     ) : (
                         <Col className="text-center">
-                            <FontAwesomeIcon icon={faTimes} size="3x" /><br />
-                            This game has been cancelled by vote
-                        </Col>
+                            {tr("auto.game-state-panel.IngameCancelledComponent.1", { p0: (<FontAwesomeIcon icon={faTimes} size="3x" />) })}</Col>
                     )}
                 </Row>
             </>

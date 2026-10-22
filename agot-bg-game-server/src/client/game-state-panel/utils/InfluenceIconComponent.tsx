@@ -6,6 +6,7 @@ import OverlayTrigger from "react-bootstrap/OverlayTrigger";
 import House from "../../../common/ingame-game-state/game-data-structure/House";
 import IngameGameState from "../../../common/ingame-game-state/IngameGameState";
 import classNames from "classnames";
+import { t } from "../../i18n/i18n";
 
 interface InfluenceIconComponentProps {
   house: House | null;
@@ -55,7 +56,7 @@ export default class InfluenceIconComponent extends Component<InfluenceIconCompo
         key={`influence-icon-${this.house?.id ?? "unknown"}-${this.props.ingame.stateVersion}`}
         overlay={
           <Tooltip id="influence-icon">
-            <b>{this.house?.name ?? "Unknown"}</b>
+            <b>{this.house?.name ?? t("auto2.game-state-panel.utils.InfluenceIconComponent.0")}</b>
           </Tooltip>
         }
         placement="bottom"

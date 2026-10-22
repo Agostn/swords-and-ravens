@@ -11,6 +11,7 @@ import AeronDamphairAbilityGameState from "../../../common/ingame-game-state/act
 import SelectHouseCardGameState from "../../../common/ingame-game-state/select-house-card-game-state/SelectHouseCardGameState";
 import SelectHouseCardComponent from "../SelectHouseCardComponent";
 import { Alert } from "react-bootstrap";
+import { tr } from "../../i18n/i18n";
 
 @observer
 export default class AeronDamphairAbilityComponent extends Component<
@@ -27,9 +28,7 @@ export default class AeronDamphairAbilityComponent extends Component<
     return (
       <>
         <Col xs={12} className="text-center">
-          <b>Aeron Damphair:</b> House <b>{childGameState.house.name}</b> may
-          discard 2 Power tokens to change their House card.
-        </Col>
+          {tr("auto.game-state-panel.house-card-abilities.AeronDamphairAbilityComponent.0", { p0: (<b>{childGameState.house.name}</b>) })}</Col>
         {showWarning && (
           <Col xs={12}>
             <Row className="justify-content-center">
@@ -38,10 +37,7 @@ export default class AeronDamphairAbilityComponent extends Component<
                   variant="danger"
                   className="text-center pl-2 pt-1 pr-2 pb-2"
                 >
-                  <small>
-                    <b>Warning:</b> This card&apos;s ability will have no effect
-                    because the cancellation phase has already passed!
-                  </small>
+                  {tr("auto.game-state-panel.house-card-abilities.AeronDamphairAbilityComponent.1")}
                 </Alert>
               </Col>
             </Row>

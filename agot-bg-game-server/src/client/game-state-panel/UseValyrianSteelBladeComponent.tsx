@@ -8,6 +8,7 @@ import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
 import House from "../../common/ingame-game-state/game-data-structure/House";
 import { Alert } from "react-bootstrap";
+import { t, tr } from "../i18n/i18n";
 
 @observer
 export default class UseValyrianSteelBladeComponent extends Component<
@@ -34,12 +35,9 @@ export default class UseValyrianSteelBladeComponent extends Component<
     ) : (
       <>
         <Col xs={12} className="text-center">
-          {this.house.name} may choose to use the Valyrian Steel Blade to{" "}
-          {this.gameState.forNewTidesOfBattleCard
-            ? "draw a new Tides of Battle card"
-            : "increase their combat strength by 1"}
-          .
-        </Col>
+          {tr("auto.game-state-panel.UseValyrianSteelBladeComponent.0", { p0: (this.house.name), p1: (this.gameState.forNewTidesOfBattleCard
+            ? t("auto2.game-state-panel.UseValyrianSteelBladeComponent.0")
+            : t("auto2.game-state-panel.UseValyrianSteelBladeComponent.1")) })}</Col>
         <Col xs={12}>
           {this.props.gameClient.doesControlHouse(this.house) ? (
             <>
@@ -56,10 +54,7 @@ export default class UseValyrianSteelBladeComponent extends Component<
                         variant="warning"
                         className="text-center pl-2 pt-1 pr-2 pb-2"
                       >
-                        <small>
-                          <b>Warning:</b> Using the Valyrian Steel Blade
-                          won&apos;t change the outcome of the battle.
-                        </small>
+                        {tr("auto.game-state-panel.UseValyrianSteelBladeComponent.1")}
                       </Alert>
                     </Col>
                   </Row>
@@ -72,13 +67,7 @@ export default class UseValyrianSteelBladeComponent extends Component<
                         variant="warning"
                         className="text-center pl-2 pt-1 pr-2 pb-2"
                       >
-                        <small>
-                          <b>Warning:</b> The Valyrian Steel Blade decision is
-                          forced by a house card effect.
-                          <br />
-                          The +1 bonus may not be enough to win the battle this
-                          time.
-                        </small>
+                        {tr("auto.game-state-panel.UseValyrianSteelBladeComponent.2")}
                       </Alert>
                     </Col>
                   </Row>
@@ -92,8 +81,7 @@ export default class UseValyrianSteelBladeComponent extends Component<
                     onClick={() => this.choose(true)}
                     disabled={!houseCardsAreRevealed}
                   >
-                    Use it
-                  </Button>
+                    {t("auto.game-state-panel.UseValyrianSteelBladeComponent.3")}</Button>
                 </Col>
                 <Col xs="auto">
                   <Button
@@ -102,20 +90,14 @@ export default class UseValyrianSteelBladeComponent extends Component<
                     onClick={() => this.choose(false)}
                     disabled={!houseCardsAreRevealed}
                   >
-                    Don&apos;t use it
-                  </Button>
+                    {t("auto.game-state-panel.UseValyrianSteelBladeComponent.4")}</Button>
                 </Col>
               </Row>
             </>
           ) : (
             <div className="text-center">
-              Waiting for{" "}
-              {
-                this.gameState.ingame.getControllerOfHouse(this.house).house
-                  .name
-              }
-              ...
-            </div>
+              {tr("auto.game-state-panel.UseValyrianSteelBladeComponent.5", { p0: (this.gameState.ingame.getControllerOfHouse(this.house).house
+                  .name) })}</div>
           )}
         </Col>
       </>

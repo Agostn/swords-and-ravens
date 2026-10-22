@@ -11,6 +11,7 @@ import SelectHouseCardGameState
 import SelectHouseCardComponent from "../SelectHouseCardComponent";
 import SimpleChoiceGameState from "../../../common/ingame-game-state/simple-choice-game-state/SimpleChoiceGameState";
 import SimpleChoiceComponent from "../SimpleChoiceComponent";
+import { tr } from "../../i18n/i18n";
 
 @observer
 export default class MissandeiAbilityComponent extends Component<GameStateComponentProps<MelisandreAbilityGameState>> {
@@ -18,8 +19,7 @@ export default class MissandeiAbilityComponent extends Component<GameStateCompon
         return (
             <>
                 <Col xs={12} className="text-center">
-                    <b>Missandei</b>: House <b>{this.props.gameState.childGameState.house.name}</b> may return any House card from their discard pile to their hand.
-                </Col>
+                    {tr("auto.game-state-panel.house-card-abilities.MissandeiAbilityComponent.0", { p0: (<b>{this.props.gameState.childGameState.house.name}</b>) })}</Col>
                 {renderChildGameState(this.props, [
                     [SimpleChoiceGameState, SimpleChoiceComponent],
                     [SelectHouseCardGameState, SelectHouseCardComponent]

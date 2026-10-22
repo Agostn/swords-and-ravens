@@ -12,6 +12,7 @@ import BetterMap from "../utils/BetterMap";
 import { compress, decompress } from "./utils/compression";
 import SfxManager from "./utils/SfxManager";
 import { isMobile } from "react-device-detect";
+import { t } from "./i18n/i18n";
 
 export interface AuthData {
   userId: string;
@@ -521,8 +522,8 @@ export default class GameClient {
         if (!this.hasShownServerMessageErrorDialog) {
           this.hasShownServerMessageErrorDialog = true;
           window.alert(
-            "Something strange happened and your game view may be out of sync. " +
-              "Please open the browser console (F12) and send the error details there to the site admin."
+            t("auto2.GameClient.0") +
+              t("auto2.GameClient.1")
           );
         }
       }

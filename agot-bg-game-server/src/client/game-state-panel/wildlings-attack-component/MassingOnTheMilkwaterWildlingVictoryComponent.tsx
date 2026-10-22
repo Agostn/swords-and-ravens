@@ -9,13 +9,14 @@ import SelectHouseCardComponent from "../SelectHouseCardComponent";
 import SelectHouseCardGameState
     from "../../../common/ingame-game-state/select-house-card-game-state/SelectHouseCardGameState";
 import { Col } from "react-bootstrap";
+import { t } from "../../i18n/i18n";
 
 @observer
 export default class MassingOnTheMilkwaterWildlingVictoryComponent extends Component<GameStateComponentProps<MassingOnTheMilkwaterWildlingVictoryGameState>> {
     render(): ReactNode {
         return (
             <>
-                <Col xs={12} className="text-center">Houses choose their House cards to discard.</Col>
+                <Col xs={12} className="text-center">{t("auto.game-state-panel.wildlings-attack-component.MassingOnTheMilkwaterWildlingVictoryComponent.0")}</Col>
                 {renderChildGameState(this.props, [
                     [SelectHouseCardGameState, SelectHouseCardComponent]
                 ])}

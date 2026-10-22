@@ -8,6 +8,7 @@ import SelectOrdersGameState from "../../../common/ingame-game-state/select-orde
 import SelectOrdersComponent from "../SelectOrdersComponent";
 import React from "react";
 import Col from "react-bootstrap/Col";
+import { t, tr } from "../../i18n/i18n";
 
 @observer
 export default class QueenOfThornsAbilityComponent extends Component<GameStateComponentProps<QueenOfThornsAbilityGameState>> {
@@ -19,9 +20,8 @@ export default class QueenOfThornsAbilityComponent extends Component<GameStateCo
         return (
             <>
                 <Col xs={12} className="text-center">
-                    <b>Queen of Thorns</b>: House <b>{this.props.gameState.childGameState.house.name}</b> must remove an enemy Order token {this.removingOrderInEmbattledAreaAllowed ?
-                    "either in the embattled area or " : ""}adjacent to the embattled area.
-                </Col>
+                    {tr("auto.game-state-panel.house-card-abilities.QueenOfThornsAbilityComponent.0", { p0: (<b>{this.props.gameState.childGameState.house.name}</b>), p1: (this.removingOrderInEmbattledAreaAllowed ?
+                    t("auto2.game-state-panel.house-card-abilities.QueenOfThornsAbilityComponent.0") : "") })}</Col>
                 {renderChildGameState(this.props, [
                     [SelectOrdersGameState, SelectOrdersComponent]
                 ])}

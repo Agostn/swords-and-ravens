@@ -9,6 +9,7 @@ import SimpleChoiceComponent from "../SimpleChoiceComponent";
 import SelectRegionGameState from "../../../common/ingame-game-state/select-region-game-state/SelectRegionGameState";
 import SelectRegionComponent from "../SelectRegionComponent";
 import { Col } from "react-bootstrap";
+import { tr } from "../../i18n/i18n";
 
 @observer
 export default class ChooseMultipleRegionsForLoyaltyTokenComponent extends Component<GameStateComponentProps<ChooseMultipleRegionsForLoyaltyTokenGameState>> {
@@ -16,8 +17,7 @@ export default class ChooseMultipleRegionsForLoyaltyTokenComponent extends Compo
         return (
             <>
                 {this.props.gameState.childGameState instanceof SelectRegionGameState && <Col className="text-center">
-                    House <b>{this.props.gameState.childGameState.house.name}</b> must choose regions to place loyalty&nbsp;tokens.
-                </Col>}
+                    {tr("auto.game-state-panel.westeros-deck-4-component.ChooseMultipleRegionsForLoyaltyTokenComponent.0", { p0: (<b>{this.props.gameState.childGameState.house.name}</b>) })}</Col>}
                 {renderChildGameState(this.props, [
                     [SimpleChoiceGameState, SimpleChoiceComponent],
                     [SelectRegionGameState, SelectRegionComponent]

@@ -5,6 +5,7 @@ import orderImages from "../../orderImages";
 import classNames from "classnames";
 import Order from "../../../common/ingame-game-state/game-data-structure/Order";
 import { OverlayTrigger, Tooltip } from "react-bootstrap";
+import { tr } from "../../i18n/i18n";
 
 interface OrderGridProps {
     orders: Order[];
@@ -26,7 +27,7 @@ export default class OrderGridComponent extends Component<OrderGridProps> {
                                 placement="right"
                                 overlay={
                                     <Tooltip id={"order-tooltip-" + o.id}><b>{o.type.name}</b>{this.props.restrictedOrders.includes(o) &&
-                                    <><br/>You are not allowed to place this order but it can be placed as dummy order token and will be removed after the messenger raven has been used.</>}</Tooltip>
+                                    <>{tr("auto.game-state-panel.utils.OrderGridComponent.0")}</>}</Tooltip>
                                 }
                                 delay={{ show: 250, hide: 100 }}
                             >

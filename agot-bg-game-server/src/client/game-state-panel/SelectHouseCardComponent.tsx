@@ -11,6 +11,7 @@ import HouseCard from "../../common/ingame-game-state/game-data-structure/house-
 import HouseCardComponent from "./utils/HouseCardComponent";
 import DraftHouseCardsGameState from "../../common/ingame-game-state/draft-game-state/draft-house-cards-game-state/DraftHouseCardsGameState";
 import _ from "lodash";
+import { t } from "../i18n/i18n";
 
 @observer
 export default class SelectHouseCardComponent extends Component<
@@ -37,7 +38,7 @@ export default class SelectHouseCardComponent extends Component<
               <Row className="justify-content-center mb-2">
                 <input
                   className="form-control"
-                  placeholder="Filter by house card name or strength"
+                  placeholder={t("auto2.game-state-panel.SelectHouseCardComponent.0")}
                   type="text"
                   value={this.nameFilter}
                   onChange={(e) => (this.nameFilter = e.target.value)}
@@ -85,7 +86,7 @@ export default class SelectHouseCardComponent extends Component<
                   onClick={() => this.confirm()}
                   disabled={this.selectedHouseCard == null}
                 >
-                  Confirm
+                  {t("common.confirm")}
                 </Button>
               </Col>
             </Row>
@@ -93,7 +94,7 @@ export default class SelectHouseCardComponent extends Component<
         ) : (
           <Col xs={12}>
             <Row className="justify-content-center">
-              Waiting for {this.props.gameState.house.name}...
+              {t("common.waitingFor", { who: this.props.gameState.house.name })}
             </Row>
           </Col>
         )}

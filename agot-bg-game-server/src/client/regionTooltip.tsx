@@ -8,6 +8,7 @@ import barrelImage from "../../public/images/region-modifications/Barrel.png";
 import crownImage from "../../public/images/region-modifications/Crown.png";
 import housePowerTokensImages from "./housePowerTokensImages";
 import loyaltyTokenImage from "../../public/images/power-tokens/Loyalty.png";
+import { t, tr } from "./i18n/i18n";
 
 export function renderRegionTooltip(
   region: Region,
@@ -23,7 +24,7 @@ export function renderRegionTooltip(
           {region.staticRegion.castleLevel > 0 && (
             <>
               <br />
-              {region.staticRegion.castleLevel == 1 ? "Castle" : "Stronghold"}
+              {region.staticRegion.castleLevel == 1 ? t("auto2.regionTooltip.0") : t("auto2.regionTooltip.1")}
             </>
           )}
           <div className="d-flex flex-row justify-content-center mt-2">
@@ -64,33 +65,28 @@ export function renderRegionTooltip(
         <b>{region.name}</b>
         {controller && (
           <small>
-            {" "}
-            of <b>{controller.name}</b>
+            {" "}{tr("auto.regionTooltip.0", { p0: (<b>{controller.name}</b>) })}
           </small>
         )}
         {region.castleLevel > 0 && (
           <>
             <br />
-            {region.castleLevel == 1 ? "Castle" : "Stronghold"}
+            {region.castleLevel == 1 ? t("auto2.regionTooltip.2") : t("auto2.regionTooltip.3")}
           </>
         )}
         {region.superControlPowerToken &&
         region.superControlPowerToken == controller ? (
           <>
-            <br />
-            Capital
-            {region.garrison > 0 && (
+            {tr("auto.regionTooltip.1")}{region.garrison > 0 && (
               <>
-                &nbsp;with&nbsp;Garrison&nbsp;of&nbsp;<b>{region.garrison}</b>
+                {" "}{tr("auto.regionTooltip.2", { p0: (<b>{region.garrison}</b>) })}
               </>
             )}
           </>
         ) : (
           region.garrison > 0 && (
             <>
-              <br />
-              {!controller ? "Neutral\xa0force" : "Garrison"}&nbsp;of&nbsp;
-              <b>{region.garrison}</b>
+              {tr("auto.regionTooltip.3", { p0: (!controller ? t("auto2.regionTooltip.4") : t("auto2.regionTooltip.5")), p1: (<b>{region.garrison}</b>) })}
             </>
           )
         )}

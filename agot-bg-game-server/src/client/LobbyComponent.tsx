@@ -411,8 +411,7 @@ export default class LobbyComponent extends Component<LobbyComponentProps> {
         return (
           <Col xs="auto">
             <Button type="button" size="sm" className="invisible">
-              INVISIBLE DUMMY
-            </Button>
+              {t("auto.LobbyComponent.0")}</Button>
           </Col>
         );
       }

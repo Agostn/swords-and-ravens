@@ -10,6 +10,7 @@ import SelectUnitsGameState from "../../../common/ingame-game-state/select-units
 import SelectUnitsComponent from "../SelectUnitsComponent";
 import SimpleChoiceGameState from "../../../common/ingame-game-state/simple-choice-game-state/SimpleChoiceGameState";
 import SimpleChoiceComponent from "../SimpleChoiceComponent";
+import { tr } from "../../i18n/i18n";
 
 @observer
 export default class SerIlynPayneAbilityComponent extends Component<GameStateComponentProps< SerIlynPayneAbilityGameState>> {
@@ -17,9 +18,7 @@ export default class SerIlynPayneAbilityComponent extends Component<GameStateCom
         return (
             <>
                 <Col xs={12} className="text-center">
-                    <b>Ser Ilyn Payne</b>: House <b>{this.props.gameState.house.name}</b> may kill a Footman of
-                    House <b>{this.props.gameState.combatGameState.getEnemy(this.props.gameState.house).name}</b>.
-                </Col>
+                    {tr("auto.game-state-panel.house-card-abilities.SerIlynPayneAbilityComponent.0", { p0: (<b>{this.props.gameState.house.name}</b>), p1: (<b>{this.props.gameState.combatGameState.getEnemy(this.props.gameState.house).name}</b>) })}</Col>
                 {renderChildGameState(this.props, [
                     [SimpleChoiceGameState, SimpleChoiceComponent],
                     [SelectUnitsGameState, SelectUnitsComponent]

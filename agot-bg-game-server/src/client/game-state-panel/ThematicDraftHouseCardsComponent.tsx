@@ -9,6 +9,7 @@ import HouseCardComponent from "./utils/HouseCardComponent";
 import ThematicDraftHouseCardsGameState from "../../common/ingame-game-state/draft-game-state/thematic-draft-house-cards-game-state/ThematicDraftHouseCardsGameState";
 import { observable } from "mobx";
 import HouseCard from "../../common/ingame-game-state/game-data-structure/house-card/HouseCard";
+import { t, tr } from "../i18n/i18n";
 
 @observer
 export default class ThematicDraftHouseCardsComponent extends Component<
@@ -25,16 +26,14 @@ export default class ThematicDraftHouseCardsComponent extends Component<
       <>
         <Row className="justify-content-center">
           <Col xs={12} className="text-center">
-            All houses choose their House cards.
-          </Col>
+            {t("auto.game-state-panel.ThematicDraftHouseCardsComponent.0")}</Col>
         </Row>
         {this.player &&
           this.props.gameState.unreadyPlayers.includes(this.player) && (
             <>
               <Row className="mt-3 justify-content-center">
                 <Col xs="12" className="text-center">
-                  Please select a House card:
-                </Col>
+                  {t("auto.game-state-panel.ThematicDraftHouseCardsComponent.1")}</Col>
               </Row>
               <Row className="justify-content-center">
                 <Col xs="12">
@@ -63,7 +62,7 @@ export default class ThematicDraftHouseCardsComponent extends Component<
                     onClick={() => this.confirm()}
                     disabled={this.selectedHouseCard == null}
                   >
-                    Confirm
+                    {t("common.confirm")}
                   </Button>
                 </Col>
               </Row>
@@ -71,12 +70,9 @@ export default class ThematicDraftHouseCardsComponent extends Component<
           )}
         <Row className="mt-3 justify-content-center">
           <Col xs={12} className="text-center">
-            Waiting for{" "}
-            {this.props.gameState.unreadyPlayers
+            {tr("auto.game-state-panel.ThematicDraftHouseCardsComponent.2", { p0: (this.props.gameState.unreadyPlayers
               .map((p) => p.house.name)
-              .join(", ")}
-            ...
-          </Col>
+              .join(", ")) })}</Col>
         </Row>
       </>
     );

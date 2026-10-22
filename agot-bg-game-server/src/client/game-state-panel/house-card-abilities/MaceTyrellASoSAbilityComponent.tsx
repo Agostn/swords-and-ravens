@@ -7,6 +7,7 @@ import Col from "react-bootstrap/Col";
 import SimpleChoiceGameState from "../../../common/ingame-game-state/simple-choice-game-state/SimpleChoiceGameState";
 import SimpleChoiceComponent from "../SimpleChoiceComponent";
 import MaceTyrellASoSAbilityGameState from "../../../common/ingame-game-state/action-game-state/resolve-march-order-game-state/combat-game-state/post-combat-game-state/after-combat-house-card-abilities-game-state/mace-tyrell-asos-ability-game-state/MaceTyrellASoSAbilityGameState";
+import { tr } from "../../i18n/i18n";
 
 @observer
 export default class MaceTyrellASoSAbilityComponent extends Component<GameStateComponentProps<MaceTyrellASoSAbilityGameState>> {
@@ -14,9 +15,8 @@ export default class MaceTyrellASoSAbilityComponent extends Component<GameStateC
         return (
             <>
                 <Col xs={12} className="text-center">
-                    <b>Mace Tyrell</b>: House <b>{this.props.gameState.childGameState.house.name}</b> may choose to place a <b>Support</b> or <b>Defense</b> order in <b>
-                        {this.props.gameState.combatGameState.defendingRegion.name}</b>.
-                </Col>
+                    {tr("auto.game-state-panel.house-card-abilities.MaceTyrellASoSAbilityComponent.0", { p0: (<b>{this.props.gameState.childGameState.house.name}</b>), p1: (<b>
+                        {this.props.gameState.combatGameState.defendingRegion.name}</b>) })}</Col>
                 {renderChildGameState(this.props, [
                     [SimpleChoiceGameState, SimpleChoiceComponent],
                 ])}
