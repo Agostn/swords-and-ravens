@@ -100,6 +100,13 @@ export default class EntireGame extends GameState<
     this.throttledSaveGame.flush();
   }
 
+  // Discards a save still waiting inside the throttle window. Used when a game is evicted
+  // after an error: its in-memory state may be half-updated and must not overwrite the last
+  // good save (see GlobalServer.evictGameAfterError).
+  cancelPendingSave(): void {
+    this.throttledSaveGame.cancel();
+  }
+
   // FINISHED/CANCELLED are rare, final state transitions where losing the save to an unluckily
   // timed process restart landing inside the throttle's 2s window would leave the website with a
   // stale, non-final snapshot of the game forever (see GlobalServer.shutdown()'s doc comment for

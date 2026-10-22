@@ -78,7 +78,12 @@ export default class GlobalServer {
         const ix = this.parseClientIx(incomingMsg);
         console.log("New user connected: " + ix);
         client.on("message", (data: WebSocket.Data) => {
-          this.onMessage(client, data as Buffer, ix);
+          // onMessage is async: without this catch, any rejection (e.g. the website being
+          // unreachable during authentication) is unhandled and terminates the process.
+          this.onMessage(client, data as Buffer, ix).catch((e) => {
+            console.error("Unhandled error in onMessage:", e);
+            Sentry.captureException(e);
+          });
         });
         client.on("close", () => {
           this.onClose(client);
@@ -316,7 +321,13 @@ export default class GlobalServer {
           });
           Sentry.captureException(e);
         });
-        throw e;
+        // Previously the error was rethrown here, which crashed the whole process and
+        // disconnected every game on the server. Now only the affected game is isolated.
+        console.error(
+          `Error while processing message ${JSON.stringify(message)} for game ${entireGame.id}:`,
+          e
+        );
+        this.evictGameAfterError(entireGame);
       }
     }
 
@@ -831,6 +842,52 @@ export default class GlobalServer {
     return result.map(([userId, _]) => entireGame.users.get(userId).name);
   }
 
+  /**
+   * Isolates a game whose state threw an exception while processing a client message.
+   * The game is unloaded WITHOUT saving (its in-memory state may be half-updated), its timers
+   * are stopped and its clients are disconnected. When the players reload the page, the game
+   * is loaded again from its last good save. All other games keep running.
+   */
+  evictGameAfterError(entireGame: EntireGame): void {
+    if (this.loadedGames.tryGet(entireGame.id, null) != entireGame) {
+      return;
+    }
+    console.error(`Evicting game ${entireGame.id} after an error`);
+
+    entireGame.cancelPendingSave();
+    entireGame.ingameGameState?.players.values.forEach((p) => {
+      if (p.liveClockData?.serverTimer) {
+        clearTimeout(p.liveClockData.serverTimer);
+        p.liveClockData.serverTimer = null;
+      }
+    });
+
+    this.detachGameCallbacks(entireGame);
+    this.loadedGames.delete(entireGame.id);
+
+    entireGame.users.values.forEach((user) => {
+      [...user.connectedClients].forEach((client) =>
+        this.disconnectClient(client, user)
+      );
+    });
+  }
+
+  private detachGameCallbacks(entireGame: EntireGame): void {
+    entireGame.onSendClientMessage = undefined;
+    entireGame.onSendServerMessage = undefined;
+    entireGame.onReadyToStart = undefined;
+    entireGame.onWaitedUsers = undefined;
+    entireGame.onBattleResults = undefined;
+    entireGame.onBribeForSupport = undefined;
+    entireGame.onNewVoteStarted = undefined;
+    entireGame.onGameEnded = undefined;
+    entireGame.onNewPbemResponseTime = undefined;
+    entireGame.onClearChatRoom = undefined;
+    entireGame.onCaptureSentryMessage = undefined;
+    entireGame.onSaveGame = undefined;
+    entireGame.onGetUser = undefined;
+  }
+
   unloadGame(entireGame: EntireGame): void {
     if (!this.loadedGames.has(entireGame.id)) {
       console.warn(
@@ -872,19 +929,7 @@ export default class GlobalServer {
       entireGame.flushSaveGame();
     }
 
-    entireGame.onSendClientMessage = undefined;
-    entireGame.onSendServerMessage = undefined;
-    entireGame.onReadyToStart = undefined;
-    entireGame.onWaitedUsers = undefined;
-    entireGame.onBattleResults = undefined;
-    entireGame.onBribeForSupport = undefined;
-    entireGame.onNewVoteStarted = undefined;
-    entireGame.onGameEnded = undefined;
-    entireGame.onNewPbemResponseTime = undefined;
-    entireGame.onClearChatRoom = undefined;
-    entireGame.onCaptureSentryMessage = undefined;
-    entireGame.onSaveGame = undefined;
-    entireGame.onGetUser = undefined;
+    this.detachGameCallbacks(entireGame);
 
     this.loadedGames.delete(entireGame.id);
   }
@@ -908,7 +953,14 @@ export default class GlobalServer {
             (!game.gameSettings.pbem &&
               secondsSinceLastIncomingMessage >= 20 * 60)
           ) {
-            this.unloadGame(game);
+            // An exception here would end this background loop for good (and, being an
+            // unhandled rejection, terminate the process), so guard each game.
+            try {
+              this.unloadGame(game);
+            } catch (e) {
+              console.error(`Error while unloading game ${game.id}:`, e);
+              Sentry.captureException(e);
+            }
           }
         });
     }
