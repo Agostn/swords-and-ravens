@@ -76,7 +76,13 @@ interface HudLayoutProps {
 }
 
 const TOP_BAR_HEIGHT = 64;
+// tablet: o cabeçalho da partida (relógio, avisos) desce para uma 2ª faixa
+const TABLET_TOP_BAR_HEIGHT = 110;
+// celular: status, trilhas e cabeçalho ficam em 3 faixas finas no topo
+const PHONE_TOP_BAR_HEIGHT = 136;
 const LEFT_DOCK_WIDTH = 320;
+
+type ScreenSize = "phone" | "tablet" | "desktop";
 
 // Título curto do painel da jogada, conforme o que está acontecendo.
 // (instanceof em vez do nome da classe, que some no build de produção)
@@ -105,6 +111,9 @@ export default class HudLayout extends Component<HudLayoutProps> {
   @observable chatOpen = false;
   @observable chatTab: string | undefined = undefined;
   @observable windowWidth = window.innerWidth;
+  @observable windowHeight = window.innerHeight;
+  // celular: Casas abertas por cima do mapa
+  @observable phoneHousesOpen = false;
   // Altura dos painéis de baixo (jogada e canto esquerdo), para o mapa poder
   // ser arrastado para cima deles e nenhuma área ficar escondida embaixo.
   @observable bottomPanelsHeight = 0;
@@ -128,7 +137,40 @@ export default class HudLayout extends Component<HudLayoutProps> {
 
   private onResize = (): void => {
     this.windowWidth = window.innerWidth;
+    this.windowHeight = window.innerHeight;
   };
+
+  // Celular (inclusive deitado, que é baixo), tablet ou computador
+  private get screenSize(): ScreenSize {
+    if (this.windowWidth < 760 || this.windowHeight < 500) return "phone";
+    if (this.windowWidth < 1200) return "tablet";
+    return "desktop";
+  }
+
+  private get isPhone(): boolean {
+    return this.screenSize == "phone";
+  }
+
+  private get topBarHeight(): number {
+    return this.screenSize == "phone"
+      ? PHONE_TOP_BAR_HEIGHT
+      : this.screenSize == "tablet"
+        ? TABLET_TOP_BAR_HEIGHT
+        : TOP_BAR_HEIGHT;
+  }
+
+  // Avisos e o cabeçalho da partida ficam fora daqui: eles se ajustam pela
+  // classe no <body>.
+  private applyBodyClasses(): void {
+    const size = this.screenSize;
+    document.body.classList.toggle("hud-phone", size == "phone");
+    document.body.classList.toggle("hud-tablet", size == "tablet");
+    // celular: com Casas ou chat abertos em tela cheia, o cabeçalho some
+    document.body.classList.toggle(
+      "hud-sheet-open",
+      size == "phone" && (this.phoneHousesOpen || this.chatOpen)
+    );
+  }
 
   private measureBottomPanels = (): void => {
     const vh = window.innerHeight;
@@ -150,12 +192,28 @@ export default class HudLayout extends Component<HudLayoutProps> {
     this.measureBottomPanels();
     // avisos (toasts) e outros elementos fora daqui se ajustam à tela nova
     document.body.classList.add("hud-active");
+    this.applyBodyClasses();
+  }
+
+  componentDidUpdate(): void {
+    this.applyBodyClasses();
+    // no celular os painéis de baixo mudam de lugar conforme o que está aberto
+    if (this.actionDockRef.current)
+      this.panelsObserver?.observe(this.actionDockRef.current);
+    if (this.leftDockRef.current)
+      this.panelsObserver?.observe(this.leftDockRef.current);
+    this.measureBottomPanels();
   }
 
   componentWillUnmount(): void {
     window.removeEventListener("resize", this.onResize);
     this.panelsObserver?.disconnect();
-    document.body.classList.remove("hud-active");
+    document.body.classList.remove(
+      "hud-active",
+      "hud-phone",
+      "hud-tablet",
+      "hud-sheet-open"
+    );
   }
 
   private get publicChatRoom(): Channel | null {
@@ -259,10 +317,11 @@ export default class HudLayout extends Component<HudLayoutProps> {
   }
 
   render(): ReactNode {
-    const rightOpen = hudSettings.rightPanelOpen;
-    const rightSpace = rightOpen ? this.rightPanelWidth + 24 : 72;
+    const phone = this.isPhone;
+    const rightOpen = !phone && hudSettings.rightPanelOpen;
+    const rightSpace = phone ? 0 : rightOpen ? this.rightPanelWidth + 24 : 72;
     const insets = {
-      top: TOP_BAR_HEIGHT,
+      top: this.topBarHeight,
       right: rightSpace,
       bottom: 0,
       left: 0
@@ -270,12 +329,13 @@ export default class HudLayout extends Component<HudLayoutProps> {
 
     return (
       <div
-        className="hud-root"
+        className={classNames("hud-root", `hud-${this.screenSize}`)}
         style={
           {
             "--hud-right-panel-width": `${this.rightPanelWidth}px`,
             "--hud-left-dock-width": `${LEFT_DOCK_WIDTH}px`,
-            "--hud-right-space": `${rightSpace}px`
+            "--hud-right-space": `${rightSpace}px`,
+            "--hud-top-offset": `${this.topBarHeight}px`
           } as React.CSSProperties
         }
       >
@@ -291,7 +351,8 @@ export default class HudLayout extends Component<HudLayoutProps> {
           minimapImage={this.mapImage}
           insets={insets}
           panBottom={this.bottomPanelsHeight}
-          controlsRight={rightSpace}
+          controlsRight={phone ? 8 : rightSpace}
+          compactControls={phone}
         >
           <MapComponent
             gameClient={this.gameClient}
@@ -318,9 +379,142 @@ export default class HudLayout extends Component<HudLayoutProps> {
 
         <HudBidResults ingame={this.ingame} myHouse={this.myHouse} />
         {this.renderTopRight()}
-        {rightOpen ? this.renderRightPanel() : this.renderHouseStrip()}
-        {this.renderActionDock(rightSpace)}
-        {this.renderLeftDock()}
+        {phone ? (
+          <>
+            {this.renderPhoneBottom()}
+            {this.phoneHousesOpen && this.renderPhoneHouses()}
+            {this.chatOpen && this.renderPhoneChat()}
+          </>
+        ) : (
+          <>
+            {rightOpen ? this.renderRightPanel() : this.renderHouseStrip()}
+            {this.renderActionDock(rightSpace)}
+            {this.renderLeftDock()}
+          </>
+        )}
+      </div>
+    );
+  }
+
+  // ---------- celular ----------
+
+  // Embaixo: o painel da jogada e uma barra com Casas, Chat, Corvos e Histórico.
+  private renderPhoneBottom(): ReactNode {
+    const unread = this.unreadPublicMessages;
+    const privateUnread = this.hasUnreadPrivateMessages;
+    const houses: House[] = this.gameClient.getPotentialWinners();
+    const me = this.myHouse;
+    return (
+      <div className="hud-phone-bottom" ref={this.leftDockRef}>
+        {this.renderActionDock(0)}
+        <nav className="hud-phone-nav" aria-label={t("hud.phone.nav")}>
+          <button
+            type="button"
+            className="hud-phone-nav-button"
+            onClick={() => (this.phoneHousesOpen = true)}
+          >
+            <span className="hud-phone-nav-chips" aria-hidden="true">
+              {houses.slice(0, 3).map((h) => (
+                <HouseChip
+                  key={`hud-nav-${h.id}`}
+                  house={h}
+                  size={18}
+                  mine={h == me}
+                />
+              ))}
+            </span>
+            <span>{t("hud.houses.title")}</span>
+          </button>
+          <button
+            type="button"
+            className="hud-phone-nav-button"
+            onClick={() => this.openDrawer("chat")}
+          >
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="#E2B65A"
+              strokeWidth="2"
+              aria-hidden="true"
+            >
+              <path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z" />
+            </svg>
+            <span>{t("hud.chat.label")}</span>
+            {unread > 0 && <span className="hud-count small">{unread}</span>}
+          </button>
+          <button
+            type="button"
+            className="hud-phone-nav-button"
+            onClick={() => this.openDrawer("chat")}
+            title={t("hud.chat.ravensHint")}
+          >
+            <span aria-hidden="true">✉</span>
+            <span>{t("hud.chat.ravens")}</span>
+            {privateUnread && <span className="hud-dot" />}
+          </button>
+          <button
+            type="button"
+            className="hud-phone-nav-button"
+            onClick={() => this.openDrawer("game-logs")}
+          >
+            <span aria-hidden="true">☰</span>
+            <span>{t("hud.recent.history")}</span>
+          </button>
+        </nav>
+      </div>
+    );
+  }
+
+  private renderPhoneSheet(
+    title: string,
+    onClose: () => void,
+    body: ReactNode
+  ): ReactNode {
+    return (
+      <div className="hud-phone-sheet" role="dialog" aria-label={title}>
+        <div className="hud-panel-header">
+          <b>{title}</b>
+          <button
+            type="button"
+            className="hud-icon-button"
+            aria-label={t("hud.chat.close")}
+            title={t("hud.chat.close")}
+            onClick={onClose}
+          >
+            ×
+          </button>
+        </div>
+        <div className="hud-phone-sheet-body">{body}</div>
+      </div>
+    );
+  }
+
+  private renderPhoneHouses(): ReactNode {
+    return this.renderPhoneSheet(
+      t("hud.houses.title"),
+      () => (this.phoneHousesOpen = false),
+      <HudHouseList
+        gameClient={this.gameClient}
+        ingame={this.ingame}
+        mapControls={this.props.mapControls}
+      />
+    );
+  }
+
+  private renderPhoneChat(): ReactNode {
+    return this.renderPhoneSheet(
+      t("hud.chat.title"),
+      () => (this.chatOpen = false),
+      <div className="hud-chat-body">
+        <GameTabsComponent
+          key={`hud-tabs-${this.chatTab ?? "default"}`}
+          gameClient={this.gameClient}
+          ingame={this.ingame}
+          mapControls={this.props.mapControls}
+          initialTab={this.chatTab}
+        />
       </div>
     );
   }

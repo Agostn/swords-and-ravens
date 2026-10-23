@@ -305,6 +305,21 @@ export default class LobbyComponent extends Component<LobbyComponentProps> {
 
         <footer className="lobby-panel lobby-actionbar">
           <div className="lobby-start">
+            {this.readyCheckOngoing &&
+              mySeat &&
+              !(this.lobby.readyUsers ?? []).includes(
+                this.authenticatedUser
+              ) && (
+                // também aqui embaixo: no celular o botão da Casa pode estar
+                // fora da tela
+                <button
+                  type="button"
+                  className="lobby-btn ready big"
+                  onClick={() => this.ready()}
+                >
+                  {t("lobby.ui.imReady")}
+                </button>
+              )}
             <button
               type="button"
               className="lobby-btn primary big"

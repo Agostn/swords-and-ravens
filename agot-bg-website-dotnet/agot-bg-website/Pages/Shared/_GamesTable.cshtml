@@ -5,13 +5,98 @@
     var allOpen = Model.Games.All(g => g.State == GameState.InLobby);
 }
 
+@{
+    // Selos (PBEM/ao vivo, sua vez, mensagens...) e botões de cada partida. Usados na tabela
+    // (computador/tablet) e nos cartões (celular).
+    async Task RenderBadges(agot_bg_website.Services.GameListing.GameListItem game, bool iAmPlaying)
+    {
+        @if (game.IsPasswordProtected)
+        {
+            // isPasswordProtected is only ever true for open/lobby games
+            // (it's propagated from the game server's LobbyGameState and is
+            // always undefined once a game starts/finishes), so this can never
+            // show for running/finished games. Shown here unconditionally
+            // (regardless of ShowStateBadge) so there's a single place that
+            // renders it, rather than duplicating the check in both cells.
+            <span class="badge badge-error align-middle" title="Protegida por senha"><i class="fas fa-lock"></i></span>
+        }
+        <span class="badge @(game.IsPbem ? "badge-info" : "badge-success") align-middle" title="@(game.IsPbem ? "Por turnos (PBEM): cada jogador recebe um e-mail quando chega a vez dele" : "Partida ao vivo")">
+            @(game.IsPbem ? "PBEM" : "Ao vivo")
+        </span>
+        @if (iAmPlaying)
+        {
+            <span class="badge @(game.MyTurn ? "badge-error" : "badge-info") align-middle gap-1" title="@game.MyHouse">
+                @if (!string.IsNullOrEmpty(game.MyHouse))
+                {
+                    <img src="~/house_icons/@(game.MyHouse.ToLowerInvariant()).png" alt="@game.MyHouse" class="h-full w-auto shrink-0" />
+                }
+                @(game.MyTurn ? "Sua vez" : "Jogando")
+            </span>
+            @if (game.UnreadPublicMessages)
+            {
+                <span class="badge badge-warning align-middle" title="Mensagens públicas não lidas"><i class="fas fa-envelope"></i></span>
+            }
+            @if (game.UnreadPrivateMessages)
+            {
+                <span class="badge badge-error align-middle" title="Mensagens privadas não lidas"><i class="fas fa-envelope"></i></span>
+            }
+            @if (game.MyNeededForVote)
+            {
+                <span class="badge badge-error align-middle" title="Tem uma votação em andamento"><i class="fas fa-vote-yea"></i></span>
+            }
+        }
+        @if (game.ReplacementNeededFor is not null)
+        {
+            <span class="badge badge-error align-middle" title="Precisa de substituto para: @game.ReplacementNeededFor"><i class="fas fa-exchange-alt"></i></span>
+        }
+    }
+
+    async Task RenderActions(agot_bg_website.Services.GameListing.GameListItem game, bool isOpen, bool iAmPlaying)
+    {
+        <div class="flex flex-nowrap items-center justify-end gap-1">
+            <button type="button" class="btn btn-ghost btn-sm btn-square js-game-settings-btn" title="Ver opções da partida" aria-label="Ver opções da partida"
+                    data-game-name="@game.Name" data-setup-name="@game.SetupName" data-player-count="@game.PlayersCount@(game.MaxPlayerCount is not null && game.PlayersCount != game.MaxPlayerCount ? $"/{game.MaxPlayerCount}" : "")"
+                    data-owner-name="@game.PublicOwnerDisplayName"
+                    data-is-faceless="@game.IsFaceless"
+                    data-created-at="@game.CreatedAt.ToString("O")"
+                    data-last-active-at="@(isOpen ? null : game.LastActiveAt.ToString("O"))"
+                    data-round="@(!isOpen ? (game.Turn?.ToString() ?? "?") : null)"
+                    data-waiting-for="@game.WaitingFor"
+                    data-settings="@string.Join("|", game.EnabledSettingLabels)">
+                <i class="fas fa-gear"></i>
+            </button>
+            @if (Model.ShowJoinAsWaited && Model.CanPlayAsAnotherPlayer && game.JoinAsUserId is not null && !iAmPlaying)
+            {
+                <a class="btn btn-outline btn-sm" href="/play/@game.Id/@game.JoinAsUserId" target="_blank" rel="noopener noreferrer" title="Entrar como o jogador da vez">
+                    Entrar como...
+                </a>
+            }
+            @if (Model.ShowJoinAsOwner && Model.CanPlayAsAnotherPlayer && isOpen && !iAmPlaying)
+            {
+                <a class="btn btn-outline btn-sm" href="/play/@game.Id/@game.OwnerUserId" target="_blank" rel="noopener noreferrer" title="Entrar como o criador da partida (para destravar um saguão parado)">
+                    Entrar como criador
+                </a>
+            }
+            @if (Model.CanCancelGame)
+            {
+                <form method="post" asp-page-handler="CancelGame" data-game-name="@game.Name" onsubmit="return confirm('Tem certeza de que quer cancelar a partida &quot;' + this.dataset.gameName + '&quot;?');" class="inline">
+                    <input type="hidden" name="gameId" value="@game.Id" />
+                    <button type="submit" class="btn btn-error btn-sm btn-square" title="Cancelar esta partida" aria-label="Cancelar esta partida">
+                        <i class="fas fa-xmark"></i>
+                    </button>
+                </form>
+            }
+        </div>
+    }
+}
+
 @if (Model.Games.Count == 0)
 {
     <p class="opacity-70">@Model.EmptyMessage</p>
 }
 else
 {
-    <div class="overflow-x-auto overflow-y-auto rounded-box border border-base-300 bg-base-300" style="max-height: 1000px;">
+    <div class="hidden md:block overflow-x-auto overflow-y-auto rounded-box border border-base-300 bg-base-300" style="max-height: 1000px;">
         <table class="table table-zebra">
             <thead>
                 <tr>
@@ -55,45 +140,7 @@ else
                             </td>
                         }
                         <td>
-                            @if (game.IsPasswordProtected)
-                            {
-                                // isPasswordProtected is only ever true for open/lobby games
-                                // (it's propagated from the game server's LobbyGameState and is
-                                // always undefined once a game starts/finishes), so this can never
-                                // show for running/finished games. Shown here unconditionally
-                                // (regardless of ShowStateBadge) so there's a single place that
-                                // renders it, rather than duplicating the check in both cells.
-                                <span class="badge badge-error align-middle" title="Protegida por senha"><i class="fas fa-lock"></i></span>
-                            }
-                            <span class="badge @(game.IsPbem ? "badge-info" : "badge-success") align-middle" title="@(game.IsPbem ? "Por turnos (PBEM): cada jogador recebe um e-mail quando chega a vez dele" : "Partida ao vivo")">
-                                @(game.IsPbem ? "PBEM" : "Ao vivo")
-                            </span>
-                            @if (iAmPlaying)
-                            {
-                                <span class="badge @(game.MyTurn ? "badge-error" : "badge-info") align-middle gap-1" title="@game.MyHouse">
-                                    @if (!string.IsNullOrEmpty(game.MyHouse))
-                                    {
-                                        <img src="~/house_icons/@(game.MyHouse.ToLowerInvariant()).png" alt="@game.MyHouse" class="h-full w-auto shrink-0" />
-                                    }
-                                    @(game.MyTurn ? "Sua vez" : "Jogando")
-                                </span>
-                                @if (game.UnreadPublicMessages)
-                                {
-                                    <span class="badge badge-warning align-middle" title="Mensagens públicas não lidas"><i class="fas fa-envelope"></i></span>
-                                }
-                                @if (game.UnreadPrivateMessages)
-                                {
-                                    <span class="badge badge-error align-middle" title="Mensagens privadas não lidas"><i class="fas fa-envelope"></i></span>
-                                }
-                                @if (game.MyNeededForVote)
-                                {
-                                    <span class="badge badge-error align-middle" title="Tem uma votação em andamento"><i class="fas fa-vote-yea"></i></span>
-                                }
-                            }
-                            @if (game.ReplacementNeededFor is not null)
-                            {
-                                <span class="badge badge-error align-middle" title="Precisa de substituto para: @game.ReplacementNeededFor"><i class="fas fa-exchange-alt"></i></span>
-                            }
+                            @{ await RenderBadges(game, iAmPlaying); }
                             <a class="link font-semibold text-base text-base-content" href="/play/@game.Id" target="_blank" rel="noopener noreferrer">@game.Name</a>
                         </td>
                         @if (allOpen)
@@ -112,44 +159,61 @@ else
                             @(isOpen ? agot_bg_website.Infrastructure.RelativeTimeFormatter.Format(game.CreatedAt) : agot_bg_website.Infrastructure.RelativeTimeFormatter.Format(game.LastActiveAt))
                         </td>
                         <td class="sticky right-0 z-10 bg-inherit text-right whitespace-nowrap">
-                            <div class="flex flex-nowrap items-center justify-end gap-1">
-                                <button type="button" class="btn btn-ghost btn-sm btn-square js-game-settings-btn" title="Ver opções da partida" aria-label="Ver opções da partida"
-                                        data-game-name="@game.Name" data-setup-name="@game.SetupName" data-player-count="@game.PlayersCount@(game.MaxPlayerCount is not null && game.PlayersCount != game.MaxPlayerCount ? $"/{game.MaxPlayerCount}" : "")"
-                                        data-owner-name="@game.PublicOwnerDisplayName"
-                                        data-is-faceless="@game.IsFaceless"
-                                        data-created-at="@game.CreatedAt.ToString("O")"
-                                        data-last-active-at="@(isOpen ? null : game.LastActiveAt.ToString("O"))"
-                                        data-round="@(!isOpen ? (game.Turn?.ToString() ?? "?") : null)"
-                                        data-waiting-for="@game.WaitingFor"
-                                        data-settings="@string.Join("|", game.EnabledSettingLabels)">
-                                    <i class="fas fa-gear"></i>
-                                </button>
-                                @if (Model.ShowJoinAsWaited && Model.CanPlayAsAnotherPlayer && game.JoinAsUserId is not null && !iAmPlaying)
-                                {
-                                    <a class="btn btn-outline btn-sm" href="/play/@game.Id/@game.JoinAsUserId" target="_blank" rel="noopener noreferrer" title="Entrar como o jogador da vez">
-                                        Entrar como...
-                                    </a>
-                                }
-                                @if (Model.ShowJoinAsOwner && Model.CanPlayAsAnotherPlayer && isOpen && !iAmPlaying)
-                                {
-                                    <a class="btn btn-outline btn-sm" href="/play/@game.Id/@game.OwnerUserId" target="_blank" rel="noopener noreferrer" title="Entrar como o criador da partida (para destravar um saguão parado)">
-                                        Entrar como criador
-                                    </a>
-                                }
-                                @if (Model.CanCancelGame)
-                                {
-                                    <form method="post" asp-page-handler="CancelGame" data-game-name="@game.Name" onsubmit="return confirm('Tem certeza de que quer cancelar a partida &quot;' + this.dataset.gameName + '&quot;?');" class="inline">
-                                        <input type="hidden" name="gameId" value="@game.Id" />
-                                        <button type="submit" class="btn btn-error btn-sm btn-square" title="Cancelar esta partida" aria-label="Cancelar esta partida">
-                                            <i class="fas fa-xmark"></i>
-                                        </button>
-                                    </form>
-                                }
-                            </div>
+                            @{ await RenderActions(game, isOpen, iAmPlaying); }
                         </td>
                     </tr>
                 }
             </tbody>
         </table>
     </div>
+
+    <ul class="md:hidden flex flex-col gap-2">
+        @foreach (var game in Model.Games)
+        {
+            var isOpen = game.State == GameState.InLobby;
+            var isOngoing = game.State == GameState.Ongoing;
+            var iAmPlaying = !string.IsNullOrEmpty(game.MyHouse) || game.MyTurn;
+            <li class="rounded-box border border-base-300 bg-base-100/60 p-3 flex flex-col gap-2">
+                <div class="flex flex-wrap items-center gap-1">
+                    @if (Model.ShowStateBadge)
+                    {
+                        if (isOpen)
+                        {
+                            <span class="badge badge-success">Aberta</span>
+                        }
+                        else if (isOngoing)
+                        {
+                            <span class="badge badge-warning">Em andamento</span>
+                        }
+                    }
+                    @{ await RenderBadges(game, iAmPlaying); }
+                </div>
+                <a class="link font-semibold text-lg text-base-content leading-snug" href="/play/@game.Id">@game.Name</a>
+                <div class="flex items-end justify-between gap-2">
+                    <div class="text-sm text-base-content/70 leading-snug">
+                        @if (isOngoing)
+                        {
+                            <div>Rodada @(game.Turn?.ToString() ?? "?") · @game.PlayersCount jogadores</div>
+                            @if (!string.IsNullOrEmpty(game.WaitingFor))
+                            {
+                                <div>Esperando: @game.WaitingFor</div>
+                            }
+                        }
+                        else
+                        {
+                            <div>
+                                @game.PlayersCount@(game.MaxPlayerCount is not null && game.PlayersCount != game.MaxPlayerCount ? $"/{game.MaxPlayerCount}" : "") jogadores
+                                @if (!string.IsNullOrEmpty(game.PublicOwnerDisplayName))
+                                {
+                                    <span>· criada por @game.PublicOwnerDisplayName</span>
+                                }
+                            </div>
+                        }
+                        <div>@(isOpen ? "Criada" : "Última ação") @(isOpen ? agot_bg_website.Infrastructure.RelativeTimeFormatter.Format(game.CreatedAt) : agot_bg_website.Infrastructure.RelativeTimeFormatter.Format(game.LastActiveAt))</div>
+                    </div>
+                    @{ await RenderActions(game, isOpen, iAmPlaying); }
+                </div>
+            </li>
+        }
+    </ul>
 }

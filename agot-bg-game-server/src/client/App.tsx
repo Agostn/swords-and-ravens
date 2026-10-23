@@ -9,6 +9,7 @@ import EntireGameComponent from "./EntireGameComponent";
 import Alert from "react-bootstrap/Alert";
 import User from "../server/User";
 import { isMobile } from "react-device-detect";
+import hudSettings from "./hud/hudSettings";
 import EntireGame from "../common/EntireGame";
 import IngameGameState from "../common/ingame-game-state/IngameGameState";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -57,7 +58,7 @@ export default class App extends Component<AppProps> {
 
   render(): ReactNode {
     const minWidth =
-      isMobile && this.isGameRunning && !this.isFullScreen
+      isMobile && this.isGameRunning && !this.isFullScreen && !hudSettings.hudActive
         ? this.is8pGame
           ? "2550px"
           : "2000px"

@@ -242,8 +242,10 @@ const ptBRIngame: { [key in keyof typeof enIngame]: string } = {
   "settings.group.draftDecks": "Baralhos do draft",
   "settings.group.mode": "Modo",
   "lobby.ui.back": "Voltar para as partidas",
-  "lobby.ui.clickReady": "Clique em \"Pronto\" na sua Casa para confirmar que está aqui",
-  "lobby.ui.waitingReady": "Esperando todos confirmarem…"
+  "lobby.ui.clickReady": "Clique em \"Estou pronto\" para confirmar que está aqui",
+  "lobby.ui.waitingReady": "Esperando todos confirmarem…",
+  "hud.phone.nav": "Menu da partida",
+  "lobby.ui.imReady": "Estou pronto"
 };
 
 export default ptBRIngame;

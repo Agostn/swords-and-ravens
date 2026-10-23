@@ -668,3 +668,142 @@
 .lobby-settings .custom-control-input:checked ~ .custom-control-label::after {
   background-color: $hud-gold-ink;
 }
+
+// ---- celular e tablet ----
+
+// o container do jogo tem 3rem de margem nos lados (estilo inline no App)
+@media (max-width: 759px) {
+  #game-container {
+    padding-left: 8px !important;
+    padding-right: 8px !important;
+  }
+
+  .lobby-screen {
+    gap: 10px;
+    padding-bottom: 16px;
+  }
+
+  .lobby-panel {
+    padding: 12px;
+    border-radius: 12px;
+  }
+
+  .lobby-hero {
+    padding: 14px;
+    gap: 12px;
+  }
+
+  .lobby-hero-side {
+    width: 100%;
+    min-width: 0;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .lobby-meter {
+    order: 3;
+    width: 100%;
+  }
+
+  .lobby-count b {
+    font-size: 28px;
+  }
+
+  .lobby-title {
+    font-size: 24px;
+  }
+
+  .lobby-steps li {
+    padding: 8px 10px;
+    font-size: 13px;
+  }
+
+  .lobby-seats {
+    grid-template-columns: 1fr;
+  }
+
+  .lobby-chat-body {
+    min-height: 260px;
+    max-height: 60vh;
+  }
+
+  .lobby-settings .settings-groups {
+    grid-template-columns: 1fr;
+  }
+
+  // no celular a barra fica no fim da página (fixa, tampava metade da tela)
+  .lobby-actionbar {
+    position: static;
+    transform: none;
+    width: 100%;
+    padding: 10px;
+    gap: 8px;
+  }
+
+  .lobby-tools .mr-2 {
+    display: none; // "Idioma:" (o seletor já mostra o idioma)
+  }
+
+  .lobby-start {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+    width: 100%;
+    flex: none;
+
+    .lobby-btn.big {
+      width: 100%;
+    }
+  }
+
+  .lobby-start-reason {
+    text-align: center;
+    font-size: 13px;
+  }
+
+  .lobby-tools {
+    width: 100%;
+    justify-content: space-between;
+  }
+}
+
+// tablet em pé: Casas em cima, conversa embaixo
+@media (min-width: 760px) and (max-width: 1100px) {
+  #game-container {
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+  }
+
+  .lobby-main {
+    grid-template-columns: 1fr;
+  }
+
+  .lobby-chat {
+    min-height: 320px;
+  }
+}
+
+// botões e opções com tamanho bom para o dedo
+@media (pointer: coarse) {
+  .lobby-btn {
+    min-height: 42px;
+  }
+
+  .lobby-seat-action .btn {
+    min-height: 38px;
+  }
+
+  .lobby-settings .custom-switch {
+    padding-top: 2px;
+    padding-bottom: 2px;
+  }
+}
+
+.lobby-btn.ready {
+  border-color: $hud-green;
+  background: $hud-green;
+  color: #10200f;
+  animation: lobby-pulse 1.6s ease-in-out infinite;
+}

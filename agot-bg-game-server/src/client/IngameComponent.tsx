@@ -1,7 +1,7 @@
 import * as React from "react";
 import { Component, ReactNode } from "react";
 import { observer } from "mobx-react";
-import { observable } from "mobx";
+import { autorun, observable } from "mobx";
 import {
   Button,
   FormCheck,
@@ -79,6 +79,7 @@ import { customsOfficer } from "../common/ingame-game-state/game-data-structure/
 import { LoanPurchased } from "../common/ingame-game-state/game-data-structure/GameLog";
 import { t, tr } from "./i18n/i18n";
 import HudLayout from "./hud/HudLayout";
+import { setViewportMode } from "./utils/viewport";
 import hudSettings from "./hud/hudSettings";
 
 export interface ColumnOrders {
@@ -1000,7 +1001,16 @@ export default class IngameComponent extends Component<IngameComponentProps> {
     );
   }
 
+  private viewportDisposer: (() => void) | null = null;
+
   componentDidMount(): void {
+    // Tela nova: a página não tem zoom do navegador (a pinça dá zoom no mapa).
+    // Tela antiga no celular: página larga, como no computador.
+    this.viewportDisposer = autorun(() =>
+      setViewportMode(
+        hudSettings.hudActive ? "app" : isMobile ? "desktop" : "page"
+      )
+    );
     this.mapControls.modifyOrdersOnMap.push(
       (this.modifyOrdersOnMapCallback = () => this.modifyOrdersOnMap())
     );
@@ -1172,6 +1182,8 @@ export default class IngameComponent extends Component<IngameComponentProps> {
   }
 
   componentWillUnmount(): void {
+    this.viewportDisposer?.();
+    setViewportMode("page");
     this.ingame.entireGame.onNewPrivateChatRoomCreated = null;
     _.pull(this.mapControls.modifyOrdersOnMap, this.modifyOrdersOnMapCallback);
     _.pull(this.mapControls.modifyUnitsOnMap, this.modifyUnitsOnMapCallback);

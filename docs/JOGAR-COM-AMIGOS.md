@@ -32,6 +32,9 @@ ou crie um Codespace novo.
 4. Clique em **Iniciar partida**. Ao vivo, cada um clica em **Pronto** para confirmar
    que está aqui, e a partida começa.
 
+Dá para jogar no **celular** e no **tablet**: é só abrir o mesmo link. No celular, use dois
+dedos para dar zoom no mapa e a barra de baixo para ver as Casas, o chat e o histórico.
+
 Deixe o terminal do Codespace aberto enquanto estiverem jogando. Se o Codespace
 desligar por inatividade, abra de novo: tudo volta (partidas e contas ficam salvas).
 

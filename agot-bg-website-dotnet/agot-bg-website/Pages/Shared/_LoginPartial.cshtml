@@ -33,7 +33,7 @@ else
     var safeReturnUrl = Context.Request.Path.StartsWithSegments("/Identity")
         ? Url.Content("~/")
         : (Context.Request.Path + Context.Request.QueryString).ToString();
-    <a class="nav-link" asp-area="Identity" asp-page="/Account/Register" asp-route-returnUrl="@safeReturnUrl">Criar conta</a>
+    <a class="nav-link hidden sm:block" asp-area="Identity" asp-page="/Account/Register" asp-route-returnUrl="@safeReturnUrl">Criar conta</a>
     <a class="btn btn-primary btn-sm" asp-area="Identity" asp-page="/Account/Login" asp-route-returnUrl="@safeReturnUrl">Entrar</a>
 }
 </div>

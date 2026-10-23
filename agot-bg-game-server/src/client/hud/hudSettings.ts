@@ -1,5 +1,4 @@
 import { observable } from "mobx";
-import { isMobile } from "react-device-detect";
 
 /**
  * Preferências da tela nova da partida (layout "mapa em tela cheia").
@@ -42,9 +41,9 @@ class HudSettings {
     this.showHouseColors = s.showHouseColors ?? false;
   }
 
-  /** A tela nova vale para computador. No celular continua a antiga por enquanto. */
+  /** A tela nova vale para computador, tablet e celular (a antiga fica como opção). */
   get hudActive(): boolean {
-    return !isMobile && !this.classicLayout;
+    return !this.classicLayout;
   }
 
   save(): void {

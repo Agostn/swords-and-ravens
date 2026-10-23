@@ -11,10 +11,9 @@
 <html lang="pt-BR" data-theme="swordsandravens">
 <head>
     <meta charset="utf-8" />
-    @* Intentionally no responsive "width=device-width" viewport meta tag: like the old Django site,
-       mobile browsers fall back to their default desktop-oriented layout viewport (~980px), so the
-       whole page renders at full desktop size and simply shrinks visually - users pinch-zoom into the
-       area they want instead of the site reflowing into a separate mobile layout. *@
+    @* O site se ajusta ao celular e ao tablet (antes a página aparecia "de computador", miniatura). *@
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#120f0c" />
     <title>@pageTitle</title>
     <meta name="description" content="@pageDescription" />
     <link rel="canonical" href="@canonicalUrl" />
@@ -56,7 +55,7 @@
     <header class="shrink-0 sticky top-0 z-30">
         <nav class="navbar bg-base-100/95 backdrop-blur border-b border-base-300 shadow-md">
             <div class="page-container flex items-center justify-between">
-                <a class="brand flex items-center gap-2 shrink-0 px-2" asp-area="" asp-page="/Index">
+                <a class="brand flex items-center gap-2 shrink-0 px-1 sm:px-2 text-xl sm:text-2xl" asp-area="" asp-page="/Index">
                     <img src="~/raven.svg" asp-append-version="true" alt="" width="26" height="26" class="inline-block" />
                     O GoT dos Games
                 </a>
@@ -85,6 +84,10 @@
                                 <li><a asp-area="" asp-page="/Games">Todas as partidas</a></li>
                                 <li><a asp-area="" asp-page="/MyGames">Minhas partidas</a></li>
                                 <li><a asp-area="" asp-page="/Users">Jogadores</a></li>
+                            }
+                            else
+                            {
+                                <li class="sm:hidden"><a asp-area="Identity" asp-page="/Account/Register">Criar conta</a></li>
                             }
                             <li><a asp-area="" asp-page="/TermsOfUse">Termos de uso</a></li>
                             <li><a asp-area="" asp-page="/About">Sobre</a></li>

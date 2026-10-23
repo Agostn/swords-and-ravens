@@ -28,6 +28,8 @@ interface MapViewportProps {
   // Distância dos botões de zoom e do mini-mapa até a borda direita
   // (para não ficarem embaixo do painel das Casas).
   controlsRight?: number;
+  // Celular: sem +/− e sem mini-mapa (a pinça faz o zoom); só "ver tudo".
+  compactControls?: boolean;
 }
 
 const MIN_ZOOM_FACTOR = 0.9; // em relação a "caber inteiro"
@@ -169,7 +171,9 @@ export default class MapViewport extends Component<MapViewportProps> {
 
     return (
       <div
-        className="hud-map-controls"
+        className={
+          "hud-map-controls" + (this.props.compactControls ? " compact" : "")
+        }
         style={{ right: this.props.controlsRight ?? 12 }}
         onPointerDown={(e) => e.stopPropagation()}
         onWheel={(e) => e.stopPropagation()}

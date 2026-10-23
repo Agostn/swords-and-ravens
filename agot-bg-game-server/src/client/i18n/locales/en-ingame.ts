@@ -241,8 +241,10 @@ const enIngame = {
   "settings.group.draftDecks": "Draft decks",
   "settings.group.mode": "Mode",
   "lobby.ui.back": "Back to games",
-  "lobby.ui.clickReady": "Click \"Ready\" on your house to confirm you are here",
-  "lobby.ui.waitingReady": "Waiting for everyone to confirm…"
+  "lobby.ui.clickReady": "Click \"I'm ready\" to confirm you are here",
+  "lobby.ui.waitingReady": "Waiting for everyone to confirm…",
+  "hud.phone.nav": "Game menu",
+  "lobby.ui.imReady": "I'm ready"
 };
 
 export default enIngame;

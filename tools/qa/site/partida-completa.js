@@ -1,6 +1,6 @@
 // Joga sozinho uma partida inteira PELO SITE (3 contas: jogador1..3), do lobby até o fim,
 // usando as funções do próprio jogo, e tira prints de cada tela nova.
-// Uso: node partida-completa.js <pasta-de-prints> <passos>   (MODE=pbem para por turnos; GAME=<url> continua uma partida)
+// Uso: node partida-completa.js <pasta-de-prints> <passos>   (MODE=pbem para por turnos; GAME=<url> continua uma partida; DEVICE="iPhone 13" para o celular)
 const { chromium } = require(process.env.PLAYWRIGHT_MODULE || "playwright");
 const fs = require("fs");
 const out = process.argv[2] || "bot";
@@ -111,8 +111,30 @@ function botTick() {
       case "ResolveTiesGameState":
         if (!commands(leaf.decider)) return name + ":espera";
         leaf.resolveTies(leaf.bidResults.map(([, hs]) => hs)); return name + ":desempate";
-      case "PlayerReconcileArmiesGameState":
-        return name + ":ajuste";
+      case "SelectRegionGameState":
+        if (!commands(leaf.house)) return name + ":espera";
+        leaf.select(leaf.regions[0]); return name + ":area";
+      case "SelectOrdersGameState":
+        if (!commands(leaf.house)) return name + ":espera";
+        leaf.selectOrders(leaf.possibleRegions.slice(0, leaf.count)); return name + ":ordens";
+      case "SelectUnitsGameState": {
+        if (!commands(leaf.house)) return name + ":espera";
+        const chosen = leaf.possibleUnits.slice(0, leaf.count);
+        const byRegion = {};
+        chosen.forEach((u) => { (byRegion[u.region.id] = byRegion[u.region.id] || []).push(u); });
+        const fake = { map: (fn) => Object.keys(byRegion).map((rid) => fn(byRegion[rid][0].region, byRegion[rid])) };
+        leaf.selectUnits(fake); return name + ":unidades";
+      }
+      case "SelectWesterosCardGameState":
+        if (!commands(leaf.house)) return name + ":espera";
+        leaf.select(leaf.cards[0]); return name + ":westeros";
+      case "PlayerReconcileArmiesGameState": {
+        if (!commands(leaf.house)) return name + ":espera";
+        // deixa só 1 unidade em cada área (sempre cabe no suprimento)
+        const entries = regions().filter((r) => r.getController() == leaf.house && r.units.size > 1)
+          .map((r) => [r, r.units.values.slice(1)]);
+        leaf.reconcileArmies({ entries }); return name + ":ajuste";
+      }
       default:
         return name;
     }

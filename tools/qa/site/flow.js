@@ -4,7 +4,11 @@ const BASE = process.env.BASE || "http://localhost:8000";
 const OUT = process.env.OUT || __dirname + "/shots";
 require("fs").mkdirSync(OUT, { recursive: true });
 async function account(b, name) {
-  const ctx = await b.newContext({ viewport: { width: 1440, height: Number(process.env.VH || 900) } });
+  // DEVICE="iPhone 13" (ou outro aparelho do Playwright) para testar no celular/tablet
+  const { devices } = require(process.env.PLAYWRIGHT_MODULE || "playwright");
+  const ctx = await b.newContext(
+    process.env.DEVICE ? devices[process.env.DEVICE] : { viewport: { width: 1440, height: Number(process.env.VH || 900) } }
+  );
   const p = await ctx.newPage();
   p.on("pageerror", e => console.log("PAGEERROR", name, e.message));
   await p.goto(BASE + "/Identity/Account/Login");
@@ -26,7 +30,11 @@ async function account(b, name) {
 module.exports = { account, BASE, OUT };
 if (require.main === module) (async () => {
   const b = await chromium.launch((process.env.CHROMIUM ? { executablePath: process.env.CHROMIUM } : {}));
-  const ctx = await b.newContext({ viewport: { width: 1440, height: Number(process.env.VH || 900) } });
+  // DEVICE="iPhone 13" (ou outro aparelho do Playwright) para testar no celular/tablet
+  const { devices } = require(process.env.PLAYWRIGHT_MODULE || "playwright");
+  const ctx = await b.newContext(
+    process.env.DEVICE ? devices[process.env.DEVICE] : { viewport: { width: 1440, height: Number(process.env.VH || 900) } }
+  );
   const anon = await ctx.newPage();
   for (const [n, u] of [["index", "/"], ["login", "/Identity/Account/Login"], ["register", "/Identity/Account/Register"]]) {
     await anon.goto(BASE + u); await anon.screenshot({ path: `${OUT}/${n}.png`, fullPage: true });
