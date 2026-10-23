@@ -37,8 +37,12 @@ nos três pontinhos → Delete) e use o link acima para criar um novo.
 Dá para jogar no **celular** e no **tablet**: é só abrir o mesmo link. No celular, use dois
 dedos para dar zoom no mapa e a barra de baixo para ver as Casas, o chat e o histórico.
 
-Deixe o terminal do Codespace aberto enquanto estiverem jogando. Se o Codespace
-desligar por inatividade, abra de novo: tudo volta (partidas e contas ficam salvas).
+O site continua ligado mesmo se você fechar a aba do Codespace, e abrir o Codespace de novo
+(em outro aparelho, por exemplo) não derruba quem está jogando. Mas o GitHub **desliga o
+Codespace depois de 30 minutos sem ninguém mexer nele** (jogar no site não conta). Para
+partidas longas, aumente esse tempo uma vez em **github.com/settings/codespaces →
+Default idle timeout → 240 minutos**. Se desligar, abra pelo link de novo: tudo volta
+(partidas e contas ficam salvas).
 
 ## Atualizar para a versão mais nova
 
@@ -51,6 +55,12 @@ Cada versão nova salva no GitHub também é testada sozinha (aba **Actions** do
 inteiras pelo site com 3 contas, no computador e no celular. Os prints ficam lá.
 
 ## Se algo der errado
+
+- **Ao entrar ou criar conta, o iPhone "baixa um arquivo" (login, register) ou o computador
+  mostra "HTTP ERROR" / "Não deu para enviar o formulário":** a porta 8000 ficou privada.
+  O `iniciar.sh` tenta deixar pública sozinho e avisa no terminal se não conseguir.
+  Para arrumar na mão: aba **Portas** → botão direito na linha **8000** → **Port Visibility
+  → Public**; faça o mesmo na **5000**. Depois recarregue a página do site.
 
 - **A página não abre:** confira na aba Portas se a 8000 e a 5000 estão como
   "Public". Se não estiverem, clique com o botão direito → Port Visibility → Public.

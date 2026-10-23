@@ -44,6 +44,19 @@ jobs:
           cat /tmp/iniciar.log
           grep -q "PRONTO" /tmp/iniciar.log
 
+      - name: Formulário recusado mostra uma página (e não um arquivo vazio)
+        run: |
+          code=$(curl -s -o /tmp/recusado.html -w "%{http_code}" -X POST -d "Input.UserName=x" http://localhost:8000/Identity/Account/Login)
+          echo "status $code"; head -c 400 /tmp/recusado.html; echo
+          [ "$code" = "400" ] && grep -q "Não deu para enviar" /tmp/recusado.html
+
+      - name: Abrir o Codespace de novo não derruba o site
+        run: |
+          bash .devcontainer/iniciar.sh > /tmp/iniciar2.log 2>&1
+          cat /tmp/iniciar2.log
+          grep -q "O site já está ligado" /tmp/iniciar2.log
+          grep -q "PRONTO" /tmp/iniciar2.log
+
       - name: Navegador para os robôs
         run: |
           mkdir -p /tmp/pw && cd /tmp/pw

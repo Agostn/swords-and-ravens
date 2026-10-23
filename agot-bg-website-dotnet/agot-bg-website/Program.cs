@@ -487,6 +487,56 @@ if (app.Environment.IsProduction())
 // than exposing the EF Core migrations-endpoint/detailed-exception page.
 app.UseExceptionHandler("/Error");
 
+// Formulário recusado (ex.: entrar / criar conta) volta como "400" sem nada dentro. O iPhone
+// trata isso como um arquivo para baixar ("login", "register", 0 KB) e o computador mostra só
+// "HTTP ERROR 400". Aqui o erro vira uma página que explica o que fazer, e o log do site
+// (/tmp/site.log no Codespace) registra os endereços envolvidos para achar a causa.
+app.Use(
+    async (context, next) =>
+    {
+        await next();
+
+        var response = context.Response;
+        if (
+            response.StatusCode == StatusCodes.Status400BadRequest
+            && !response.HasStarted
+            && string.IsNullOrEmpty(response.ContentType)
+            && HttpMethods.IsPost(context.Request.Method)
+            && !context.Request.Path.StartsWithSegments("/api")
+        )
+        {
+            var logger = context
+                .RequestServices.GetRequiredService<ILoggerFactory>()
+                .CreateLogger("FormularioRecusado");
+            logger.LogWarning(
+                "POST {Path} recusado (400). Host={Host} Origin={Origin} X-Forwarded-Host={ForwardedHost} X-Forwarded-Proto={ForwardedProto} Cookies={CookieNames}",
+                context.Request.Path.Value,
+                context.Request.Headers.Host.ToString(),
+                context.Request.Headers.Origin.ToString(),
+                context.Request.Headers["X-Forwarded-Host"].ToString(),
+                context.Request.Headers["X-Forwarded-Proto"].ToString(),
+                string.Join(",", context.Request.Cookies.Keys)
+            );
+
+            var voltar = System.Net.WebUtility.HtmlEncode(
+                context.Request.Path.Value + context.Request.QueryString
+            );
+            response.ContentType = "text/html; charset=utf-8";
+            await response.WriteAsync(
+                "<!doctype html><html lang=\"pt-BR\"><head><meta charset=\"utf-8\">"
+                    + "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">"
+                    + "<title>Não deu para enviar</title></head>"
+                    + "<body style=\"background:#14100c;color:#e9e2d3;font-family:system-ui,sans-serif;padding:24px;line-height:1.5\">"
+                    + "<h1 style=\"color:#c9a227;font-size:1.4rem\">Não deu para enviar o formulário</h1>"
+                    + "<p>A página ficou velha ou o navegador bloqueou um cookie do site. "
+                    + "Volte, recarregue a página e tente de novo.</p>"
+                    + $"<p><a style=\"color:#c9a227\" href=\"{voltar}\">Voltar e tentar de novo</a></p>"
+                    + "</body></html>"
+            );
+        }
+    }
+);
+
 app.UseHttpsRedirection();
 
 // Legacy Django URLs commonly ended in a trailing slash (e.g. "/games/", "/my_games/") - old
