@@ -91,8 +91,11 @@ export default class EntireGameComponent extends Component<EntireGameComponentPr
   }
 
   render(): ReactNode {
+    // Na sala de espera o cabeçalho vem do próprio LobbyComponent
+    const inLobby = this.entireGame.childGameState instanceof LobbyGameState;
     return (
       <>
+        {!inLobby && (
         <Col
           xs={12}
           className={classNames(
@@ -136,6 +139,7 @@ export default class EntireGameComponent extends Component<EntireGameComponentPr
             )}
           </Row>
         </Col>
+        )}
         {this.entireGame.childGameState instanceof LobbyGameState ? (
           <LobbyComponent
             gameClient={this.props.gameClient}

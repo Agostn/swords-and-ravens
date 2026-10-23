@@ -7,15 +7,11 @@ import GameClient from "./GameClient";
 import * as React from "react";
 import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
-import Card from "react-bootstrap/Card";
 import Button from "react-bootstrap/Button";
-import ListGroup from "react-bootstrap/ListGroup";
-import ListGroupItem from "react-bootstrap/ListGroupItem";
 import classNames from "classnames";
 import ChatComponent from "./chat-client/ChatComponent";
 import GameSettingsComponent from "./GameSettingsComponent";
 import User from "../server/User";
-import ConditionalWrap from "./utils/ConditionalWrap";
 import { Badge, OverlayTrigger, Popover, Spinner } from "react-bootstrap";
 import Tooltip from "react-bootstrap/Tooltip";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -24,19 +20,21 @@ import EntireGame from "../common/EntireGame";
 import HouseIconComponent from "./game-state-panel/utils/HouseIconComponent";
 import { observable } from "mobx";
 import DebouncedPasswordComponent from "./utils/DebouncedPasswordComponent";
-import { faCheck, faLock } from "@fortawesome/free-solid-svg-icons";
+import { faCheck, faLink, faLock } from "@fortawesome/free-solid-svg-icons";
 import { setBoltonIconImage, setStarkIconImage } from "./houseIconImages";
 import settingsKnobsImage from "../../public/images/icons/settings-knobs.svg";
 import speakerImage from "../../public/images/icons/speaker.svg";
 import speakerOffImage from "../../public/images/icons/speaker-off.svg";
 import getUserLinkOrLabel from "./utils/getIngameUserLinkOrLabel";
-// @ts-expect-error Somehow ts complains that this module cannot be found while it is
-import ScrollToBottom from "react-scroll-to-bottom";
 import _ from "lodash";
 import VolumeSliderComponent from "./utils/VolumeSliderComponent";
 import { OverlayChildren } from "react-bootstrap/esm/Overlay";
 import { t } from "./i18n/i18n";
 import LanguageSelectComponent from "./i18n/LanguageSelectComponent";
+import { GameSettings } from "../common/GameSettings";
+import { allGameSetups } from "../common/ingame-game-state/game-data-structure/createGame";
+import { getSetupShortName } from "./i18n/setupNames";
+import westerosImage from "../../public/images/westeros.jpg";
 
 interface LobbyComponentProps {
   gameClient: GameClient;
@@ -80,252 +78,348 @@ export default class LobbyComponent extends Component<LobbyComponentProps> {
       this.lobby.canCancel(this.authenticatedUser);
 
     const connectedSpectators = this.getConnectedSpectators();
+    const houses = this.lobby.getAvailableHouses();
+    const needed = this.entireGame.selectedGameSetup.playerCount;
+    const seated = houses.filter((h) => this.lobby.players.has(h)).length;
+    const mySeat = this.lobby.players.entries.find(
+      ([, u]) => u == this.authenticatedUser
+    );
+    const isOwner = this.props.gameClient.isRealOwner();
+
+    const startReason = this.readyCheckOngoing
+      ? mySeat && !(this.lobby.readyUsers ?? []).includes(this.authenticatedUser)
+        ? t("lobby.ui.clickReady")
+        : t("lobby.ui.waitingReady")
+      : canStartGameReason == "not-enough-players"
+        ? t("lobby.ui.missingPlayers", {
+            n: Math.max(
+              0,
+              (this.settings.vassals ? this.entireGame.minPlayerCount : needed) -
+                seated
+            )
+          })
+        : canStartGameReason == "targaryen-must-be-a-player-controlled-house"
+          ? t("lobby.targaryenMustBePlayer")
+          : canStartGameReason == "not-owner"
+            ? t("lobby.onlyOwnerCanStart")
+            : this.settings.pbem
+              ? t("lobby.ui.readyPbem")
+              : t("lobby.ui.readyLive");
 
     return (
-      <Row className="justify-content-center no-space-around">
-        <Col xs={10} lg="auto" className="mb-2" style={{ minWidth: 400 }}>
-          <Card>
-            <Card.Body
-              ref={this.lobbyHousesListRef}
-              className="no-space-around"
-            >
-              <ListGroup variant="flush">
-                {this.lobby.lobbyHouses.values.map((h, i) => (
-                  <ListGroupItem
-                    key={`lobby-house_${h.id}`}
-                    style={{
-                      minHeight: "50px",
-                      paddingTop: "6px",
-                      paddingBottom: "6px"
-                    }}
-                  >
-                    <Row
-                      className="align-items-center"
-                      style={{
-                        opacity: this.isHouseAvailable(h) ? 1 : 0.3
-                      }}
-                    >
-                      {!this.randomHouses && (
-                        <Col xs="auto" style={{ width: "48px" }}>
-                          <HouseIconComponent house={h} />
-                        </Col>
-                      )}
-                      <Col xs="auto" style={{ width: "100px" }}>
-                        <b>
-                          {this.randomHouses
-                            ? t("lobby.seat", { n: i + 1 })
-                            : h.name}
-                        </b>
-                      </Col>
-                      <Col
-                        className={classNames({
-                          invisible: !this.lobby.players.has(h)
-                        })}
-                      >
-                        {this.lobby.players.has(h) && (
-                          <UserLabel
-                            gameClient={this.props.gameClient}
-                            gameState={this.lobby}
-                            user={this.lobby.players.get(h)}
-                          />
-                        )}
-                      </Col>
-                      {this.renderLobbyHouseButtons(h)}
-                    </Row>
-                  </ListGroupItem>
-                ))}
-              </ListGroup>
-            </Card.Body>
-          </Card>
-        </Col>
-        <Col xs={10} lg xl={6} className="mb-2 col-xxl-5">
-          <Row className="no-space-around">
-            <Col
-              xs={connectedSpectators.length > 0 ? 8 : 12}
-              className="no-space-around"
-            >
-              <Card>
-                <Card.Body style={{ height: this.chatHeight }}>
-                  <ChatComponent
-                    gameClient={this.props.gameClient}
-                    entireGame={this.lobby.entireGame}
-                    roomId={this.lobby.entireGame.publicChatRoomId}
-                    currentlyViewed={true}
-                    getUserDisplayName={(u) => (
-                      <a
-                        href={`/user/${u.id}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        style={{ color: "white" }}
-                      >
-                        <b>{u.name}</b>
-                      </a>
-                    )}
-                  />
-                </Card.Body>
-              </Card>
-            </Col>
-            {connectedSpectators.length > 0 && (
-              <Col className="no-space-around">
-                <Card className="ml-2">
-                  <Card.Body
-                    style={{ height: this.chatHeight, padding: "1rem" }}
-                  >
-                    <div className="d-flex flex-column h-100">
-                      <span>{t("lobby.spectators")}</span>
-                      <ScrollToBottom
-                        className="mb-2 flex-fill-remaining"
-                        scrollViewClassName="overflow-x-hidden"
-                      >
-                        {connectedSpectators.map((u) => (
-                          <div key={`specatator_${u.id}`}>
-                            <b>{getUserLinkOrLabel(u)}</b>
-                          </div>
-                        ))}
-                      </ScrollToBottom>
-                    </div>
-                  </Card.Body>
-                </Card>
-              </Col>
+      <div className="lobby-screen">
+        <div
+          className="lobby-backdrop"
+          style={{ backgroundImage: `url(${westerosImage})` }}
+          aria-hidden="true"
+        />
+
+        <header className="lobby-panel lobby-hero">
+          <div className="lobby-hero-text">
+            {location.pathname.startsWith("/play") && (
+              <a className="lobby-back" href="/games">
+                ← {t("lobby.ui.back")}
+              </a>
             )}
-          </Row>
-        </Col>
-        <Col xs={12}>
-          <Row className="justify-content-center no-space-around">
-            <Card>
-              <Card.Body className="py-2">
-                {!this.props.gameClient.isRealOwner() &&
-                  this.lobby.password != "" &&
-                  !this.readyCheckOngoing &&
-                  this.renderPasswordInput()}
-                <Row>
-                  <GameSettingsComponent
-                    gameClient={this.props.gameClient}
-                    entireGame={this.lobby.entireGame}
-                  />
-                </Row>
-                {this.props.gameClient.isRealOwner() &&
-                  !this.readyCheckOngoing &&
-                  this.renderPasswordInput()}
-                <Row className="mt-2">
-                  <Col>
-                    <Button
-                      type="button"
-                      block
-                      onClick={() => this.lobby.start()}
-                      disabled={!canStartGame || this.readyCheckOngoing}
-                    >
-                      <ConditionalWrap
-                        condition={!canStartGame || this.readyCheckOngoing}
-                        wrap={(children) => (
-                          <OverlayTrigger
-                            overlay={
-                              <Tooltip id="start-game">
-                                {this.readyCheckOngoing
-                                  ? t("lobby.readyCheckOngoing")
-                                  : canStartGameReason == "not-enough-players"
-                                    ? t("lobby.notEnoughPlayers")
-                                    : canStartGameReason ==
-                                        "targaryen-must-be-a-player-controlled-house"
-                                      ? t("lobby.targaryenMustBePlayer")
-                                      : canStartGameReason == "not-owner"
-                                        ? t("lobby.onlyOwnerCanStart")
-                                        : null}
-                              </Tooltip>
-                            }
-                          >
-                            {children}
-                          </OverlayTrigger>
-                        )}
-                      >
-                        {this.lobby.settings.pbem ? (
-                          <span>{t("lobby.start")}</span>
-                        ) : (
-                          <span>{t("lobby.launchReadyCheck")}</span>
-                        )}
-                      </ConditionalWrap>
-                    </Button>
-                  </Col>
-                  <Col xs="auto">
-                    <Button
-                      type="button"
-                      variant="danger"
-                      onClick={() => this.cancel()}
-                      disabled={!canCancelGame || this.readyCheckOngoing}
-                    >
-                      <ConditionalWrap
-                        condition={!canCancelGame || this.readyCheckOngoing}
-                        wrap={(children) => (
-                          <OverlayTrigger
-                            overlay={
-                              <Tooltip id="start-game">
-                                {this.readyCheckOngoing
-                                  ? t("lobby.readyCheckOngoing")
-                                  : canCancelGameReason == "not-owner"
-                                    ? t("lobby.onlyOwnerCanCancel")
-                                    : null}
-                              </Tooltip>
-                            }
-                          >
-                            {children}
-                          </OverlayTrigger>
-                        )}
-                      >
-                        <>{t("lobby.cancel")}</>
-                      </ConditionalWrap>
-                    </Button>
-                  </Col>
-                  <Col xs="auto">
-                    <button
-                      type="button"
-                      className="btn btn-outline-light btn-sm"
-                      onClick={() =>
-                        (this.props.gameClient.muted =
-                          !this.props.gameClient.muted)
-                      }
-                    >
-                      <OverlayTrigger
-                        overlay={
-                          <Tooltip id="lobby-mute-tooltip">
-                            {this.props.gameClient.muted
-                              ? t("lobby.unmute")
-                              : t("lobby.mute")}
-                          </Tooltip>
-                        }
-                      >
-                        <img
-                          src={
-                            this.props.gameClient.muted
-                              ? speakerOffImage
-                              : speakerImage
-                          }
-                          height={26}
+            <span className="lobby-kicker">{t("lobby.ui.kicker")}</span>
+            <h1 className="lobby-title">{this.entireGame.name}</h1>
+            <div className="lobby-badges">
+              <span className="lobby-badge">
+                {this.settings.pbem
+                  ? t("lobby.ui.modePbem")
+                  : t("lobby.ui.modeLive")}
+              </span>
+              <span className="lobby-badge">{this.setupName}</span>
+              {this.settings.private && (
+                <span className="lobby-badge">{t("lobby.ui.private")}</span>
+              )}
+              {this.lobby.password != "" && (
+                <span className="lobby-badge danger">
+                  <FontAwesomeIcon icon={faLock} size="sm" />{" "}
+                  {t("lobby.ui.locked")}
+                </span>
+              )}
+            </div>
+          </div>
+          <div className="lobby-hero-side">
+            <div className="lobby-count">
+              <b>
+                {seated}
+                <small>/{needed}</small>
+              </b>
+              <span>{t("lobby.ui.seated")}</span>
+            </div>
+            <span className="lobby-meter" aria-hidden="true">
+              <span
+                className="lobby-meter-fill"
+                style={{
+                  width: `${needed ? Math.min(100, Math.round((seated / needed) * 100)) : 0}%`
+                }}
+              />
+            </span>
+            <button
+              type="button"
+              className="lobby-btn ghost"
+              onClick={() => this.copyInvite()}
+            >
+              <FontAwesomeIcon icon={this.copied ? faCheck : faLink} />{" "}
+              {this.copied ? t("lobby.ui.copied") : t("lobby.ui.invite")}
+            </button>
+          </div>
+        </header>
+
+        <ol className="lobby-steps" aria-label={t("lobby.ui.stepsTitle")}>
+          <li className={classNames({ done: !!mySeat })}>
+            <b>1</b> {t("lobby.ui.step1")}
+          </li>
+          <li className={classNames({ done: seated >= needed })}>
+            <b>2</b> {t("lobby.ui.step2")}
+          </li>
+          <li>
+            <b>3</b>{" "}
+            {isOwner ? t("lobby.ui.step3Owner") : t("lobby.ui.step3")}
+          </li>
+        </ol>
+
+        <div className="lobby-main">
+          <section className="lobby-panel lobby-houses">
+            <div className="lobby-section-head">
+              <h2>{t("lobby.ui.housesTitle")}</h2>
+              <span>
+                {this.randomHouses
+                  ? t("lobby.ui.housesRandomHint")
+                  : t("lobby.ui.housesHint")}
+              </span>
+            </div>
+            {!isOwner &&
+              this.lobby.password != "" &&
+              !this.readyCheckOngoing &&
+              this.renderPasswordInput()}
+            <div className="lobby-seats" ref={this.lobbyHousesListRef}>
+              {houses.map((h, i) => {
+                const user = this.lobby.players.tryGet(h, null);
+                return (
+                  <div
+                    key={`lobby-house_${h.id}`}
+                    className={classNames("lobby-seat", {
+                      taken: !!user,
+                      mine: user == this.authenticatedUser
+                    })}
+                    style={{ ["--house-color" as string]: h.color }}
+                  >
+                    {this.randomHouses ? (
+                      <span className="lobby-seat-number">{i + 1}</span>
+                    ) : (
+                      <HouseIconComponent house={h} size={38} />
+                    )}
+                    <div className="lobby-seat-text">
+                      <b>
+                        {this.randomHouses
+                          ? t("lobby.seat", { n: i + 1 })
+                          : h.name}
+                      </b>
+                      {user ? (
+                        <UserLabel
+                          gameClient={this.props.gameClient}
+                          gameState={this.lobby}
+                          user={user}
                         />
-                      </OverlayTrigger>
-                    </button>
-                  </Col>
-                  <Col xs="auto">
-                    <div className="btn btn-outline-light btn-sm">
-                      <OverlayTrigger
-                        overlay={this.renderVolumeControlPopover()}
-                        placement="top"
-                        trigger="click"
-                        rootClose
-                      >
-                        <img src={settingsKnobsImage} height={26} />
-                      </OverlayTrigger>
+                      ) : (
+                        <span className="lobby-seat-free">
+                          {t("lobby.ui.freeSeat")}
+                        </span>
+                      )}
                     </div>
-                  </Col>
-                  <Col xs="auto" className="d-flex align-items-center">
-                    <LanguageSelectComponent />
-                  </Col>
-                </Row>
-              </Card.Body>
-            </Card>
+                    <div className="lobby-seat-action">
+                      {this.renderLobbyHouseButtons(h)}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+
+          <section className="lobby-panel lobby-chat">
+            <div className="lobby-section-head">
+              <h2>{t("lobby.ui.chatTitle")}</h2>
+              {connectedSpectators.length > 0 && (
+                <span>
+                  {t("lobby.ui.watching", { n: connectedSpectators.length })}
+                </span>
+              )}
+            </div>
+            <div className="lobby-chat-body">
+              <ChatComponent
+                gameClient={this.props.gameClient}
+                entireGame={this.lobby.entireGame}
+                roomId={this.lobby.entireGame.publicChatRoomId}
+                currentlyViewed={true}
+                getUserDisplayName={(u) => (
+                  <a
+                    href={`/user/${u.id}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ color: "white" }}
+                  >
+                    <b>{u.name}</b>
+                  </a>
+                )}
+              />
+            </div>
+            {connectedSpectators.length > 0 && (
+              <div className="lobby-spectators">
+                <span>{t("lobby.spectators")}</span>{" "}
+                {connectedSpectators.map((u, i) => (
+                  <React.Fragment key={`specatator_${u.id}`}>
+                    {i > 0 && ", "}
+                    <b>{getUserLinkOrLabel(u)}</b>
+                  </React.Fragment>
+                ))}
+              </div>
+            )}
+          </section>
+        </div>
+
+        <section className="lobby-panel lobby-settings">
+          <div className="lobby-section-head">
+            <h2>{t("lobby.ui.settingsTitle")}</h2>
+            <span>
+              {isOwner
+                ? t("lobby.ui.settingsHintOwner")
+                : t("lobby.ui.settingsHint")}
+            </span>
+          </div>
+          <Row className="no-space-around">
+            <GameSettingsComponent
+              gameClient={this.props.gameClient}
+              entireGame={this.lobby.entireGame}
+            />
           </Row>
-        </Col>
-      </Row>
+          {isOwner && !this.readyCheckOngoing && (
+            <div className="lobby-password">
+              <span>{t("lobby.ui.passwordLabel")}</span>
+              {this.renderPasswordInput()}
+            </div>
+          )}
+        </section>
+
+        <footer className="lobby-panel lobby-actionbar">
+          <div className="lobby-start">
+            <button
+              type="button"
+              className="lobby-btn primary big"
+              onClick={() => this.lobby.start()}
+              disabled={!canStartGame || this.readyCheckOngoing}
+            >
+              {this.settings.pbem
+                ? t("lobby.ui.startPbem")
+                : t("lobby.ui.startLive")}
+            </button>
+            <span
+              className={classNames("lobby-start-reason", {
+                ok: canStartGame && !this.readyCheckOngoing,
+                attention:
+                  this.readyCheckOngoing &&
+                  !!mySeat &&
+                  !(this.lobby.readyUsers ?? []).includes(this.authenticatedUser)
+              })}
+            >
+              {startReason}
+            </span>
+          </div>
+          <div className="lobby-tools">
+            <button
+              type="button"
+              className="lobby-btn danger"
+              onClick={() => this.cancel()}
+              disabled={!canCancelGame || this.readyCheckOngoing}
+              title={
+                this.readyCheckOngoing
+                  ? t("lobby.readyCheckOngoing")
+                  : canCancelGameReason == "not-owner"
+                    ? t("lobby.onlyOwnerCanCancel")
+                    : undefined
+              }
+            >
+              {t("lobby.cancel")}
+            </button>
+            <OverlayTrigger
+              overlay={
+                <Tooltip id="lobby-mute-tooltip">
+                  {this.props.gameClient.muted
+                    ? t("lobby.unmute")
+                    : t("lobby.mute")}
+                </Tooltip>
+              }
+            >
+              <button
+                type="button"
+                className="lobby-btn icon"
+                aria-label={
+                  this.props.gameClient.muted
+                    ? t("lobby.unmute")
+                    : t("lobby.mute")
+                }
+                onClick={() =>
+                  (this.props.gameClient.muted = !this.props.gameClient.muted)
+                }
+              >
+                <img
+                  src={
+                    this.props.gameClient.muted ? speakerOffImage : speakerImage
+                  }
+                  height={22}
+                  alt=""
+                />
+              </button>
+            </OverlayTrigger>
+            <OverlayTrigger
+              overlay={this.renderVolumeControlPopover()}
+              placement="top"
+              trigger="click"
+              rootClose
+            >
+              <button
+                type="button"
+                className="lobby-btn icon"
+                aria-label={t("lobby.ui.volume")}
+              >
+                <img src={settingsKnobsImage} height={22} alt="" />
+              </button>
+            </OverlayTrigger>
+            <LanguageSelectComponent />
+          </div>
+        </footer>
+      </div>
     );
+  }
+
+  get settings(): GameSettings {
+    return this.entireGame.gameSettings;
+  }
+
+  get setupName(): string {
+    const id = this.settings.setupId;
+    const data = allGameSetups.get(id);
+    return t("lobby.ui.setup", {
+      setup: getSetupShortName(id, data ? data.name : id),
+      n: this.settings.playerCount
+    });
+  }
+
+  @observable copied = false;
+
+  copyInvite(): void {
+    const link = `${location.origin}/play/${this.entireGame.id}`;
+    const done = (): void => {
+      this.copied = true;
+      window.setTimeout(() => (this.copied = false), 2500);
+    };
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(link).then(done, () => prompt(t("lobby.ui.inviteManual"), link));
+    } else {
+      prompt(t("lobby.ui.inviteManual"), link);
+    }
   }
 
   renderVolumeControlPopover(): OverlayChildren {

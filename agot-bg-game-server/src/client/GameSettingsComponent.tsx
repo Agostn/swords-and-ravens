@@ -15,7 +15,7 @@ import {
 } from "../common/ingame-game-state/game-data-structure/createGame";
 import IngameGameState from "../common/ingame-game-state/IngameGameState";
 import { isMobile } from "react-device-detect";
-import { t, tr } from "./i18n/i18n";
+import { t, tr, TranslationKey } from "./i18n/i18n";
 import {
   getSetupName,
   getSetupShortName,
@@ -248,14 +248,19 @@ export default class GameSettingsComponent extends Component<GameSettingsCompone
     );
   }
 
+  groupTitle(key: TranslationKey): ReactNode {
+    return <div className="settings-group-title">{t(key)}</div>;
+  }
+
   renderGameSetupsTooltipContent(): ReactNode {
     return renderSetupTooltip(this.gameSettings.setupId);
   }
 
   renderLobbySettings(): ReactNode {
     return (
-      <Row className="mt-2 justify-content-center">
+      <Row className="mt-2 justify-content-center settings-groups">
         <Col xs="auto" id="base-settings-col" className="no-gutters">
+          {this.groupTitle("settings.group.game")}
           <OverlayTrigger
             overlay={
               <Tooltip id="game-setups-tooltip" className="tooltip-w-100">
@@ -621,6 +626,7 @@ export default class GameSettingsComponent extends Component<GameSettingsCompone
           )}
         </Col>
         <Col xs="6" lg="auto" id="mod-settings-col" className="no-gutters">
+          {this.groupTitle("settings.group.modules")}
           <Col xs="12">
             <FormCheck
               id="vassals-setting"
@@ -813,6 +819,7 @@ export default class GameSettingsComponent extends Component<GameSettingsCompone
           id="extended-base-settings-col"
           className="no-gutters"
         >
+          {this.groupTitle("settings.group.houses")}
           <Col xs="12">
             <FormCheck
               id="random-houses-setting"
@@ -964,6 +971,7 @@ export default class GameSettingsComponent extends Component<GameSettingsCompone
           </Col>
         </Col>
         <Col xs="6" lg="auto" id="custom-settings-col" className="no-gutters">
+          {this.groupTitle("settings.group.rules")}
           <Col xs="12">
             <FormCheck
               id="mixed-wd1-setting"
@@ -1132,6 +1140,7 @@ export default class GameSettingsComponent extends Component<GameSettingsCompone
           </Col>
         </Col>
         <Col xs="6" lg="auto" id="custom-settings-2-col" className="no-gutters">
+          {this.groupTitle("settings.group.start")}
           <Col xs="12">
             <FormCheck
               id="preceding-mustering-setting"
@@ -1269,6 +1278,7 @@ export default class GameSettingsComponent extends Component<GameSettingsCompone
           </Col>
         </Col>
         <Col xs="6" lg="auto" id="draft-settings-col" className="no-gutters">
+          {this.groupTitle("settings.group.draft")}
           <Col xs="12">
             <FormCheck
               id="draft-house-cards-settings"
@@ -1411,6 +1421,7 @@ export default class GameSettingsComponent extends Component<GameSettingsCompone
             id="draft-decks-settings-col"
             className="no-gutters"
           >
+          {this.groupTitle("settings.group.draftDecks")}
             <Col xs="12">
               <FormCheck
                 id="draft-tracks-settings"

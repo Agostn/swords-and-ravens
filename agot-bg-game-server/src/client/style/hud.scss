@@ -1,3 +1,12 @@
+// Fonte dos títulos (IM Fell English SC, licença SIL OFL: public/fonts/IM-Fell-English-SC-LICENSE.txt)
+@font-face {
+  font-family: "IM Fell English SC";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("../../../public/fonts/im-fell-english-sc-latin-400-normal.woff2") format("woff2");
+}
+
 // Tela nova da partida: mapa em tela cheia com painéis flutuantes (proposta B).
 
 $hud-bg: rgba(23, 19, 15, 0.93);
@@ -281,8 +290,9 @@ $hud-display-font: "IM Fell English SC", Georgia, serif;
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-family: $hud-display-font;
-  font-size: 17px;
+  // sem a fonte dos títulos: nela o "1" parece um "I" (algarismos antigos)
+  font-size: 15px;
+  font-weight: 700;
   color: $hud-gold;
   white-space: nowrap;
 }

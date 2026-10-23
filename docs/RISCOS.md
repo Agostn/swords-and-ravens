@@ -57,7 +57,10 @@ Gravidade: 🔴 alta · 🟠 média · 🟡 baixa · Situação: ✅ resolvido �
 | W5 | Cultura pt-BR muda formato de números (vírgula). Onde número vai para CSS/JS/API, tem que usar `InvariantCulture`. | 🟡 | 🛡️ | Conferido: código já usa `InvariantCulture`/`"O"` nesses pontos. Cuidar em código novo. |
 | W6 | Se o fork for juntado no `master`, o GitHub Actions (`deploy.yml`) tenta publicar no servidor do projeto original e falha (sem as senhas). | 🟡 | ⏳ | Desativar/ajustar `deploy.yml` antes da etapa de hospedagem. |
 | W8 | FAQ e Discord do projeto original removidos do site e do jogo (22/out). Se o projeto ganhar FAQ/Discord próprios, colocar os links de volta em `_Layout.cshtml`, `Games.cshtml`, `MyGames.cshtml` e `UserSettingsComponent.tsx`. | 🟡 | ✅ | — |
-| W7 | Visual: títulos dos cartões da página inicial quase invisíveis; texto de exemplo dos campos alinhado à direita. | 🟡 | ⏳ | Etapa de design. |
+| W7 | Visual: títulos dos cartões da página inicial quase invisíveis; texto de exemplo dos campos alinhado à direita. | 🟡 | ✅ 23/out | Tema novo (cores da tela da partida, dourado) em `ClientAssets/src/app.css`; Início, Partidas, Minhas partidas, Entrar e Criar conta refeitos. Depois de mudar classes nas páginas, rodar `npm run build` em `ClientAssets` (o `app.css` gerado vai para o Git). |
+| W9 | `Accounts:RequireConfirmedEmail=false` deixa entrar sem confirmar o e-mail. Só para o Codespaces (não tem servidor de e-mail lá). | 🟠 | 🛡️ 23/out | O padrão é `true`. Nunca colocar `false` em produção. Ligado só no `.devcontainer/iniciar.sh`. |
+| W10 | O site do Codespaces usa senhas de teste conhecidas (Postgres `example`, API do servidor do jogo `change-me-in-user-secrets`) e roda em modo `Development`. | 🟡 | 🛡️ | Só para jogar entre amigos. Para um site de verdade (etapa de hospedagem), trocar as senhas e usar `Production`. A API interna (porta 8001) não é aberta para fora. |
+| W11 | Fonte dos títulos (IM Fell English SC, licença SIL OFL) vai junto no site (`wwwroot/lib/fonts`) e no jogo (`public/fonts`). Os números dela parecem letras ("1" vira "I"). | 🟡 | 🛡️ | Não usar essa fonte em números (rodada, contagens). Licença junto dos arquivos. |
 
 ## Tela nova da partida (mapa em tela cheia, branch `design-novo`)
 
@@ -77,6 +80,8 @@ Gravidade: 🔴 alta · 🟠 média · 🟡 baixa · Situação: ✅ resolvido �
 | H13 | Resultado dos lances (`HudBidResults`): lê o histórico da partida (tipos `clash-of-kings-*`, `wildling-*`, `ties-decided`, `*-bidder-chosen`). Se o servidor mudar o formato desses registros, o quadro pode não aparecer (o jogo continua normal). Aparece só para lances novos e some ao mudar de fase. | 🟡 | 🛡️ 22/out | Testado com A Fúria dos Reis com empate e com ataque dos Selvagens. |
 | H14 | Botões a) b) c) das cartas Asas Negras, Um Trono de Lâminas, Passar a Fio de Espada e O Fardo do Poder dependem do texto exato que o servidor manda (`LETTERED_CHOICES` em `serverText.ts`). Se o texto mudar, voltam os botões normais (sem quebrar). | 🟡 | ✅ 22/out | Teste automático em `tests/i18n` confere os quatro textos. |
 | H15 | "Cores das Casas" virou botão liga/desliga (salvo no navegador). O destaque ao passar o mouse sobre uma Casa continua valendo por cima. | 🟡 | ✅ 22/out | — |
+| H16 | Sala de espera (lobby) redesenhada. O CSS (`style/lobby.scss`) organiza as opções em grupos usando os `id` das colunas do `GameSettingsComponent` (`#base-settings-col`, `#mod-settings-col`...). | 🟡 | ✅ 23/out | Se mudar esses `id`, conferir a sala de espera. Testado: criar partida no site, 3 contas entrando, confirmação de presença (ao vivo) e início. |
+| H17 | No Codespaces a página do jogo é gerada sem comprimir as imagens (`SKIP_IMAGE_OPTIMIZATION=1`), senão leva mais de meia hora. As imagens ficam maiores (abre um pouco mais devagar na primeira vez). | 🟡 | 🛡️ 23/out | Em produção (Dockerfile) continua comprimindo. `gerar-jogo.sh` só refaz quando o código do jogo muda. |
 | H6 | As preferências da tela nova (tela antiga, painel recolhido, zoom do mapa) ficam no navegador de cada um (`localStorage`). Em janela anônima voltam ao padrão. | 🟡 | 🛡️ | Aceitável. |
 
 ## Imagens, direitos e legal
@@ -85,7 +90,7 @@ Gravidade: 🔴 alta · 🟠 média · 🟡 baixa · Situação: ✅ resolvido �
 |---|---|---|---|---|
 | L1 | Artes das cartas e do mapa são da Fantasy Flight Games. O projeto original também usa. Um site público pode receber pedido de retirada. | 🟠 | ⏳ | Manter sem anúncios/cobrança; ter plano B de arte própria. |
 | L2 | Licença GPLv3: o fork precisa manter código aberto e créditos aos autores originais. | 🟡 | ✅ | Repositório público, créditos mantidos. |
-| L3 | No Codespaces de teste, o link do jogo fica **público** (qualquer um com o link entra) e o modo de teste deixa escolher qualquer jogador pelo `#1`, `#2`... | 🟡 | ⏳ | Só compartilhar o link com amigos; não é para produção. |
+| L3 | No Codespaces o link do site fica **público** (qualquer um com o link pode criar conta e entrar). No modo de teste rápido (`modo-teste.sh`, porta 8080) dá para escolher qualquer jogador pelo `#1`, `#2`... | 🟡 | ⏳ | Só compartilhar o link com amigos; não é para produção. Desde 23/out o Codespaces usa o site completo (contas e sala de espera). |
 
 ## Ambiente de trabalho (Claude)
 

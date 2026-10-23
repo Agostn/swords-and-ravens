@@ -24,53 +24,51 @@
 }
 
 /*
- * "Swords and Ravens" dark theme: a neutral charcoal-grey base (matching the previous
- * Django/Bootstrap dark theme testers were used to, since the original brown/wood-toned base
- * colors read as too dark/muddy), a steel-blue primary accent for default buttons (kept visually
- * distinct from the Discord "blurple" (#5865F2) and Ko-fi cyan-blue (#29abe0) brand buttons
- * rendered inline on Games/MyGames), aged crown-gold as the secondary accent, dragon-fire crimson
- * reserved for errors/danger, and a cold Valyrian-steel/Stark blue-grey as the info accent.
+ * Tema "Swords and Ravens" (versão PT-BR): as mesmas cores da tela da partida (hud.scss do
+ * jogo) - fundo marrom quase preto, linhas cor de madeira escura, texto pergaminho e dourado
+ * como cor de destaque. O vermelho fica para erros/perigo.
  */
 @plugin "daisyui/theme" {
   name: "swordsandravens";
   default: true;
   prefersdark: true;
   color-scheme: dark;
-  --color-primary: #375a7f;
-  --color-primary-content: #eef5fb;
-  --color-secondary: #444444;
-  --color-secondary-content: #eef5fb;
-  --color-accent: #4c6b8a;
+  --color-primary: #e2b65a;
+  --color-primary-content: #1a140c;
+  --color-secondary: #d8c39a;
+  --color-secondary-content: #1a140c;
+  --color-accent: #8a6a3a;
   --color-accent-content: #f5e9d9;
-  --color-neutral: #2b2f33;
-  --color-neutral-content: #d8dadc;
-  --color-base-100: #222222;
-  --color-base-200: #303030;
-  --color-base-300: #444444;
-  --color-base-content: #e8e6e3;
-  --color-info: #4c6b8a;
+  --color-neutral: #2a231c;
+  --color-neutral-content: #ede6d8;
+  --color-base-100: #120f0c;
+  --color-base-200: #1c1713;
+  --color-base-300: #3a3128;
+  --color-base-content: #ede6d8;
+  --color-info: #3e7bd6;
   --color-info-content: #eef5fb;
-  --color-success: #4f7a52;
-  --color-success-content: #eef5fb;
-  --color-warning: #b3892f;
-  --color-warning-content: #221a08;
-  --color-error: #9c2b2b;
+  --color-success: #7fb77e;
+  --color-success-content: #10200f;
+  --color-warning: #e2b65a;
+  --color-warning-content: #1a140c;
+  --color-error: #c9473b;
   --color-error-content: #fbe9e9;
   /* border radius */
   --radius-selector: 1rem;
-  --radius-field: 0.5rem;
-  --radius-box: 1rem;
+  --radius-field: 0.6rem;
+  --radius-box: 0.9rem;
   /* base sizes */
   --size-selector: 0.25rem;
   --size-field: 0.25rem;
   /* border size */
   --border: 1px;
-  /* effects: keep the theme flat (no beveled highlight/shadow on buttons/inputs) - depth: 0
-     disables DaisyUI v5's --btn-inset highlight and --btn-shadow drop-shadow layers, both of
-     which are scaled by --depth and were rendering as an unwanted thin border/glow around
-     buttons compared to the previous DaisyUI v4 flat look. */
   --depth: 0;
   --noise: 0;
+}
+
+/* Fonte dos títulos (carregada por /lib/fonts/fonts.css no _Layout) */
+@theme {
+  --font-display: "IM Fell English SC", Georgia, "Times New Roman", serif;
 }
 
 /*
@@ -84,7 +82,26 @@
  */
 @layer base {
   a {
-    color: #00bc8c;
+    color: #e2b65a;
+  }
+  h1,
+  h2,
+  .card-title,
+  .collapse-title {
+    font-family: var(--font-display);
+    font-weight: 400;
+    letter-spacing: 0.01em;
+  }
+  /* números e etiquetas dentro de títulos ficam na fonte normal (a dos títulos não tem
+     algarismos fáceis de ler) */
+  .badge {
+    white-space: nowrap;
+  }
+  h1 .badge,
+  h2 .badge,
+  .card-title .badge,
+  .collapse-title .badge {
+    font-family: var(--font-sans);
   }
 }
 
@@ -309,4 +326,36 @@
 .btn-outline:hover {
   --btn-bg: var(--color-base-content);
   color: var(--color-base-100);
+}
+
+/* ---------- Peças do visual novo (Início, Partidas, cabeçalho) ---------- */
+@layer components {
+  .site-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    background:
+      radial-gradient(ellipse at 50% -10%, rgba(226, 182, 90, 0.12), transparent 60%),
+      linear-gradient(180deg, #17130f 0%, #0e0b09 100%);
+  }
+  .panel {
+    @apply rounded-box border border-base-300 bg-base-200/90 shadow-lg;
+  }
+  .kicker {
+    @apply text-xs font-bold uppercase tracking-[0.14em] text-primary;
+  }
+  .hero-map {
+    @apply relative overflow-hidden rounded-box border border-primary/40 shadow-2xl;
+    background-image:
+      linear-gradient(90deg, rgba(14, 11, 9, 0.96) 0%, rgba(14, 11, 9, 0.82) 45%, rgba(14, 11, 9, 0.35) 100%),
+      url("/img/westeros-fundo.jpg");
+    background-size: cover;
+    background-position: center;
+  }
+  .step-badge {
+    @apply inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-primary text-sm font-bold text-primary;
+  }
+  .brand {
+    @apply font-display text-2xl text-primary tracking-wide no-underline;
+  }
 }

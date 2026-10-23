@@ -32,6 +32,7 @@
     <link rel="stylesheet" href="~/lib/fontawesome/css/fontawesome.min.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/lib/fontawesome/css/solid.min.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/lib/fontawesome/css/brands.min.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/lib/fonts/fonts.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/app.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     @if (User.Identity?.IsAuthenticated ?? false)
@@ -51,11 +52,12 @@
     }
 </head>
 <body class="min-h-screen bg-base-100 text-base-content flex flex-col lg:h-screen lg:overflow-hidden">
+    <div class="site-backdrop" aria-hidden="true"></div>
     <header class="shrink-0 sticky top-0 z-30">
-        <nav class="navbar bg-base-200 border-b border-base-300 shadow-md">
+        <nav class="navbar bg-base-100/95 backdrop-blur border-b border-base-300 shadow-md">
             <div class="page-container flex items-center justify-between">
-                <a class="btn btn-ghost text-xl normal-case text-white font-bold tracking-wide shrink-0" asp-area="" asp-page="/Index">
-                    <img src="~/raven.svg" asp-append-version="true" alt="" width="24" height="24" class="inline-block" />
+                <a class="brand flex items-center gap-2 shrink-0 px-2" asp-area="" asp-page="/Index">
+                    <img src="~/raven.svg" asp-append-version="true" alt="" width="26" height="26" class="inline-block" />
                     Swords and Ravens
                 </a>
                 <div class="flex items-center gap-1">
@@ -123,7 +125,7 @@
         </div>
     </div>
 
-    <footer class="border-t border-base-300 py-3 text-sm opacity-70 shrink-0 bg-base-100 z-20">
+    <footer class="border-t border-base-300 py-3 text-sm opacity-70 shrink-0 bg-base-100/95 z-20">
         <div class="page-container flex items-center justify-center gap-1">
             <span>&copy; 2026 - Swords and Ravens -</span>
             <a class="link link-hover" asp-area="" asp-page="/Privacy">Privacidade</a>

@@ -68,6 +68,11 @@ module.exports = (env, argv) => {
           }
         },
         {
+          // fonte dos títulos (public/fonts)
+          test: /\.(woff2?)$/i,
+          type: "asset/resource"
+        },
+        {
           test: /\.(ico)$/i,
           use: {
             loader: "file-loader",

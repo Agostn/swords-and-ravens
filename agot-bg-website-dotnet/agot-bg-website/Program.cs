@@ -139,7 +139,13 @@ builder.Services.AddScoped<IUserValidator<ApplicationUser>, SafeUserValidator>()
 builder
     .Services.AddIdentity<ApplicationUser, IdentityRole<Guid>>(options =>
     {
-        options.SignIn.RequireConfirmedAccount = true;
+        // "Accounts:RequireConfirmedEmail" = false só para testes entre amigos sem servidor de
+        // e-mail (ex.: GitHub Codespaces, ver .devcontainer/iniciar.sh): aí a conta já entra
+        // direto após o cadastro. Em produção fica sempre true (padrão).
+        options.SignIn.RequireConfirmedAccount = builder.Configuration.GetValue(
+            "Accounts:RequireConfirmedEmail",
+            true
+        );
         // Two different ApplicationUsers must never share an email: Register.cshtml.cs and
         // ExternalLogin.cshtml.cs both rely on FindByEmailAsync returning at most one match so
         // local-password and external-login accounts can be told apart/linked correctly.

@@ -47,3 +47,6 @@ agot-bg-website-dotnet/agot-bg-website/wwwroot/static_game/**
 /.vs/**
 /agot-bg-website-dotnet/publish/**
 /agot-bg-website-dotnet/Snr.Migration/publish-linux
+
+# Redis local (testes)
+dump.rdb

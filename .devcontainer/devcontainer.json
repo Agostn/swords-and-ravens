@@ -1,16 +1,19 @@
 {
-  "name": "Swords and Ravens PT-BR (teste)",
+  "name": "Swords and Ravens PT-BR (site completo)",
   "image": "mcr.microsoft.com/devcontainers/base:bookworm",
   "features": {
     "ghcr.io/devcontainers/features/node:1": { "version": "24" },
+    "ghcr.io/devcontainers/features/dotnet:2": { "version": "10.0" },
     "ghcr.io/devcontainers/features/github-cli:1": {}
   },
   "hostRequirements": { "cpus": 2, "memory": "8gb" },
   "postCreateCommand": "bash .devcontainer/instalar.sh",
   "postAttachCommand": "bash .devcontainer/iniciar.sh",
-  "forwardPorts": [8080, 5000],
+  "forwardPorts": [8000, 5000],
   "portsAttributes": {
-    "8080": { "label": "Jogo (abra este)", "onAutoForward": "notify" },
-    "5000": { "label": "Servidor do jogo", "onAutoForward": "silent" }
+    "8000": { "label": "Site (abra este)", "onAutoForward": "notify" },
+    "5000": { "label": "Servidor do jogo", "onAutoForward": "silent" },
+    "8001": { "label": "API interna (não abrir)", "onAutoForward": "ignore" },
+    "8080": { "label": "Modo de teste rápido", "onAutoForward": "notify" }
   }
 }

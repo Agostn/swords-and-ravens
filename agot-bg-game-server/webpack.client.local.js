@@ -50,9 +50,11 @@ module.exports = (env, argv) => {
               loader: "file-loader",
               options: { name: "[sha256:contenthash:hex:16].[ext]" }
             },
-            {
-              loader: "image-webpack-loader"
-            }
+            // Comprimir as imagens demora muito (dezenas de minutos com 2 CPUs).
+            // SKIP_IMAGE_OPTIMIZATION=1 pula essa etapa (usado no Codespaces).
+            ...(process.env.SKIP_IMAGE_OPTIMIZATION
+              ? []
+              : [{ loader: "image-webpack-loader" }])
           ]
         },
         {
@@ -61,6 +63,11 @@ module.exports = (env, argv) => {
             loader: "file-loader",
             options: { name: "[sha256:contenthash:hex:16].[ext]" }
           }
+        },
+        {
+          // fonte dos títulos (public/fonts)
+          test: /\.(woff2?)$/i,
+          type: "asset/resource"
         },
         {
           test: /\.(ico)$/i,

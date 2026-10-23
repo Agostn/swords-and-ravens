@@ -1,0 +1,10 @@
+/* Fonte dos títulos (a mesma da tela da partida). IM Fell English SC, licença SIL OFL 1.1
+   (ver im-fell-english-sc/LICENSE). Usada pelo site e pela página do jogo (/play). */
+@font-face {
+  font-family: "IM Fell English SC";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/lib/fonts/im-fell-english-sc/im-fell-english-sc-latin-400-normal.woff2") format("woff2"),
+    url("/lib/fonts/im-fell-english-sc/im-fell-english-sc-latin-400-normal.woff") format("woff");
+}

@@ -277,6 +277,11 @@ namespace agot_bg_website.Areas.Identity.Pages.Account
                     }
                     else
                     {
+                        // Sem confirmação por e-mail (modo de teste): marca o e-mail como
+                        // confirmado para o resto do site tratar a conta como normal.
+                        var confirmToken =
+                            await _userManager.GenerateEmailConfirmationTokenAsync(user);
+                        await _userManager.ConfirmEmailAsync(user, confirmToken);
                         await _signInManager.SignInAsync(user, isPersistent: false);
                         return LocalRedirect(returnUrl);
                     }

@@ -302,7 +302,10 @@ class SfxManager {
         this.currentlyPlayingSfx.push(audio);
         audio.onended = () => _.pull(this.currentlyPlayingSfx, audio);
         audio.volume = this.gameClient.sfxVolume;
-        return audio.play();
+        // O navegador bloqueia som antes da primeira interação com a página: não é erro.
+        return audio.play().catch(() => {
+            _.pull(this.currentlyPlayingSfx, audio);
+        });
     }
 
     private playMusic(file: string): Promise<void> {
@@ -310,7 +313,10 @@ class SfxManager {
         this.currentlyPlayingMusic.push(audio);
         audio.onended = () => _.pull(this.currentlyPlayingMusic, audio);
         audio.volume = this.gameClient.musicVolume;
-        return audio.play();
+        // O navegador bloqueia som antes da primeira interação com a página: não é erro.
+        return audio.play().catch(() => {
+            _.pull(this.currentlyPlayingMusic, audio);
+        });
     }
 
     private playNotification(file: string): Promise<void> {
@@ -318,7 +324,10 @@ class SfxManager {
         this.currentlyPlayingNotifications.push(audio);
         audio.onended = () => _.pull(this.currentlyPlayingNotifications, audio);
         audio.volume = this.gameClient.notificationsVolume;
-        return audio.play();
+        // O navegador bloqueia som antes da primeira interação com a página: não é erro.
+        return audio.play().catch(() => {
+            _.pull(this.currentlyPlayingNotifications, audio);
+        });
     }
 
     private fadeOutMusic(fadeOutDuration: number, fadeOutSteps: number): void {

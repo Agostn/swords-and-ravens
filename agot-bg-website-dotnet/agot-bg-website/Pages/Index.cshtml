@@ -18,49 +18,73 @@
     }))
 </script>
 
-<div class="hero bg-base-200 rounded-box mt-6">
-    <div class="hero-content text-center py-16">
-        <div class="max-w-2xl">
-            <h1 class="display-4 text-primary">Swords and Ravens</h1>
-            <p class="py-4 text-base-content/80">
-                Jogue <em>A Game of Thrones: The Board Game</em> (2ª edição, com as 3 expansões)
-                online, ao vivo ou por turnos (PBEM), com amigos ou com quem quiser, tudo em português.
-            </p>
-            @if (User.Identity?.IsAuthenticated ?? false)
-            {
-                <div class="flex items-center justify-center gap-3">
-                    <a class="btn btn-primary" asp-page="/MyGames">Minhas partidas</a>
-                    <a class="btn btn-outline" asp-page="/Games">Todas as partidas</a>
-                </div>
-            }
-            else
-            {
-                <div class="flex items-center justify-center gap-3">
-                    <a class="btn btn-primary" asp-area="Identity" asp-page="/Account/Register">Criar uma conta</a>
-                    <a class="btn btn-outline" asp-area="Identity" asp-page="/Account/Login">Entrar</a>
-                </div>
-            }
-        </div>
-    </div>
-</div>
+@{
+    var signedIn = User.Identity?.IsAuthenticated ?? false;
+}
 
-<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8">
-    <div class="card bg-base-200 shadow-md">
-        <div class="card-body">
-            <h2 class="card-title text-secondary">Ao vivo ou por turnos</h2>
-            <p>Entre numa partida ao vivo ou jogue no seu ritmo, um turno por vez (PBEM), recebendo aviso quando for sua vez.</p>
-        </div>
+<section class="hero-map mt-4">
+    <div class="px-6 py-14 sm:px-12 sm:py-20 max-w-2xl">
+        <p class="kicker mb-3">O jogo de tabuleiro, online e em português</p>
+        <h1 class="font-display text-5xl sm:text-6xl leading-none text-base-content mb-5">Swords and Ravens</h1>
+        <p class="text-lg text-base-content/85 mb-8">
+            Jogue <em>A Game of Thrones: The Board Game</em> (2ª edição, com as 3 expansões)
+            ao vivo ou por turnos, com seus amigos. Negocie, traia e conquiste o Trono de Ferro.
+        </p>
+        @if (signedIn)
+        {
+            <div class="flex flex-wrap items-center gap-3">
+                <a class="btn btn-primary btn-lg px-8" asp-page="/Games" asp-fragment="criar">Criar uma partida</a>
+                <a class="btn btn-outline btn-lg" asp-page="/MyGames">Minhas partidas</a>
+            </div>
+        }
+        else
+        {
+            <div class="flex flex-wrap items-center gap-3">
+                <a class="btn btn-primary btn-lg px-8" asp-area="Identity" asp-page="/Account/Register">Criar uma conta</a>
+                <a class="btn btn-outline btn-lg" asp-area="Identity" asp-page="/Account/Login">Já tenho conta</a>
+            </div>
+        }
     </div>
-    <div class="card bg-base-200 shadow-md">
-        <div class="card-body">
-            <h2 class="card-title text-secondary">Chat na partida</h2>
-            <p>Combine, negocie e traia rumo ao Trono de Ferro pelo chat da própria partida.</p>
-        </div>
+</section>
+
+<section class="mt-10">
+    <h2 class="text-3xl mb-1">Como jogar com seus amigos</h2>
+    <p class="text-base-content/70 mb-5">Leva uns dois minutos para começar.</p>
+    <ol class="grid grid-cols-1 md:grid-cols-4 gap-3">
+        <li class="panel p-5 flex flex-col gap-3">
+            <span class="step-badge">1</span>
+            <b>Crie sua conta</b>
+            <span class="text-sm text-base-content/75">Só nome de usuário, e-mail e senha. Cada amigo cria a sua.</span>
+        </li>
+        <li class="panel p-5 flex flex-col gap-3">
+            <span class="step-badge">2</span>
+            <b>Crie a partida</b>
+            <span class="text-sm text-base-content/75">Em <a asp-page="/Games">Partidas</a>, dê um nome e clique em "Criar partida". Você vai para a sala de espera.</span>
+        </li>
+        <li class="panel p-5 flex flex-col gap-3">
+            <span class="step-badge">3</span>
+            <b>Chame a mesa</b>
+            <span class="text-sm text-base-content/75">Copie o link do convite na sala de espera e mande para os amigos. Cada um escolhe sua Casa.</span>
+        </li>
+        <li class="panel p-5 flex flex-col gap-3">
+            <span class="step-badge">4</span>
+            <b>Inicie</b>
+            <span class="text-sm text-base-content/75">Escolha o cenário (jogo base, expansões) e as regras, e clique em "Iniciar partida".</span>
+        </li>
+    </ol>
+</section>
+
+<section class="grid grid-cols-1 md:grid-cols-3 gap-3 mt-10 mb-4">
+    <div class="panel p-6">
+        <h2 class="card-title text-xl text-primary mb-2">Ao vivo ou por turnos</h2>
+        <p class="text-base-content/80">Jogue tudo numa noite, ou no seu ritmo, um turno por vez (PBEM), recebendo aviso quando for sua vez.</p>
     </div>
-    <div class="card bg-base-200 shadow-md">
-        <div class="card-body">
-            <h2 class="card-title text-secondary">Entre do seu jeito</h2>
-            <p>Use nome de usuário e senha, ou entre com Google, Discord ou Facebook.</p>
-        </div>
+    <div class="panel p-6">
+        <h2 class="card-title text-xl text-primary mb-2">Mesa completa</h2>
+        <p class="text-base-content/80">De 3 a 8 jogadores, com O Festim dos Corvos, A Dança dos Dragões, Mãe dos Dragões e várias regras opcionais.</p>
     </div>
-</div>
+    <div class="panel p-6">
+        <h2 class="card-title text-xl text-primary mb-2">Tudo em português</h2>
+        <p class="text-base-content/80">Cartas, mapa, regras e o chat da partida para combinar (e quebrar) alianças.</p>
+    </div>
+</section>
