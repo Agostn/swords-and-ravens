@@ -1057,7 +1057,7 @@ export default class MapComponent extends Component<MapComponentProps> {
                         {tr("auto.MapComponent.4", { p0: (<b>
                           {getDragonPrefix(dragonStrength)}
                           {u.type.name}
-                        </b>), p1: (<b>{controller?.name ?? t("auto2.MapComponent.0")}</b>), p2: (<b>{r.name}</b>) })}
+                        </b>), p1: (<b>{u.allegiance?.name ?? controller?.name ?? t("auto2.MapComponent.0")}</b>), p2: (<b>{r.name}</b>) })}
                       </div>
                     </Tooltip>
                   }

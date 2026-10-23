@@ -204,6 +204,9 @@ export default class ResolveSingleMarchOrderComponent extends Component<
                     </div>
                   ))}
                 </div>
+                <div className="text-center small text-muted mb-2">
+                  {t("march.cancelHint")}
+                </div>
               </Col>
             )}
             {this.selectedMarchOrderRegion != null && (
@@ -428,6 +431,36 @@ export default class ResolveSingleMarchOrderComponent extends Component<
     }
   }
 
+  /**
+   * Desfaz a viagem de uma unidade já mandada para outra área: basta clicar
+   * nela de novo (no destino, ou na origem quando é um ataque). Ela volta para
+   * a área de onde saiu e pode ser mandada de novo.
+   */
+  cancelMove(unit: Unit): void {
+    const entry = this.plannedMoves.entries.find(([, units]) =>
+      units.includes(unit)
+    );
+    if (!entry) return;
+    const [region, units] = entry;
+    const remaining = units.filter((u) => u != unit);
+    if (remaining.length > 0) {
+      this.plannedMoves.set(region, remaining);
+    } else {
+      this.plannedMoves.delete(region);
+    }
+    if (region.newUnits.includes(unit)) {
+      region.newUnits = region.newUnits.filter((u) => u != unit);
+    }
+    if (this.selectedMarchOrderRegion) {
+      this.selectedMarchOrderRegion.removedUnits =
+        this.selectedMarchOrderRegion.removedUnits.filter((u) => u != unit);
+    }
+    // se não sobrou viagem nenhuma, a escolha de deixar a ficha de Poder recomeça
+    if (this.plannedMoves.size == 0) {
+      this.leavePowerToken = undefined;
+    }
+  }
+
   onRegionClick(region: Region): void {
     const alreadyGoingUnits: Unit[] = this.plannedMoves.has(region)
       ? this.plannedMoves.get(region)
@@ -567,7 +600,8 @@ export default class ResolveSingleMarchOrderComponent extends Component<
               onClick: !attackingUnits.includes(u)
                 ? () =>
                     this.onUnitClick(this.selectedMarchOrderRegion as Region, u)
-                : undefined
+                : // ataque já marcado: clicar de novo cancela
+                  () => this.cancelMove(u)
             }
           ] as [Unit, PartialRecursive<UnitOnMapProperties>]
       );
@@ -582,7 +616,9 @@ export default class ResolveSingleMarchOrderComponent extends Component<
               highlight: {
                 active: true,
                 color: "yellow"
-              }
+              },
+              // clicar na unidade que já foi mandada desfaz a viagem
+              onClick: () => this.cancelMove(u)
             }
           ] as [Unit, PartialRecursive<UnitOnMapProperties>]
       );

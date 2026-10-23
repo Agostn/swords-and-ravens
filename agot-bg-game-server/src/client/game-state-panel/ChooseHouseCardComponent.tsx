@@ -94,7 +94,7 @@ export default class ChooseHouseCardComponent extends Component<
         {this.shouldChooseHouseCard() && (
           <>
             <Col xs={12}>
-              <Row className="justify-content-center">
+              <Row className="justify-content-center choose-house-cards">
                 {this.getChoosableHouseCards().map((hc) => (
                   <Col
                     xs="auto"
@@ -119,6 +119,21 @@ export default class ChooseHouseCardComponent extends Component<
                   </Col>
                 ))}
               </Row>
+              <div className="choose-house-card-summary text-center">
+                {this.selectedHouseCard ? (
+                  <>
+                    <b>{this.selectedHouseCard.name}</b>
+                    {" · "}
+                    {t("houseCard.summary", {
+                      strength: this.selectedHouseCard.combatStrength,
+                      swords: this.selectedHouseCard.swordIcons,
+                      towers: this.selectedHouseCard.towerIcons
+                    })}
+                  </>
+                ) : (
+                  t("houseCard.pickHint")
+                )}
+              </div>
             </Col>
             <Col xs={12}>
               {this.isValyrianSteelBladeHolder &&

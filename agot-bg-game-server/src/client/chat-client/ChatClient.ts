@@ -70,6 +70,18 @@ export default class ChatClient {
     }
 
     addChannel(id: string): void {
+        // ao reconectar, a sala é aberta de novo: fecha a conexão antiga dela
+        const previous = this.channels.tryGet(id, null);
+        if (previous) {
+            previous.websocket.onclose = null;
+            previous.websocket.onerror = null;
+            previous.websocket.onmessage = null;
+            try {
+                previous.websocket.close();
+            } catch {
+                // já estava fechada
+            }
+        }
         const websocket = new WebSocket(`${CHAT_SERVER_URL}/ws/chat/room/${id}`);
         const channel = new Channel(id, websocket);
         this.channels.set(id, channel);

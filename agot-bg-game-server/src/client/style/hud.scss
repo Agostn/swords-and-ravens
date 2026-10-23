@@ -291,7 +291,8 @@ $hud-display-font: "IM Fell English SC", Georgia, serif;
   align-items: center;
   gap: 6px;
   // sem a fonte dos títulos: nela o "1" parece um "I" (algarismos antigos)
-  font-size: 15px;
+  // todos os textos da barra do topo têm o mesmo tamanho (14px)
+  font-size: 14px;
   font-weight: 700;
   color: $hud-gold;
   white-space: nowrap;
@@ -316,8 +317,9 @@ $hud-display-font: "IM Fell English SC", Georgia, serif;
   align-items: center;
   gap: 6px;
   color: $hud-muted;
-  font-size: 11px;
+  font-size: 14px;
   line-height: 1.15;
+  white-space: nowrap;
 
   img {
     filter: brightness(0) invert(0.85);
@@ -326,7 +328,6 @@ $hud-display-font: "IM Fell English SC", Georgia, serif;
 
 // O nome da trilha só aparece em telas largas; o ícone basta nas outras.
 .hud-track-name {
-  max-width: 58px;
   display: none;
 }
 
@@ -477,37 +478,78 @@ $hud-display-font: "IM Fell English SC", Georgia, serif;
 .hud-house-list-head,
 .hud-house-line {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 30px 40px 38px 40px;
+  grid-template-columns: minmax(0, 1fr) 40px 44px 52px 42px;
   gap: 2px;
   align-items: center;
 }
 
+.hud-house-list {
+  padding: 4px 0 0;
+}
+
 .hud-house-list-head {
-  padding: 8px 12px 4px;
+  padding: 6px 12px 4px;
   font-size: 11px;
   color: $hud-muted;
+}
 
-  span:not(:first-child) {
-    text-align: center;
+.hud-head-label {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  cursor: help;
+  line-height: 1.1;
+
+  .hud-stat-icon {
+    opacity: 0.8;
   }
 }
 
+// cada Casa é um "cartão" com a cor dela na borda esquerda
 .hud-house-line {
-  width: 100%;
-  padding: 8px 12px;
-  border: 0;
-  border-top: 1px solid $hud-line-soft;
-  background: transparent;
+  position: relative;
+  width: calc(100% - 12px);
+  margin: 0 6px 6px;
+  padding: 8px 8px 8px 12px;
+  border: 1px solid $hud-line-soft;
+  border-left: 4px solid var(--house-color, #{$hud-line});
+  border-radius: 10px;
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--house-color, #000) 16%, transparent),
+    rgba(255, 255, 255, 0.015) 55%
+  );
   color: $hud-text;
   text-align: left;
   cursor: pointer;
+  transition:
+    background 0.15s,
+    border-color 0.15s;
 
   &:hover {
-    background: rgba(255, 255, 255, 0.04);
+    border-color: #4a4036;
+    border-left-color: var(--house-color, #{$hud-line});
+    background: linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--house-color, #000) 24%, transparent),
+      rgba(255, 255, 255, 0.03) 60%
+    );
   }
 
   &.mine {
-    background: rgba(226, 182, 90, 0.08);
+    box-shadow: inset 0 0 0 1px rgba(226, 182, 90, 0.55);
+  }
+
+  // quem está na frente ganha uma coroa pequena
+  &.leader::after {
+    content: "♛";
+    position: absolute;
+    top: 2px;
+    right: 6px;
+    font-size: 11px;
+    color: $hud-gold;
+    opacity: 0.8;
   }
 }
 
@@ -555,9 +597,41 @@ $hud-display-font: "IM Fell English SC", Georgia, serif;
   }
 }
 
-.hud-house-num {
-  text-align: center;
+// número com o símbolo do lado (castelo, coroa, barril, carta)
+.hud-stat {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
   font-size: 14px;
+  cursor: help;
+
+  b {
+    font-weight: 700;
+  }
+
+  small {
+    font-size: 11px;
+    color: $hud-muted;
+  }
+}
+
+.hud-stat-vp b {
+  color: $hud-gold;
+  font-size: 15px;
+}
+
+.hud-stat-icon {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  // os ícones vêm pretos; aqui ficam claros
+  filter: brightness(0) invert(0.82);
+  color: #d0c6b4;
+}
+
+svg.hud-stat-icon {
+  filter: none;
 }
 
 .hud-house-popover {
@@ -588,9 +662,79 @@ $hud-display-font: "IM Fell English SC", Georgia, serif;
   }
 }
 
-.hud-supply {
-  padding: 6px 4px 10px;
-  zoom: 0.62;
+.hud-section-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+// Trilha de Suprimento em linhas (nível, exércitos, Casas)
+.hud-supply-track {
+  padding: 0 10px 10px;
+  font-size: 12px;
+}
+
+.hud-supply-row {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 6px;
+  min-height: 28px;
+  padding: 2px 6px;
+  border-radius: 6px;
+  color: $hud-muted;
+
+  &.occupied {
+    background: rgba(255, 255, 255, 0.04);
+    color: $hud-text;
+  }
+
+  &.mine {
+    box-shadow: inset 0 0 0 1px rgba(226, 182, 90, 0.5);
+  }
+}
+
+.hud-supply-head {
+  min-height: 0;
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.hud-supply-level {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.hud-supply-armies {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+}
+
+.hud-army-size {
+  min-width: 18px;
+  padding: 0 4px;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid $hud-line;
+  text-align: center;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.hud-supply-houses {
+  display: flex;
+  gap: 2px;
+}
+
+.hud-supply-note {
+  margin-top: 6px;
+  font-size: 10px;
+  color: $hud-muted;
 }
 
 .hud-spectators {
@@ -650,9 +794,11 @@ $hud-display-font: "IM Fell English SC", Georgia, serif;
 
   &.own-turn {
     border-color: $hud-gold;
+    border-width: 3px;
     box-shadow:
-      0 0 0 4px rgba(226, 182, 90, 0.15),
+      0 0 0 4px rgba(226, 182, 90, 0.2),
       0 10px 40px rgba(0, 0, 0, 0.55);
+    animation: hud-own-turn-glow 1.8s ease-in-out infinite;
   }
 
   // Minimizado: só uma faixa curta no centro, com o aviso de vez.
@@ -695,8 +841,14 @@ $hud-display-font: "IM Fell English SC", Georgia, serif;
   color: #d8d0c2;
 
   &.own-turn {
-    background: $hud-gold;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 14px;
+    padding: 6px 12px;
+    background: linear-gradient(180deg, #f2cf7a, $hud-gold);
     color: $hud-gold-ink;
+    box-shadow: 0 0 12px rgba(226, 182, 90, 0.7);
   }
 
   &.cancelled {
@@ -878,9 +1030,32 @@ $hud-display-font: "IM Fell English SC", Georgia, serif;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 8px;
   margin-bottom: 4px;
   color: $hud-text;
   font-size: 13px;
+
+  b {
+    flex: 1;
+  }
+
+  .hud-icon-button.small {
+    width: 24px;
+    height: 24px;
+  }
+}
+
+.hud-recent.minimized {
+  padding: 6px 12px;
+
+  .hud-recent-head {
+    margin-bottom: 0;
+  }
+}
+
+// botão do mini-mapa: aceso quando o mini-mapa está aparecendo
+.hud-zoom-buttons .hud-icon-button.active {
+  color: $hud-gold;
 }
 
 .hud-recent-body {
@@ -1794,4 +1969,211 @@ body.hud-active .Toastify__toast {
 // quadro grande aberto (resultado de batalha): esconde a faixa do relógio
 body.hud-overlay-open .hud-game-header {
   visibility: hidden;
+}
+
+// Força da área no balão do mapa
+.region-tooltip-strength {
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.region-tooltip-strength-total {
+  font-weight: 700;
+  color: $hud-gold;
+}
+
+.region-tooltip-strength-note {
+  opacity: 0.65;
+  font-size: 0.72rem;
+}
+
+// Celular/tablet: balões (barra preta) só aparecem ao segurar o dedo (touchTooltips.ts)
+body.touch-tooltips:not(.touch-tip-on) .tooltip,
+body.touch-tooltips .tooltip.touch-stale,
+body.touch-tooltips:not(.touch-tip-on) .image-popover,
+body.touch-tooltips .image-popover.touch-stale {
+  display: none !important;
+}
+
+body.touch-tooltips .hud-root {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+
+  input,
+  textarea,
+  [contenteditable="true"] {
+    -webkit-user-select: text;
+    user-select: text;
+  }
+}
+
+// Sua vez: moldura dourada pulsando em volta da tela inteira
+.hud-root.own-turn::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  pointer-events: none;
+  border: 3px solid rgba(226, 182, 90, 0.85);
+  box-shadow: inset 0 0 36px rgba(226, 182, 90, 0.35);
+  animation: hud-own-turn-frame 1.8s ease-in-out infinite;
+}
+
+@keyframes hud-own-turn-glow {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 4px rgba(226, 182, 90, 0.18),
+      0 10px 40px rgba(0, 0, 0, 0.55);
+  }
+  50% {
+    box-shadow:
+      0 0 0 6px rgba(226, 182, 90, 0.4),
+      0 0 28px rgba(226, 182, 90, 0.55),
+      0 10px 40px rgba(0, 0, 0, 0.55);
+  }
+}
+
+@keyframes hud-own-turn-frame {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hud-root.own-turn::after,
+  .hud-action-dock.own-turn {
+    animation: none;
+  }
+}
+
+// Lances: Poder de todas as Casas acima da barra
+.bid-power-list {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 6px 10px;
+  margin: 2px 0 10px;
+}
+
+.bid-power-title {
+  width: 100%;
+  text-align: center;
+  font-size: 12px;
+  color: #a99e8b;
+  letter-spacing: 0.04em;
+}
+
+.bid-power-house {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px 3px 4px;
+  border-radius: 999px;
+  border: 1px solid #3a3128;
+  background: rgba(0, 0, 0, 0.25);
+  font-size: 13px;
+
+  b {
+    font-size: 15px;
+    color: #e2b65a;
+  }
+
+  &.mine {
+    border-color: #e2b65a;
+  }
+
+  &.done {
+    opacity: 0.75;
+  }
+}
+
+.bid-power-done {
+  color: #7fb77e;
+  font-weight: 700;
+}
+
+.bid-step {
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  font-size: 18px;
+  line-height: 1;
+}
+
+.bid-value {
+  min-width: 56px;
+  font-weight: 700;
+  font-size: 15px;
+}
+
+@media (max-width: 559px) {
+  .bid-power-name {
+    display: none;
+  }
+}
+
+// Escolher a Carta de Casa
+.choose-house-card-summary {
+  margin: 4px 0 8px;
+  font-size: 14px;
+  color: #ede6d8;
+}
+
+// Celular: cartas maiores numa fileira que rola para o lado
+body.hud-phone .choose-house-cards {
+  flex-wrap: nowrap;
+  justify-content: flex-start !important;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  padding: 4px 8px 8px;
+  margin: 0;
+
+  > div {
+    flex: none;
+    scroll-snap-align: center;
+  }
+
+  .vertical-game-card.small {
+    width: 27vw;
+    height: calc(27vw * 1.57);
+    max-width: 130px;
+    max-height: 204px;
+  }
+
+  .vertical-game-card.medium-outline {
+    outline-width: 4px;
+  }
+}
+
+// Celular: o menu de recrutamento vira uma folha presa embaixo da tela
+// (antes ele abria colado na área do mapa e podia ficar metade fora da tela)
+body.hud-phone .popover.muster-popover {
+  position: fixed !important;
+  left: 8px !important;
+  right: 8px !important;
+  top: auto !important;
+  bottom: calc(8px + env(safe-area-inset-bottom, 0px)) !important;
+  transform: none !important;
+  inset: auto 8px calc(8px + env(safe-area-inset-bottom, 0px)) 8px !important;
+  min-width: 0;
+  max-width: none;
+  max-height: 70vh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  z-index: 1080;
+  box-shadow: 0 -8px 40px rgba(0, 0, 0, 0.6);
+
+  .arrow {
+    display: none;
+  }
 }

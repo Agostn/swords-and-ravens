@@ -12,7 +12,7 @@ const ptBRAuto: { [key in keyof typeof enAuto]: string } = {
   "auto.App.6": "Erro",
   "auto.CancelledComponent.0": "{p0}<br/>Esta partida foi cancelada",
   "auto.ClockComponent.0": "<b>Contagem até a partida voltar</b> <small><i>(hh:mm:ss)</i></small>",
-  "auto.ClockComponent.1": "<b>Tempo total de jogo</b> <small><i>(hh:mm)</i></small>",
+  "auto.ClockComponent.1": "<b>Tempo total de jogo</b> <small><i>(horas:minutos:segundos, sem as pausas)</i></small>",
   "auto.ClockComponent.2": "<b>Contagem da confirmação de presença</b>",
   "auto.ClockComponent.3": "<b>Horário UTC atual</b> <small><i>(hh:mm)</i></small>",
   "auto.CombatInfoComponent.0": "<b>Exército</b>",

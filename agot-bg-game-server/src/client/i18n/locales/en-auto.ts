@@ -10,7 +10,7 @@ const enAuto = {
   "auto.App.6": "Error",
   "auto.CancelledComponent.0": "{p0}<br/>This game has been cancelled",
   "auto.ClockComponent.0": "<b>Countdown until game resumes</b> <small><i>(hh:mm:ss)</i></small>",
-  "auto.ClockComponent.1": "<b>Total playing time</b> <small><i>(hh:mm)</i></small>",
+  "auto.ClockComponent.1": "<b>Total playing time</b> <small><i>(hh:mm:ss, pauses excluded)</i></small>",
   "auto.ClockComponent.2": "<b>Countdown for Ready Check</b>",
   "auto.ClockComponent.3": "<b>Current UTC time</b> <small><i>(hh:mm)</i></small>",
   "auto.CombatInfoComponent.0": "<b>Army</b>",

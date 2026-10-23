@@ -13,6 +13,8 @@ interface StoredHudSettings {
   rightPanelOpen?: boolean;
   actionDockMinimized?: boolean;
   showHouseColors?: boolean;
+  minimapHidden?: boolean;
+  recentMinimized?: boolean;
 }
 
 function load(): StoredHudSettings {
@@ -30,6 +32,10 @@ class HudSettings {
   @observable actionDockMinimized = false;
   // Mapa pintado com a cor de quem controla cada área
   @observable showHouseColors = false;
+  // Mini-mapa escondido (botão ao lado do zoom)
+  @observable minimapHidden = false;
+  // "Últimos acontecimentos" recolhido (só o título)
+  @observable recentMinimized = false;
 
   constructor() {
     const s = load();
@@ -39,6 +45,8 @@ class HudSettings {
       (typeof window != "undefined" && window.innerWidth >= 1280);
     this.actionDockMinimized = s.actionDockMinimized ?? false;
     this.showHouseColors = s.showHouseColors ?? false;
+    this.minimapHidden = s.minimapHidden ?? false;
+    this.recentMinimized = s.recentMinimized ?? false;
   }
 
   /** A tela nova vale para computador, tablet e celular (a antiga fica como opção). */
@@ -54,7 +62,9 @@ class HudSettings {
           classicLayout: this.classicLayout,
           rightPanelOpen: this.rightPanelOpen,
           actionDockMinimized: this.actionDockMinimized,
-          showHouseColors: this.showHouseColors
+          showHouseColors: this.showHouseColors,
+          minimapHidden: this.minimapHidden,
+          recentMinimized: this.recentMinimized
         })
       );
     } catch {
@@ -74,6 +84,16 @@ class HudSettings {
 
   toggleHouseColors(): void {
     this.showHouseColors = !this.showHouseColors;
+    this.save();
+  }
+
+  toggleMinimap(): void {
+    this.minimapHidden = !this.minimapHidden;
+    this.save();
+  }
+
+  toggleRecent(): void {
+    this.recentMinimized = !this.recentMinimized;
     this.save();
   }
 

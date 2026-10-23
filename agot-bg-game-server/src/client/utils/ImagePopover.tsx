@@ -21,7 +21,7 @@ const ImagePopover = React.forwardRef<HTMLDivElement, ImagePopoverProps>(
       <div
         ref={ref}
         style={style}
-        className={classNames(className)}
+        className={classNames("image-popover", className)}
         {...props}
       >
       </div>

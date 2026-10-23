@@ -75,7 +75,8 @@ export default class ClockComponent extends Component<ClockComponentProps> {
                 let elapsed = getTimeDeltaInSeconds(lastTimeStamp, firstLog.time);
                 elapsed -= totalPauseTime;
 
-                totalPlayingTime = secondsToString(elapsed);
+                // com os segundos, para dar para ver o relógio andando
+                totalPlayingTime = secondsToString(Math.max(0, elapsed), true);
             }
 
             return totalPlayingTime && <Col xs="auto">

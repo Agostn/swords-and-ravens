@@ -39,6 +39,12 @@ export default class GameClient {
   private hasShownServerMessageErrorDialog = false;
   private pendingMessages: ServerMessage[] = [];
   private pendingMessagesFlushTimeout: number | null = null;
+  // Reconexão automática (ex.: o celular apagou a tela e a conexão caiu)
+  private reconnectTimer: number | null = null;
+  private reconnectAttempts = 0;
+  private lastMessageAt = Date.now();
+  private aliveCheckTimer: number | null = null;
+  private listenersAdded = false;
 
   @observable connectionState: ConnectionState = ConnectionState.INITIALIZING;
   @observable entireGame: EntireGame | null = null;
@@ -276,6 +282,23 @@ export default class GameClient {
   }
 
   start(): void {
+    this.addWakeUpListeners();
+    this.reconnectTimer = null;
+    // fecha uma conexão antiga sem disparar a lógica de "caiu"
+    if (this.socket) {
+      const old = this.socket;
+      old.onopen = null;
+      old.onclose = null;
+      old.onerror = null;
+      old.onmessage = null;
+      try {
+        old.close();
+      } catch {
+        // já estava fechada
+      }
+      this.clearPingInterval();
+    }
+    this.lastMessageAt = Date.now();
     // GitHub Codespaces publica cada porta num endereço próprio, ex.:
     // "<nome>-8080.app.github.dev" (cliente) e "<nome>-5000.app.github.dev"
     // (servidor do jogo). Assim dá para testar o jogo direto no navegador.
@@ -383,6 +406,7 @@ export default class GameClient {
   }
 
   onMessage(data: string): void {
+    this.lastMessageAt = Date.now();
     let message: ServerMessage | null = null;
 
     try {
@@ -460,6 +484,7 @@ export default class GameClient {
         .forEach(({ roomId }) => this.chatClient.addChannel(roomId));
 
       this.connectionState = ConnectionState.SYNCED;
+      this.reconnectAttempts = 0;
       this.loadVolumeSettingsFromLocalStorage();
 
       // Ping immediately to establish the clock offset instead of waiting for the next scheduled ping
@@ -545,10 +570,86 @@ export default class GameClient {
 
   onError(): void {
     this.setDisconnectedState();
+    this.scheduleReconnect();
   }
 
   onClose(): void {
     this.setDisconnectedState();
+    this.scheduleReconnect();
+  }
+
+  /**
+   * Tenta conectar de novo sozinho, esperando um pouco mais a cada tentativa
+   * (1 s, 2 s, 4 s... até 10 s). Nas primeiras tentativas a tela mostra
+   * "Conectando..."; depois aparece o aviso com o botão de recarregar, mas as
+   * tentativas continuam.
+   */
+  private scheduleReconnect(): void {
+    if (this.connectionState == ConnectionState.BANNED) return;
+    // "erro" e "fechou" chegam juntos: a 2ª chamada só mantém o aviso certo
+    if (this.reconnectAttempts < 6) {
+      this.connectionState = ConnectionState.CONNECTING;
+    }
+    if (this.reconnectTimer != null) return;
+    const delay = Math.min(10000, 1000 * Math.pow(2, this.reconnectAttempts));
+    this.reconnectAttempts++;
+    this.reconnectTimer = window.setTimeout(() => this.start(), delay);
+  }
+
+  private reconnectNow(): void {
+    if (this.connectionState == ConnectionState.BANNED) return;
+    if (this.reconnectTimer != null) window.clearTimeout(this.reconnectTimer);
+    this.reconnectTimer = null;
+    this.reconnectAttempts = 0;
+    this.start();
+  }
+
+  /**
+   * Quando a tela do celular apaga, o navegador congela a página e a conexão
+   * costuma cair sem avisar. Ao voltar para a página, conferimos se a conexão
+   * ainda responde; se não, reconectamos sem precisar recarregar.
+   */
+  private onWakeUp = (): void => {
+    if (document.visibilityState == "hidden") return;
+    if (this.connectionState == ConnectionState.BANNED) return;
+    const socket = this.socket;
+    if (
+      !socket ||
+      socket.readyState == WebSocket.CLOSED ||
+      socket.readyState == WebSocket.CLOSING ||
+      this.connectionState == ConnectionState.CLOSED
+    ) {
+      this.reconnectNow();
+      return;
+    }
+    if (socket.readyState != WebSocket.OPEN) return;
+    // salas de chat que caíram enquanto a tela estava apagada
+    this.chatClient.channels.entries.forEach(([id, channel]) => {
+      if (
+        channel.websocket.readyState == WebSocket.CLOSED ||
+        channel.websocket.readyState == WebSocket.CLOSING
+      ) {
+        this.chatClient.addChannel(id);
+      }
+    });
+    // conexão "aberta": pergunta ao servidor se ele ainda está ouvindo
+    const askedAt = Date.now();
+    this.send({ type: "ping" });
+    if (this.aliveCheckTimer != null) window.clearTimeout(this.aliveCheckTimer);
+    this.aliveCheckTimer = window.setTimeout(() => {
+      this.aliveCheckTimer = null;
+      if (this.socket == socket && this.lastMessageAt < askedAt) {
+        this.reconnectNow();
+      }
+    }, 4000);
+  };
+
+  private addWakeUpListeners(): void {
+    if (this.listenersAdded || typeof document == "undefined") return;
+    this.listenersAdded = true;
+    document.addEventListener("visibilitychange", this.onWakeUp);
+    window.addEventListener("online", this.onWakeUp);
+    window.addEventListener("pageshow", this.onWakeUp);
   }
 
   send(message: ClientMessage): void {

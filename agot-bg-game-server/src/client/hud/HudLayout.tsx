@@ -61,6 +61,7 @@ import HudBattleResult from "./HudBattleResult";
 import HouseChip from "./HouseChip";
 import displayedVictoryPoints from "./displayedVictoryPoints";
 import hudSettings from "./hudSettings";
+import { installTouchTooltips } from "./touchTooltips";
 import { getPiecesStyle, setPiecesStyle } from "../unitImages";
 import { t, TranslationKey } from "../i18n/i18n";
 
@@ -194,6 +195,8 @@ export default class HudLayout extends Component<HudLayoutProps> {
     this.measureBottomPanels();
     // avisos (toasts) e outros elementos fora daqui se ajustam à tela nova
     document.body.classList.add("hud-active");
+    // celular/tablet: balões de explicação só ao segurar o dedo
+    installTouchTooltips();
     this.applyBodyClasses();
   }
 
@@ -331,7 +334,9 @@ export default class HudLayout extends Component<HudLayoutProps> {
 
     return (
       <div
-        className={classNames("hud-root", `hud-${this.screenSize}`)}
+        className={classNames("hud-root", `hud-${this.screenSize}`, {
+          "own-turn": this.isOwnTurn
+        })}
         style={
           {
             "--hud-right-panel-width": `${this.rightPanelWidth}px`,
@@ -743,6 +748,17 @@ export default class HudLayout extends Component<HudLayoutProps> {
       >
         <div className="hud-action-header">
           <span className={classNames("hud-badge", badge.cls)}>
+            {ownTurn && (
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                aria-hidden="true"
+              >
+                <path d="M3 18h18l-2-10-5 4-2-7-2 7-5-4z" />
+              </svg>
+            )}
             {badge.text}
           </span>
           {title && <b className="hud-action-title">{title}</b>}
@@ -875,7 +891,11 @@ export default class HudLayout extends Component<HudLayoutProps> {
 
     return (
       <div className="hud-left-dock" ref={this.leftDockRef}>
-        <div className="hud-panel hud-recent">
+        <div
+          className={classNames("hud-panel hud-recent", {
+            minimized: hudSettings.recentMinimized
+          })}
+        >
           <div className="hud-recent-head">
             <b>{t("hud.recent.title")}</b>
             <button
@@ -885,15 +905,51 @@ export default class HudLayout extends Component<HudLayoutProps> {
             >
               {t("hud.recent.history")}
             </button>
+            <button
+              type="button"
+              className="hud-icon-button small"
+              aria-expanded={!hudSettings.recentMinimized}
+              aria-label={
+                hudSettings.recentMinimized
+                  ? t("hud.recent.expand")
+                  : t("hud.recent.minimize")
+              }
+              title={
+                hudSettings.recentMinimized
+                  ? t("hud.recent.expand")
+                  : t("hud.recent.minimize")
+              }
+              onClick={() => hudSettings.toggleRecent()}
+            >
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                aria-hidden="true"
+              >
+                <path
+                  d={
+                    hudSettings.recentMinimized
+                      ? "M6 15l6-6 6 6"
+                      : "M6 9l6 6 6-6"
+                  }
+                />
+              </svg>
+            </button>
           </div>
-          <div className="hud-recent-body">
-            <GameLogListComponent
-              ingameGameState={this.ingame}
-              gameClient={this.gameClient}
-              currentlyViewed={false}
-              onlyLast={2}
-            />
-          </div>
+          {!hudSettings.recentMinimized && (
+            <div className="hud-recent-body">
+              <GameLogListComponent
+                ingameGameState={this.ingame}
+                gameClient={this.gameClient}
+                currentlyViewed={false}
+                onlyLast={2}
+              />
+            </div>
+          )}
         </div>
         <div className="hud-left-buttons">
           <button
