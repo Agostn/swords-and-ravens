@@ -100,15 +100,6 @@ namespace agot_bg_website.Areas.Identity.Pages.Account
             ///     directly from your code. This API may change or be removed in future releases.
             /// </summary>
             [Required]
-            [EmailAddress]
-            [Display(Name = "E-mail")]
-            public string Email { get; set; }
-
-            /// <summary>
-            ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
-            ///     directly from your code. This API may change or be removed in future releases.
-            /// </summary>
-            [Required]
             [StringLength(
                 100,
                 ErrorMessage = "A {0} precisa ter de {2} a {1} caracteres.",
@@ -201,39 +192,9 @@ namespace agot_bg_website.Areas.Identity.Pages.Account
                     return Page();
                 }
 
-                // If this email already belongs to an account, don't let CreateAsync fail with a
-                // generic "email already taken" error — tell the visitor exactly what to do next,
-                // per the requirement that duplicate registration must be forbidden in favor of
-                // signing in with the already-linked method.
-                var existingUser = await _userManager.FindByEmailAsync(Input.Email);
-                if (existingUser is not null)
-                {
-                    var hasPassword = await _userManager.HasPasswordAsync(existingUser);
-                    var providerNames = hasPassword
-                        ? []
-                        : (await _userManager.GetLoginsAsync(existingUser))
-                            .Select(l => l.ProviderDisplayName ?? l.LoginProvider)
-                            .ToArray();
-                    ModelState.AddModelError(
-                        string.Empty,
-                        BuildDuplicateAccountErrorMessage(hasPassword, providerNames)
-                    );
-                    return Page();
-                }
-
-                if (await _disposableEmailChecker.IsDisposableAsync(Input.Email))
-                {
-                    ModelState.AddModelError(
-                        "Input.Email",
-                        "E-mails temporários/descartáveis não são aceitos. Use um e-mail em que você realmente receba mensagens."
-                    );
-                    return Page();
-                }
-
                 var user = CreateUser();
 
                 await _userStore.SetUserNameAsync(user, Input.UserName, CancellationToken.None);
-                await _emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
                 var result = await _userManager.CreateAsync(user, Input.Password);
 
                 if (result.Succeeded)
@@ -242,49 +203,16 @@ namespace agot_bg_website.Areas.Identity.Pages.Account
 
                     await _userManager.AddToRoleAsync(user, Infrastructure.Auth.RoleNames.Member);
 
-                    var userId = await _userManager.GetUserIdAsync(user);
-                    var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-                    code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
-                    var callbackUrl = Url.Page(
-                        "/Account/ConfirmEmail",
-                        pageHandler: null,
-                        values: new
-                        {
-                            area = "Identity",
-                            userId = userId,
-                            code = code,
-                            returnUrl = returnUrl,
-                        },
-                        protocol: Request.Scheme
-                    );
-
-                    await _emailSender.SendEmailAsync(
-                        Input.Email,
-                        "Confirme seu e-mail",
-                        EmailTemplates.Build(
-                            Input.UserName,
-                            Input.Email,
-                            $"<p>Confirme sua conta <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicando aqui</a>.</p>"
-                        )
-                    );
-
-                    if (_userManager.Options.SignIn.RequireConfirmedAccount)
+                    // A primeira conta de um site novo vira Admin (é quem cuida do site: pode,
+                    // por exemplo, trocar a senha de quem esqueceu, já que não há e-mail).
+                    if (_userManager.Users.Count() == 1)
                     {
-                        return RedirectToPage(
-                            "RegisterConfirmation",
-                            new { email = Input.Email, returnUrl = returnUrl }
-                        );
+                        await _userManager.AddToRoleAsync(user, Infrastructure.Auth.RoleNames.Admin);
                     }
-                    else
-                    {
-                        // Sem confirmação por e-mail (modo de teste): marca o e-mail como
-                        // confirmado para o resto do site tratar a conta como normal.
-                        var confirmToken =
-                            await _userManager.GenerateEmailConfirmationTokenAsync(user);
-                        await _userManager.ConfirmEmailAsync(user, confirmToken);
-                        await _signInManager.SignInAsync(user, isPersistent: false);
-                        return LocalRedirect(returnUrl);
-                    }
+
+                    // Cadastro só com nome de usuário e senha: entra direto, sem e-mail.
+                    await _signInManager.SignInAsync(user, isPersistent: false);
+                    return LocalRedirect(returnUrl);
                 }
                 foreach (var error in result.Errors)
                 {

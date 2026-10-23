@@ -13,9 +13,9 @@
             <form id="account" method="post">
                 <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
                 <div class="form-floating mb-3">
-                    <input asp-for="Input.Email" class="form-control" autocomplete="username" aria-required="true" placeholder="nome@exemplo.com" />
-                    <label asp-for="Input.Email" class="form-label">E-mail</label>
-                    <span asp-validation-for="Input.Email" class="text-danger"></span>
+                    <input asp-for="Input.UserName" class="form-control" autocomplete="username" aria-required="true" placeholder="seu nome de usuário" />
+                    <label asp-for="Input.UserName" class="form-label">Nome de usuário</label>
+                    <span asp-validation-for="Input.UserName" class="text-danger"></span>
                 </div>
                 <div class="form-floating mb-3">
                     <input asp-for="Input.Password" class="form-control" autocomplete="current-password" aria-required="true" placeholder="senha" />
@@ -29,16 +29,14 @@
                     </label>
                 </div>
                 <div>
-                    <button id="login-submit" type="submit" class="w-100 btn btn-lg btn-primary">Entrar</button>
+                    <button id="login-submit" type="submit" class="w-full btn btn-lg btn-primary">Entrar</button>
                 </div>
                 <div class="mt-5 flex flex-col gap-2 text-sm">
                     <p class="text-base-content/75">
                         Ainda não tem conta? <a asp-page="./Register" asp-route-returnUrl="@Model.ReturnUrl">Criar uma conta nova</a>
                     </p>
-                    <p>
-                        <a id="forgot-password" asp-page="./ForgotPassword">Esqueceu a senha?</a>
-                        <span class="opacity-40 mx-1">·</span>
-                        <a id="resend-confirmation" asp-page="./ResendEmailConfirmation">Reenviar o e-mail de confirmação</a>
+                    <p class="text-base-content/60">
+                        Esqueceu a senha? Peça para quem cuida do site trocar para você.
                     </p>
                 </div>
             </form>

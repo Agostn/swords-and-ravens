@@ -39,7 +39,7 @@ public class NotificationsApiTests
             "<p><a href=\"https://swordsandravens.net/play/123\">https://swordsandravens.net/play/123</a></p>",
             html
         );
-        Assert.Contains("<p>Um abraço,<br />Equipe do Swords and Ravens</p>", html);
+        Assert.Contains("<p>Um abraço,<br />Equipe do GoT dos Games</p>", html);
     }
 
     [Fact]

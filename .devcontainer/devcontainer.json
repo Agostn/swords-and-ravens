@@ -1,5 +1,5 @@
 {
-  "name": "Swords and Ravens PT-BR (site completo)",
+  "name": "O GoT dos Games (site completo)",
   "image": "mcr.microsoft.com/devcontainers/base:bookworm",
   "features": {
     "ghcr.io/devcontainers/features/node:1": { "version": "24" },

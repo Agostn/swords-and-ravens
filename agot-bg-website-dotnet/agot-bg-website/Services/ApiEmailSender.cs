@@ -25,7 +25,7 @@ public class ApiEmailSender(
         var apiKey = configuration["Email:Api:Key"];
         var fromAddress =
             configuration["Email:FromAddress"]
-            ?? "Swords and Ravens <no-reply@swordsandravens.net>";
+            ?? "O GoT dos Games <no-reply@swordsandravens.net>";
 
         using var request = new HttpRequestMessage(HttpMethod.Post, "emails")
         {
@@ -90,7 +90,7 @@ public class ApiEmailSender(
         var apiKey = configuration["Email:Api:Key"];
         var fromAddress =
             configuration["Email:FromAddress"]
-            ?? "Swords and Ravens <no-reply@swordsandravens.net>";
+            ?? "O GoT dos Games <no-reply@swordsandravens.net>";
         var toAddress = EmailAddressHelper.ExtractBareAddress(fromAddress);
 
         using var request = new HttpRequestMessage(HttpMethod.Post, "emails")

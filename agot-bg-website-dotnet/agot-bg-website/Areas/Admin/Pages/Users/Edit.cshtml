@@ -6,6 +6,8 @@
 
 <h1 class="text-2xl font-bold mb-4">Editar funções — @Model.TargetUser.UserName</h1>
 
+<partial name="_StatusMessage" for="StatusMessage" />
+
 <form method="post">
     <h2 class="text-lg font-semibold mb-2">Funções</h2>
     <div class="flex flex-col gap-2 mb-4">
@@ -38,4 +40,16 @@
 
     <button type="submit" class="btn btn-primary">Salvar</button>
     <a class="btn" asp-page="./Index">Cancelar</a>
+</form>
+
+<div class="divider my-6"></div>
+
+<h2 class="text-lg font-semibold mb-2">Trocar a senha</h2>
+<p class="text-sm opacity-70 mb-3">
+    Para quem esqueceu a senha: o cadastro não usa e-mail, então a senha só pode ser trocada aqui.
+    Combine a nova senha com a pessoa; ela pode mudar depois em "Editar perfil".
+</p>
+<form method="post" asp-page-handler="SetPassword" class="flex flex-wrap items-center gap-2">
+    <input type="text" name="NewPassword" class="input" minlength="6" maxlength="100" required autocomplete="off" placeholder="Nova senha (mínimo 6 caracteres)" />
+    <button type="submit" class="btn btn-primary">Trocar senha</button>
 </form>

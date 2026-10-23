@@ -12,7 +12,6 @@ const { BASE, OUT } = require("./flow");
   console.log("cadastro ->", p.url());
   const n = "amigo" + Date.now() % 100000;
   await p.fill("input[name='Input.UserName']", n);
-  await p.fill("input[name='Input.Email']", n + "@exemplo.com");
   await p.fill("input[name='Input.Password']", "Senha123!");
   await p.fill("input[name='Input.ConfirmPassword']", "Senha123!");
   await Promise.all([p.waitForNavigation(), p.click("#registerSubmit")]);

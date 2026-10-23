@@ -30,7 +30,7 @@ public static class EmailTemplates
         return $"""
             <p>{greeting}</p>
             {bodyHtml}
-            <p>Um abraço,<br />Equipe do Swords and Ravens</p>
+            <p>Um abraço,<br />Equipe do GoT dos Games</p>
             """;
     }
 }

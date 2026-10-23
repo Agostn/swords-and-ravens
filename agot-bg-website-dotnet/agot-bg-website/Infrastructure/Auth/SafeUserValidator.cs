@@ -88,7 +88,8 @@ public class SafeUserValidator(IdentityErrorDescriber? describer = null)
         var email = await manager.GetEmailAsync(user);
         if (string.IsNullOrWhiteSpace(email))
         {
-            errors.Add(_describer.InvalidEmail(email));
+            // O cadastro é só com nome de usuário e senha: o e-mail é opcional. Quando a conta
+            // tiver um e-mail, ele precisa ser válido e único (abaixo).
             return;
         }
 

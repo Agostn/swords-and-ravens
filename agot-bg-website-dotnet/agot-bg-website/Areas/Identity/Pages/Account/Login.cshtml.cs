@@ -62,10 +62,9 @@ namespace agot_bg_website.Areas.Identity.Pages.Account
             ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
             ///     directly from your code. This API may change or be removed in future releases.
             /// </summary>
-            [Required]
-            [EmailAddress]
-            [Display(Name = "E-mail")]
-            public string Email { get; set; }
+            [Required(ErrorMessage = "Digite seu nome de usuário.")]
+            [Display(Name = "Nome de usuário")]
+            public string UserName { get; set; }
 
             /// <summary>
             ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
@@ -113,10 +112,14 @@ namespace agot_bg_website.Areas.Identity.Pages.Account
 
             if (ModelState.IsValid)
             {
-                // Login is by email, but UserName is a separate, independently-changeable field
-                // now (see MIGRATION_PLAN.md §13 / username selection), so PasswordSignInAsync
-                // can't be called with the email directly - it looks up by (normalized) UserName.
-                var user = await _userManager.FindByEmailAsync(Input.Email);
+                // Entrar pelo nome de usuário (o cadastro não pede e-mail). Contas antigas que
+                // tenham e-mail também podem entrar digitando o e-mail no mesmo campo.
+                var login = Input.UserName.Trim();
+                var user = await _userManager.FindByNameAsync(login);
+                if (user is null && login.Contains('@'))
+                {
+                    user = await _userManager.FindByEmailAsync(login);
+                }
                 if (user is not null && user.IsDeleted)
                 {
                     // Defence in depth: PasswordHash is already null for soft-deleted accounts so
@@ -166,21 +169,12 @@ namespace agot_bg_website.Areas.Identity.Pages.Account
                         return RedirectToPage("./Banned");
                     }
 
-                    // The most common reason SignInManager refuses an otherwise-correct password is
-                    // RequireConfirmedAccount: the email hasn't been confirmed yet. Say so plainly
-                    // instead of the generic "Invalid login attempt" — that's what made it look like
-                    // login silently did nothing while the nav kept showing Login/Register.
-                    ModelState.AddModelError(
-                        string.Empty,
-                        "Você precisa confirmar seu e-mail antes de entrar. Procure na sua caixa de entrada "
-                            + "(e no spam) o link de confirmação que mandamos quando você criou a conta, "
-                            + "ou use \"Reenviar o e-mail de confirmação\" abaixo."
-                    );
+                    ModelState.AddModelError(string.Empty, "Esta conta não pode entrar agora.");
                     return Page();
                 }
                 else
                 {
-                    ModelState.AddModelError(string.Empty, "E-mail ou senha incorretos.");
+                    ModelState.AddModelError(string.Empty, "Nome de usuário ou senha incorretos.");
                     return Page();
                 }
             }

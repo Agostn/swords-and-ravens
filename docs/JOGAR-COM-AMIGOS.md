@@ -18,8 +18,9 @@ ou crie um Codespace novo.
 
 ## Para jogar
 
-1. **Cada pessoa cria a sua conta** em "Criar conta" (nome, e-mail e senha; não precisa
-   confirmar o e-mail).
+1. **Cada pessoa cria a sua conta** em "Criar conta": só nome de usuário e senha, sem e-mail.
+   A **primeira conta criada** no site vira administradora: é ela que pode trocar a senha
+   de quem esquecer (em Admin → Usuários → Editar).
 2. Quem vai organizar entra em **Todas as partidas → Criar uma partida**.
 3. Na **sala de espera**:
    - clique em **Copiar link do convite** e mande no grupo. Quem abrir o link sem conta

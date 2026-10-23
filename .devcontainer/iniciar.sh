@@ -44,7 +44,7 @@ cat <<MSG
 
   $URL
 
-  1. Cada pessoa cria a sua conta (não precisa confirmar e-mail).
+  1. Cada pessoa cria a sua conta (só nome de usuário e senha).
   2. Em "Todas as partidas", crie a partida.
   3. Na sala de espera, copie o link do convite e mande
      para os amigos. Cada um escolhe a Casa.
@@ -57,7 +57,5 @@ MSG
 
 cd "$ROOT/agot-bg-website-dotnet/agot-bg-website"
 export ASPNETCORE_ENVIRONMENT=Development
-# Sem servidor de e-mail no Codespaces: a conta entra direto após o cadastro.
-export Accounts__RequireConfirmedEmail=false
 export PublicSiteUrl="$URL"
 exec dotnet run --no-launch-profile

@@ -790,7 +790,7 @@ const ptBRAuto: { [key in keyof typeof enAuto]: string } = {
   "auto2.VoteComponent.2": "Você não pode votar porque as Casas a serem trocadas já colocaram ordens",
   "auto2.VoteComponent.3": "No momento não é possível votar",
   "auto2.chat-client.ChatComponent.0": "Usados recentemente",
-  "auto2.chat-client.ChatComponent.1": "Swords and Ravens",
+  "auto2.chat-client.ChatComponent.1": "O GoT dos Games",
   "auto2.chat-client.ChatComponent.2": "Carinhas e pessoas",
   "auto2.chat-client.ChatComponent.3": "Animais e natureza",
   "auto2.chat-client.ChatComponent.4": "Comidas e bebidas",

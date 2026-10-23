@@ -8,14 +8,13 @@ async function account(b, name) {
   const p = await ctx.newPage();
   p.on("pageerror", e => console.log("PAGEERROR", name, e.message));
   await p.goto(BASE + "/Identity/Account/Login");
-  await p.fill("input[name='Input.Email']", name + "@exemplo.com");
+  await p.fill("input[name='Input.UserName']", name);
   const pw = "Senha123!";
   await p.fill("input[type=password]", pw);
   await Promise.all([p.waitForLoadState("networkidle"), p.click("#login-submit")]);
   if (p.url().includes("/Login")) {
     await p.goto(BASE + "/Identity/Account/Register");
     await p.fill("input[name='Input.UserName']", name);
-    await p.fill("input[name='Input.Email']", name + "@exemplo.com");
     await p.fill("input[name='Input.Password']", pw);
     await p.fill("input[name='Input.ConfirmPassword']", pw);
     const terms = await p.$("input[type=checkbox]"); if (terms) await terms.check();

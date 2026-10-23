@@ -123,13 +123,9 @@ builder.Services.Configure<CookiePolicyOptions>(options =>
     options.MinimumSameSitePolicy = SameSiteMode.Lax;
 });
 
-// Email confirmation is always required, in every environment (matches production and lets
-// local testing exercise the real confirm-email flow instead of silently skipping it). Locally
-// there is usually no mail sender configured, so unconfirmed accounts simply can't log in until
-// either a real SMTP relay is configured (see README.md "Email" section) or the confirmation link
-// is grabbed from smtp4dev's web UI at http://localhost:5099. Each external OAuth provider below
-// is only wired up when its ClientId/ClientSecret are actually configured (via
-// appsettings/user-secrets/env vars), so local debugging can run with individual
+// Contas: só nome de usuário e senha, sem e-mail e sem confirmação (versão PT-BR "O GoT dos
+// Games"). Each external OAuth provider below is only wired up when its ClientId/ClientSecret are
+// actually configured (via appsettings/user-secrets/env vars), so the site runs with individual
 // (username/password) accounts only, with no OAuth app registrations needed.
 //
 // Registered before AddIdentity() below so its TryAddScoped<IUserValidator<TUser>, ...>() call is
@@ -139,16 +135,20 @@ builder.Services.AddScoped<IUserValidator<ApplicationUser>, SafeUserValidator>()
 builder
     .Services.AddIdentity<ApplicationUser, IdentityRole<Guid>>(options =>
     {
-        // "Accounts:RequireConfirmedEmail" = false só para testes entre amigos sem servidor de
-        // e-mail (ex.: GitHub Codespaces, ver .devcontainer/iniciar.sh): aí a conta já entra
-        // direto após o cadastro. Em produção fica sempre true (padrão).
-        options.SignIn.RequireConfirmedAccount = builder.Configuration.GetValue(
-            "Accounts:RequireConfirmedEmail",
-            true
-        );
-        // Two different ApplicationUsers must never share an email: Register.cshtml.cs and
-        // ExternalLogin.cshtml.cs both rely on FindByEmailAsync returning at most one match so
-        // local-password and external-login accounts can be told apart/linked correctly.
+        // O cadastro é só com nome de usuário e senha (sem e-mail), então não dá para exigir a
+        // confirmação do e-mail para entrar. Quem quiser pode adicionar um e-mail no perfil
+        // depois (serve para recuperar a senha, se o site tiver um servidor de e-mail).
+        options.SignIn.RequireConfirmedAccount = false;
+        // Senha simples: só o tamanho mínimo (6), sem exigir maiúscula, número ou símbolo.
+        options.Password.RequiredLength = 6;
+        options.Password.RequireDigit = false;
+        options.Password.RequireLowercase = false;
+        options.Password.RequireUppercase = false;
+        options.Password.RequireNonAlphanumeric = false;
+        // Two different ApplicationUsers must never share an email: ExternalLogin.cshtml.cs relies
+        // on FindByEmailAsync returning at most one match so local-password and external-login
+        // accounts can be told apart/linked correctly. Contas sem e-mail são permitidas
+        // (SafeUserValidator só confere o e-mail quando ele existe).
         options.User.RequireUniqueEmail = true;
     })
     .AddEntityFrameworkStores<ApplicationDbContext>()
@@ -444,7 +444,7 @@ builder.Services.AddOpenApi(options =>
     options.AddDocumentTransformer(
         (document, _, _) =>
         {
-            document.Info.Title = "Swords and Ravens Public API";
+            document.Info.Title = "O GoT dos Games - API pública";
             document.Info.Description =
                 "Read-only public REST endpoints for outside consumption. Anonymous/unauthenticated "
                 + "— no login or credentials required.";
@@ -623,7 +623,7 @@ app.MapPost(
 app.MapOpenApi();
 app.MapScalarApiReference(
     "/api/docs",
-    options => options.WithTitle("Swords and Ravens Public API")
+    options => options.WithTitle("O GoT dos Games - API pública")
 );
 
 using (var scope = app.Services.CreateScope())

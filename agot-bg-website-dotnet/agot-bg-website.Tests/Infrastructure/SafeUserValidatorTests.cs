@@ -150,6 +150,18 @@ public class SafeUserValidatorTests : IDisposable
         Assert.True(result.Succeeded);
     }
 
+    // Cadastro só com nome de usuário e senha: conta sem e-mail precisa ser aceita, inclusive
+    // quando várias contas não têm e-mail.
+    [Fact]
+    public async Task CreateAsync_WithoutEmail_SucceedsEvenWhenOthersHaveNoEmail()
+    {
+        var first = await _userManager.CreateAsync(new ApplicationUser { UserName = "arya" }, "Senha123!");
+        var second = await _userManager.CreateAsync(new ApplicationUser { UserName = "sansa" }, "Senha123!");
+
+        Assert.True(first.Succeeded, string.Join("; ", first.Errors.Select(e => e.Code)));
+        Assert.True(second.Succeeded, string.Join("; ", second.Errors.Select(e => e.Code)));
+    }
+
     // Reproduces the second production incident this validator fixes: legacy-imported usernames
     // containing accented/diacritic letters (e.g. "Länsiauto", "LuízaWD") used to fail this
     // validator's username check on every single UserManager.UpdateAsync call - including ones

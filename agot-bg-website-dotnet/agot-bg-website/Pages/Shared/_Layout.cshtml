@@ -4,7 +4,7 @@
     var pageDescription = ViewData["Description"] as string
         ?? "Jogue A Game of Thrones: The Board Game (2ª edição) online e de graça, ao vivo ou por turnos (PBEM), com amigos ou desconhecidos.";
     // Most pages get "Page - Swords and Ravens"; a page can set ViewData["TitleOverride"] for full control (e.g. the homepage leading with the brand name).
-    var pageTitle = ViewData["TitleOverride"] as string ?? $"{ViewData["Title"]} - Swords and Ravens";
+    var pageTitle = ViewData["TitleOverride"] as string ?? $"{ViewData["Title"]} - O GoT dos Games";
     var canonicalUrl = $"{Context.Request.Scheme}://{Context.Request.Host}{Context.Request.Path}";
 }
 <!DOCTYPE html>
@@ -19,7 +19,7 @@
     <meta name="description" content="@pageDescription" />
     <link rel="canonical" href="@canonicalUrl" />
     <meta property="og:type" content="website" />
-    <meta property="og:site_name" content="Swords and Ravens" />
+    <meta property="og:site_name" content="O GoT dos Games" />
     <meta property="og:title" content="@pageTitle" />
     <meta property="og:description" content="@pageDescription" />
     <meta property="og:url" content="@canonicalUrl" />
@@ -58,7 +58,7 @@
             <div class="page-container flex items-center justify-between">
                 <a class="brand flex items-center gap-2 shrink-0 px-2" asp-area="" asp-page="/Index">
                     <img src="~/raven.svg" asp-append-version="true" alt="" width="26" height="26" class="inline-block" />
-                    Swords and Ravens
+                    O GoT dos Games
                 </a>
                 <div class="flex items-center gap-1">
                     <div class="hidden lg:flex items-center gap-1">
@@ -127,7 +127,7 @@
 
     <footer class="border-t border-base-300 py-3 text-sm opacity-70 shrink-0 bg-base-100/95 z-20">
         <div class="page-container flex items-center justify-center gap-1">
-            <span>&copy; 2026 - Swords and Ravens -</span>
+            <span>&copy; 2026 - O GoT dos Games (baseado no Swords and Ravens) -</span>
             <a class="link link-hover" asp-area="" asp-page="/Privacy">Privacidade</a>
             <span>-</span>
             <a class="link link-hover" asp-area="" asp-page="/TermsOfUse">Termos de uso</a>

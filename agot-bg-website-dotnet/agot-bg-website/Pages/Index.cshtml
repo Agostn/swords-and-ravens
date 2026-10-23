@@ -2,7 +2,7 @@
 @model IndexModel
 @{
     ViewData["Title"] = "Jogue Game of Thrones: The Board Game online";
-    ViewData["TitleOverride"] = "Swords and Ravens - Jogue Game of Thrones: The Board Game online";
+    ViewData["TitleOverride"] = "O GoT dos Games - Jogue Game of Thrones: The Board Game online";
     ViewData["Description"] = "Jogue A Game of Thrones: The Board Game (2ª edição) online e de graça, ao vivo ou por turnos (PBEM), com amigos ou desconhecidos. Com as 3 expansões, tudo em português.";
 }
 
@@ -12,7 +12,7 @@
     {
         ["@context"] = "https://schema.org",
         ["@type"] = "WebSite",
-        ["name"] = "Swords and Ravens",
+        ["name"] = "O GoT dos Games",
         ["url"] = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}/",
         ["description"] = ViewData["Description"]
     }))
@@ -25,7 +25,7 @@
 <section class="hero-map mt-4">
     <div class="px-6 py-14 sm:px-12 sm:py-20 max-w-2xl">
         <p class="kicker mb-3">O jogo de tabuleiro, online e em português</p>
-        <h1 class="font-display text-5xl sm:text-6xl leading-none text-base-content mb-5">Swords and Ravens</h1>
+        <h1 class="font-display text-5xl sm:text-6xl leading-none text-base-content mb-5">O GoT dos Games</h1>
         <p class="text-lg text-base-content/85 mb-8">
             Jogue <em>A Game of Thrones: The Board Game</em> (2ª edição, com as 3 expansões)
             ao vivo ou por turnos, com seus amigos. Negocie, traia e conquiste o Trono de Ferro.
@@ -54,7 +54,7 @@
         <li class="panel p-5 flex flex-col gap-3">
             <span class="step-badge">1</span>
             <b>Crie sua conta</b>
-            <span class="text-sm text-base-content/75">Só nome de usuário, e-mail e senha. Cada amigo cria a sua.</span>
+            <span class="text-sm text-base-content/75">Só nome de usuário e senha, sem e-mail. Cada amigo cria a sua.</span>
         </li>
         <li class="panel p-5 flex flex-col gap-3">
             <span class="step-badge">2</span>

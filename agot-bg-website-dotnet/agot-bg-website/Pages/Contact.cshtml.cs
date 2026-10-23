@@ -212,7 +212,7 @@ public class ContactModel(
             .Replace("\n", "<br />", StringComparison.Ordinal);
 
         return $"""
-            <p>Chegou uma mensagem pelo formulário de contato do Swords and Ravens.</p>
+            <p>Chegou uma mensagem pelo formulário de contato do GoT dos Games.</p>
             <p><strong>De:</strong> {senderLine}<br />
             <strong>Assunto:</strong> {WebUtility.HtmlEncode(input.Subject)}</p>
             <p>{message}</p>

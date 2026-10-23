@@ -134,4 +134,47 @@ public class EditModel(UserManager<ApplicationUser> userManager) : PageModel
                 : $"Funções e permissões de {user.UserName} atualizadas.";
         return RedirectToPage("./Index");
     }
+
+    /// <summary>
+    /// Troca a senha de um usuário (o cadastro não usa e-mail, então "Esqueci a senha" não existe:
+    /// quem esqueceu pede para um Admin trocar aqui).
+    /// </summary>
+    public async Task<IActionResult> OnPostSetPasswordAsync(Guid id, [FromForm] string? newPassword)
+    {
+        var user = await userManager.FindByIdAsync(id.ToString());
+        if (user is null)
+        {
+            return NotFound();
+        }
+
+        if (string.IsNullOrWhiteSpace(newPassword) || newPassword.Length < 6)
+        {
+            StatusMessage = "Erro: a nova senha precisa ter pelo menos 6 caracteres.";
+            return RedirectToPage("./Edit", new { id });
+        }
+
+        if (await userManager.HasPasswordAsync(user))
+        {
+            var removed = await userManager.RemovePasswordAsync(user);
+            if (!removed.Succeeded)
+            {
+                StatusMessage =
+                    $"Erro: não foi possível trocar a senha: {string.Join("; ", removed.Errors.Select(e => e.Description))}";
+                return RedirectToPage("./Edit", new { id });
+            }
+        }
+
+        var added = await userManager.AddPasswordAsync(user, newPassword);
+        if (!added.Succeeded)
+        {
+            StatusMessage =
+                $"Erro: não foi possível trocar a senha: {string.Join("; ", added.Errors.Select(e => e.Description))}";
+            return RedirectToPage("./Edit", new { id });
+        }
+
+        // derruba as sessões abertas com a senha antiga
+        await userManager.UpdateSecurityStampAsync(user);
+        StatusMessage = $"Senha de {user.UserName} trocada.";
+        return RedirectToPage("./Index");
+    }
 }
