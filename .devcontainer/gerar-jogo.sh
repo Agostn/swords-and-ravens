@@ -15,7 +15,9 @@ fi
 
 cd "$ROOT/agot-bg-game-server"
 # Pular a compressão das imagens: sem isso leva mais de meia hora com 2 CPUs.
-SKIP_IMAGE_OPTIMIZATION=1 yarn run build-local-client
+echo "Gerando a página do jogo (1 a 3 minutos)... log em /tmp/gerar-jogo.log"
+SKIP_IMAGE_OPTIMIZATION=1 yarn run build-local-client > /tmp/gerar-jogo.log 2>&1 \
+  || { tail -40 /tmp/gerar-jogo.log; echo "ERRO ao gerar a página do jogo (veja acima)."; exit 1; }
 
 cd "$ROOT"
 dest="agot-bg-website-dotnet/agot-bg-website/wwwroot/static_game"

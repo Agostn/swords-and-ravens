@@ -658,3 +658,13 @@
     }
   }
 }
+
+// chaves ligadas em dourado (o azul do bootstrap destoava)
+.lobby-settings .custom-control-input:checked ~ .custom-control-label::before {
+  background-color: $hud-gold;
+  border-color: $hud-gold;
+}
+
+.lobby-settings .custom-control-input:checked ~ .custom-control-label::after {
+  background-color: $hud-gold-ink;
+}
