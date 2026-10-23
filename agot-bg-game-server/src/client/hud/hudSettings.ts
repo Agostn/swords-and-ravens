@@ -13,6 +13,7 @@ interface StoredHudSettings {
   classicLayout?: boolean;
   rightPanelOpen?: boolean;
   actionDockMinimized?: boolean;
+  showHouseColors?: boolean;
 }
 
 function load(): StoredHudSettings {
@@ -28,6 +29,8 @@ class HudSettings {
   @observable classicLayout = false;
   @observable rightPanelOpen = true;
   @observable actionDockMinimized = false;
+  // Mapa pintado com a cor de quem controla cada área
+  @observable showHouseColors = false;
 
   constructor() {
     const s = load();
@@ -36,6 +39,7 @@ class HudSettings {
       s.rightPanelOpen ??
       (typeof window != "undefined" && window.innerWidth >= 1280);
     this.actionDockMinimized = s.actionDockMinimized ?? false;
+    this.showHouseColors = s.showHouseColors ?? false;
   }
 
   /** A tela nova vale para computador. No celular continua a antiga por enquanto. */
@@ -50,7 +54,8 @@ class HudSettings {
         JSON.stringify({
           classicLayout: this.classicLayout,
           rightPanelOpen: this.rightPanelOpen,
-          actionDockMinimized: this.actionDockMinimized
+          actionDockMinimized: this.actionDockMinimized,
+          showHouseColors: this.showHouseColors
         })
       );
     } catch {
@@ -65,6 +70,11 @@ class HudSettings {
 
   toggleRightPanel(): void {
     this.rightPanelOpen = !this.rightPanelOpen;
+    this.save();
+  }
+
+  toggleHouseColors(): void {
+    this.showHouseColors = !this.showHouseColors;
     this.save();
   }
 

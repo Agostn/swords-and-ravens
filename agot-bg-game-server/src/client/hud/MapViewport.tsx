@@ -22,6 +22,9 @@ interface MapViewportProps {
   // Espaço ocupado pelos painéis em cada borda, para centralizar o mapa
   // na parte da tela que fica livre.
   insets?: { top: number; right: number; bottom: number; left: number };
+  // Altura dos painéis que ficam por cima da parte de baixo do mapa. O mapa
+  // pode ser arrastado para cima até essa altura, para nada ficar escondido.
+  panBottom?: number;
   // Distância dos botões de zoom e do mini-mapa até a borda direita
   // (para não ficarem embaixo do painel das Casas).
   controlsRight?: number;
@@ -259,7 +262,8 @@ export default class MapViewport extends Component<MapViewportProps> {
       a?.top != b?.top ||
       a?.right != b?.right ||
       a?.bottom != b?.bottom ||
-      a?.left != b?.left
+      a?.left != b?.left ||
+      (prev.panBottom ?? 0) != (this.props.panBottom ?? 0)
     ) {
       this.clamp();
     }
@@ -365,10 +369,14 @@ export default class MapViewport extends Component<MapViewportProps> {
         Math.max(free.left + free.width - w, this.x)
       );
     }
-    if (h <= free.height) {
-      this.y = free.top + (free.height - h) / 2;
+    // Embaixo, o mapa pode subir além da borda até ficar acima dos painéis
+    // de baixo (jogada, chat), para dar para clicar nas áreas do Sul.
+    const pad = Math.min(this.props.panBottom ?? 0, free.height * 0.7);
+    if (h + pad <= free.height) {
+      this.y = free.top + (free.height - pad - h) / 2;
     } else {
-      this.y = Math.min(free.top, Math.max(free.top + free.height - h, this.y));
+      const minY = free.top + free.height - pad - h; // sempre < free.top aqui
+      this.y = Math.min(free.top, Math.max(minY, this.y));
     }
   }
 

@@ -56,6 +56,7 @@ import MapViewport from "./MapViewport";
 import HudTracks from "./HudTracks";
 import HudHouseList from "./HudHouseList";
 import HudOrdersStrip from "./HudOrdersStrip";
+import HudBidResults from "./HudBidResults";
 import HouseChip from "./HouseChip";
 import displayedVictoryPoints from "./displayedVictoryPoints";
 import hudSettings from "./hudSettings";
@@ -104,6 +105,12 @@ export default class HudLayout extends Component<HudLayoutProps> {
   @observable chatOpen = false;
   @observable chatTab: string | undefined = undefined;
   @observable windowWidth = window.innerWidth;
+  // Altura dos painéis de baixo (jogada e canto esquerdo), para o mapa poder
+  // ser arrastado para cima deles e nenhuma área ficar escondida embaixo.
+  @observable bottomPanelsHeight = 0;
+  private actionDockRef = React.createRef<HTMLElement>();
+  private leftDockRef = React.createRef<HTMLDivElement>();
+  private panelsObserver: ResizeObserver | null = null;
 
   private get gameClient(): GameClient {
     return this.props.gameClient;
@@ -123,14 +130,31 @@ export default class HudLayout extends Component<HudLayoutProps> {
     this.windowWidth = window.innerWidth;
   };
 
+  private measureBottomPanels = (): void => {
+    const vh = window.innerHeight;
+    const heightFromBottom = (el: Element | null): number =>
+      el ? Math.max(0, vh - el.getBoundingClientRect().top) : 0;
+    this.bottomPanelsHeight = Math.max(
+      heightFromBottom(this.actionDockRef.current),
+      heightFromBottom(this.leftDockRef.current)
+    );
+  };
+
   componentDidMount(): void {
     window.addEventListener("resize", this.onResize);
+    this.panelsObserver = new ResizeObserver(() => this.measureBottomPanels());
+    if (this.actionDockRef.current)
+      this.panelsObserver.observe(this.actionDockRef.current);
+    if (this.leftDockRef.current)
+      this.panelsObserver.observe(this.leftDockRef.current);
+    this.measureBottomPanels();
     // avisos (toasts) e outros elementos fora daqui se ajustam à tela nova
     document.body.classList.add("hud-active");
   }
 
   componentWillUnmount(): void {
     window.removeEventListener("resize", this.onResize);
+    this.panelsObserver?.disconnect();
     document.body.classList.remove("hud-active");
   }
 
@@ -266,6 +290,7 @@ export default class HudLayout extends Component<HudLayoutProps> {
           contentHeight={this.mapSize.height}
           minimapImage={this.mapImage}
           insets={insets}
+          panBottom={this.bottomPanelsHeight}
           controlsRight={rightSpace}
         >
           <MapComponent
@@ -291,6 +316,7 @@ export default class HudLayout extends Component<HudLayoutProps> {
           />
         </div>
 
+        <HudBidResults ingame={this.ingame} myHouse={this.myHouse} />
         {this.renderTopRight()}
         {rightOpen ? this.renderRightPanel() : this.renderHouseStrip()}
         {this.renderActionDock(rightSpace)}
@@ -496,6 +522,7 @@ export default class HudLayout extends Component<HudLayoutProps> {
 
     return (
       <section
+        ref={this.actionDockRef}
         className={classNames("hud-panel hud-action-dock", {
           "own-turn": ownTurn,
           minimized: minimized
@@ -535,8 +562,12 @@ export default class HudLayout extends Component<HudLayoutProps> {
             </svg>
           </button>
         </div>
-        {!minimized && (
-          <div className="hud-action-body">
+        {/* Minimizado o conteúdo só fica escondido: ele continua montado,
+            porque é ele que deixa as áreas do mapa clicáveis (ex.: colocar
+            ordens). Se fosse removido, o mapa pararia de responder. */}
+        <div
+          className={classNames("hud-action-body", { "hud-hidden": minimized })}
+        >
             {leaf instanceof PlaceOrdersGameState &&
               me &&
               !this.ingame.isVassalHouse(me) && (
@@ -549,8 +580,7 @@ export default class HudLayout extends Component<HudLayoutProps> {
               onColumnSwapClick={this.props.onColumnSwapClick}
               hudPart="action"
             />
-          </div>
-        )}
+        </div>
       </section>
     );
   }
@@ -604,7 +634,7 @@ export default class HudLayout extends Component<HudLayoutProps> {
 
     if (this.chatOpen) {
       return (
-        <div className="hud-left-dock">
+        <div className="hud-left-dock" ref={this.leftDockRef}>
           <div className="hud-panel hud-chat-panel">
             <div className="hud-panel-header">
               <b>{t("hud.chat.title")}</b>
@@ -633,7 +663,7 @@ export default class HudLayout extends Component<HudLayoutProps> {
     }
 
     return (
-      <div className="hud-left-dock">
+      <div className="hud-left-dock" ref={this.leftDockRef}>
         <div className="hud-panel hud-recent">
           <div className="hud-recent-head">
             <b>{t("hud.recent.title")}</b>

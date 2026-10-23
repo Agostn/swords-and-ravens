@@ -195,6 +195,7 @@ export default class HudHouseList extends Component<HudHouseListProps> {
         {this.supplyOpen && (
           <div className="hud-supply">
             <SupplyTrackComponent
+              tooltipPlacement="left"
               supplyRestrictions={game.supplyRestrictions}
               houses={game.houses.values}
               ingame={this.ingame}

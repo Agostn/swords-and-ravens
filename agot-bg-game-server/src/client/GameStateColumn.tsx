@@ -61,6 +61,7 @@ import mammothImage from "../../public/images/icons/mammoth.svg";
 import spikedDragonHeadImage from "../../public/images/icons/spiked-dragon-head.svg";
 import ClaimVassalsGameState from "../common/ingame-game-state/planning-game-state/claim-vassals-game-state/ClaimVassalsGameState";
 import ClaimVassalsComponent from "./game-state-panel/ClaimVassalsComponent";
+import hudSettings from "./hud/hudSettings";
 import { t } from "./i18n/i18n";
 
 interface GameStateColumnProps {
@@ -439,11 +440,7 @@ export default class GameStateColumn extends Component<GameStateColumnProps> {
           }
           placement="bottom"
         >
-          <span
-            className="hud-round"
-            onMouseEnter={() => this.highlightRegionsOfHouses()}
-            onMouseLeave={() => this.highlightedRegions.clear()}
-          >
+          <span className="hud-round">
             <img
               src={hourglassImage}
               width={20}
@@ -465,6 +462,41 @@ export default class GameStateColumn extends Component<GameStateColumnProps> {
               })}
             </span>
           </span>
+        </OverlayTrigger>
+        <span className="hud-divider" />
+        <OverlayTrigger
+          overlay={
+            <Tooltip id="hud-house-colors-tooltip">
+              {hudSettings.showHouseColors
+                ? t("hud.status.houseColorsOff")
+                : t("hud.status.houseColorsOn")}
+            </Tooltip>
+          }
+          placement="bottom"
+        >
+          <button
+            type="button"
+            className={classNames("hud-text-button hud-toggle", {
+              active: hudSettings.showHouseColors
+            })}
+            aria-pressed={hudSettings.showHouseColors}
+            aria-label={t("hud.status.houseColors")}
+            onClick={() => hudSettings.toggleHouseColors()}
+          >
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              aria-hidden="true"
+            >
+              <path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2z" />
+              <path d="M9 4v14M15 6v14" />
+            </svg>
+            <span>{t("hud.status.houseColors")}</span>
+          </button>
         </OverlayTrigger>
         {activePhaseName && (
           <>
@@ -704,6 +736,14 @@ export default class GameStateColumn extends Component<GameStateColumnProps> {
   }
 
   highlightRegionsOfHouses(): void {
+    this.highlightedRegions.clear();
+    this.houseColorHighlights().forEach(([r, props]) =>
+      this.highlightedRegions.set(r, props)
+    );
+  }
+
+  // Cada área pintada com a cor da Casa que a controla.
+  private houseColorHighlights(): [Region, RegionOnMapProperties][] {
     const regionsWithControllers = new BetterMap(
       this.props.gameClient.allRegionsWithControllers
     );
@@ -716,18 +756,20 @@ export default class GameStateColumn extends Component<GameStateColumnProps> {
       });
     }
 
-    this.highlightedRegions.clear();
-
-    regionsWithControllers.entries.forEach(([r, controller]) => {
-      this.highlightedRegions.set(r, {
-        highlight: {
-          active: controller != null ? true : false,
-          color: controller?.getHighlightColor() ?? "#ffffff",
-          light: r.type.id == "sea",
-          strong: r.type.id == "land"
-        }
-      });
-    });
+    return regionsWithControllers.entries.map(
+      ([r, controller]) =>
+        [
+          r,
+          {
+            highlight: {
+              active: controller != null ? true : false,
+              color: controller?.getHighlightColor() ?? "#ffffff",
+              light: r.type.id == "sea",
+              strong: r.type.id == "land"
+            }
+          }
+        ] as [Region, RegionOnMapProperties]
+    );
   }
 
   highlightRegionsWithDragons(): void {
@@ -771,6 +813,15 @@ export default class GameStateColumn extends Component<GameStateColumnProps> {
   }
 
   modifyRegionsOnMap(): [Region, PartialRecursive<RegionOnMapProperties>][] {
+    // Tela nova: botão "Cores das Casas" ligado pinta o mapa o tempo todo
+    // (calculado na hora, então acompanha as marchas).
+    if (
+      this.props.hudPart == "status" &&
+      hudSettings.showHouseColors &&
+      this.highlightedRegions.size == 0
+    ) {
+      return this.houseColorHighlights();
+    }
     return this.highlightedRegions.entries;
   }
 

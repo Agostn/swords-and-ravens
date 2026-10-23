@@ -19,6 +19,7 @@ import { observable } from "mobx";
 import _ from "lodash";
 import GameClient from "../../GameClient";
 import { t, tr } from "../../i18n/i18n";
+import { preventOverflow } from "@popperjs/core";
 
 interface SupplyTrackComponentProps {
   gameClient: GameClient;
@@ -26,6 +27,8 @@ interface SupplyTrackComponentProps {
   houses: House[];
   ingame: IngameGameState;
   mapControls: MapControls;
+  // Tela nova: o painel fica na borda direita, então a dica abre para a esquerda
+  tooltipPlacement?: "right" | "left";
 }
 
 @observer
@@ -49,7 +52,8 @@ export default class SupplyTrackComponent extends Component<SupplyTrackComponent
               <Tooltip id="supply-track">
                 {tr("auto.game-state-panel.utils.SupplyTrackComponent.0")}</Tooltip>
             }
-            placement="right"
+            placement={this.props.tooltipPlacement ?? "right"}
+            popperConfig={{ modifiers: [preventOverflow] }}
           >
             <img width="32px" src={barrelImage} alt={t("auto2.game-state-panel.utils.SupplyTrackComponent.0")} />
           </OverlayTrigger>
@@ -91,6 +95,7 @@ export default class SupplyTrackComponent extends Component<SupplyTrackComponent
                       </Tooltip>
                     }
                     placement="auto"
+                    popperConfig={{ modifiers: [preventOverflow] }}
                   >
                     <Badge variant="secondary" style={{ fontSize: "1rem" }}>
                       {i}

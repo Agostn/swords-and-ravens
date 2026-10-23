@@ -343,81 +343,98 @@ export default class PlayerMusteringComponent extends Component<
   }
 
   private renderMusteringPopover(modifiedRegion: Region): OverlayChildren {
+    const used = this.props.gameState.getUsedPointsForRegion(
+      modifiedRegion,
+      this.musterings
+    );
+    const total = modifiedRegion.castleLevel;
+    const rules: MusteringRule[] = _.flatMap(
+      this.props.gameState.getValidMusteringRules(
+        modifiedRegion,
+        this.musterings
+      ),
+      ({ rules }) => rules
+    );
+    // Separado em grupos para ficar claro o que cada botão faz
+    const groups: { title: string; rules: MusteringRule[] }[] = [
+      {
+        title: t("muster.group.new"),
+        rules: rules.filter(
+          (r) => r.from == null && r.region == modifiedRegion
+        )
+      },
+      {
+        title: t("muster.group.upgrade"),
+        rules: rules.filter((r) => r.from != null)
+      },
+      {
+        title: t("muster.group.ships"),
+        rules: rules.filter(
+          (r) => r.from == null && r.region != modifiedRegion
+        )
+      }
+    ].filter((g) => g.rules.length > 0);
+
     return (
       <Popover
         id={"region-mustering-popover-" + modifiedRegion.id}
-        className="p-3"
+        className="muster-popover"
       >
-        <Row className="justify-content-center align-items-center mb-2">
-          <Col>
-            <h5 className="my-0 text-center">
-              <b>{modifiedRegion.name}</b>{" "}
-              <small>
-                (
-                {this.props.gameState.getUsedPointsForRegion(
-                  modifiedRegion,
-                  this.musterings
-                )}{" "}
-                / {modifiedRegion.castleLevel})
-              </small>
-            </h5>
-          </Col>
-          <Col xs="auto">
-            <OverlayTrigger
-              overlay={renderRegionTooltip(modifiedRegion)}
-              popperConfig={{ modifiers: [preventOverflow] }}
-              placement="auto"
+        <div className="muster-header">
+          <div className="muster-title">
+            <b>{modifiedRegion.name}</b>
+            <span className="muster-points">
+              {t("muster.points", { used, total })}
+            </span>
+            <span className="muster-meter" aria-hidden="true">
+              <span
+                style={{
+                  width: `${total ? Math.round((used / total) * 100) : 0}%`
+                }}
+              />
+            </span>
+          </div>
+          <OverlayTrigger
+            overlay={renderRegionTooltip(modifiedRegion)}
+            popperConfig={{ modifiers: [preventOverflow] }}
+            placement="auto"
+          >
+            <div
+              style={{ width: 24, height: 24 }}
+              className="circle-border d-flex justify-content-center align-items-center"
             >
-              <div
-                style={{ width: 24, height: 24 }}
-                className="circle-border d-flex justify-content-center align-items-center"
-              >
-                <FontAwesomeIcon icon={faInfo} />
-              </div>
-            </OverlayTrigger>
-          </Col>
-          <Col xs="auto">
-            <Button
-              type="button"
-              variant="link"
-              className="text-light p-1"
-              aria-label={t("auto2.game-state-panel.PlayerMusteringComponent.6")}
-              onClick={() => this.setOpenMusteringPopover(null)}
-            >
-              <FontAwesomeIcon icon={faTimes} />
-            </Button>
-          </Col>
-        </Row>
-        <Row className="justify-content-center">
-          <>
-            {this.props.gameState.getValidMusteringRulesForRegion(
-              modifiedRegion,
-              this.musterings
-            ).length > 0 && (
-              <>
-                {this.props.gameState
-                  .getValidMusteringRules(modifiedRegion, this.musterings)
-                  .map(({ rules }) =>
-                    rules.map((rule, i) => (
-                      <Col
-                        xs="auto"
-                        key={modifiedRegion.id + "_muster-rule_" + i}
-                      >
-                        <Button
-                          type="button"
-                          onClick={() =>
-                            this.addMustering(modifiedRegion, rule)
-                          }
-                        >
-                          {this.renderMusteringButton(modifiedRegion, rule)}
-                        </Button>
-                      </Col>
-                    ))
-                  )}
-              </>
-            )}
-          </>
-        </Row>
+              <FontAwesomeIcon icon={faInfo} />
+            </div>
+          </OverlayTrigger>
+          <Button
+            type="button"
+            variant="link"
+            className="text-light p-1"
+            aria-label={t("auto2.game-state-panel.PlayerMusteringComponent.6")}
+            onClick={() => this.setOpenMusteringPopover(null)}
+          >
+            <FontAwesomeIcon icon={faTimes} />
+          </Button>
+        </div>
+        {groups.length == 0 ? (
+          <p className="muster-empty">{t("muster.noneLeft")}</p>
+        ) : (
+          groups.map((g) => (
+            <div className="muster-group" key={`muster-group-${g.title}`}>
+              <div className="muster-group-title">{g.title}</div>
+              {g.rules.map((rule, i) => (
+                <button
+                  type="button"
+                  className="muster-option"
+                  key={`${modifiedRegion.id}_muster-rule_${g.title}_${i}`}
+                  onClick={() => this.addMustering(modifiedRegion, rule)}
+                >
+                  {this.renderMusteringButton(modifiedRegion, rule)}
+                </button>
+              ))}
+            </div>
+          ))
+        )}
       </Popover>
     );
   }
@@ -458,26 +475,31 @@ export default class PlayerMusteringComponent extends Component<
     initiatingRegion: Region,
     rule: MusteringRule
   ): React.ReactNode {
+    const label =
+      rule.from != null
+        ? t("muster.option.upgrade", {
+            from: rule.from.type.name,
+            to: rule.to.name
+          })
+        : initiatingRegion != rule.region
+          ? t("muster.option.ship", { region: rule.region.name })
+          : rule.to.name;
     return (
-      <div className="d-flex flex-nowrap overflow-x-auto">
-        {rule.from != null && (
-          <>
-            <UnitIconComponent house={this.house} unitType={rule.from.type} />
-            <FontAwesomeIcon icon={faArrowRight} size="2x" />
-          </>
-        )}
-        <UnitIconComponent house={this.house} unitType={rule.to} />
-        {initiatingRegion != rule.region && (
-          <>
-            {" "}{tr("auto.game-state-panel.PlayerMusteringComponent.15", { p0: (<b>{rule.region.name}</b>) })}
-          </>
-        )}
-        <>
-          <small style={{ position: "absolute", bottom: 6, right: 10 }}>
-            {rule.cost}
-          </small>
-        </>
-      </div>
+      <>
+        <span className="muster-icons">
+          {rule.from != null && (
+            <>
+              <UnitIconComponent house={this.house} unitType={rule.from.type} />
+              <FontAwesomeIcon icon={faArrowRight} />
+            </>
+          )}
+          <UnitIconComponent house={this.house} unitType={rule.to} />
+        </span>
+        <span className="muster-label">{label}</span>
+        <span className="muster-cost">
+          {t("muster.cost", { n: rule.cost })}
+        </span>
+      </>
     );
   }
 

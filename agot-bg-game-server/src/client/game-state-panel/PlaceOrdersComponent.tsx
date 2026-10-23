@@ -110,17 +110,11 @@ export default class PlaceOrdersComponent extends Component<GameStateComponentPr
     // as cartas que proíbem ordens (pequenas) e os botões.
     renderCompact(): ReactNode {
         const player = this.props.gameClient.authenticatedPlayer;
-        const restrictionCards = this.placeOrders.parentGameState.planningRestrictions
-            .map(pr => this.restrictionToWesterosCardTypeMap.tryGet(pr, null))
-            .filter(prWc => prWc != null) as { westerosCardType: WesterosCardType; deckId: number }[];
         return (
             <Col xs={12}>
                 <Row className="justify-content-center align-items-center">
-                    {restrictionCards.map(prWc => (
-                        <Col xs="auto" key={`prwc_${prWc.westerosCardType.id}`}>
-                            <WesterosCardComponent cardType={prWc.westerosCardType} size="small" tooltip={true} westerosDeckI={prWc.deckId} />
-                        </Col>
-                    ))}
+                    {/* As cartas que proíbem ordens já aparecem na faixa de cartas de
+                        Westeros acima (com ⚠) e as fichas proibidas ficam riscadas. */}
                     {player && (
                         <>
                             <Col xs="auto">

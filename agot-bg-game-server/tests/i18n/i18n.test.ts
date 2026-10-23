@@ -101,3 +101,49 @@ describe("textos vindos dos dados e do servidor", () => {
     expect(translateServerText("King's Landing")).toBe("Porto Real");
   });
 });
+
+describe("cartas com opções a) b) c)", () => {
+  // textos exatamente como o servidor manda (ver os GameStates de Westeros)
+  const CASES: [string, string[], string[]][] = [
+    [
+      "The holder of the Messenger Raven token can choose between Clash of Kings, Game of Thrones, or nothing at all.",
+      ["Clash of Kings", "Game of Thrones", "Nothing"],
+      ["a", "b", "c"]
+    ],
+    [
+      "The holder of the Iron Throne token can choose between Mustering, Supply, or nothing at all.",
+      ["Mustering", "Supply", "Nothing"],
+      ["a", "b", "c"]
+    ],
+    [
+      "The holder of the Valyrian Steel Blade can choose between No March +1 Orders, no Defense Orders, or no restrictions.",
+      ["No March +1 Orders", "No Defense Orders", "No restrictions"],
+      ["a", "b", "c"]
+    ],
+    [
+      "The holder of the Iron Throne token chooses whether a) the Wilding track is reduced to the \"0\" position, or b) everyone musters units in Strongholds and Castles.",
+      ["Reduce the Wildling track to 0", "Mustering"],
+      ["a", "b"]
+    ]
+  ];
+
+  it("reconhece as quatro cartas e mantém o índice certo de cada opção", () => {
+    const { letteredChoices } = require("../../src/client/i18n/serverText");
+    const before = getLanguage();
+    setLanguage("pt-BR");
+    try {
+      CASES.forEach(([description, choices, letters]) => {
+        const result = letteredChoices(description, choices);
+        expect(result).not.toBeNull();
+        expect(result.map((r: { letter: string }) => r.letter)).toEqual(letters);
+        // cada opção aponta para um índice diferente e válido
+        const indexes = result.map((r: { index: number }) => r.index);
+        expect(new Set(indexes).size).toBe(choices.length);
+      });
+      // opções inesperadas: volta para os botões normais
+      expect(letteredChoices(CASES[0][0], ["Clash of Kings", "Nothing"])).toBeNull();
+    } finally {
+      setLanguage(before);
+    }
+  });
+});

@@ -1044,6 +1044,8 @@ export default class IngameComponent extends Component<IngameComponentProps> {
       highestBidder,
       lowestBidder
     ) => {
+      // Tela nova: o resultado já aparece em destaque (HudBidResults)
+      if (hudSettings.hudActive) return;
       toast(
         this.getWildlingsAttackFastTrackedComponent(
           wildlingCard,

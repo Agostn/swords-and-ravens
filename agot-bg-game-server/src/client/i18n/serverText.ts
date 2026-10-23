@@ -85,6 +85,9 @@ const exactPtBR: { [en: string]: string } = {
     "Quem tem a ficha do Trono de Ferro pode escolher entre Recrutamento, Suprimento ou nada.",
   'The holder of the Iron Throne token chooses whether a) the Wilding track is reduced to the "0" position, or b) everyone musters units in Strongholds and Castles':
     'Quem tem a ficha do Trono de Ferro escolhe se a) a trilha dos Selvagens volta para a posição "0", ou b) todos recrutam unidades em Fortalezas e Castelos',
+  // o servidor manda com ponto final
+  'The holder of the Iron Throne token chooses whether a) the Wilding track is reduced to the "0" position, or b) everyone musters units in Strongholds and Castles.':
+    'Quem tem a ficha do Trono de Ferro escolhe se a) a trilha dos Selvagens volta para a posição "0", ou b) todos recrutam unidades em Fortalezas e Castelos.',
   "The holder of the Messenger Raven token can choose between Clash of Kings, Game of Thrones, or nothing at all.":
     "Quem tem a ficha do Corvo Mensageiro pode escolher entre A Fúria dos Reis, Jogo dos Tronos ou nada.",
   "The holder of the Valyrian Steel Blade can choose between No March +1 Orders, no Defense Orders, or no restrictions.":
@@ -193,4 +196,79 @@ export function translateServerText(text: string): string {
   // Nome de lugar sozinho (ex.: opção com uma área do mapa)
   const asRegion = region(normalized);
   return asRegion != normalized ? asRegion : text;
+}
+
+export interface LabeledChoice {
+  // posição da opção na lista do servidor (é o que vai na resposta)
+  index: number;
+  // letra como está impressa na carta: a), b), c)
+  letter: string;
+  title: string;
+  detail: string;
+}
+
+// Cartas de Westeros com opções a), b), c): os botões seguem as letras da
+// carta e dizem o que acontece. Chave = descrição em inglês do servidor.
+const LETTERED_CHOICES: {
+  match: RegExp;
+  options: { choice: string; letter: string; title: string; detail: string }[];
+}[] = [
+  {
+    // Asas Negras, Palavras Negras
+    match: /^The holder of the Messenger Raven token can choose between Clash of Kings/,
+    options: [
+      { choice: "Clash of Kings", letter: "a", title: "A Fúria dos Reis", detail: "lances nas três Trilhas de Influência" },
+      { choice: "Game of Thrones", letter: "b", title: "Jogo dos Tronos", detail: "todos ganham Fichas de Poder" },
+      { choice: "Nothing", letter: "c", title: "Nada", detail: "a carta não tem efeito" }
+    ]
+  },
+  {
+    // Um Trono de Lâminas
+    match: /^The holder of the Iron Throne token can choose between Mustering, Supply/,
+    options: [
+      { choice: "Supply", letter: "a", title: "Suprimento", detail: "todos ajustam o Suprimento e os exércitos" },
+      { choice: "Mustering", letter: "b", title: "Recrutamento", detail: "todos recrutam unidades" },
+      { choice: "Nothing", letter: "c", title: "Nada", detail: "a carta não tem efeito" }
+    ]
+  },
+  {
+    // Passar a Fio de Espada
+    match: /^The holder of the Valyrian Steel Blade can choose between No March \+1 Orders/,
+    options: [
+      { choice: "No Defense Orders", letter: "a", title: "Sem Defesa", detail: "ninguém pode usar ordens de Defesa" },
+      { choice: "No March +1 Orders", letter: "b", title: "Sem Marcha +1", detail: "ninguém pode usar Marcha +1" },
+      { choice: "No restrictions", letter: "c", title: "Sem restrições", detail: "todas as ordens liberadas" }
+    ]
+  },
+  {
+    // O Fardo do Poder
+    match: /^The holder of the Iron Throne token chooses whether a\) the Wilding track/,
+    options: [
+      { choice: "Reduce the Wildling track to 0", letter: "a", title: "Selvagens a 0", detail: 'a trilha dos Selvagens volta para "0"' },
+      { choice: "Mustering", letter: "b", title: "Recrutamento", detail: "todos recrutam em Fortalezas e Castelos" }
+    ]
+  }
+];
+
+/**
+ * Para as cartas com opções a), b), c): devolve as opções na ordem da carta,
+ * com letra, nome e o que acontece. Devolve null se não for uma dessas cartas
+ * (ou se o servidor mandar opções diferentes das esperadas: aí os botões
+ * normais aparecem, sem quebrar nada).
+ */
+export function letteredChoices(
+  description: string,
+  choices: string[]
+): LabeledChoice[] | null {
+  if (getLanguage() == "en") return null;
+  const entry = LETTERED_CHOICES.find((e) => e.match.test(description.trim()));
+  if (!entry) return null;
+  const result: LabeledChoice[] = [];
+  for (const o of entry.options) {
+    const index = choices.indexOf(o.choice);
+    if (index < 0) return null;
+    result.push({ index, letter: o.letter, title: o.title, detail: o.detail });
+  }
+  if (result.length != choices.length) return null;
+  return result;
 }

@@ -7,10 +7,14 @@ import Button from "react-bootstrap/Button";
 import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
 import { t } from "../i18n/i18n";
-import { translateServerText } from "../i18n/serverText";
+import { translateServerText, letteredChoices, LabeledChoice } from "../i18n/serverText";
 
 @observer
 export default class SimpleChoiceComponent extends Component<GameStateComponentProps<SimpleChoiceGameState>> {
+    private get lettered(): LabeledChoice[] | null {
+        return letteredChoices(this.props.gameState.description, this.props.gameState.choices);
+    }
+
     render(): JSX.Element {
         return (
             <>
@@ -18,7 +22,18 @@ export default class SimpleChoiceComponent extends Component<GameStateComponentP
                     {translateServerText(this.props.gameState.description)}
                 </Col>
                 <Col xs={12} className="text-center">
-                    {this.props.gameClient.doesControlHouse(this.props.gameState.house) ? (
+                    {this.props.gameClient.doesControlHouse(this.props.gameState.house) && this.lettered ? (
+                        <Row className="justify-content-center">
+                            {this.lettered.map(c => (
+                                <Col xs="auto" key={`simple-choice-lettered_${c.index}`} className="mb-2">
+                                    <Button type="button" variant="secondary" className="lettered-choice" onClick={() => this.choose(c.index)}>
+                                        <span className="lettered-choice-title"><b>{c.letter})</b> {c.title}</span>
+                                        <small>{c.detail}</small>
+                                    </Button>
+                                </Col>
+                            ))}
+                        </Row>
+                    ) : this.props.gameClient.doesControlHouse(this.props.gameState.house) ? (
                         <Row className="justify-content-center">
                             {this.props.gameState.choices.map((s, i) => {
                                 const variant = s == "Ignore"
