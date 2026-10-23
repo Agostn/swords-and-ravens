@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Roda toda vez que o Codespace é aberto: liga o servidor e o cliente do jogo.
 cd "$(dirname "$0")/../agot-bg-game-server"
+export COREPACK_ENABLE_DOWNLOAD_PROMPT=0
 
 # O navegador precisa alcançar a porta do servidor (5000) e a do cliente (8080).
 if [ -n "$CODESPACE_NAME" ]; then
