@@ -244,6 +244,14 @@ export function setPiecesStyle(style: PiecesStyle): void {
     }
 }
 
-const unitImages = getPiecesStyle() == "classic" ? classicUnitImages : woodUnitImages;
+const piecesStyle = getPiecesStyle();
+// classe no <html> para o CSS ajustar tamanho e animações das peças (ver style/pieces.scss)
+try {
+    document.documentElement.classList.add(`pieces-${piecesStyle}`);
+} catch {
+    // fora do navegador (testes)
+}
+
+const unitImages = piecesStyle == "classic" ? classicUnitImages : woodUnitImages;
 
 export default unitImages;

@@ -119,7 +119,10 @@ def svg_for(color, unit):
         '<feMorphology in="SourceAlpha" operator="dilate" radius="2.2" result="d"/>',
         '<feFlood flood-color="#1b120a" flood-opacity="0.8"/><feComposite in2="d" operator="in"/>',
         "</filter>",
+        '<filter id="chao" x="-50%" y="-200%" width="200%" height="500%"><feGaussianBlur stdDeviation="3.2"/></filter>',
         "</defs>",
+        # sombra de contato no chão, embaixo da peça (destaca em terreno claro)
+        '<ellipse cx="60" cy="107" rx="42" ry="6.5" fill="#000" opacity="0.55" filter="url(#chao)"/>',
         # sombra no mapa
         '<g transform="translate(4.5 6)" fill="#000" opacity="0.5" filter="url(#sh)"><use href="#s"/></g>',
     ]

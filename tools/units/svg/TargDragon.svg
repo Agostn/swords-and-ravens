@@ -19,7 +19,9 @@
 <feMorphology in="SourceAlpha" operator="dilate" radius="2.2" result="d"/>
 <feFlood flood-color="#1b120a" flood-opacity="0.8"/><feComposite in2="d" operator="in"/>
 </filter>
+<filter id="chao" x="-50%" y="-200%" width="200%" height="500%"><feGaussianBlur stdDeviation="3.2"/></filter>
 </defs>
+<ellipse cx="60" cy="107" rx="42" ry="6.5" fill="#000" opacity="0.55" filter="url(#chao)"/>
 <g transform="translate(4.5 6)" fill="#000" opacity="0.5" filter="url(#sh)"><use href="#s"/></g>
 <g filter="url(#halo)"><use href="#s"/><g transform="translate(3.5 4.8)"><use href="#s"/></g></g>
 <g transform="translate(3.50 4.76)" fill="#1e0b35"><use href="#s"/></g>

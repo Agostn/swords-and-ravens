@@ -1,0 +1,241 @@
+// Peças de madeira no tabuleiro (classe "pieces-wood" no <html>, ver unitImages.ts).
+// As peças novas são figuras recortadas (com espaço transparente em volta), então ficam
+// um pouco maiores que as antigas e se encostam umas nas outras como peças de verdade.
+// As animações usam as propriedades "translate", "rotate" e "scale" (e não "transform")
+// para não apagar o "transform" que o jogo já usa nas peças feridas (deitadas).
+
+$piece: 40px;
+
+.pieces-wood .map {
+  .units-container .unit-icon,
+  .unit-icon.v-hidden {
+    width: $piece;
+    height: $piece;
+    margin: 0 -5px;
+  }
+
+  .units-container .unit-icon.baby-dragon {
+    width: 34px;
+    height: 34px;
+  }
+
+  .units-container .unit-icon.monster-dragon {
+    width: 46px;
+    height: 46px;
+  }
+
+  // levanta um pouquinho a peça que dá para clicar
+  .units-container .unit-icon.clickable {
+    transition:
+      translate 0.12s ease-out,
+      filter 0.12s linear;
+  }
+
+  .units-container .unit-icon.clickable:hover {
+    translate: 0 -3px;
+  }
+
+  // peça nova (recrutada / chegou): cai no tabuleiro e assenta
+  .unit-icon.pulsate-bck_fade-in {
+    animation:
+      piece-drop 0.85s cubic-bezier(0.3, 0.9, 0.4, 1) both,
+      piece-glow 1.4s ease-in-out 0.85s 2 both;
+  }
+
+  // peça destruída: tomba para o lado e some
+  .unit-icon.pulsate-bck_fade-out {
+    animation: piece-fall 1.6s cubic-bezier(0.55, 0, 0.75, 0.4) both;
+  }
+
+  // peça pedindo atenção: balança de leve em vez de pulsar
+  .unit-icon.pulsate-bck {
+    animation: piece-wobble 0.9s ease-in-out infinite both;
+  }
+}
+
+// peça andando pelo mapa (marcha / retirada)
+.pieces-wood .moving-unit .unit-icon {
+  width: $piece;
+  height: $piece;
+}
+
+.moving-unit .unit-icon {
+  filter: drop-shadow(0 8px 5px rgba(0, 0, 0, 0.45));
+}
+
+.moving-unit-dust {
+  position: absolute;
+  left: 50%;
+  top: 88%;
+  width: 52px;
+  height: 18px;
+  border-radius: 50%;
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(
+    ellipse at center,
+    rgba(196, 166, 118, 0.85) 0%,
+    rgba(150, 120, 80, 0.45) 45%,
+    rgba(150, 120, 80, 0) 72%
+  );
+}
+
+.moving-ship .moving-unit-dust {
+  background: radial-gradient(
+    ellipse at center,
+    rgba(235, 245, 255, 0.9) 0%,
+    rgba(170, 205, 235, 0.5) 45%,
+    rgba(170, 205, 235, 0) 72%
+  );
+}
+
+.moving-dragon .moving-unit-dust {
+  width: 70px;
+  height: 24px;
+}
+
+// batalha acontecendo: espadas cruzadas e anéis na área atacada
+.map .battle-marker {
+  position: absolute;
+  z-index: 3;
+  width: 64px;
+  height: 64px;
+  pointer-events: none;
+  transform: translate(-50%, -100%);
+}
+
+.battle-marker-ring {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 60px;
+  height: 60px;
+  margin: -30px 0 0 -30px;
+  border-radius: 50%;
+  border: 3px solid rgba(214, 48, 36, 0.85);
+  box-shadow: 0 0 10px rgba(214, 48, 36, 0.6);
+  animation: battle-ring 1.8s ease-out infinite both;
+
+  &.delay {
+    animation-delay: 0.9s;
+  }
+}
+
+.battle-marker-swords {
+  position: absolute;
+  left: 4px;
+  top: 4px;
+  filter: drop-shadow(0 3px 3px rgba(0, 0, 0, 0.6));
+  animation: battle-clash 1.2s ease-in-out infinite both;
+}
+
+@keyframes piece-drop {
+  0% {
+    opacity: 0;
+    translate: 0 -30px;
+    scale: 1.2;
+  }
+  55% {
+    opacity: 1;
+    translate: 0 2px;
+    scale: 1.06 0.9;
+  }
+  75% {
+    translate: 0 -4px;
+    scale: 0.97 1.04;
+  }
+  100% {
+    opacity: 1;
+    translate: 0 0;
+    scale: 1;
+  }
+}
+
+@keyframes piece-glow {
+  0%,
+  100% {
+    filter: none;
+  }
+  50% {
+    filter: drop-shadow(0 0 4px rgba(255, 236, 170, 0.95))
+      drop-shadow(0 0 2px rgba(255, 236, 170, 0.95));
+  }
+}
+
+@keyframes piece-fall {
+  0% {
+    opacity: 1;
+    rotate: 0deg;
+    translate: 0 0;
+  }
+  15% {
+    rotate: -8deg;
+    translate: -1px 0;
+  }
+  60% {
+    opacity: 1;
+    rotate: 88deg;
+    translate: 8px 6px;
+  }
+  70% {
+    rotate: 80deg;
+  }
+  100% {
+    opacity: 0;
+    rotate: 86deg;
+    translate: 9px 8px;
+  }
+}
+
+@keyframes piece-wobble {
+  0%,
+  100% {
+    rotate: 0deg;
+    translate: 0 0;
+  }
+  25% {
+    rotate: -6deg;
+    translate: 0 -3px;
+  }
+  75% {
+    rotate: 6deg;
+    translate: 0 -3px;
+  }
+}
+
+@keyframes battle-ring {
+  0% {
+    opacity: 0.9;
+    scale: 0.4;
+  }
+  100% {
+    opacity: 0;
+    scale: 1.6;
+  }
+}
+
+@keyframes battle-clash {
+  0%,
+  100% {
+    scale: 1;
+    rotate: 0deg;
+  }
+  40% {
+    scale: 1.12;
+    rotate: -4deg;
+  }
+  50% {
+    scale: 0.94;
+    rotate: 3deg;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pieces-wood .map .unit-icon.pulsate-bck_fade-in,
+  .pieces-wood .map .unit-icon.pulsate-bck,
+  .battle-marker-ring,
+  .battle-marker-swords {
+    animation: none;
+  }
+}
