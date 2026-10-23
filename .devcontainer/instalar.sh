@@ -11,9 +11,12 @@ echo "---> Banco de dados (PostgreSQL) e Redis"
 sudo apt-get update -y
 sudo apt-get install -y --no-install-recommends postgresql redis-server
 sudo service postgresql start
-sudo -u postgres psql -c "ALTER USER postgres PASSWORD 'example';"
-sudo -u postgres psql -tc "SELECT 1 FROM pg_database WHERE datname='snr_dotnet'" | grep -q 1 \
-  || sudo -u postgres psql -c "CREATE DATABASE snr_dotnet;"
+# No Codespaces o usuário "vscode" só pode usar o sudo como root sem senha; "sudo -u postgres"
+# pede uma senha que não existe e a instalação trava. Por isso: sudo (root) + su postgres.
+pg() { sudo su postgres -c "psql -v ON_ERROR_STOP=1 -tA"; }
+echo "ALTER USER postgres PASSWORD 'example';" | pg
+echo "SELECT 1 FROM pg_database WHERE datname='snr_dotnet';" | pg | grep -q 1 \
+  || echo "CREATE DATABASE snr_dotnet;" | pg
 
 echo "---> Jogo (Node)"
 cd "$ROOT/agot-bg-game-server"
