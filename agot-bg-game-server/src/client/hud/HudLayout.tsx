@@ -60,6 +60,7 @@ import HudBidResults from "./HudBidResults";
 import HouseChip from "./HouseChip";
 import displayedVictoryPoints from "./displayedVictoryPoints";
 import hudSettings from "./hudSettings";
+import { getPiecesStyle, setPiecesStyle } from "../unitImages";
 import { t, TranslationKey } from "../i18n/i18n";
 
 import settingsKnobsImage from "../../../public/images/icons/settings-knobs.svg";
@@ -583,13 +584,27 @@ export default class HudLayout extends Component<HudLayoutProps> {
             <li>{t("hud.help.houses")}</li>
             <li>{t("hud.help.tracks")}</li>
           </ul>
-          <button
-            type="button"
-            className="btn btn-sm btn-outline-light"
-            onClick={() => hudSettings.setClassicLayout(true)}
-          >
-            {t("hud.menu.classicLayout")}
-          </button>
+          <div className="d-flex flex-wrap" style={{ gap: 8 }}>
+            <button
+              type="button"
+              className="btn btn-sm btn-outline-light"
+              onClick={() => hudSettings.setClassicLayout(true)}
+            >
+              {t("hud.menu.classicLayout")}
+            </button>
+            <button
+              type="button"
+              className="btn btn-sm btn-outline-light"
+              onClick={() => {
+                setPiecesStyle(getPiecesStyle() == "wood" ? "classic" : "wood");
+                window.location.reload();
+              }}
+            >
+              {getPiecesStyle() == "wood"
+                ? t("hud.menu.classicPieces")
+                : t("hud.menu.woodPieces")}
+            </button>
+          </div>
         </Popover.Content>
       </Popover>
     );

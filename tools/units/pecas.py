@@ -77,6 +77,11 @@ def load_paths(unit):
         if d.strip() in ("M0 0h512v512H0z", "M0 0h512v512H0z "):
             continue
         rule = "evenodd" if "evenodd" in attrs else "nonzero"
+        sw = re.search(r'stroke-width="([^"]+)"', attrs)
+        if "data-grav" in attrs and sw:
+            # traço gravado (linha), em vez de área preenchida
+            grav.append(f'<path d="{d}" fill="none" stroke-width="{sw.group(1)}" stroke-linecap="round" stroke-linejoin="round"/>')
+            continue
         (grav if "data-grav" in attrs else paths).append(f'<path d="{d}" fill-rule="{rule}"/>')
     return "".join(paths), "".join(grav)
 
@@ -97,7 +102,7 @@ def svg_for(color, unit):
         f'<g id="gv"><g id="fit2" transform="FIT">{grav}</g></g>',
         # contorno do corte, luz na quina e veio da madeira, só dentro da silhueta
         '<filter id="f" x="-10%" y="-10%" width="120%" height="120%" color-interpolation-filters="sRGB">',
-        '<feMorphology in="SourceAlpha" operator="erode" radius="0.9" result="er"/>',
+        '<feMorphology in="SourceAlpha" operator="erode" radius="1.2" result="er"/>',
         '<feComposite in="SourceAlpha" in2="er" operator="out" result="edge"/>',
         f'<feFlood flood-color="{side_edge}"/><feComposite in2="edge" operator="in" result="edgeC"/>',
         '<feOffset in="SourceAlpha" dx="1.3" dy="1.5" result="off"/>',
@@ -109,10 +114,17 @@ def svg_for(color, unit):
         '<feMerge><feMergeNode in="SourceGraphic"/><feMergeNode in="grain"/><feMergeNode in="hlC"/><feMergeNode in="edgeC"/></feMerge>',
         "</filter>",
         '<filter id="sh" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="2"/></filter>',
+        # borda escura em volta da peça inteira (destaca a peça em cima do mapa)
+        '<filter id="halo" x="-15%" y="-15%" width="130%" height="130%">',
+        '<feMorphology in="SourceAlpha" operator="dilate" radius="2.2" result="d"/>',
+        '<feFlood flood-color="#1b120a" flood-opacity="0.8"/><feComposite in2="d" operator="in"/>',
+        "</filter>",
         "</defs>",
         # sombra no mapa
         '<g transform="translate(4.5 6)" fill="#000" opacity="0.5" filter="url(#sh)"><use href="#s"/></g>',
     ]
+    # contorno escuro por fora da frente e da lateral
+    out.append('<g filter="url(#halo)"><use href="#s"/><g transform="translate(3.5 4.8)"><use href="#s"/></g></g>')
     # espessura da madeira: a silhueta repetida, deslocada para baixo e para a direita
     steps = 7
     for k in range(steps, 0, -1):
@@ -122,7 +134,7 @@ def svg_for(color, unit):
     # frente pintada
     out.append(f'<g filter="url(#f)" fill="{color}"><use href="#s"/></g>')
     if grav:
-        out.append(f'<g fill="{engrave}" opacity="0.85"><use href="#gv"/></g>')
+        out.append(f'<g fill="{engrave}" stroke="{engrave}" opacity="0.85"><use href="#gv"/></g>')
     out.append("</svg>")
     return "\n".join(out)
 

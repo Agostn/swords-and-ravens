@@ -30,6 +30,7 @@ import crownImage from "../../public/images/region-modifications/Crown.png";
 import houseOrderImages from "./houseOrderImages";
 import orderImages from "./orderImages";
 import FlipIcon from "./FlipIcon";
+import CombatGameState from "../common/ingame-game-state/action-game-state/resolve-march-order-game-state/combat-game-state/CombatGameState";
 import unitImages from "./unitImages";
 import classNames from "classnames";
 import housePowerTokensImages from "./housePowerTokensImages";
@@ -76,6 +77,39 @@ interface MapComponentProps {
 interface MovingUnitProps {
   animation: UnitMoveAnimationEntry;
   dragonStrength: number;
+}
+
+/**
+ * Caminho da peça andando no mapa: ela levanta, vai dando passinhos (navio balança,
+ * dragão voa alto) e assenta no destino. As posições são calculadas aqui porque o
+ * "easing" do caminho é diferente do "easing" dos passos.
+ */
+function marchKeyframes(dx: number, dy: number, unitTypeId: string): Keyframe[] {
+  const N = 40;
+  const frames: Keyframe[] = [];
+  const isShip = unitTypeId == "ship";
+  const isDragon = unitTypeId == "dragon";
+  const lift = isDragon ? 34 : isShip ? 4 : 12;
+  for (let i = 0; i <= N; i++) {
+    const t = i / N;
+    // anda devagar no começo e no fim
+    const p = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+    // levanta no começo e assenta no fim
+    const plateau = Math.max(0, Math.min(1, t / 0.12, (1 - t) / 0.12));
+    const steps = isShip || isDragon ? 0 : Math.abs(Math.sin(t * Math.PI * 7)) * 5;
+    const y = dy * p - (lift + steps) * plateau;
+    const tilt = isShip
+      ? Math.sin(t * Math.PI * 6) * 5 * plateau
+      : isDragon
+        ? Math.sin(t * Math.PI * 4) * 4 * plateau
+        : Math.sin(t * Math.PI * 7) * 3 * plateau;
+    const scale = 1 + (isDragon ? 0.3 : 0.16) * plateau;
+    frames.push({
+      offset: t,
+      transform: `translate(-50%, -50%) translate(${(dx * p).toFixed(1)}px, ${y.toFixed(1)}px) rotate(${tilt.toFixed(1)}deg) scale(${scale.toFixed(3)})`
+    });
+  }
+  return frames;
 }
 
 class MovingUnit extends Component<MovingUnitProps> {
@@ -126,18 +160,25 @@ class MovingUnit extends Component<MovingUnitProps> {
         const targetY =
           (targetRect.top + targetRect.height / 2 - layerRect.top) / scale;
 
+        const duration = Math.max(0, this.props.animation.durationMs - 50);
         element.animate(
+          marchKeyframes(
+            targetX - sourceX,
+            targetY - sourceY,
+            this.props.animation.unit.type.id
+          ),
+          { duration, easing: "linear", fill: "forwards" }
+        );
+        // poeira (ou respingo, no mar) quando a peça chega
+        const dust = element.querySelector<HTMLElement>(".moving-unit-dust");
+        dust?.animate(
           [
-            { transform: "translate(-50%, -50%) translate(0, 0)" },
-            {
-              transform: `translate(-50%, -50%) translate(${targetX - sourceX}px, ${targetY - sourceY}px)`
-            }
+            { opacity: 0, transform: "translate(-50%, -50%) scale(0.3)", offset: 0 },
+            { opacity: 0, transform: "translate(-50%, -50%) scale(0.3)", offset: 0.86 },
+            { opacity: 0.85, transform: "translate(-50%, -50%) scale(0.9)", offset: 0.93 },
+            { opacity: 0, transform: "translate(-50%, -50%) scale(1.6)", offset: 1 }
           ],
-          {
-            duration: Math.max(0, this.props.animation.durationMs - 50),
-            easing: "ease-in-out",
-            fill: "forwards"
-          }
+          { duration, easing: "linear", fill: "forwards" }
         );
       });
     });
@@ -162,7 +203,11 @@ class MovingUnit extends Component<MovingUnitProps> {
         : "rotate(90deg)";
 
     return (
-      <div ref={this.element} className="moving-unit">
+      <div
+        ref={this.element}
+        className={classNames("moving-unit", `moving-${unit.type.id}`)}
+      >
+        <div className="moving-unit-dust" aria-hidden="true" />
         <div
           className={classNames(
             "unit-icon",
@@ -557,9 +602,47 @@ export default class MapComponent extends Component<MapComponentProps> {
             fogOfWarActive,
             isVisible
           )}
+          {this.renderBattleMarker()}
         </div>
         <svg style={{ width: `${this.mapWidth}px`, height: `${MAP_HEIGHT}px` }}>
           {this.renderRegions(propertiesForRegions, isVisible)}
+        </svg>
+      </div>
+    );
+  }
+
+  // Batalha em andamento: espadas cruzadas pulsando na área atacada
+  renderBattleMarker(): ReactNode {
+    if (!this.ingame.hasChildGameState(CombatGameState)) return null;
+    let combat: CombatGameState;
+    try {
+      combat = this.ingame.getChildGameState(CombatGameState) as CombatGameState;
+    } catch {
+      return null;
+    }
+    const region = combat.defendingRegion;
+    if (!region) return null;
+    const { x, y } = region.unitSlot.point;
+    const w = region.unitSlot.width;
+    return (
+      <div
+        className="battle-marker"
+        style={{ left: x + w / 2, top: y + 18 }}
+        aria-hidden="true"
+      >
+        <span className="battle-marker-ring" />
+        <span className="battle-marker-ring delay" />
+        <svg className="battle-marker-swords" viewBox="0 0 64 64" width="56" height="56">
+          <g stroke="#1b120a" strokeWidth="3" strokeLinecap="round" fill="#e9e2d3">
+            <path d="M10 8 L40 38 L36 42 L6 12 Z" />
+            <path d="M54 8 L24 38 L28 42 L58 12 Z" />
+          </g>
+          <g stroke="#1b120a" strokeWidth="2.5" fill="#c9a227">
+            <path d="M33 37 L43 47 L40 50 L30 40 Z" />
+            <path d="M31 37 L21 47 L24 50 L34 40 Z" />
+            <circle cx="47" cy="53" r="4" />
+            <circle cx="17" cy="53" r="4" />
+          </g>
         </svg>
       </div>
     );

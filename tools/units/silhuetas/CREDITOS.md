@@ -2,7 +2,7 @@
 
 | Arquivo | Origem | Autor | Licença |
 |---|---|---|---|
-| `soldado.svg` | game-icons.net, "Pikeman" | Delapouite | CC BY 3.0 |
+| `soldado.svg` | desenho próprio (soldado com elmo, escudo e espada) | projeto | GPLv3 (como o projeto) |
 | `cavaleiro.svg` | game-icons.net, "Mounted knight" | Skoll | CC BY 3.0 |
 | `cerco.svg` | game-icons.net, "Trebuchet" | Delapouite | CC BY 3.0 |
 | `navio.svg` | game-icons.net, "Drakkar" | Delapouite | CC BY 3.0 |

@@ -244,7 +244,9 @@ const enIngame = {
   "lobby.ui.clickReady": "Click \"I'm ready\" to confirm you are here",
   "lobby.ui.waitingReady": "Waiting for everyone to confirm…",
   "hud.phone.nav": "Game menu",
-  "lobby.ui.imReady": "I'm ready"
+  "lobby.ui.imReady": "I'm ready",
+  "hud.menu.classicPieces": "Use the old pieces",
+  "hud.menu.woodPieces": "Use the wooden pieces"
 };
 
 export default enIngame;

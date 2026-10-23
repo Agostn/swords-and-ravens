@@ -245,7 +245,9 @@ const ptBRIngame: { [key in keyof typeof enIngame]: string } = {
   "lobby.ui.clickReady": "Clique em \"Estou pronto\" para confirmar que está aqui",
   "lobby.ui.waitingReady": "Esperando todos confirmarem…",
   "hud.phone.nav": "Menu da partida",
-  "lobby.ui.imReady": "Estou pronto"
+  "lobby.ui.imReady": "Estou pronto",
+  "hud.menu.classicPieces": "Usar as peças antigas",
+  "hud.menu.woodPieces": "Usar as peças de madeira"
 };
 
 export default ptBRIngame;
