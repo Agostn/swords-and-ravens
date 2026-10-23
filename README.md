@@ -1,3 +1,7 @@
+> **O GoT dos Games (versão em português):** para abrir o site e jogar com os amigos, clique em
+> [**abrir no Codespaces**](https://codespaces.new/Agostn/swords-and-ravens?quickstart=1&ref=design-novo),
+> espere aparecer "PRONTO!" no terminal e abra o link. Passo a passo em [docs/JOGAR-COM-AMIGOS.md](docs/JOGAR-COM-AMIGOS.md).
+
 # Swords and Ravens
 
 "Swords and Ravens" is a reimplementation of the board game published by Fantasy Flight Games "A Game of Thrones: Board Game - Second Edition".

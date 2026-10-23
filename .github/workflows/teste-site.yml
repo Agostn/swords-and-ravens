@@ -1,0 +1,80 @@
+name: Teste do site completo
+
+# Faz no GitHub exatamente o que o Codespace faz (instalar.sh + iniciar.sh) e depois
+# joga partidas inteiras pelo site com 3 contas, no computador e no celular.
+# Se algo quebrar, o "x" vermelho aparece no GitHub e os prints ficam em "Artifacts".
+
+on:
+  push:
+    branches: [design-novo]
+  workflow_dispatch:
+
+jobs:
+  site:
+    name: Site + partidas do robô
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Instalação (igual ao Codespace)
+        run: bash .devcontainer/instalar.sh
+
+      - name: Testes automáticos do jogo (jest) e do site (dotnet test)
+        run: |
+          (cd agot-bg-game-server && npx jest)
+          (cd agot-bg-website-dotnet && dotnet test agot-bg-website-dotnet.slnx)
+
+      - name: Ligar o site (igual ao Codespace)
+        run: |
+          nohup bash .devcontainer/iniciar.sh > /tmp/iniciar.log 2>&1 &
+          for i in $(seq 1 180); do
+            grep -q "PRONTO" /tmp/iniciar.log && break
+            grep -q "ERRO" /tmp/iniciar.log && break
+            sleep 5
+          done
+          cat /tmp/iniciar.log
+          grep -q "PRONTO" /tmp/iniciar.log
+
+      - name: Navegador para os robôs
+        run: |
+          mkdir -p /tmp/pw && cd /tmp/pw
+          npm init -y >/dev/null
+          npm install playwright@1.56.1 >/dev/null
+          npx playwright install --with-deps chromium
+
+      - name: Partida inteira no computador
+        env:
+          PLAYWRIGHT_MODULE: /tmp/pw/node_modules/playwright
+        run: |
+          node tools/qa/site/partida-completa.js prints/computador 1500 | tee /tmp/computador.log
+          grep -q "FIM DE JOGO" /tmp/computador.log
+
+      - name: Partida inteira no celular
+        env:
+          PLAYWRIGHT_MODULE: /tmp/pw/node_modules/playwright
+          DEVICE: iPhone 13
+        run: |
+          node tools/qa/site/partida-completa.js prints/celular 1500 | tee /tmp/celular.log
+          grep -q "FIM DE JOGO" /tmp/celular.log
+
+      - name: Logs
+        if: always()
+        run: |
+          mkdir -p prints
+          cp /tmp/iniciar.log /tmp/site.log /tmp/servidor-do-jogo.log /tmp/gerar-jogo.log /tmp/*.log prints/ 2>/dev/null || true
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: prints-e-logs
+          path: prints
+          retention-days: 14

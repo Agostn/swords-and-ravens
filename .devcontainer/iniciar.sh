@@ -4,6 +4,31 @@ cd "$(dirname "$0")/.."
 ROOT="$(pwd)"
 export COREPACK_ENABLE_DOWNLOAD_PROMPT=0
 
+# Atualiza sozinho para a versão mais nova do GitHub (só se não houver mudança local).
+# Depois de atualizar, roda de novo a versão nova deste arquivo.
+if [ "$1" != "--ja-atualizado" ] && git rev-parse --abbrev-ref --symbolic-full-name @{u} >/dev/null 2>&1; then
+  echo "---> Procurando atualização no GitHub"
+  ANTES="$(git rev-parse HEAD)"
+  if git pull --ff-only -q >/tmp/atualizar.log 2>&1; then
+    if [ "$(git rev-parse HEAD)" != "$ANTES" ]; then
+      echo "     Atualizado: $(git log -1 --format=%s)"
+      if git diff --name-only "$ANTES" HEAD | grep -qE "agot-bg-game-server/(package.json|yarn.lock)"; then
+        echo "---> Instalando pacotes novos do jogo"
+        (cd agot-bg-game-server && yarn install >/tmp/yarn-install.log 2>&1 && yarn run generate-json-schemas >/dev/null 2>&1) \
+          || echo "     Aviso: falhou (veja /tmp/yarn-install.log)."
+      fi
+      if git diff --name-only "$ANTES" HEAD | grep -q "^agot-bg-game-server/src/messages/"; then
+        (cd agot-bg-game-server && yarn run generate-json-schemas >/dev/null 2>&1) || true
+      fi
+    else
+      echo "     Já está na versão mais nova."
+    fi
+  else
+    echo "     Não deu para atualizar agora (seguindo com a versão atual; detalhes em /tmp/atualizar.log)."
+  fi
+  exec bash "$ROOT/.devcontainer/iniciar.sh" --ja-atualizado
+fi
+
 # Endereço público do site
 if [ -n "$CODESPACE_NAME" ]; then
   # O navegador precisa alcançar o site (8000) e o servidor do jogo (5000).
@@ -36,13 +61,35 @@ echo "---> Ligando o servidor do jogo (log em /tmp/servidor-do-jogo.log)"
   nohup yarn run run-server > /tmp/servidor-do-jogo.log 2>&1 &
 )
 
+cd "$ROOT/agot-bg-website-dotnet/agot-bg-website"
+export ASPNETCORE_ENVIRONMENT=Development
+export PublicSiteUrl="$URL"
+echo "---> Ligando o site (1 a 2 minutos na primeira vez; log em /tmp/site.log)"
+dotnet run --no-launch-profile > /tmp/site.log 2>&1 &
+SITE_PID=$!
+
+# Espera o site responder e só então mostra o link
+for i in $(seq 1 300); do
+  if ! kill -0 "$SITE_PID" 2>/dev/null; then
+    tail -40 /tmp/site.log
+    echo ""
+    echo "ERRO: o site não ligou (veja as mensagens acima ou /tmp/site.log)."
+    exit 1
+  fi
+  curl -s -o /dev/null --max-time 2 http://localhost:8000/ && break
+  sleep 2
+done
+curl -s -o /dev/null --max-time 5 http://localhost:8000/ \
+  || echo "O site ainda está ligando. Espere aparecer \"Application started\" em /tmp/site.log e abra o link abaixo."
+
 cat <<MSG
 
 ==============================================================
-  O site está ligando (1 a 2 minutos na primeira vez).
-  Quando aparecer "Application started" aqui embaixo, abra:
+  PRONTO! O site está no ar. Abra este link:
 
   $URL
+
+  (ou na aba "Portas", linha "Site (abra este)")
 
   1. Cada pessoa cria a sua conta (só nome de usuário e senha).
   2. Em "Todas as partidas", crie a partida.
@@ -55,7 +102,5 @@ cat <<MSG
 
 MSG
 
-cd "$ROOT/agot-bg-website-dotnet/agot-bg-website"
-export ASPNETCORE_ENVIRONMENT=Development
-export PublicSiteUrl="$URL"
-exec dotnet run --no-launch-profile
+# Mantém o terminal ligado ao site (Ctrl+C desliga)
+wait "$SITE_PID"

@@ -3,18 +3,20 @@
 O Codespaces liga o site inteiro: contas, lista de partidas, sala de espera e o jogo.
 É para testar entre amigos (o link é público, mas só quem você mandar vai saber dele).
 
-## Primeira vez
+## Abrir o site (sempre igual, primeira vez ou não)
 
-1. No GitHub, abra o repositório, escolha a branch **`design-novo`**, clique em
-   **Code → Codespaces → Create codespace**.
-2. Espere a instalação (uns 10 minutos na primeira vez: banco de dados, .NET, jogo).
-3. No terminal vai aparecer o endereço do site, algo como
-   `https://<nome>-8000.app.github.dev`. Espere aparecer **"Application started"** e abra.
-   (Também dá para abrir pela aba **Portas**, linha "Site (abra este)".)
+1. Clique neste link (com a conta do GitHub aberta):
+   **https://codespaces.new/Agostn/swords-and-ravens?quickstart=1&ref=design-novo**
+   e depois em **Create codespace** (ou **Resume**, se já tiver um).
+2. Espere. Na primeira vez a instalação leva uns 10 minutos (banco de dados, .NET, jogo);
+   nas outras vezes, 1 a 3 minutos. Ele **se atualiza sozinho** com a versão mais nova
+   do GitHub toda vez que abre.
+3. Quando aparecer no terminal o quadro **"PRONTO! O site está no ar"**, clique no link
+   que está nele (algo como `https://<nome>-8000.app.github.dev`). Também dá para abrir
+   pela aba **Portas**, linha "Site (abra este)".
 
-Se você já tinha um Codespace criado antes de 23/out, ele não tem o .NET nem o banco.
-Abra a paleta de comandos (Ctrl+Shift+P) e rode **"Codespaces: Rebuild Container"**,
-ou crie um Codespace novo.
+Se você tem um Codespace criado **antes de 23/out**, apague esse (em github.com/codespaces,
+nos três pontinhos → Delete) e use o link acima para criar um novo.
 
 ## Para jogar
 
@@ -40,14 +42,13 @@ desligar por inatividade, abra de novo: tudo volta (partidas e contas ficam salv
 
 ## Atualizar para a versão mais nova
 
-No terminal do Codespace:
+Não precisa fazer nada: toda vez que o Codespace abre, ele baixa a versão mais nova do
+GitHub e refaz a página do jogo se o código mudou. Se ele já estiver aberto e você quiser
+atualizar agora, feche a aba do Codespace e abra de novo pelo link.
 
-```bash
-git pull
-bash .devcontainer/iniciar.sh
-```
-
-O `iniciar.sh` refaz a página do jogo sozinho quando o código mudou (1 a 3 minutos).
+Cada versão nova salva no GitHub também é testada sozinha (aba **Actions** do repositório,
+"Teste do site completo"): instala igual ao Codespace, liga o site e joga duas partidas
+inteiras pelo site com 3 contas, no computador e no celular. Os prints ficam lá.
 
 ## Se algo der errado
 
