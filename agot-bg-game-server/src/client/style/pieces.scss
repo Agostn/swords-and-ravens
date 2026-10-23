@@ -42,9 +42,10 @@ $piece: 40px;
       piece-glow 1.4s ease-in-out 0.85s 2 both;
   }
 
-  // peça destruída: tomba para o lado e some
+  // peça destruída: fica uns instantes com o destaque vermelho, depois tomba
+  // para o lado e some (o jogo tira a peça do mapa 4 s depois)
   .unit-icon.pulsate-bck_fade-out {
-    animation: piece-fall 1.6s cubic-bezier(0.55, 0, 0.75, 0.4) both;
+    animation: piece-fall 1.6s cubic-bezier(0.55, 0, 0.75, 0.4) 0.6s both;
   }
 
   // peça pedindo atenção: balança de leve em vez de pulsar

@@ -1045,6 +1045,8 @@ export default class IngameComponent extends Component<IngameComponentProps> {
 
     this.ingame.entireGame.onCombatFastTracked = (stats) => {
       if (stats.length == 0) return;
+      // Na tela nova o resultado já aparece no quadro grande de batalha
+      if (hudSettings.hudActive) return;
       toast(this.getCombatFastTrackedComponent(stats));
     };
 

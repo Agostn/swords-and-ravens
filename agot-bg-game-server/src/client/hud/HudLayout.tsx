@@ -57,6 +57,7 @@ import HudTracks from "./HudTracks";
 import HudHouseList from "./HudHouseList";
 import HudOrdersStrip from "./HudOrdersStrip";
 import HudBidResults from "./HudBidResults";
+import HudBattleResult from "./HudBattleResult";
 import HouseChip from "./HouseChip";
 import displayedVictoryPoints from "./displayedVictoryPoints";
 import hudSettings from "./hudSettings";
@@ -379,6 +380,7 @@ export default class HudLayout extends Component<HudLayoutProps> {
         </div>
 
         <HudBidResults ingame={this.ingame} myHouse={this.myHouse} />
+        <HudBattleResult ingame={this.ingame} myHouse={this.myHouse} />
         {this.renderTopRight()}
         {phone ? (
           <>

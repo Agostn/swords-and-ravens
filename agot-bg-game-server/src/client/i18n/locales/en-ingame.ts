@@ -246,7 +246,24 @@ const enIngame = {
   "hud.phone.nav": "Game menu",
   "lobby.ui.imReady": "I'm ready",
   "hud.menu.classicPieces": "Use the old pieces",
-  "hud.menu.woodPieces": "Use the wooden pieces"
+  "hud.menu.woodPieces": "Use the wooden pieces",
+  "hud.battle.title": "Battle for {region}",
+  "hud.battle.attacker": "Attacker",
+  "hud.battle.defender": "Defender",
+  "hud.battle.army": "Army",
+  "hud.battle.order": "Order",
+  "hud.battle.garrison": "Garrison",
+  "hud.battle.support": "Support",
+  "hud.battle.card": "House card",
+  "hud.battle.blade": "Valyrian Steel Blade",
+  "hud.battle.tides": "Tides of Battle",
+  "hud.battle.total": "Total",
+  "hud.battle.victory": "VICTORY",
+  "hud.battle.youWon": "You won the battle!",
+  "hud.battle.youLost": "House {house} won the battle",
+  "hud.battle.winner": "House {house} won the battle",
+  "hud.battle.tie": "Tie: the house higher on the Fiefdoms track wins",
+  "hud.battle.clickToClose": "Click to close"
 };
 
 export default enIngame;

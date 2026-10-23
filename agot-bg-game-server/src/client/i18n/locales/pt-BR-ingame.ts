@@ -247,7 +247,24 @@ const ptBRIngame: { [key in keyof typeof enIngame]: string } = {
   "hud.phone.nav": "Menu da partida",
   "lobby.ui.imReady": "Estou pronto",
   "hud.menu.classicPieces": "Usar as peças antigas",
-  "hud.menu.woodPieces": "Usar as peças de madeira"
+  "hud.menu.woodPieces": "Usar as peças de madeira",
+  "hud.battle.title": "Batalha por {region}",
+  "hud.battle.attacker": "Atacante",
+  "hud.battle.defender": "Defensor",
+  "hud.battle.army": "Exército",
+  "hud.battle.order": "Ordem",
+  "hud.battle.garrison": "Guarnição",
+  "hud.battle.support": "Apoio",
+  "hud.battle.card": "Carta de Casa",
+  "hud.battle.blade": "Espada de Aço Valiriano",
+  "hud.battle.tides": "Marés de Batalha",
+  "hud.battle.total": "Total",
+  "hud.battle.victory": "VITÓRIA",
+  "hud.battle.youWon": "Você venceu a batalha!",
+  "hud.battle.youLost": "A Casa {house} venceu a batalha",
+  "hud.battle.winner": "A Casa {house} venceu a batalha",
+  "hud.battle.tie": "Empate: vence quem está mais alto na trilha dos Feudos",
+  "hud.battle.clickToClose": "Clique para fechar"
 };
 
 export default ptBRIngame;
