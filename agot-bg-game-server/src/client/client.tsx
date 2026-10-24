@@ -4,10 +4,14 @@ import * as React from "react";
 import "react-toastify/dist/ReactToastify.css";
 import "./style/custom.scss";
 import GameClient, {AuthData} from "./GameClient";
+import ScreenErrorBoundary from "./ScreenErrorBoundary";
 import { installDataTranslations } from "./i18n/dataTranslations";
+import { installTolerantRegionController } from "./utils/tolerantRegionController";
 
 // Traduz nomes de lugares, unidades e ordens vindos dos dados do jogo.
 installDataTranslations();
+// Uma área com peças de Casas diferentes não derruba a tela (ver o arquivo)
+installTolerantRegionController();
 
 function getAuthData(): AuthData {
     if (process.env.NODE_ENV == "development") {
@@ -47,7 +51,9 @@ const authData = getAuthData();
 const gameClient = new GameClient(authData);
 
 ReactDOM.render(
-    <App gameClient={gameClient} />,
+    <ScreenErrorBoundary>
+        <App gameClient={gameClient} />
+    </ScreenErrorBoundary>,
     document.getElementById("root")
 );
 
