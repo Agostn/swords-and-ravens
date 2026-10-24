@@ -6623,3 +6623,18 @@ body.hud-phone .popover.deck-popover {
   font-size: 22px;
   line-height: 1;
 }
+
+// Celular na tela antiga: botão grande e fixo para voltar para a tela nova
+.back-to-new-layout {
+  position: fixed;
+  left: 10px;
+  top: calc(10px + env(safe-area-inset-top, 0px));
+  z-index: 2147483000;
+  padding: 10px 16px;
+  border: 0;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #f2cf7a, #e2b65a) !important;
+  color: #1a140c !important;
+  font-weight: 800;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.55);
+}

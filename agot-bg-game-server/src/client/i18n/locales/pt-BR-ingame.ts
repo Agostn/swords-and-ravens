@@ -104,6 +104,7 @@ const ptBRIngame: { [key in keyof typeof enIngame]: string } = {
   "hud.menu.gameControls": "Opções da partida e volume",
   "hud.menu.classicLayout": "Tela antiga",
   "hud.menu.classicLayoutHint": "Voltar para a tela antiga, em três colunas",
+  "hud.menu.backToNew": "Voltar para a tela nova",
   "hud.menu.newLayout": "Tela nova",
   "hud.menu.newLayoutHint": "Usar a tela nova, com o mapa em tela cheia",
   "hud.houses.title": "Casas e trilhas",

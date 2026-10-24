@@ -365,7 +365,17 @@ export default class IngameComponent extends Component<IngameComponentProps> {
 
   renderGameControlsButton(): ReactNode {
     if (isMobile) {
-      return null;
+      // Celular na tela antiga: botão fixo para voltar para a tela nova
+      return (
+        <button
+          type="button"
+          className="btn btn-warning back-to-new-layout"
+          title={t("hud.menu.newLayoutHint")}
+          onClick={() => hudSettings.setClassicLayout(false)}
+        >
+          {t("hud.menu.backToNew")}
+        </button>
+      );
     }
 
     return (

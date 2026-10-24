@@ -103,6 +103,7 @@ const enIngame = {
   "hud.menu.gameControls": "Game options and volume",
   "hud.menu.classicLayout": "Classic layout",
   "hud.menu.classicLayoutHint": "Go back to the old three-column layout",
+  "hud.menu.backToNew": "Back to the new screen",
   "hud.menu.newLayout": "New layout",
   "hud.menu.newLayoutHint": "Use the new full-screen map layout",
   "hud.houses.title": "Houses and tracks",

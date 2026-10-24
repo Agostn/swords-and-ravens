@@ -883,13 +883,16 @@ export default class HudLayout extends Component<HudLayoutProps> {
             <li>{t("hud.help.tracks")}</li>
           </ul>
           <div className="d-flex flex-wrap" style={{ gap: 8 }}>
-            <button
-              type="button"
-              className="btn btn-sm btn-outline-light"
-              onClick={() => hudSettings.setClassicLayout(true)}
-            >
-              {t("hud.menu.classicLayout")}
-            </button>
+            {/* no celular a tela antiga não serve (e era fácil cair nela sem querer) */}
+            {!this.isPhone && (
+              <button
+                type="button"
+                className="btn btn-sm btn-outline-light"
+                onClick={() => hudSettings.setClassicLayout(true)}
+              >
+                {t("hud.menu.classicLayout")}
+              </button>
+            )}
             <button
               type="button"
               className="btn btn-sm btn-outline-light"
