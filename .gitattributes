@@ -1,0 +1,21 @@
+# Fim de linha sempre no formato do Linux (LF), mesmo baixando no Windows.
+# Sem isso o Git do Windows troca para CRLF e os scripts .sh quebram no contêiner.
+* text=auto eol=lf
+*.ps1 text eol=crlf
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.webp binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.otf binary
+*.mp3 binary
+*.ogg binary
+*.wav binary
+*.pdf binary
+*.zip binary
