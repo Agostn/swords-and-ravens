@@ -95,7 +95,7 @@ body.hud-tablet:not(.hud-two-columns) .hud-game-header {
 
   // só o botão "ver o mapa todo"; o zoom é com dois dedos
   .hud-map-controls {
-    top: 148px;
+    top: 194px; // abaixo dos 4 botões do canto (ajuda, opções, tela cheia, som)
     right: 6px !important;
 
     &.compact {

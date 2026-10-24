@@ -4543,3 +4543,22 @@ body.hud-active .dropdown-menu {
     border-top-color: rgba(255, 236, 190, 0.1);
   }
 }
+
+// passos para instalar o jogo como app (iPhone)
+.install-steps {
+  margin: 0 0 8px;
+  padding-left: 20px;
+  font-size: 13px;
+  line-height: 1.4;
+  color: #e6dccb;
+
+  li + li {
+    margin-top: 6px;
+  }
+}
+
+.install-note {
+  display: block;
+  font-size: 11.5px;
+  color: $hud-muted;
+}

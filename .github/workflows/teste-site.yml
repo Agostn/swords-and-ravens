@@ -53,6 +53,12 @@ jobs:
           echo "status $code"; head -c 400 /tmp/recusado.html; echo
           [ "$code" = "400" ] && grep -q "Não deu para enviar" /tmp/recusado.html
 
+      - name: Arquivos para instalar como app (manifesto e ícones)
+        run: |
+          curl -sf http://localhost:8000/manifest.json | python3 -c "import json,sys; d=json.load(sys.stdin); assert d['display']=='standalone'; print(d['name'])"
+          curl -sf -o /dev/null -w "%{http_code} %{content_type}\n" http://localhost:8000/icons/apple-touch-icon.png
+          curl -sf http://localhost:8000/ | grep -q 'rel="manifest"'
+
       - name: Abrir o Codespace de novo não derruba o site
         run: |
           bash .devcontainer/iniciar.sh > /tmp/iniciar2.log 2>&1

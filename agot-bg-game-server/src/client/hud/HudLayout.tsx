@@ -64,6 +64,7 @@ import HudSituation from "./HudSituation";
 import displayedVictoryPoints from "./displayedVictoryPoints";
 import hudSettings from "./hudSettings";
 import { readableTextOn } from "./houseColor";
+import HudFullscreenButton from "./HudFullscreenButton";
 import { installTouchTooltips } from "./touchTooltips";
 import { getPiecesStyle, setPiecesStyle } from "../unitImages";
 import { t, TranslationKey } from "../i18n/i18n";
@@ -821,6 +822,7 @@ export default class HudLayout extends Component<HudLayoutProps> {
             <img src={settingsKnobsImage} width={22} alt="" />
           </button>
         </OverlayTrigger>
+        <HudFullscreenButton />
         <button
           type="button"
           className="hud-icon-button"

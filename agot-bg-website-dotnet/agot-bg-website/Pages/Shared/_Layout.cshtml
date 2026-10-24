@@ -27,6 +27,13 @@
     <meta name="twitter:title" content="@pageTitle" />
     <meta name="twitter:description" content="@pageDescription" />
     <link rel="shortcut icon" type="image/x-icon" href="~/favicon.ico" asp-append-version="true" />
+    @* Instalar como app (Tela de Início do iPhone/Android): abre sem a barra do navegador *@
+    <link rel="manifest" href="/manifest.json" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="GoT dos Games" />
     <script type="importmap" nonce="@Context.GetCspNonce()"></script>
     <link rel="stylesheet" href="~/lib/fontawesome/css/fontawesome.min.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/lib/fontawesome/css/solid.min.css" asp-append-version="true" />
@@ -189,5 +196,19 @@
     <script src="~/js/site.js" asp-append-version="true"></script>
 
     @await RenderSectionAsync("Scripts", required: false)
+    @* Aberto como app (pela Tela de Início): links do site que abririam outra aba
+       (ex.: o nome da partida) abrem na mesma janela, senão o iPhone joga para o Safari. *@
+    <script nonce="@Context.GetCspNonce()">
+        (function () {
+            var app = (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) || window.navigator.standalone === true;
+            if (!app) return;
+            document.addEventListener("click", function (e) {
+                var a = e.target && e.target.closest ? e.target.closest("a[target=_blank]") : null;
+                if (!a) return;
+                var url = new URL(a.href, location.href);
+                if (url.origin === location.origin) { a.removeAttribute("target"); }
+            }, true);
+        })();
+    </script>
 </body>
 </html>
