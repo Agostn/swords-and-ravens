@@ -3127,7 +3127,6 @@ body.hud-active {
     border-radius: 14px !important;
     background: linear-gradient(180deg, #241c15, #120e0a) !important;
     box-shadow: 0 16px 48px rgba(0, 0, 0, 0.6) !important;
-    overflow: hidden;
 
     .list-group-item {
       background: transparent;
@@ -4355,5 +4354,192 @@ body.hud-phone {
 
   b {
     font-size: 34px;
+  }
+}
+
+// ---- janelas de escolha (Consolidar Poder, Recrutar/Defesa, Banco de Ferro) ----
+body.hud-active .popover.choice-popover {
+  min-width: 280px;
+  max-width: min(380px, calc(100vw - 24px));
+  border: 1px solid $tip-border;
+  border-radius: 14px;
+  background: linear-gradient(180deg, #241c15, #120e0a);
+  color: #ede6d8;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.6);
+
+  .arrow::after {
+    border-top-color: #120e0a;
+    border-bottom-color: #241c15;
+    border-left-color: #1b1510;
+    border-right-color: #1b1510;
+  }
+}
+
+.choice-box {
+  padding: 12px;
+}
+
+.choice-head {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  margin-bottom: 10px;
+  text-align: center;
+
+  small {
+    font-size: 11.5px;
+    color: $hud-muted;
+  }
+}
+
+.choice-order {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #c9a96a;
+}
+
+.choice-region {
+  font-family: $hud-display-font;
+  font-weight: 400;
+  font-size: 20px;
+  color: #f6ead0;
+}
+
+.choice-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.choice-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 236, 190, 0.14);
+  background: rgba(255, 236, 190, 0.04);
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color 0.12s,
+    background 0.12s,
+    transform 0.12s;
+
+  &:hover {
+    border-color: $hud-gold;
+    background: rgba(226, 182, 90, 0.1);
+    transform: translateY(-1px);
+  }
+
+  &.muster:hover {
+    border-color: $hud-green;
+    background: rgba(127, 183, 126, 0.1);
+  }
+
+  &.remove {
+    opacity: 0.85;
+
+    &:hover {
+      border-color: $hud-red;
+      background: rgba(201, 71, 59, 0.1);
+    }
+  }
+}
+
+.choice-icon {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.6));
+
+  &.glyph {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.3);
+    font-size: 18px;
+    color: #e6dccb;
+  }
+}
+
+.choice-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.3;
+
+  b {
+    font-size: 14.5px;
+    color: #f4ead6;
+  }
+
+  small {
+    font-size: 12px;
+    color: $hud-muted;
+  }
+}
+
+
+// ---- menu do jogador (perfil, substituir, votações) ----
+body.hud-active .dropdown-menu {
+  min-width: 260px;
+  max-width: min(340px, calc(100vw - 24px));
+  padding: 6px;
+  border: 1px solid $tip-border;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #241c15, #120e0a);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
+  z-index: 1090;
+
+  .dropdown-item {
+    padding: 8px 12px;
+    border-radius: 8px;
+    color: #e6dccb;
+    font-size: 13.5px;
+    white-space: normal;
+    line-height: 1.3;
+
+    &:hover,
+    &:focus {
+      background: rgba(226, 182, 90, 0.12);
+      color: #f6ead0;
+    }
+
+    &.disabled,
+    &:disabled {
+      color: rgba(169, 158, 139, 0.6);
+      background: transparent;
+    }
+
+    &.active,
+    &:active {
+      background: rgba(226, 182, 90, 0.18);
+      color: #f6ead0;
+    }
+  }
+
+  // primeira linha: "Ver perfil de <nome>" com o relógio
+  .dropdown-item.enabled,
+  > .dropdown-item:first-child {
+    margin-bottom: 4px;
+    padding: 10px 12px;
+    border: 1px solid rgba(226, 182, 90, 0.3);
+    background: rgba(226, 182, 90, 0.08) !important;
+    color: #f1e3c2 !important;
+  }
+
+  .dropdown-divider {
+    margin: 6px 4px;
+    border-top-color: rgba(255, 236, 190, 0.1);
   }
 }

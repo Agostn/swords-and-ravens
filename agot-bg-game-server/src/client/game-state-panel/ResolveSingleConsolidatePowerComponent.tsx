@@ -16,6 +16,9 @@ import DefenseMusterOrderType from "../../common/ingame-game-state/game-data-str
 import IronBank from "../../common/ingame-game-state/game-data-structure/IronBank";
 import _ from "lodash";
 import { t, tr } from "../i18n/i18n";
+import hudSettings from "../hud/hudSettings";
+import unitImages from "../unitImages";
+import housePowerTokensImages from "../housePowerTokensImages";
 
 @observer
 export default class ResolveSingleConsolidatePowerComponent extends Component<
@@ -114,6 +117,107 @@ export default class ResolveSingleConsolidatePowerComponent extends Component<
     );
   }
 
+  // Tela nova: cada escolha é um cartão com símbolo, título e explicação
+  private renderChoice(
+    key: string,
+    kind: "muster" | "power" | "loan" | "remove",
+    title: ReactNode,
+    hint: ReactNode,
+    onClick: () => void
+  ): ReactNode {
+    const icon =
+      kind == "muster" ? (
+        <span
+          className="choice-icon unit"
+          style={{ backgroundImage: `url(${unitImages.get(this.house.id).get("footman")})` }}
+        />
+      ) : kind == "power" ? (
+        <span
+          className="choice-icon token"
+          style={{ backgroundImage: `url(${housePowerTokensImages.get(this.house.id)})` }}
+        />
+      ) : kind == "loan" ? (
+        <span className="choice-icon glyph" aria-hidden="true">⚖</span>
+      ) : (
+        <span className="choice-icon glyph" aria-hidden="true">✕</span>
+      );
+    return (
+      <button key={key} type="button" className={`choice-card ${kind}`} onClick={onClick}>
+        {icon}
+        <span className="choice-text">
+          <b>{title}</b>
+          <small>{hint}</small>
+        </span>
+      </button>
+    );
+  }
+
+  private renderHudControls(
+    orderRegion: Region,
+    orderType: ConsolidatePowerOrderType | IronBankOrderType | DefenseMusterOrderType
+  ): ReactNode {
+    const done = (fn: () => void) => () => {
+      fn();
+      this.reset();
+    };
+    const choices: ReactNode[] = [];
+    if (orderType instanceof DefenseMusterOrderType) {
+      choices.push(
+        this.renderChoice("muster", "muster",
+          tr("auto.game-state-panel.ResolveSingleConsolidatePowerComponent.6", { p0: orderRegion.name }),
+          t("consolidate.musterHint", { n: Math.max(1, orderRegion.castleLevel) }),
+          done(() => this.gameState.chooseMustering(orderRegion))),
+        this.renderChoice("remove", "remove",
+          t("auto.game-state-panel.ResolveSingleConsolidatePowerComponent.7"),
+          t("consolidate.removeHint"),
+          done(() => this.gameState.chooseRemoveOrder(orderRegion)))
+      );
+    }
+    if (orderType instanceof ConsolidatePowerOrderType) {
+      const gain = this.gameState.getPotentialGainedPowerTokens(orderRegion, this.house);
+      if (orderType.starred && orderRegion.castleLevel > 0) {
+        choices.push(
+          this.renderChoice("muster", "muster",
+            tr("auto.game-state-panel.ResolveSingleConsolidatePowerComponent.8", { p0: orderRegion.name }),
+            t("consolidate.musterHint", { n: orderRegion.castleLevel }),
+            done(() => this.gameState.chooseMustering(orderRegion)))
+        );
+      }
+      choices.push(
+        this.renderChoice("power", "power",
+          this.getPowerTokenButtonText(gain),
+          t("consolidate.powerHint"),
+          done(() => this.gameState.chooseGainPowerTokens(orderRegion)))
+      );
+    }
+    if (orderType instanceof IronBankOrderType && this.ironBank) {
+      this.ironBank.getPurchasableLoans(this.house).forEach((purchasable) =>
+        choices.push(
+          this.renderChoice(`loan-${purchasable.loan.id}`, "loan",
+            purchasable.loan.name,
+            t("consolidate.loanHint", { n: purchasable.costs }),
+            done(() => this.gameState.choosePurchaseLoan(purchasable.slotIndex, orderRegion)))
+        )
+      );
+      choices.push(
+        this.renderChoice("remove", "remove",
+          t("auto.game-state-panel.ResolveSingleConsolidatePowerComponent.10"),
+          t("consolidate.removeHint"),
+          done(() => this.gameState.chooseRemoveOrder(orderRegion)))
+      );
+    }
+    return (
+      <div className="choice-box">
+        <div className="choice-head">
+          <span className="choice-order">{orderType.name}</span>
+          <b className="choice-region">{orderRegion.name}</b>
+          <small>{t("consolidate.chooseOne")}</small>
+        </div>
+        <div className="choice-list">{choices}</div>
+      </div>
+    );
+  }
+
   private renderGameStateControls(
     orderRegion: Region,
     orderType:
@@ -121,6 +225,9 @@ export default class ResolveSingleConsolidatePowerComponent extends Component<
       | IronBankOrderType
       | DefenseMusterOrderType
   ): ReactNode {
+    if (hudSettings.hudActive) {
+      return <Col xs={12}>{this.renderHudControls(orderRegion, orderType)}</Col>;
+    }
     return (
       <>
         <Col xs={12} className="text-center">
@@ -263,9 +370,9 @@ export default class ResolveSingleConsolidatePowerComponent extends Component<
               overlay={
                 <Popover
                   id={"resolve-cp-order-popover_region_" + r.id}
-                  className="p-1"
+                  className={hudSettings.hudActive ? "choice-popover" : "p-1"}
                 >
-                  {this.renderGameStateControls(r, ot)}
+                  {hudSettings.hudActive ? this.renderHudControls(r, ot) : this.renderGameStateControls(r, ot)}
                 </Popover>
               }
             >
