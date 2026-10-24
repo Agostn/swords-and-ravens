@@ -9,6 +9,9 @@ on:
     branches: [design-novo]
   workflow_dispatch:
 
+permissions:
+  contents: write # para guardar os logs de uma falha na branch ci-resultados
+
 jobs:
   site:
     name: Site + partidas do robô
@@ -84,6 +87,21 @@ jobs:
         run: |
           mkdir -p prints
           cp /tmp/iniciar.log /tmp/site.log /tmp/servidor-do-jogo.log /tmp/gerar-jogo.log /tmp/*.log prints/ 2>/dev/null || true
+
+      # Se falhar, guarda os textos dos logs (sem as imagens) numa branch separada,
+      # "ci-resultados", para dar para ler sem baixar o arquivo do Actions.
+      - name: Guardar logs da falha na branch ci-resultados
+        if: failure()
+        run: |
+          mkdir -p /tmp/ci && cd /tmp/ci
+          git init -q && git checkout -q -b ci-resultados
+          mkdir -p "run-${{ github.run_id }}"
+          cp /tmp/*.log "run-${{ github.run_id }}/" 2>/dev/null || true
+          ls "$GITHUB_WORKSPACE"/prints/computador/*.png 2>/dev/null | tail -2 | xargs -r -I{} cp {} "run-${{ github.run_id }}/"
+          ls "$GITHUB_WORKSPACE"/prints/celular/*.png 2>/dev/null | tail -2 | xargs -r -I{} sh -c 'cp "$1" "run-${{ github.run_id }}/celular-$(basename "$1")"' _ {}
+          git add -A
+          git -c user.name=ci -c user.email=ci@users.noreply.github.com commit -q -m "logs da execução ${{ github.run_id }} (${{ github.sha }})"
+          git push -q -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" ci-resultados
 
       - uses: actions/upload-artifact@v4
         if: always()
