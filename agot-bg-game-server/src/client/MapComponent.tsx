@@ -47,7 +47,7 @@ import {
 import PlaceOrdersGameState from "../common/ingame-game-state/planning-game-state/place-orders-game-state/PlaceOrdersGameState";
 import PlaceOrdersForVassalsGameState from "../common/ingame-game-state/planning-game-state/place-orders-for-vassals-game-state/PlaceOrdersForVassalsGameState";
 import UseRavenGameState from "../common/ingame-game-state/action-game-state/use-raven-game-state/UseRavenGameState";
-import { renderRegionTooltip, renderUnitStrength } from "./regionTooltip";
+import { renderRegionTooltip, renderUnitStrength, renderCastleTooltip } from "./regionTooltip";
 import getGarrisonToken from "./garrisonTokens";
 import { ship } from "../common/ingame-game-state/game-data-structure/unitTypes";
 import { OverlayChildren } from "react-bootstrap/esm/Overlay";
@@ -399,6 +399,27 @@ export default class MapComponent extends Component<MapComponentProps> {
     }, 750);
   }
 
+  // O "ponto" invisível em cima do castelo só existe para mostrar o balão;
+  // o clique passa para a área que está embaixo (pôr ordem, recrutar, marchar...).
+  private forwardToMapBelow = (e: React.MouseEvent<HTMLDivElement>): void => {
+    const el = e.currentTarget;
+    e.stopPropagation();
+    el.style.pointerEvents = "none";
+    const below = document.elementFromPoint(e.clientX, e.clientY);
+    el.style.pointerEvents = "";
+    if (below && below != el) {
+      below.dispatchEvent(
+        new MouseEvent(e.type == "dblclick" ? "dblclick" : "click", {
+          bubbles: true,
+          cancelable: true,
+          clientX: e.clientX,
+          clientY: e.clientY,
+          view: window
+        })
+      );
+    }
+  };
+
   private clearRegionHover = (): void => {
     if (this.hoverTimer != null) {
       window.clearTimeout(this.hoverTimer);
@@ -519,6 +540,21 @@ export default class MapComponent extends Component<MapComponentProps> {
         <div style={{ position: "relative" }}>
           {allRegions.map((r) => (
             <div key={`map_${r.id}`}>
+              {r.staticRegion.castleLevel > 0 && !castleModifiers.has(r) && (
+                <OverlayTrigger
+                  overlay={renderCastleTooltip(r, isVisible(r))}
+                  delay={{ show: 300, hide: 80 }}
+                  placement="auto"
+                  popperConfig={{ modifiers: [preventOverflow] }}
+                >
+                  <div
+                    className={classNames("castle-hotspot", { stronghold: r.staticRegion.castleLevel >= 2 })}
+                    style={{ left: r.castleSlot.x, top: r.castleSlot.y }}
+                    onClick={this.forwardToMapBelow}
+                    onDoubleClick={this.forwardToMapBelow}
+                  />
+                </OverlayTrigger>
+              )}
               {castleModifiers.has(r) && (
                 <OverlayTrigger
                   overlay={renderRegionTooltip(r, isVisible(r))}

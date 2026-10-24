@@ -22,7 +22,7 @@ import { InfluenceTrackDetails } from "../IngameComponent";
 import CancelledGameState from "../../common/cancelled-game-state/CancelledGameState";
 import GameEndedGameState from "../../common/ingame-game-state/game-ended-game-state/GameEndedGameState";
 import House from "../../common/ingame-game-state/game-data-structure/House";
-import { HouseCardState } from "../../common/ingame-game-state/game-data-structure/house-card/HouseCard";
+import HouseCard, { HouseCardState } from "../../common/ingame-game-state/game-data-structure/house-card/HouseCard";
 import User from "../../server/User";
 import { Channel } from "../chat-client/ChatClient";
 import HouseCardComponent from "../game-state-panel/utils/HouseCardComponent";
@@ -1134,10 +1134,35 @@ export default class HudLayout extends Component<HudLayoutProps> {
   }
 
   // Botão "Cartas (n)": mostra as cartas de Casa do jogador num balão.
+  // Na mão primeiro (da mais forte para a mais fraca), depois as já usadas.
   private renderCardsButton(house: House): ReactNode {
-    const cards = _.sortBy(house.houseCards.values, (c) => c.combatStrength);
+    const cards = _.sortBy(house.houseCards.values, (c) => -c.combatStrength);
     const available = cards.filter((c) => c.state == HouseCardState.AVAILABLE);
+    const used = cards.filter((c) => c.state != HouseCardState.AVAILABLE);
     if (cards.length == 0) return null;
+    const renderCard = (c: HouseCard, isUsed: boolean): ReactNode => (
+      <div key={`hud-card-${c.id}`} className={classNames("hcards-card", { used: isUsed })}>
+        <HouseCardComponent houseCard={c} size="small" unavailable={isUsed} />
+        <div className="hcards-info">
+          <span className="hcards-strength" title={t("hud.cards.strength", { n: c.combatStrength })}>
+            {c.combatStrength}
+          </span>
+          <span className="hcards-icons">
+            {c.swordIcons > 0 && (
+              <span className="hcards-icon sword" title={t("houseCard.swords", { n: c.swordIcons })}>
+                {"⚔".repeat(c.swordIcons)}
+              </span>
+            )}
+            {c.towerIcons > 0 && (
+              <span className="hcards-icon tower" title={t("houseCard.towers", { n: c.towerIcons })}>
+                {"▲".repeat(c.towerIcons)}
+              </span>
+            )}
+          </span>
+        </div>
+        <span className="hcards-name">{c.name}</span>
+      </div>
+    );
     return (
       <OverlayTrigger
         trigger="click"
@@ -1145,20 +1170,30 @@ export default class HudLayout extends Component<HudLayoutProps> {
         rootClose
         overlay={
           <Popover id="hud-my-cards" className="hud-cards-popover">
-            <Popover.Title as="h3">
-              {t("hud.cards.title", { n: available.length })}
-            </Popover.Title>
             <Popover.Content>
-              <div className="hud-cards-grid">
-                {cards.map((c) => (
-                  <HouseCardComponent
-                    key={`hud-card-${c.id}`}
-                    houseCard={c}
-                    size="small"
-                    unavailable={c.state != HouseCardState.AVAILABLE}
-                  />
-                ))}
+              <div className="hcards-head">
+                <b>{t("hud.cards.titleShort")}</b>
+                <span className="hcards-count">{t("hud.cards.inHand", { n: available.length })}</span>
+                {used.length > 0 && (
+                  <span className="hcards-count muted">{t("hud.cards.usedCount", { n: used.length })}</span>
+                )}
+                <button
+                  type="button"
+                  className="hcards-close"
+                  aria-label={t("orders.close")}
+                  onClick={() => document.body.click()}
+                >
+                  ×
+                </button>
               </div>
+              <div className="hcards-grid">{available.map((c) => renderCard(c, false))}</div>
+              {used.length > 0 && (
+                <>
+                  <div className="hcards-sub">{t("hud.cards.usedTitle")}</div>
+                  <div className="hcards-grid used">{used.map((c) => renderCard(c, true))}</div>
+                </>
+              )}
+              <div className="hcards-hint">{t("hud.cards.hint")}</div>
             </Popover.Content>
           </Popover>
         }

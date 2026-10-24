@@ -147,6 +147,50 @@ function renderUnits(region: Region): React.ReactNode {
   );
 }
 
+// Pontos de recrutamento: Castelo = 1, Fortaleza = 2 (o que vale é o nível atual,
+// que cartas e melhorias podem mudar). Custos: Soldado 1, Navio 1, Cavaleiro 2,
+// Máquina de cerco 2; trocar um Soldado por Cavaleiro ou Máquina custa 1.
+export function renderMusterInfo(region: Region, level: number): React.ReactNode {
+  if (level <= 0) return null;
+  const base = region.staticRegion.castleLevel;
+  return (
+    <div className={classNames("region-tip-muster", { stronghold: level >= 2 })}>
+      <div className="region-tip-muster-head">
+        <span className="region-tip-muster-pts">
+          {_.range(0, level).map((i) => (
+            <i key={`mp-${region.id}-${i}`} aria-hidden="true" />
+          ))}
+        </span>
+        <b>{t("map.muster.points", { n: level })}</b>
+      </div>
+      {level != base && base > 0 && (
+        <small className="region-tip-muster-mod">{t("map.muster.changed", { n: base })}</small>
+      )}
+      <small className="region-tip-muster-costs">
+        {level >= 2 ? t("map.muster.costs2") : t("map.muster.costs1")}
+      </small>
+    </div>
+  );
+}
+
+// Balão do castelo/fortaleza no mapa (passar o mouse ou segurar o dedo em cima dele).
+export function renderCastleTooltip(region: Region, visible: boolean): OverlayChildren {
+  const level = visible || !region.game.ingame.fogOfWar ? region.castleLevel : region.staticRegion.castleLevel;
+  return (
+    <Tooltip id={`castle-${region.id}-tip`} className="tooltip-w-100 region-tip">
+      <div className="text-center">
+        <div className="region-tip-head">
+          <b className="region-tip-name">{level >= 2 ? t("auto2.regionTooltip.3") : t("auto2.regionTooltip.2")}</b>
+          <div className="region-tip-sub">
+            <span>{region.name}</span>
+          </div>
+        </div>
+        {renderMusterInfo(region, level)}
+      </div>
+    </Tooltip>
+  );
+}
+
 export function renderRegionTooltip(
   region: Region,
   forceNormalToolTip = false
@@ -164,6 +208,7 @@ export function renderRegionTooltip(
               {region.staticRegion.castleLevel == 1 ? t("auto2.regionTooltip.0") : t("auto2.regionTooltip.1")}
             </>
           )}
+          {renderMusterInfo(region, region.staticRegion.castleLevel)}
           <div className="d-flex flex-row justify-content-center mt-2">
             {_.range(0, region.staticRegion.supplyIcons).map((_, i) => {
               return (
@@ -217,6 +262,7 @@ export function renderRegionTooltip(
             </div>
           )}
         </div>
+        {renderMusterInfo(region, region.castleLevel)}
         {region.superControlPowerToken &&
         region.superControlPowerToken == controller ? (
           <>

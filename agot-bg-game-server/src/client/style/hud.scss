@@ -6127,3 +6127,233 @@ body.hud-phone .popover.order-popover {
   top: 7px;
   right: 8px;
 }
+
+/* ---------- Castelo / Fortaleza: balão com os pontos de recrutamento ---------- */
+.map .castle-hotspot {
+  position: absolute;
+  width: 54px;
+  height: 40px;
+  transform: translate(-50%, -50%);
+  border-radius: 10px;
+  cursor: help;
+  z-index: 1;
+  -webkit-tap-highlight-color: transparent;
+
+  &.stronghold {
+    width: 66px;
+    height: 48px;
+  }
+}
+
+body:not(.touch-tooltips) .map .castle-hotspot:hover {
+  background: rgba(226, 182, 90, 0.12);
+  box-shadow: 0 0 0 1.5px rgba(226, 182, 90, 0.7);
+}
+
+.region-tip-muster {
+  margin: 6px auto 2px;
+  padding: 6px 8px;
+  max-width: 250px;
+  border-radius: 8px;
+  border: 1px solid rgba(226, 182, 90, 0.35);
+  background: rgba(226, 182, 90, 0.08);
+  text-align: left;
+
+  .region-tip-muster-head {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+
+    b { color: #f2cf7a; font-size: 12.5px; }
+  }
+
+  .region-tip-muster-pts {
+    display: inline-flex;
+    gap: 3px;
+
+    i {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #e2b65a;
+      box-shadow: 0 0 0 1.5px rgba(0, 0, 0, 0.5);
+    }
+  }
+
+  .region-tip-muster-mod {
+    display: block;
+    margin-top: 2px;
+    color: #f0a59d;
+    font-size: 11px;
+  }
+
+  .region-tip-muster-costs {
+    display: block;
+    margin-top: 3px;
+    color: rgba(255, 244, 220, 0.75);
+    font-size: 11px;
+    line-height: 1.35;
+  }
+}
+
+/* ---------- Suas cartas de Casa (botão "Cartas") ---------- */
+.popover.hud-cards-popover {
+  width: min(640px, calc(100vw - 16px));
+  max-width: min(640px, calc(100vw - 16px));
+  border: 1px solid rgba(226, 182, 90, 0.35);
+  border-radius: 16px;
+  background: #17130f;
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.6);
+
+  > .arrow::after { border-top-color: #17130f; }
+
+  .popover-body {
+    padding: 12px 14px 10px;
+    color: #e6dccb;
+  }
+}
+
+.hcards-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+
+  b {
+    font-family: $hud-display-font;
+    font-size: 15px;
+    letter-spacing: 0.04em;
+    color: #fff4dc;
+  }
+}
+
+.hcards-count {
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: rgba(226, 182, 90, 0.18);
+  color: $hud-gold;
+  font-size: 11.5px;
+  font-weight: 700;
+
+  &.muted {
+    background: rgba(255, 236, 190, 0.07);
+    color: rgba(255, 244, 220, 0.55);
+  }
+}
+
+.hcards-close {
+  margin-left: auto;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 236, 190, 0.18);
+  background: rgba(0, 0, 0, 0.3);
+  color: #fff4dc;
+  font-size: 17px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.hcards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(78px, 1fr));
+  gap: 10px 8px;
+
+  &.used { opacity: 0.75; }
+}
+
+.hcards-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+
+  .vertical-game-card.small {
+    width: 74px;
+    height: 116px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+    transition: transform 0.12s;
+  }
+
+  &:not(.used) .vertical-game-card.small:hover { transform: translateY(-3px); }
+}
+
+.hcards-info {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.hcards-strength {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: rgba(226, 182, 90, 0.2);
+  color: $hud-gold;
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 22px;
+  text-align: center;
+
+  .used & {
+    background: rgba(255, 236, 190, 0.08);
+    color: rgba(255, 244, 220, 0.5);
+  }
+}
+
+.hcards-icons {
+  display: inline-flex;
+  gap: 3px;
+  font-size: 11px;
+  letter-spacing: 1px;
+}
+
+.hcards-icon.sword { color: #f08c7c; font-size: 13px; }
+.hcards-icon.tower { color: #9cc3e8; }
+
+.hcards-name {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 11px;
+  color: rgba(255, 244, 220, 0.75);
+  text-align: center;
+}
+
+.hcards-sub {
+  margin: 12px 0 8px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255, 236, 190, 0.1);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: rgba(255, 244, 220, 0.55);
+}
+
+.hcards-hint {
+  margin-top: 10px;
+  font-size: 11px;
+  color: rgba(255, 244, 220, 0.45);
+  text-align: center;
+}
+
+body.touch-tooltips .hcards-hint { display: none; }
+
+body.hud-phone .popover.hud-cards-popover {
+  width: auto;
+  position: fixed !important;
+  inset: auto 8px calc(8px + env(safe-area-inset-bottom, 0px)) 8px !important;
+  transform: none !important;
+  max-width: none;
+  max-height: 75vh;
+  overflow-y: auto;
+  z-index: 1080;
+
+  > .arrow { display: none; }
+
+  .hcards-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .hcards-card .vertical-game-card.small { width: 100%; height: auto; aspect-ratio: 74 / 116; }
+}
