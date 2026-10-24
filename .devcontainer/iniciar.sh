@@ -64,6 +64,17 @@ echo "---> Ligando o banco de dados e o Redis"
 sudo service postgresql start >/dev/null 2>&1 || true
 (redis-cli ping >/dev/null 2>&1) || sudo service redis-server start >/dev/null 2>&1 || redis-server --daemonize yes --dir /tmp >/dev/null
 
+# Se a página do jogo vai ser refeita, desliga antes o site e o servidor do jogo:
+# o webpack precisa de muita memória e, com tudo ligado, o sistema mata ele.
+if bash "$ROOT/.devcontainer/gerar-jogo.sh" --precisa; then
+  echo "---> Versão nova: desligando o site por alguns minutos para refazer a página do jogo"
+  pkill -f "ts-node -T src/server/""server.ts" >/dev/null 2>&1 || true
+  pkill -f "agot-bg-website.dll" >/dev/null 2>&1 || true
+  pkill -f "bin/Debug/net10.0/agot-bg-website" >/dev/null 2>&1 || true
+  pkill -f "dotnet run --no-launch-profile" >/dev/null 2>&1 || true
+  sleep 2
+fi
+
 echo "---> Conferindo a página do jogo"
 VERSAO_ANTES="$(cat agot-bg-website-dotnet/agot-bg-website/wwwroot/static_game/.versao 2>/dev/null)"
 bash "$ROOT/.devcontainer/gerar-jogo.sh" || { echo "ERRO ao gerar a página do jogo. Veja as mensagens acima."; exit 1; }
