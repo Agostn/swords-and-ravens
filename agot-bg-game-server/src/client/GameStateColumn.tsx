@@ -850,6 +850,14 @@ export default class GameStateColumn extends Component<GameStateColumnProps> {
           )}
           <div className={classNames("deck-pop-title", { "mt-3": this.gameSettings.cokWesterosPhase })}>
             {t("westeros.remainingCards")}
+            <button
+              type="button"
+              className="deck-pop-close"
+              aria-label={t("orders.close")}
+              onClick={() => document.body.click()}
+            >
+              ×
+            </button>
           </div>
           <div className="deck-pop-columns">
             {remainingCards.map((rc, i) => (
@@ -904,6 +912,14 @@ export default class GameStateColumn extends Component<GameStateColumnProps> {
           <div className="deck-pop-title">
             {t("wildlings.deck")}
             <small>{t("westeros.cardsLeft", { n: wildlingDeck.length })}</small>
+            <button
+              type="button"
+              className="deck-pop-close"
+              aria-label={t("orders.close")}
+              onClick={() => document.body.click()}
+            >
+              ×
+            </button>
           </div>
           <div className="deck-pop-grid">
             {wildlingDeck.map((wc) => (

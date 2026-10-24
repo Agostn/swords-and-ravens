@@ -721,7 +721,7 @@ export default class HudLayout extends Component<HudLayoutProps> {
           <button
             type="button"
             className="hud-phone-nav-button"
-            onClick={() => this.openDrawer("chat")}
+            onClick={() => this.openDrawer(this.ravensTab)}
             title={t("hud.chat.ravensHint")}
           >
             <span aria-hidden="true">✉</span>
@@ -779,7 +779,7 @@ export default class HudLayout extends Component<HudLayoutProps> {
 
   private renderPhoneChat(): ReactNode {
     return this.renderPhoneSheet(
-      t("hud.chat.title"),
+      this.chatTab == "ravens" ? t("hud.chat.ravens") : t("hud.chat.title"),
       () => (this.chatOpen = false),
       <div className="hud-chat-body">
         <GameTabsComponent
@@ -1232,6 +1232,13 @@ export default class HudLayout extends Component<HudLayoutProps> {
     );
   }
 
+  // "Corvos" abre a lista de conversas particulares (se a partida permitir)
+  private get ravensTab(): string {
+    return this.gameClient.authenticatedPlayer && !this.ingame.entireGame.gameSettings.noPrivateChats
+      ? "ravens"
+      : "chat";
+  }
+
   private openDrawer(tab?: string): void {
     this.chatTab = tab;
     this.chatOpen = true;
@@ -1342,7 +1349,7 @@ export default class HudLayout extends Component<HudLayoutProps> {
         <button
           type="button"
           className="hud-panel hud-ravens-button"
-          onClick={() => this.openDrawer("chat")}
+          onClick={() => this.openDrawer(this.ravensTab)}
           title={t("hud.chat.ravensHint")}
         >
           ✉ {t("hud.chat.ravens")}

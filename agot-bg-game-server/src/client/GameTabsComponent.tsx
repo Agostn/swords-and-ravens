@@ -49,6 +49,7 @@ import ConditionalWrap from "./utils/ConditionalWrap";
 import getUserLinkOrLabel from "./utils/getIngameUserLinkOrLabel";
 import BetterMap from "../utils/BetterMap";
 import { t, tr } from "./i18n/i18n";
+import hudSettings from "./hud/hudSettings";
 
 interface GameTabsComponentProps {
   ingame: IngameGameState;
@@ -254,7 +255,20 @@ export default class GameTabsComponent extends Component<GameTabsComponentProps>
                   </OverlayTrigger>
                 </Nav.Link>
               </Nav.Item>
-              {this.player && !this.gameSettings.noPrivateChats && (
+              {this.player && !this.gameSettings.noPrivateChats && hudSettings.hudActive && (
+                <Nav.Item>
+                  <div
+                    className={classNames({
+                      "orange-border": privateChatRooms.some(({ user }) => this.getPrivateChatRoomForPlayer(user)?.areThereUnreadMessages)
+                    })}
+                  >
+                    <Nav.Link eventKey="ravens" title={t("hud.chat.ravens")} aria-label={t("hud.chat.ravens")}>
+                      <span className="ravens-tab-icon" aria-hidden="true">✉</span>
+                    </Nav.Link>
+                  </div>
+                </Nav.Item>
+              )}
+              {this.player && !this.gameSettings.noPrivateChats && !hudSettings.hudActive && (
                 <Nav.Item>
                   <div
                     className={classNames({
@@ -327,7 +341,7 @@ export default class GameTabsComponent extends Component<GameTabsComponentProps>
                   <Dropdown.Menu>{this.gameRoundElems}</Dropdown.Menu>
                 </Dropdown>
               )}
-              {isMobile && !this.logChatFullScreen && (
+              {isMobile && !this.logChatFullScreen && !hudSettings.hudActive && (
                 <button
                   className="btn btn-secondary ml-auto"
                   onClick={() => {
@@ -341,6 +355,11 @@ export default class GameTabsComponent extends Component<GameTabsComponentProps>
           </Card.Header>
           <Card.Body id="game-log-panel" className="px-1">
             <Tab.Content className="h-100">
+              {this.player && !this.gameSettings.noPrivateChats && (
+                <Tab.Pane eventKey="ravens" className="h-100">
+                  {this.renderRavensList(privateChatRooms)}
+                </Tab.Pane>
+              )}
               <Tab.Pane eventKey="chat" className="h-100">
                 <ChatComponent
                   gameClient={this.gameClient}
@@ -530,6 +549,45 @@ export default class GameTabsComponent extends Component<GameTabsComponentProps>
         this.gameClient.chatClient.channels.get(privateRoomId)
       );
     }
+  }
+
+  // Tela nova: "Corvos" = conversas particulares, uma linha por jogador.
+  private renderRavensList(
+    privateChatRooms: { user: User; roomId: string; isClosed: boolean }[]
+  ): ReactNode {
+    const others = this.getOtherPlayers();
+    return (
+      <div className="ravens-list">
+        <div className="ravens-list-hint">{t("hud.ravens.hint")}</div>
+        {others.length == 0 && <div className="ravens-list-empty">{t("hud.ravens.empty")}</div>}
+        {others.map((p) => {
+          const room = this.getPrivateChatRoomForPlayer(p.user);
+          const unread = room?.areThereUnreadMessages ?? false;
+          const last = room ? _.last(room.messages) : undefined;
+          const hasRoom = privateChatRooms.some(({ user }) => user == p.user);
+          return (
+            <button
+              type="button"
+              key={`raven-to_${p.user.id}`}
+              className={classNames("ravens-row", { unread })}
+              onClick={() => this.onNewPrivateChatRoomClick(p)}
+            >
+              <span className="ravens-dot" style={{ background: p.house.color }} aria-hidden="true" />
+              <span className="ravens-text">
+                <b>
+                  {p.house.name} <small>· {p.user.name}</small>
+                </b>
+                <small>
+                  {last ? `${last.user == this.user ? t("hud.ravens.you") : last.user.name}: ${last.text}` : hasRoom ? t("hud.ravens.noMessages") : t("hud.ravens.start")}
+                </small>
+              </span>
+              {unread && <span className="ravens-badge">{t("hud.ravens.new")}</span>}
+              <span className="ravens-go" aria-hidden="true">›</span>
+            </button>
+          );
+        })}
+      </div>
+    );
   }
 
   getPrivateChatRooms(): { user: User; roomId: string; isClosed: boolean }[] {
