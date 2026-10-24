@@ -3069,3 +3069,834 @@ body.hud-two-columns:not(.hud-left-closed) .hud-game-header {
   color: $hud-gold;
   border-color: rgba(226, 182, 90, 0.55);
 }
+
+// =====================================================================
+// Balões (barra preta) e janelas de cartas com o visual da tela nova (24/out)
+// =====================================================================
+
+$tip-bg-top: #2a2119;
+$tip-bg-bottom: #16110c;
+$tip-border: rgba(226, 182, 90, 0.42);
+
+body.hud-active {
+  .tooltip {
+    opacity: 1 !important;
+    pointer-events: none; // o balão não atrapalha passar o mouse no que está embaixo
+  }
+
+  .tooltip .tooltip-inner {
+    max-width: 280px;
+    padding: 8px 12px;
+    border: 1px solid $tip-border;
+    border-radius: 10px;
+    background: linear-gradient(180deg, $tip-bg-top, $tip-bg-bottom);
+    color: #f1e8d6;
+    font-size: 13px;
+    line-height: 1.4;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.55);
+  }
+
+  .tooltip.tooltip-wide .tooltip-inner {
+    max-width: 340px;
+    text-align: left;
+  }
+
+  .tooltip.tooltip-w-100 .tooltip-inner {
+    max-width: min(420px, calc(100vw - 24px)) !important;
+  }
+
+  .bs-tooltip-top .arrow::before {
+    border-top-color: $tip-border;
+  }
+
+  .bs-tooltip-bottom .arrow::before {
+    border-bottom-color: $tip-border;
+  }
+
+  .bs-tooltip-left .arrow::before {
+    border-left-color: $tip-border;
+  }
+
+  .bs-tooltip-right .arrow::before {
+    border-right-color: $tip-border;
+  }
+
+  // detalhes da Casa: mesmo acabamento das janelas de cartas
+  .popover.hud-house-popover {
+    border: 1px solid $tip-border !important;
+    border-radius: 14px !important;
+    background: linear-gradient(180deg, #241c15, #120e0a) !important;
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.6) !important;
+    overflow: hidden;
+
+    .list-group-item {
+      background: transparent;
+    }
+  }
+
+  // janelas que abrem ao clicar (baralhos, detalhes)
+  .popover.deck-popover {
+    max-width: min(640px, calc(100vw - 24px)) !important;
+    border: 1px solid $tip-border;
+    border-radius: 14px;
+    background: linear-gradient(180deg, #241c15, #120e0a);
+    color: #ede6d8;
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.6);
+
+    .arrow::after {
+      border-bottom-color: #241c15;
+      border-top-color: #120e0a;
+    }
+
+    .arrow::before {
+      border-bottom-color: $tip-border;
+      border-top-color: $tip-border;
+    }
+
+    > .col-12 {
+      padding: 14px 16px 16px;
+    }
+
+    h5 {
+      font-family: $hud-display-font;
+      font-size: 20px;
+      color: #f1e3c2;
+    }
+  }
+}
+
+.deck-pop-title {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  font-family: $hud-display-font;
+  font-size: 21px;
+  color: #f1e3c2;
+  letter-spacing: 0.02em;
+
+  small {
+    font-family: inherit;
+    font-size: 13px;
+    color: $hud-gold;
+    padding: 1px 8px;
+    border: 1px solid rgba(226, 182, 90, 0.4);
+    border-radius: 999px;
+  }
+}
+
+.deck-pop-top {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-bottom: 14px;
+  margin-bottom: 14px;
+  border-bottom: 1px solid $hud-line;
+}
+
+.deck-pop-columns {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(130px, 1fr);
+  gap: 14px;
+}
+
+.deck-pop-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 8px 12px;
+  border-radius: 12px;
+  background: rgba(255, 236, 190, 0.035);
+  border: 1px solid rgba(255, 236, 190, 0.07);
+}
+
+.deck-pop-col-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #c9a96a;
+
+  small {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0;
+    color: $hud-muted;
+  }
+}
+
+#wildling-threat-tooltip {
+  min-width: min(400px, calc(100vw - 24px));
+}
+
+.deck-pop-grid {
+  display: grid;
+  grid-template-columns: repeat(3, auto);
+  justify-content: center;
+  gap: 12px;
+}
+
+.deck-pop-card {
+  position: relative;
+  transition: transform 0.12s ease-out;
+
+  &:hover {
+    transform: translateY(-2px);
+  }
+
+  // títulos das cartas (showTitle) em texto claro e menor
+  > div > div:first-child:not(.vertical-game-card):not(.horizontal-game-card) {
+    font-size: 12px;
+    color: #e6dccb;
+  }
+}
+
+.deck-pop-count {
+  position: absolute;
+  top: 18px;
+  right: -6px;
+  z-index: 1;
+  min-width: 26px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: $hud-gold;
+  color: $hud-gold-ink;
+  font-size: 12px;
+  font-weight: 800;
+  text-align: center;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+}
+
+@media (max-width: 600px) {
+  .deck-pop-columns {
+    grid-auto-flow: row;
+    grid-template-columns: 1fr;
+  }
+
+  .deck-pop-grid {
+    grid-template-columns: repeat(2, auto);
+  }
+}
+
+// ---- balão da área do mapa ----
+.region-tip .tooltip-inner {
+  min-width: 220px;
+  padding: 10px 14px 12px !important;
+}
+
+.region-tip-head {
+  padding-bottom: 6px;
+}
+
+.region-tip-name {
+  display: block;
+  font-family: $hud-display-font;
+  font-weight: 400;
+  font-size: 19px;
+  color: #f6ead0;
+  letter-spacing: 0.02em;
+}
+
+.region-tip-sub {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  margin-top: 2px;
+  font-size: 12px;
+  color: $hud-muted;
+}
+
+.region-tip-castle {
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #c9a96a;
+}
+
+.region-tip-owner {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: #ede6d8;
+  font-weight: 600;
+}
+
+.region-tip-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.35);
+}
+
+.region-tip-units {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  margin-top: 8px;
+}
+
+.region-tip-unit {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+
+  b {
+    font-size: 15px;
+  }
+
+  &.wounded {
+    opacity: 0.55;
+
+    .region-tip-unit-icon {
+      transform: rotate(90deg);
+    }
+  }
+}
+
+.region-tip-unit-icon {
+  width: 30px;
+  height: 30px;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.6));
+}
+
+.region-tip-strength {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(226, 182, 90, 0.25);
+}
+
+.region-tip-total {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 8px;
+  color: $hud-gold;
+
+  span {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  b {
+    font-size: 24px;
+    line-height: 1;
+  }
+}
+
+.region-tip-pills {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 6px;
+}
+
+.region-tip-pill {
+  padding: 1px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 236, 190, 0.18);
+  font-size: 11.5px;
+  color: #e6dccb;
+}
+
+.region-tip-line {
+  margin-top: 6px;
+  font-size: 12px;
+  color: #e6dccb;
+}
+
+.region-tip-supports {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 8px;
+  font-size: 12px;
+
+  small {
+    color: $hud-muted;
+  }
+}
+
+.region-tip-label {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: $hud-muted;
+}
+
+// brasão no cartão da Casa: só ali aparece a dica "clique para ver"
+.hud-house-logo {
+  display: inline-flex;
+  flex: none;
+}
+
+// ---- Fase de Westeros: as cartas da rodada como etapas ----
+.hud-westeros-steps {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 8px;
+  margin: 0;
+  padding: 10px 12px 12px;
+  list-style: none;
+  border-bottom: 1px solid $hud-line-soft;
+}
+
+.hud-westeros-step {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 8px 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 236, 190, 0.08);
+  background: rgba(255, 236, 190, 0.03);
+  text-align: left;
+  transition: opacity 0.2s;
+
+  &.done {
+    opacity: 0.55;
+  }
+
+  &.now {
+    border-color: rgba(226, 182, 90, 0.75);
+    background: linear-gradient(180deg, rgba(226, 182, 90, 0.16), rgba(226, 182, 90, 0.04));
+    box-shadow: 0 0 0 3px rgba(226, 182, 90, 0.12);
+  }
+}
+
+.hud-westeros-step-card {
+  flex: none;
+}
+
+.hud-westeros-step-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.25;
+
+  b {
+    font-size: 14px;
+    color: #f4ead6;
+  }
+
+  > small {
+    font-size: 12px;
+    color: $hud-muted;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+  }
+}
+
+.hud-westeros-step-top {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  small {
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #c9a96a;
+  }
+}
+
+.hud-westeros-step-status {
+  margin-left: auto;
+  padding: 0 7px;
+  border-radius: 999px;
+  font-size: 10.5px;
+  font-weight: 700;
+  color: $hud-muted;
+  border: 1px solid rgba(255, 236, 190, 0.15);
+
+  .now & {
+    color: $hud-gold-ink;
+    background: $hud-gold;
+    border-color: $hud-gold;
+  }
+}
+
+// ---- conteúdo do painel da jogada: textos e botões mais leves ----
+.hud-root .hud-action-body {
+  color: #e6dccb;
+
+  .btn {
+    min-width: 96px;
+    padding: 6px 18px;
+    border-radius: 10px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    transition:
+      filter 0.12s,
+      transform 0.12s;
+
+    &:hover:not(:disabled) {
+      filter: brightness(1.08);
+      transform: translateY(-1px);
+    }
+  }
+
+  .btn-success {
+    border: 0;
+    background: linear-gradient(180deg, #3aa36b, #2a7f52);
+    box-shadow: 0 4px 14px rgba(42, 127, 82, 0.35);
+  }
+
+  .btn-danger {
+    border: 1px solid rgba(201, 71, 59, 0.75);
+    background: rgba(201, 71, 59, 0.1);
+    color: #f0a59d;
+  }
+
+  .btn-primary {
+    border: 0;
+    background: linear-gradient(180deg, #f2cf7a, $hud-gold);
+    color: $hud-gold-ink;
+  }
+}
+
+// celular: as etapas numa fileira que rola para o lado
+body.hud-phone .hud-westeros-steps {
+  grid-template-columns: none;
+  grid-auto-flow: column;
+  grid-auto-columns: 78%;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  gap: 6px;
+  padding: 8px;
+
+  > li {
+    scroll-snap-align: start;
+  }
+}
+
+// ---- Recrutamento: o que vai sair de cada área, em símbolos ----
+.hud-muster-title {
+  margin: 4px 0 8px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #c9a96a;
+  text-align: center;
+}
+
+.hud-muster-list {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.hud-muster-region {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  min-width: 120px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 236, 190, 0.1);
+  background: rgba(255, 236, 190, 0.035);
+}
+
+.hud-muster-region-name {
+  font-size: 13px;
+  color: #f4ead6;
+}
+
+.hud-muster-units {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+}
+
+.hud-muster-unit {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px 8px 2px 4px;
+  border-radius: 10px;
+  border: 1px solid rgba(226, 182, 90, 0.35);
+  background: rgba(0, 0, 0, 0.25);
+  color: inherit;
+  cursor: pointer;
+
+  .unit-icon.small {
+    width: 34px;
+    height: 34px;
+  }
+
+  &:hover {
+    border-color: $hud-red;
+    background: rgba(201, 71, 59, 0.12);
+  }
+}
+
+.hud-muster-arrow {
+  color: $hud-gold;
+  font-weight: 700;
+}
+
+.hud-muster-where {
+  max-width: 90px;
+  font-size: 11px;
+  color: $hud-muted;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.hud-muster-x {
+  position: absolute;
+  top: -7px;
+  right: -7px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #3a2f25;
+  color: #e6dccb;
+  font-size: 12px;
+  line-height: 16px;
+  text-align: center;
+
+  .hud-muster-unit:hover & {
+    background: $hud-red;
+    color: #fff;
+  }
+}
+
+// ---- detalhes da Casa (janela ao clicar no cartão) ----
+.list-group-item.hhd {
+  min-width: 300px;
+  max-width: 420px;
+  padding: 14px 16px 16px;
+  border: 0;
+  background: transparent;
+  color: #ede6d8;
+}
+
+.hhd-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(255, 236, 190, 0.1);
+
+  &.waited .hhd-logo {
+    box-shadow: 0 0 0 2px $hud-gold, 0 0 12px rgba(226, 182, 90, 0.6);
+  }
+}
+
+.hhd-logo {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.3);
+  box-shadow: 0 0 0 2px var(--house-color, #888);
+}
+
+.hhd-who {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+  line-height: 1.2;
+
+  > b {
+    font-family: $hud-display-font;
+    font-weight: 400;
+    font-size: 22px;
+  }
+
+  .userlabel,
+  a {
+    font-size: 13px;
+    color: $hud-muted;
+  }
+}
+
+.hhd-muted {
+  font-size: 13px;
+  color: $hud-muted;
+}
+
+.hhd-clock {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 236, 190, 0.15);
+  font-size: 13px;
+  font-weight: 700;
+
+  &.warning {
+    color: #f39c12;
+  }
+
+  &.critical {
+    color: #ff5a4a;
+  }
+}
+
+.hhd-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.hhd-stat {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 236, 190, 0.1);
+  background: rgba(255, 236, 190, 0.04);
+  color: inherit;
+  text-align: left;
+  cursor: default;
+
+  b {
+    font-size: 22px;
+    line-height: 1;
+  }
+
+  small {
+    margin-left: auto;
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: $hud-muted;
+  }
+
+  &.warning b {
+    color: #f39c12;
+  }
+
+  &.critical b {
+    color: #ff5a4a;
+  }
+}
+
+button.hhd-stat {
+  cursor: pointer;
+
+  &:hover {
+    border-color: rgba(226, 182, 90, 0.5);
+  }
+}
+
+.hhd-power-token {
+  width: 26px !important;
+  height: 26px !important;
+  background-size: contain;
+}
+
+.hhd-section {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 14px 0 8px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #c9a96a;
+
+  small {
+    margin-left: auto;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0;
+    text-transform: none;
+    color: $hud-muted;
+  }
+}
+
+.hhd-units {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.hhd-unit {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px 3px 4px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 236, 190, 0.1);
+  background: rgba(0, 0, 0, 0.25);
+
+  b {
+    font-size: 16px;
+  }
+
+  &:hover {
+    border-color: rgba(226, 182, 90, 0.5);
+  }
+}
+
+.hhd-unit-icon {
+  width: 32px;
+  height: 32px;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.6));
+}
+
+.hhd-cards {
+  gap: 6px;
+
+  .vertical-game-card.tiny {
+    border-radius: 6px;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.5);
+    transition: transform 0.12s;
+
+    &:hover {
+      transform: translateY(-3px);
+    }
+  }
+
+  &.later {
+    margin-top: 6px;
+    opacity: 0.7;
+  }
+}
+
+.hud-house-popover {
+  max-width: none !important;
+  width: max-content;
+}

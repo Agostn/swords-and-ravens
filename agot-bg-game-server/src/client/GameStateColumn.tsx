@@ -803,7 +803,7 @@ export default class GameStateColumn extends Component<GameStateColumnProps> {
     const nextCards = this.game.nextWesterosCardTypes;
 
     return (
-      <Popover id={"remaining-westeros-cards"} style={{ maxWidth: "100%" }}>
+      <Popover id={"remaining-westeros-cards"} className="deck-popover" style={{ maxWidth: "100%" }}>
         <Col xs={12}>
           {this.gameSettings.cokWesterosPhase && (
             <>
@@ -848,49 +848,31 @@ export default class GameStateColumn extends Component<GameStateColumnProps> {
               </Row>
             </>
           )}
-          <Row className={this.gameSettings.cokWesterosPhase ? "mt-4" : "mt-0"}>
-            <Col>
-              <h5 className="text-center">{t("westeros.remainingCards")}</h5>
-            </Col>
-          </Row>
-          <Row>
-            {remainingCards.map((_, i) => (
-              <Col
-                key={"westeros-deck-" + i + "-header"}
-                className="text-center"
-              >
-                <b>{t("westeros.deckN", { n: i + 1 })}</b>
-              </Col>
-            ))}
-          </Row>
-          <Row className="mb-2">
+          <div className={classNames("deck-pop-title", { "mt-3": this.gameSettings.cokWesterosPhase })}>
+            {t("westeros.remainingCards")}
+          </div>
+          <div className="deck-pop-columns">
             {remainingCards.map((rc, i) => (
-              <Col key={"westeros-deck-" + i + "-data"}>
+              <div key={"westeros-deck-" + i + "-data"} className="deck-pop-col">
+                <div className="deck-pop-col-head">
+                  {t("westeros.deckN", { n: i + 1 })}
+                  <small>{t("westeros.cardsLeft", { n: _.sum(rc.map(([, count]) => count)) })}</small>
+                </div>
                 {rc.map(([wc, count], j) => (
-                  <Row
-                    key={"westeros-deck-" + i + "-" + j + "-data"}
-                    className="m1 align-items-center"
-                  >
-                    <Col xs="auto" style={{ marginRight: "-20px" }}>
-                      {count > 1 ? count : <>&nbsp;</>}
-                    </Col>
-                    <Col
-                      className="pl-0"
-                      style={{ width: "150px", maxWidth: "150px" }}
-                    >
-                      <WesterosCardComponent
-                        cardType={wc}
-                        westerosDeckI={i}
-                        size="small"
-                        tooltip
-                        showTitle
-                      />
-                    </Col>
-                  </Row>
+                  <div key={"westeros-deck-" + i + "-" + j + "-data"} className="deck-pop-card">
+                    <WesterosCardComponent
+                      cardType={wc}
+                      westerosDeckI={i}
+                      size="small"
+                      tooltip
+                      showTitle
+                    />
+                    {count > 1 && <span className="deck-pop-count">×{count}</span>}
+                  </div>
                 ))}
-              </Col>
+              </div>
             ))}
-          </Row>
+          </div>
         </Col>
       </Popover>
     );
@@ -907,40 +889,29 @@ export default class GameStateColumn extends Component<GameStateColumnProps> {
       (wc) => wc.name
     );
     return (
-      <Popover id="wildling-threat-tooltip">
+      <Popover id="wildling-threat-tooltip" className="deck-popover">
         <Col xs={12}>
           {knowsWildlingCard && nextWildlingCard && (
-            <>
-              <Col xs={12} className="mt-0">
-                <h5 className="text-center">{t("wildlings.topCard")}</h5>
-              </Col>
-              <Col xs={12} className="mb-2">
-                <Row className="justify-content-center">
-                  <WildlingCardComponent
-                    cardType={nextWildlingCard}
-                    size="smedium"
-                    tooltip
-                  />
-                </Row>
-              </Col>
-            </>
+            <div className="deck-pop-top">
+              <div className="deck-pop-title">{t("wildlings.topCard")}</div>
+              <WildlingCardComponent
+                cardType={nextWildlingCard}
+                size="smedium"
+                tooltip
+              />
+            </div>
           )}
-          <Col xs={12} className="mt-0">
-            <h5 className="text-center">{t("wildlings.deck")}</h5>
-          </Col>
-          <Col xs={12}>
-            <Row className="justify-content-center mr-0 ml-0">
-              {wildlingDeck.map((wc) => (
-                <Col
-                  xs="auto"
-                  key={`wild-deck-${wc.id}`}
-                  className="justify-content-center"
-                >
-                  <WildlingCardComponent cardType={wc} size="small" tooltip />
-                </Col>
-              ))}
-            </Row>
-          </Col>
+          <div className="deck-pop-title">
+            {t("wildlings.deck")}
+            <small>{t("westeros.cardsLeft", { n: wildlingDeck.length })}</small>
+          </div>
+          <div className="deck-pop-grid">
+            {wildlingDeck.map((wc) => (
+              <div key={`wild-deck-${wc.id}`} className="deck-pop-card">
+                <WildlingCardComponent cardType={wc} size="small" tooltip />
+              </div>
+            ))}
+          </div>
         </Col>
       </Popover>
     );

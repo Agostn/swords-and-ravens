@@ -34,7 +34,8 @@ import CombatGameState from "../common/ingame-game-state/action-game-state/resol
 import unitImages from "./unitImages";
 import classNames from "classnames";
 import housePowerTokensImages from "./housePowerTokensImages";
-import { OverlayTrigger, Tooltip } from "react-bootstrap";
+import { Overlay, OverlayTrigger, Tooltip } from "react-bootstrap";
+import { observable } from "mobx";
 import ConditionalWrap from "./utils/ConditionalWrap";
 import BetterMap from "../utils/BetterMap";
 import _ from "lodash";
@@ -384,6 +385,32 @@ export default class MapComponent extends Component<MapComponentProps> {
     return this.props.ingameGameState;
   }
 
+  // Áreas que a jogada deixa clicar (ex.: as suas, para pôr ordem) usam o
+  // clique para outra coisa e perdiam o balão com a força. Para elas o balão
+  // é aberto aqui, passando o mouse (ou segurando o dedo).
+  @observable hoverRegion: { region: Region; visible: boolean; target: Element } | null = null;
+  private hoverTimer: number | null = null;
+
+  private onWrappedRegionEnter(region: Region, visible: boolean, target: Element): void {
+    this.clearRegionHover();
+    this.hoverTimer = window.setTimeout(() => {
+      this.hoverTimer = null;
+      this.hoverRegion = { region, visible, target };
+    }, 750);
+  }
+
+  private clearRegionHover = (): void => {
+    if (this.hoverTimer != null) {
+      window.clearTimeout(this.hoverTimer);
+      this.hoverTimer = null;
+    }
+    if (this.hoverRegion) this.hoverRegion = null;
+  };
+
+  componentWillUnmount(): void {
+    if (this.hoverTimer != null) window.clearTimeout(this.hoverTimer);
+  }
+
   get allRegionsWithControllers(): BetterMap<Region, House | null> {
     return this.props.gameClient.allRegionsWithControllersMap;
   }
@@ -479,6 +506,16 @@ export default class MapComponent extends Component<MapComponentProps> {
           borderRadius: "0.25rem"
         }}
       >
+        <Overlay
+          show={this.hoverRegion != null}
+          target={(this.hoverRegion?.target ?? null) as HTMLElement | null}
+          placement="auto"
+          popperConfig={{ modifiers: [preventOverflow] }}
+        >
+          {this.hoverRegion
+            ? renderRegionTooltip(this.hoverRegion.region, this.hoverRegion.visible)
+            : <Tooltip id="region-hover-empty" />}
+        </Overlay>
         <div style={{ position: "relative" }}>
           {allRegions.map((r) => (
             <div key={`map_${r.id}`}>
@@ -911,6 +948,13 @@ export default class MapComponent extends Component<MapComponentProps> {
               }
             )}
             onClick={properties.onClick}
+            onMouseEnter={
+              wrap && !region.isBlocked
+                ? (e) => this.onWrappedRegionEnter(region, visible, e.currentTarget)
+                : undefined
+            }
+            onMouseLeave={wrap ? this.clearRegionHover : undefined}
+            onMouseDown={wrap ? this.clearRegionHover : undefined}
           />
         </ConditionalWrap>
       );

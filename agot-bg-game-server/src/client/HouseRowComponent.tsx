@@ -62,6 +62,8 @@ interface HouseRowComponentProps {
   gameClient: GameClient;
   ingame: IngameGameState;
   mapControls: MapControls;
+  // Tela nova: detalhes da Casa num cartão (cabeçalho, números, peças e cartas)
+  hudDetails?: boolean;
 }
 
 @observer
@@ -222,6 +224,149 @@ export default class HouseRowComponent extends Component<HouseRowComponentProps>
       controllerOfHouse &&
       this.props.gameClient.isAuthenticatedUser(controllerOfHouse.user);
 
+    if (this.props.hudDetails) {
+      const cardsInHand = this.house.houseCards.values.filter(
+        (hc) => hc.state == HouseCardState.AVAILABLE
+      ).length;
+      return (
+        <ListGroupItem className="hhd" style={{ "--house-color": this.house.color } as React.CSSProperties}>
+          <div className={classNames("hhd-head", { waited: isWaitedFor })}>
+            <div
+              className="hhd-logo"
+              onMouseEnter={() => this.setHighlightedRegions()}
+              onMouseLeave={() => this.highlightedRegions.clear()}
+            >
+              {isVassal ? (
+                <img src={battleGearImage} width={34} alt="" />
+              ) : (
+                <HouseIconComponent house={this.house} small={true} />
+              )}
+            </div>
+            <div className="hhd-who">
+              <b style={{ color: this.house.color }}>{this.house.name}</b>
+              {controllerOfHouse ? (
+                <UserLabel
+                  user={controllerOfHouse.user}
+                  gameState={this.ingame}
+                  gameClient={this.props.gameClient}
+                />
+              ) : (
+                <span className="hhd-muted">{vassalTitle}</span>
+              )}
+            </div>
+            {clock != null && (
+              <span className={classNames("hhd-clock", { warning: clockWarning, critical: clockCritical })}>
+                <img src={stopwatchImage} width={16} alt="" />
+                {new Date(clock * 1000).toISOString().slice(12, 19)}
+              </span>
+            )}
+            {controllerOfHouse && controllerOfHouse.house.knowsNextWildlingCard && (
+              <OverlayTrigger
+                overlay={
+                  <Tooltip id={"knows-things-house-hud-" + this.house.id}>
+                    {tr("auto.HouseRowComponent.3", { p0: (<b>{this.house.name}</b>) })}
+                  </Tooltip>
+                }
+              >
+                <img src={thirdEyeImage} width={24} alt="" className="hhd-eye" />
+              </OverlayTrigger>
+            )}
+          </div>
+
+          {!isVassal && (
+            <div className="hhd-stats">
+              <OverlayTrigger overlay={this.renderVictoryTrackTooltip()} delay={{ show: 250, hide: 100 }} placement="auto">
+                <div
+                  className={classNames("hhd-stat", { warning: victoryPointsWarning, critical: victoryPointsCritical })}
+                  onMouseEnter={() =>
+                    this.setHighlightedRegions(
+                      this.house == this.game.targaryen ? "with-loyalty-tokens-only" : "with-castles-only"
+                    )
+                  }
+                  onMouseLeave={() => this.highlightedRegions.clear()}
+                >
+                  <img src={victoryImage} width={26} alt="" />
+                  <b>{victoryPoints}</b>
+                  <small>{t("hud.houses.vpShort")}</small>
+                </div>
+              </OverlayTrigger>
+              <OverlayTrigger
+                overlay={this.renderPowerPopover(availablePower, powerTokensOnBoard, powerInPool)}
+                placement="auto"
+                trigger="click"
+                rootClose
+              >
+                <button
+                  type="button"
+                  className={classNames("hhd-stat", { critical: gameRunning && powerInPool == 0 })}
+                  onMouseEnter={() => this.setHighlightedRegions("with-power-tokens-only")}
+                  onMouseLeave={() => this.highlightedRegions.clear()}
+                  title={t("hud.stats.powerHelp")}
+                >
+                  <span
+                    className="house-power-token hhd-power-token"
+                    style={{ backgroundImage: `url(${housePowerTokensImages.get(this.house.id)})` }}
+                  />
+                  <b>{this.house.powerTokens}</b>
+                  <small>{t("hud.houses.powerShort")}</small>
+                </button>
+              </OverlayTrigger>
+            </div>
+          )}
+
+          <div className="hhd-section">{t("hud.houseDetails.units")}</div>
+          <div className="hhd-units">
+            {unitTypes.values
+              .filter((type) => this.game.getUnitLimitOfType(this.house, type) > 0)
+              .map((type) => (
+                <OverlayTrigger
+                  key={`hhd-unit-${type.id}`}
+                  overlay={this.renderUnitTypeTooltip(type)}
+                  delay={{ show: 400, hide: 100 }}
+                  placement="auto"
+                  popperConfig={{ modifiers: [{ name: "preventOverflow", options: { padding: 8 } }] }}
+                >
+                  <div
+                    className="hhd-unit"
+                    onMouseEnter={() => this.setHighlightedRegions(type.id)}
+                    onMouseLeave={() => this.highlightedRegions.clear()}
+                  >
+                    <span
+                      className="hhd-unit-icon"
+                      style={{ backgroundImage: `url(${unitImages.get(this.house.id).get(type.id)})` }}
+                    />
+                    <b>{this.game.getAvailableUnitsOfType(this.house, type)}</b>
+                  </div>
+                </OverlayTrigger>
+              ))}
+          </div>
+
+          <div className="hhd-section">
+            {t("hud.houseDetails.cards")}
+            {!isVassal && <small>{t("hud.houseDetails.inHand", { n: cardsInHand, total: this.house.houseCards.size })}</small>}
+          </div>
+          <Row className="hhd-cards no-gutters">
+            {!isVassal
+              ? this.renderPlayerHouseCards()
+              : _.sortBy(this.game.vassalHouseCards.values, (hc) => hc.combatStrength).map((hc) => (
+                  <Col xs="auto" key={`hhd-vassal-cards_${this.house.id}_${hc.id}`}>
+                    <HouseCardComponent houseCard={hc} size="tiny" />
+                  </Col>
+                ))}
+          </Row>
+          {this.house.laterHouseCards != null && !isVassal && (
+            <Row className="hhd-cards later no-gutters">
+              {_.sortBy(this.house.laterHouseCards.values, (hc) => hc.combatStrength).map((hc) => (
+                <Col xs="auto" key={`hhd-later-cards_${this.house.id}_${hc.id}`}>
+                  <HouseCardComponent houseCard={hc} size="tiny" unavailable />
+                </Col>
+              ))}
+            </Row>
+          )}
+        </ListGroupItem>
+      );
+    }
+
     return (
       <ListGroupItem
         key={`house-row-${this.house.id}-${this.ingame.stateVersion}`}
@@ -326,7 +471,8 @@ export default class HouseRowComponent extends Component<HouseRowComponentProps>
                             <OverlayTrigger
                               overlay={this.renderUnitTypeTooltip(type)}
                               delay={{ show: 500, hide: 100 }}
-                              placement="top"
+                              placement="auto"
+                              popperConfig={{ modifiers: [{ name: "preventOverflow", options: { padding: 8 } }] }}
                             >
                               <div
                                 className="unit-icon small hover-weak-outline"
@@ -748,7 +894,7 @@ export default class HouseRowComponent extends Component<HouseRowComponentProps>
 
   private renderUnitTypeTooltip(unitType: UnitType): OverlayChildren {
     return (
-      <Tooltip id={unitType.id + "-tooltip"}>
+      <Tooltip id={unitType.id + "-tooltip"} className="tooltip-wide">
         <b>{unitType.name}</b>
         <br />
         {unitType.description}

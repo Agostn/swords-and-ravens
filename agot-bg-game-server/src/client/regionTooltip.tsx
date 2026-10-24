@@ -3,7 +3,8 @@ import React from "react";
 import { Tooltip } from "react-bootstrap";
 import { OverlayChildren } from "react-bootstrap/esm/Overlay";
 import Region from "../common/ingame-game-state/game-data-structure/Region";
-import joinReactNodes from "./utils/joinReactNodes";
+import classNames from "classnames";
+import unitImages from "./unitImages";
 import barrelImage from "../../public/images/region-modifications/Barrel.png";
 import crownImage from "../../public/images/region-modifications/Crown.png";
 import housePowerTokensImages from "./housePowerTokensImages";
@@ -46,36 +47,81 @@ function renderStrength(region: Region): React.ReactNode {
     })
     .filter((s) => s.house != null && s.strength > 0);
 
-  const parts: string[] = [];
-  if (units.length > 0) parts.push(t("map.strength.units", { n: unitsStrength }));
-  if (region.garrison > 0)
-    parts.push(t("map.strength.garrison", { n: region.garrison }));
-  if (defenseBonus > 0)
-    parts.push(t("map.strength.defenseOrder", { n: defenseBonus }));
-
   return (
-    <div className="region-tooltip-strength">
-      <div className="region-tooltip-strength-total">
-        {t("map.strength.defense", { n: defense })}
+    <div className="region-tip-strength">
+      <div className="region-tip-total">
+        <span>{t("map.strength.defenseLabel")}</span>
+        <b>{defense}</b>
       </div>
-      <small>{parts.join(" · ")}</small>
+      {(region.garrison > 0 || defenseBonus > 0) && (
+        <div className="region-tip-pills">
+          {region.garrison > 0 && (
+            <span className="region-tip-pill">
+              {t("map.strength.garrisonPill", { n: region.garrison })}
+            </span>
+          )}
+          {defenseBonus > 0 && (
+            <span className="region-tip-pill">
+              {t("map.strength.defensePill", { n: defenseBonus })}
+            </span>
+          )}
+        </div>
+      )}
       {attackingCastle != unitsStrength && (
-        <small className="d-block">
-          {t("map.strength.attackCastle", { n: attackingCastle })}
-        </small>
+        <div className="region-tip-line">
+          {t("map.strength.attackCastleShort", { n: attackingCastle })}
+        </div>
       )}
       {supports.length > 0 && (
-        <small className="d-block">
-          {t("map.strength.support", {
-            list: supports
-              .map((s) => `${s.house?.name} +${s.strength} (${s.region.name})`)
-              .join(", ")
-          })}
-        </small>
+        <div className="region-tip-supports">
+          <span className="region-tip-label">{t("map.strength.supportLabel")}</span>
+          {supports.map((s) => (
+            <span
+              key={`region-tip-support-${s.region.id}`}
+              className="region-tip-support"
+            >
+              <b style={{ color: s.house?.color }}>{s.house?.name}</b> +{s.strength}
+              <small> · {s.region.name}</small>
+            </span>
+          ))}
+        </div>
       )}
-      <small className="d-block region-tooltip-strength-note">
-        {t("map.strength.note")}
-      </small>
+    </div>
+  );
+}
+
+// Unidades da área como ícones com a quantidade ao lado (feridas à parte)
+function renderUnits(region: Region): React.ReactNode {
+  const units = region.units.values;
+  if (units.length == 0) return null;
+  const groups = _.groupBy(
+    units,
+    (u) => `${u.allegiance.id}|${u.upgradedType ? u.upgradedType.id : u.type.id}|${u.wounded ? "w" : ""}`
+  );
+  return (
+    <div className="region-tip-units">
+      {Object.entries(groups).map(([key, list]) => {
+        const u = list[0];
+        const typeId = u.upgradedType ? u.upgradedType.id : u.type.id;
+        const image = unitImages.get(u.allegiance.id)?.get(typeId);
+        const name = u.upgradedType ? u.upgradedType.name : u.type.name;
+        const label = u.wounded ? t("map.units.wounded", { unit: name }) : name;
+        return (
+          <span
+            key={`region-tip-unit-${region.id}-${key}`}
+            className={classNames("region-tip-unit", { wounded: u.wounded })}
+            title={label}
+            aria-label={`${list.length} × ${label}`}
+          >
+            <span
+              className="region-tip-unit-icon"
+              style={{ backgroundImage: image ? `url(${image})` : undefined }}
+              aria-hidden="true"
+            />
+            <b>{list.length}</b>
+          </span>
+        );
+      })}
     </div>
   );
 }
@@ -130,20 +176,26 @@ export function renderRegionTooltip(
         : 0;
 
   return (
-    <Tooltip id={`region-${region.id}-details`} className="tooltip-w-100">
+    <Tooltip id={`region-${region.id}-details`} className="tooltip-w-100 region-tip">
       <div className="text-center">
-        <b>{region.name}</b>
-        {controller && (
-          <small>
-            {" "}{tr("auto.regionTooltip.0", { p0: (<b>{controller.name}</b>) })}
-          </small>
-        )}
-        {region.castleLevel > 0 && (
-          <>
-            <br />
-            {region.castleLevel == 1 ? t("auto2.regionTooltip.2") : t("auto2.regionTooltip.3")}
-          </>
-        )}
+        <div className="region-tip-head">
+          <b className="region-tip-name">{region.name}</b>
+          {(controller || region.castleLevel > 0) && (
+            <div className="region-tip-sub">
+              {region.castleLevel > 0 && (
+                <span className="region-tip-castle">
+                  {region.castleLevel == 1 ? t("auto2.regionTooltip.2") : t("auto2.regionTooltip.3")}
+                </span>
+              )}
+              {controller && (
+                <span className="region-tip-owner">
+                  <span className="region-tip-dot" style={{ background: controller.color }} />
+                  {controller.name}
+                </span>
+              )}
+            </div>
+          )}
+        </div>
         {region.superControlPowerToken &&
         region.superControlPowerToken == controller ? (
           <>
@@ -203,25 +255,8 @@ export function renderRegionTooltip(
             </div>
           )}
         </div>
+        {renderUnits(region)}
         {renderStrength(region)}
-        {region.units.size > 0 && (
-          <small className="mt-2">
-            {joinReactNodes(
-              region.units.values.map((u, i) =>
-                u.wounded ? (
-                  <span key={`region-tooltip_wounded_${u.id}_${i}`}>
-                    <s>{u.type.name}</s>
-                  </span>
-                ) : (
-                  <span key={`region-tooltip_unit_${u.id}_${i}`}>
-                    {u.type.name}
-                  </span>
-                )
-              ),
-              ", "
-            )}
-          </small>
-        )}
       </div>
     </Tooltip>
   );

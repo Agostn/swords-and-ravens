@@ -32,6 +32,7 @@ import { preventOverflow } from "@popperjs/core";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import UnitIconComponent from "../UnitIconComponent";
 import { t, tr } from "../i18n/i18n";
+import hudSettings from "../hud/hudSettings";
 
 type MusteringPopoverTrigger = "region" | "order";
 
@@ -48,6 +49,56 @@ export default class PlayerMusteringComponent extends Component<
     region: Region;
     trigger: MusteringPopoverTrigger;
   } | null = null;
+
+  // Tela nova: cada área com as peças que vão sair dela, em símbolos.
+  // Tocar numa peça desfaz aquele recrutamento.
+  private renderHudMusterings(): ReactNode {
+    const any = this.musterings.values.some((m) => m.length > 0);
+    if (!any) return null;
+    return (
+      <Col xs={12}>
+        <div className="hud-muster-title">{t("auto.game-state-panel.PlayerMusteringComponent.6")}</div>
+        <div className="hud-muster-list">
+          {this.musterings.entries
+            .filter(([, list]) => list.length > 0)
+            .map(([r, list]) => (
+              <div key={`hud-muster_${r.id}`} className="hud-muster-region">
+                <b className="hud-muster-region-name">{r.name}</b>
+                <div className="hud-muster-units">
+                  {list.map(({ region, from, to }, i) => {
+                    const label =
+                      (from
+                        ? t("mustering.upgradingTo", { unit: to.name })
+                        : t("mustering.recruiting", { unit: to.name })) +
+                      (r != region ? t("auto2.game-state-panel.PlayerMusteringComponent.4") + region.name : "");
+                    return (
+                      <button
+                        type="button"
+                        key={`hud-muster_${r.id}_${i}`}
+                        className="hud-muster-unit"
+                        title={`${label} · ${t("mustering.tapToUndo")}`}
+                        aria-label={`${label}. ${t("mustering.tapToUndo")}`}
+                        onClick={() => this.removeMustering(list, i)}
+                      >
+                        {from && (
+                          <>
+                            <UnitIconComponent house={this.house} unitType={from.type} size="small" />
+                            <span className="hud-muster-arrow" aria-hidden="true">→</span>
+                          </>
+                        )}
+                        <UnitIconComponent house={this.house} unitType={to} size="small" />
+                        {r != region && <small className="hud-muster-where">{region.name}</small>}
+                        <span className="hud-muster-x" aria-hidden="true">×</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+        </div>
+      </Col>
+    );
+  }
 
   get house(): House {
     return this.props.gameState.house;
@@ -94,7 +145,8 @@ export default class PlayerMusteringComponent extends Component<
         </Col>
         {this.doesControlCurrentHouse && (
           <>
-            {this.musterings.size > 0 && (
+            {this.musterings.size > 0 && hudSettings.hudActive && this.renderHudMusterings()}
+            {this.musterings.size > 0 && !hudSettings.hudActive && (
               <Col xs={12}>
                 <>
                   {this.musterings.values[0].length > 0 && (

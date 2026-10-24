@@ -48,6 +48,8 @@ interface HouseLine {
 @observer
 export default class HudHouseList extends Component<HudHouseListProps> {
   @observable supplyOpen = true;
+  // Casa com os detalhes abertos agora (não mostra a dica de "clique para ver")
+  @observable openDetails: string | null = null;
 
   private get ingame(): IngameGameState {
     return this.props.ingame;
@@ -170,6 +172,9 @@ export default class HudHouseList extends Component<HudHouseListProps> {
               trigger="click"
               placement={cardsView ? "left-start" : "left"}
               rootClose
+              onToggle={(open: boolean) => {
+                this.openDetails = open ? h.id : this.openDetails == h.id ? null : this.openDetails;
+              }}
               overlay={
                 <Popover
                   id={`hud-house-details-${h.id}`}
@@ -181,6 +186,7 @@ export default class HudHouseList extends Component<HudHouseListProps> {
                       ingame={this.ingame}
                       house={h}
                       mapControls={this.props.mapControls}
+                      hudDetails
                     />
                   </ListGroup>
                 </Popover>
@@ -197,10 +203,16 @@ export default class HudHouseList extends Component<HudHouseListProps> {
                   }
                 )}
                 style={{ "--house-color": h.color } as React.CSSProperties}
-                title={t("hud.houses.details")}
+                aria-label={`${h.name}: ${t("hud.houses.details")}`}
               >
                 <span className="hud-house-who">
-                  <HouseChip house={h} size={cardsView ? 36 : 30} mine={l.mine} />
+                  {/* a dica só no brasão, e só enquanto os detalhes estão fechados */}
+                  <span
+                    className="hud-house-logo"
+                    title={this.openDetails == h.id ? undefined : t("hud.houses.details")}
+                  >
+                    <HouseChip house={h} size={cardsView ? 36 : 30} mine={l.mine} />
+                  </span>
                   <span className="hud-house-names">
                     <b style={{ color: h.color }} className="hud-house-name">
                       {h.name}

@@ -227,7 +227,7 @@ export default class HouseSnapshotComponent extends Component<HouseSnapshotCompo
 
   private renderUnitTypeTooltip(unitType: UnitType): OverlayChildren {
     return (
-      <Tooltip id={unitType.id + "-tooltip"}>
+      <Tooltip id={unitType.id + "-tooltip"} className="tooltip-wide">
         <b>{unitType.name}</b>
         <br />
         {unitType.description}

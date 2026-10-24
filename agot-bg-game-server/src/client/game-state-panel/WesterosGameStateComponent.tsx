@@ -28,14 +28,61 @@ import ShiftingAmbitionsComponent from "./ShiftingAmbitionsComponent";
 import NewInformationGameState from "../../common/ingame-game-state/westeros-game-state/new-information-game-state/NewInformationGameState";
 import NewInformationComponent from "./NewInformationComponent";
 import PossiblePowerTokenGainsComponent from "../PossiblePowerTokenGainsComponent";
+import hudSettings from "../hud/hudSettings";
+import { t } from "../i18n/i18n";
 
 @observer
 export default class WesterosGameStateComponent extends Component<
   GameStateComponentProps<WesterosGameState>
 > {
+  // Tela nova: as cartas da rodada como etapas (já resolvida / agora / depois),
+  // cada uma com o baralho, o nome e o efeito.
+  private renderHudSteps(): ReactNode {
+    const gs = this.props.gameState;
+    const deckNames = ["I", "II", "III", "IV"];
+    return (
+      <ol className="hud-westeros-steps">
+        {gs.revealedCards.map((wc, i) => {
+          const deckI = gs.revealAndResolveTop2WesterosDeck4Cards ? 3 : i;
+          const status =
+            i < gs.currentCardI ? "done" : i == gs.currentCardI ? "now" : "next";
+          return (
+            <li
+              key={`hud-westeros-step_${wc.id}_${i}`}
+              className={classNames("hud-westeros-step", status)}
+              aria-current={status == "now" ? "step" : undefined}
+            >
+              <div className="hud-westeros-step-card">
+                <WesterosCardComponent
+                  cardType={wc.type}
+                  westerosDeckI={deckI}
+                  wasReshuffled={gs.game.winterIsComingHappened[i]}
+                  size={"tiny"}
+                  tooltip={true}
+                />
+              </div>
+              <div className="hud-westeros-step-text">
+                <span className="hud-westeros-step-top">
+                  <small>{t("hud.westeros.deck", { n: deckNames[deckI] ?? deckI + 1 })}</small>
+                  <span className="hud-westeros-step-status">
+                    {t(`hud.westeros.step.${status}`)}
+                  </span>
+                </span>
+                <b>{wc.type.name}</b>
+                {wc.type.shortDescription && <small>{wc.type.shortDescription}</small>}
+              </div>
+            </li>
+          );
+        })}
+      </ol>
+    );
+  }
+
   render(): ReactNode {
     return (
       <>
+        {hudSettings.hudActive && this.renderHudSteps()}
+        {!hudSettings.hudActive && (
         <Row className="justify-content-around mb-3">
           {this.props.gameState.revealedCards.map((wc, i) => (
             <Col xs="auto" key={`westeros-state_${wc.id}_${i}`}>
@@ -58,6 +105,7 @@ export default class WesterosGameStateComponent extends Component<
             </Col>
           ))}
         </Row>
+        )}
         {this.props.gameState.childGameState instanceof
           PutToTheSwordGameState ||
         this.props.gameState.childGameState instanceof
