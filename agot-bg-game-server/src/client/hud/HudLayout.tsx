@@ -61,6 +61,7 @@ import HudBattleResult from "./HudBattleResult";
 import HouseChip from "./HouseChip";
 import HudSupplyTrack from "./HudSupplyTrack";
 import HudSituation from "./HudSituation";
+import HudRoundTracker from "./HudRoundTracker";
 import displayedVictoryPoints from "./displayedVictoryPoints";
 import hudSettings from "./hudSettings";
 import { readableTextOn } from "./houseColor";
@@ -1113,6 +1114,7 @@ export default class HudLayout extends Component<HudLayoutProps> {
         <div
           className={classNames("hud-action-body", { "hud-hidden": minimized })}
         >
+            <HudRoundTracker ingame={this.ingame} house={me} />
             {leaf instanceof PlaceOrdersGameState &&
               me &&
               !this.ingame.isVassalHouse(me) && (

@@ -1,3 +1,4 @@
+import classNames from "classnames";
 import { Component, ReactNode } from "react";
 import ResolveSingleMarchOrderGameState from "../../common/ingame-game-state/action-game-state/resolve-march-order-game-state/resolve-single-march-order-game-state/ResolveSingleMarchOrderGameState";
 import React from "react";
@@ -24,6 +25,8 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faInfo } from "@fortawesome/free-solid-svg-icons";
 import { OverlayChildren } from "react-bootstrap/esm/Overlay";
 import { t, tr } from "../i18n/i18n";
+import hudSettings from "../hud/hudSettings";
+import housePowerTokensImages from "../housePowerTokensImages";
 
 @observer
 export default class ResolveSingleMarchOrderComponent extends Component<
@@ -174,7 +177,38 @@ export default class ResolveSingleMarchOrderComponent extends Component<
                 )}
               </Row>
             </Col>
-            {this.selectedMarchOrderRegion && this.plannedMoves.size > 0 && (
+            {this.selectedMarchOrderRegion && this.plannedMoves.size > 0 && hudSettings.hudActive && (
+              <Col xs={12} className="mt-2">
+                <div className="march-moves">
+                  <div className="march-moves-title">
+                    {tr("auto.game-state-panel.ResolveSingleMarchOrderComponent.7", { p0: (<b>{this.selectedMarchOrderRegion.name}</b>) })}
+                  </div>
+                  {this.plannedMoves.entries.map(([region, units]) => (
+                    <div key={`hud-planned-moves_${region.id}`} className="march-move">
+                      <div className="march-move-units">
+                        {units.map((unit, i) => (
+                          <button
+                            type="button"
+                            key={`hud-planned_${unit.id}_${i}`}
+                            className="march-move-unit"
+                            title={t("march.undoUnit", { unit: unit.type.name })}
+                            aria-label={t("march.undoUnit", { unit: unit.type.name })}
+                            onClick={() => this.cancelMove(unit)}
+                          >
+                            <UnitIconComponent house={this.house} unitType={unit.type} size="smedium" makeGreyjoyUnitsBlack={true} />
+                            <span className="march-move-x" aria-hidden="true">×</span>
+                          </button>
+                        ))}
+                      </div>
+                      <span className="march-move-arrow" aria-hidden="true">→</span>
+                      <span className="march-move-target">{region.name}</span>
+                    </div>
+                  ))}
+                  <div className="march-moves-hint">{t("march.cancelHintHud")}</div>
+                </div>
+              </Col>
+            )}
+            {this.selectedMarchOrderRegion && this.plannedMoves.size > 0 && !hudSettings.hudActive && (
               <Col xs={12} className="mt-2">
                 <div>
                   <div style={{ marginBottom: "20px" }}>
@@ -244,6 +278,17 @@ export default class ResolveSingleMarchOrderComponent extends Component<
               (this.props.gameState.getPossibleSupportingHousesAgainstNeutralForces()
                 ?.size ?? -1) > 0 && (
                 <Col xs={12}>
+                  {hudSettings.hudActive ? (
+                    <div className="march-neutral">
+                      <div className="march-neutral-text">
+                        <b>{t("march.neutralTitle")}</b>
+                        <small>{t("march.neutralHint")}</small>
+                      </div>
+                      <button type="button" className="march-neutral-button" onClick={() => this.callForSupportAgainstNeutralForces()}>
+                        {t("auto.game-state-panel.ResolveSingleMarchOrderComponent.8")}
+                      </button>
+                    </div>
+                  ) : (
                   <Row className="justify-content-center">
                     <Col xs="auto">
                       <Button
@@ -256,6 +301,7 @@ export default class ResolveSingleMarchOrderComponent extends Component<
                         {t("auto.game-state-panel.ResolveSingleMarchOrderComponent.8")}</Button>
                     </Col>
                   </Row>
+                  )}
                 </Col>
               )}
           </>
@@ -359,7 +405,41 @@ export default class ResolveSingleMarchOrderComponent extends Component<
           <Form>
             <fieldset>
               <Form.Group>
-                {showLeavePowerTokenPrompt ? (
+                {showLeavePowerTokenPrompt && hudSettings.hudActive ? (
+                  <div className="leave-pt">
+                    <div className="leave-pt-question">
+                      {tr("auto.game-state-panel.ResolveSingleMarchOrderComponent.19", { p0: (<b>{startingRegion.name}</b>) })}
+                    </div>
+                    <div className="leave-pt-options" role="radiogroup">
+                      <button
+                        type="button"
+                        role="radio"
+                        aria-checked={this.leavePowerToken == true}
+                        className={classNames("leave-pt-option", { selected: this.leavePowerToken == true })}
+                        onClick={() => this.onLeavePowerTokenChange(true)}
+                      >
+                        <span className="leave-pt-token" style={{ backgroundImage: `url(${housePowerTokensImages.get(this.house.id)})` }} />
+                        <span className="leave-pt-text">
+                          <b>{t("march.leaveYes")}</b>
+                          <small>{t("march.leaveYesHint", { n: this.house.powerTokens })}</small>
+                        </span>
+                      </button>
+                      <button
+                        type="button"
+                        role="radio"
+                        aria-checked={this.leavePowerToken == false}
+                        className={classNames("leave-pt-option", "no", { selected: this.leavePowerToken == false })}
+                        onClick={() => this.onLeavePowerTokenChange(false)}
+                      >
+                        <span className="leave-pt-token none" aria-hidden="true">∅</span>
+                        <span className="leave-pt-text">
+                          <b>{t("march.leaveNo")}</b>
+                          <small>{t("march.leaveNoHint")}</small>
+                        </span>
+                      </button>
+                    </div>
+                  </div>
+                ) : showLeavePowerTokenPrompt ? (
                   <>
                     <Col xs={12} className="mb-0 pb-0">
                       <Form.Label>

@@ -222,6 +222,24 @@ export default class MapViewport extends Component<MapViewportProps> {
               <path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" />
             </svg>
           </button>
+          {this.props.compactControls ? (
+            // Celular: no lugar do mini-mapa, o botão de pintar o mapa com as cores das Casas
+            <button
+              type="button"
+              className={"hud-icon-button" + (hudSettings.showHouseColors ? " active" : "")}
+              aria-pressed={hudSettings.showHouseColors}
+              aria-label={hudSettings.showHouseColors ? t("hud.status.houseColorsOff") : t("hud.status.houseColorsOn")}
+              title={hudSettings.showHouseColors ? t("hud.status.houseColorsOff") : t("hud.status.houseColorsOn")}
+              onClick={() => hudSettings.toggleHouseColors()}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                <path d="M12 3a9 9 0 1 0 0 18c1.1 0 1.8-.8 1.8-1.7 0-.5-.2-.9-.5-1.2-.3-.3-.5-.7-.5-1.2 0-.9.8-1.7 1.7-1.7H17a4 4 0 0 0 4-4c0-4.4-4-8.2-9-8.2z" />
+                <circle cx="7.5" cy="11" r="1.3" fill="currentColor" />
+                <circle cx="10" cy="7" r="1.3" fill="currentColor" />
+                <circle cx="14.5" cy="7" r="1.3" fill="currentColor" />
+              </svg>
+            </button>
+          ) : (
           <button
             type="button"
             className={
@@ -254,6 +272,7 @@ export default class MapViewport extends Component<MapViewportProps> {
               {hudSettings.minimapHidden && <path d="M3 3l18 18" />}
             </svg>
           </button>
+          )}
           {!this.props.compactControls && (
             <button
               type="button"
@@ -293,7 +312,7 @@ export default class MapViewport extends Component<MapViewportProps> {
             </button>
           )}
         </div>
-        {!hudSettings.minimapHidden && (
+        {!hudSettings.minimapHidden && !this.props.compactControls && (
         <div
           className="hud-minimap"
           style={{

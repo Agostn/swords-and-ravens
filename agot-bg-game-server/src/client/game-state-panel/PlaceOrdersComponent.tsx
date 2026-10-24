@@ -26,6 +26,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faInfo } from "@fortawesome/free-solid-svg-icons";
 import { t } from "../i18n/i18n";
 import hudSettings from "../hud/hudSettings";
+import Order from "../../common/ingame-game-state/game-data-structure/Order";
 
 @observer
 export default class PlaceOrdersComponent extends Component<GameStateComponentProps<PlaceOrdersGameState>> {
@@ -167,8 +168,8 @@ export default class PlaceOrdersComponent extends Component<GameStateComponentPr
                             trigger="click"
                             rootClose
                             overlay={
-                                <Popover id={"place-order-popover_region_" + r.id} className="p-3">
-                                    <Row className="justify-content-center align-items-center mb-2">
+                                <Popover id={"place-order-popover_region_" + r.id} className={hudSettings.hudActive ? "order-popover" : "p-3"}>
+                                    <Row className="justify-content-center align-items-center mb-2 order-popover-head">
                                         <Col xs="auto"><h5 className="my-0"><b>{r.name}</b></h5></Col>
                                         <Col xs="auto">
                                             <OverlayTrigger overlay={renderRegionTooltip(r)}
@@ -180,6 +181,10 @@ export default class PlaceOrdersComponent extends Component<GameStateComponentPr
                                                 </div>
                                             </OverlayTrigger>
                                         </Col>
+                                        {hudSettings.hudActive && (
+                                            <button type="button" className="order-popover-close" aria-label={t("orders.close")}
+                                                title={t("orders.close")} onClick={() => document.body.click()}>×</button>
+                                        )}
                                     </Row>
                                     <Row>
                                         <OrderGridComponent orders={this.placeOrders.getOrdersList(r.getController() as House)}
@@ -188,6 +193,8 @@ export default class PlaceOrdersComponent extends Component<GameStateComponentPr
                                                 this.placeOrders.getAvailableOrders(r.getController() as House)
                                             }
                                             restrictedOrders={this.placeOrders.ingame.game.getRestrictedOrders(r, this.placeOrders.planningGameState.planningRestrictions, true)}
+                                            currentOrder={this.placeOrders.placedOrders.tryGet(r, null)}
+                                            usedOrders={this.placeOrders.placedOrders.entries.filter(([pr]) => pr != r).map(([, po]) => po).filter((po): po is Order => po != null)}
                                             onOrderClick={o => {
                                                 this.placeOrders.assignOrder(r, o);
                                                 document.body.click();

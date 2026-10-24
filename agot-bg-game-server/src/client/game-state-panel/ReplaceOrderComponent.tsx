@@ -42,6 +42,10 @@ export default class ReplaceOrderComponent extends Component<
                     this.props.gameState.ravenHolder
                   )}
                   selectedOrder={this.selectedOrder}
+                  currentOrder={this.props.gameState.ingameGameState.ordersOnBoard.tryGet(this.selectedRegion, null)}
+                  usedOrders={this.props.gameState.ingameGameState.ordersOnBoard.entries
+                    .filter(([r]) => r != this.selectedRegion)
+                    .map(([, o]) => o)}
                   availableOrders={this.props.gameState.getAvailableOrders(
                     this.selectedRegion
                   )}

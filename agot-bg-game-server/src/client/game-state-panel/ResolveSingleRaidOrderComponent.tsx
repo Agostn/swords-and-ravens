@@ -15,6 +15,9 @@ import PartialRecursive from "../../utils/PartialRecursive";
 import RaidSupportOrderType from "../../common/ingame-game-state/game-data-structure/order-types/RaidSupportOrderType";
 import House from "../../common/ingame-game-state/game-data-structure/House";
 import { t, tr } from "../i18n/i18n";
+import hudSettings from "../hud/hudSettings";
+import orderImages from "../orderImages";
+import classNames from "classnames";
 
 @observer
 export default class ResolveSingleRaidOrderComponent extends Component<
@@ -39,7 +42,67 @@ export default class ResolveSingleRaidOrderComponent extends Component<
     ).type as RaidOrderType | RaidSupportOrderType;
   }
 
+  // Tela nova: "sua Incursão → alvo" em dois quadros, com as fichas de ordem.
+  private renderHud(): ReactNode {
+    const mine = this.props.gameClient.doesControlHouse(this.house);
+    const from = this.selectedOrderRegion;
+    const target = this.selectedTargetRegion;
+    const orders = this.props.gameState.actionGameState.ordersOnBoard;
+    const fromOrder = from ? orders.tryGet(from, null) : null;
+    const targetOrder = target ? orders.tryGet(target, null) : null;
+    const isSupportRaid = this.orderInOrderRegion instanceof RaidSupportOrderType;
+    return (
+      <Col xs={12}>
+        <div className="hud-choice-text">
+          {tr("auto.game-state-panel.ResolveSingleRaidOrderComponent.0", { p0: (<b>{this.house.name}</b>) })}
+        </div>
+        {mine ? (
+          <div className="raid-flow">
+            <div className={classNames("raid-slot", { empty: !from })}>
+              <small>{t("raid.yourOrder")}</small>
+              {fromOrder ? (
+                <span className="raid-token" style={{ backgroundImage: `url(${orderImages.get(fromOrder.type.id)})` }} />
+              ) : (
+                <span className="raid-token empty" aria-hidden="true">?</span>
+              )}
+              <b>{from ? from.name : t("raid.pickOrder")}</b>
+            </div>
+            <span className="raid-arrow" aria-hidden="true">→</span>
+            <div className={classNames("raid-slot target", { empty: !target })}>
+              <small>{t("raid.target")}</small>
+              {targetOrder ? (
+                <span className="raid-token" style={{ backgroundImage: `url(${orderImages.get(targetOrder.type.id)})` }} />
+              ) : (
+                <span className="raid-token empty" aria-hidden="true">?</span>
+              )}
+              <b>{target ? target.name : from ? t("raid.pickTarget") : "—"}</b>
+            </div>
+            {from && (
+              <div className="raid-actions">
+                <button type="button" className="hud-primary-action" onClick={() => this.confirm()}>
+                  {target
+                    ? t("raid.confirmTarget", { region: target.name })
+                    : isSupportRaid
+                      ? t("raid.confirmSupport")
+                      : t("raid.confirmRemove")}
+                </button>
+                <button type="button" className="raid-reset" onClick={() => this.reset()}>
+                  {t("common.reset")}
+                </button>
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="text-center hud-muted-line">
+            {tr("auto.game-state-panel.ResolveSingleRaidOrderComponent.5", { p0: (this.props.gameState.ingameGameState.getControllerOfHouse(this.house).house.name) })}
+          </div>
+        )}
+      </Col>
+    );
+  }
+
   render(): ReactNode {
+    if (hudSettings.hudActive) return this.renderHud();
     return (
       <>
         <Col xs={12} className="text-center">

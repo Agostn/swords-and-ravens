@@ -4605,3 +4605,1525 @@ body.hud-active .dropdown-menu {
     cursor: pointer;
   }
 }
+
+// =====================================================================
+// Escolher a ordem de uma área (janela ao tocar na área no Planejamento)
+// =====================================================================
+
+body.hud-active .popover.order-popover {
+  max-width: min(400px, calc(100vw - 16px));
+  border: 1px solid $tip-border;
+  border-radius: 14px;
+  background: linear-gradient(180deg, #241c15, #120e0a);
+  color: #ede6d8;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.6);
+
+  .arrow::after {
+    border-top-color: #120e0a;
+    border-bottom-color: #241c15;
+    border-left-color: #1b1510;
+    border-right-color: #1b1510;
+  }
+
+  .order-popover-head {
+    position: relative;
+    margin: 0;
+    padding: 12px 40px 6px;
+
+    h5 {
+      font-family: $hud-display-font;
+      font-weight: 400;
+      font-size: 20px;
+      color: #f6ead0;
+
+      b {
+        font-weight: 400;
+      }
+    }
+  }
+}
+
+.order-popover-close {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 236, 190, 0.18);
+  background: rgba(0, 0, 0, 0.3);
+  color: #e6dccb;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+
+  &:hover {
+    border-color: $hud-gold;
+    color: $hud-gold;
+  }
+}
+
+.ordpick {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 4px 12px 14px;
+}
+
+.ordpick-row {
+  display: grid;
+  grid-template-columns: 92px 1fr;
+  align-items: center;
+  gap: 8px;
+}
+
+.ordpick-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #c9a96a;
+}
+
+.ordpick-tokens {
+  display: flex;
+  gap: 6px;
+}
+
+.ordpick-token {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 58px;
+  padding: 4px 2px;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+
+  &.available:hover,
+  &.available:focus-visible {
+    border-color: rgba(226, 182, 90, 0.6);
+    background: rgba(226, 182, 90, 0.1);
+  }
+
+  &.selected {
+    border-color: $hud-gold;
+    background: rgba(226, 182, 90, 0.16);
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+
+    .ordpick-img {
+      opacity: 0.32;
+      filter: grayscale(1);
+    }
+  }
+
+  // proibida por carta de Westeros: risco vermelho em cima
+  &.restricted::after {
+    content: "";
+    position: absolute;
+    top: 8px;
+    left: 50%;
+    width: 46px;
+    height: 3px;
+    margin-left: -23px;
+    margin-top: 19px;
+    border-radius: 2px;
+    background: $hud-red;
+    transform: rotate(-45deg);
+    box-shadow: 0 0 4px rgba(0, 0, 0, 0.6);
+  }
+}
+
+.ordpick-img {
+  width: 44px !important;
+  height: 44px !important;
+  border-radius: 50%;
+}
+
+.ordpick-badge {
+  margin-top: 2px;
+  padding: 0 5px;
+  border-radius: 999px;
+  font-size: 9.5px;
+  font-weight: 700;
+  line-height: 15px;
+  white-space: nowrap;
+  color: #c9bfae;
+  background: rgba(0, 0, 0, 0.45);
+
+  .restricted & {
+    color: #ffd2cc;
+    background: rgba(201, 71, 59, 0.55);
+  }
+
+  .used & {
+    color: #e6dccb;
+  }
+
+  .star & {
+    color: $hud-gold;
+  }
+}
+
+body.hud-phone .ordpick-row {
+  grid-template-columns: 74px 1fr;
+}
+
+// Celular: o "passar o mouse" fica preso depois do toque e o brilho das fichas
+// (filtros drop-shadow) vira um quadrado branco no Safari. No toque, o destaque
+// vira um anel redondo e o efeito de hover some.
+body.touch-tooltips {
+  .map .order-container,
+  .map .order-container .order-icon {
+    border-radius: 50%;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .map .hover-weak-outline:hover,
+  .map .hover-strong-outline:hover,
+  .map .hover-medium-outline:hover,
+  .map .hover-smedium-outline:hover {
+    filter: none;
+  }
+
+  .map .order-container.medium-outline,
+  .map .order-container.strong-outline,
+  .map .order-container.smedium-outline {
+    filter: none;
+    box-shadow:
+      0 0 0 3px rgba(255, 255, 255, 0.85),
+      0 0 12px 4px rgba(255, 236, 170, 0.75);
+  }
+}
+
+body.touch-tooltips {
+  .map [class*="hover-strong-outline-"]:hover {
+    filter: none;
+  }
+
+  .map .order-container.highlight-yellow {
+    filter: none;
+    box-shadow: 0 0 0 3px rgba(240, 200, 40, 0.95), 0 0 12px 4px rgba(240, 200, 40, 0.6);
+  }
+
+  .map .order-container.highlight-red {
+    filter: none;
+    box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.95), 0 0 12px 4px rgba(220, 53, 69, 0.6);
+  }
+
+  .map .order-container.highlight-grey {
+    filter: none;
+    box-shadow: 0 0 0 3px rgba(160, 160, 160, 0.9), 0 0 10px 3px rgba(160, 160, 160, 0.5);
+  }
+
+  .map .order-container.highlight-green {
+    filter: none;
+    box-shadow: 0 0 0 3px rgba(40, 167, 69, 0.95), 0 0 12px 4px rgba(40, 167, 69, 0.6);
+  }
+}
+
+/* ---------- Andamento da rodada (marcador sempre visível no painel da jogada) ---------- */
+.hud-round-tracker {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0 0 10px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(226, 182, 90, 0.22);
+  background: linear-gradient(180deg, rgba(255, 236, 190, 0.05), rgba(0, 0, 0, 0.15));
+  text-align: left;
+  font-size: 12.5px;
+}
+
+.hrt-top {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+  min-width: 0;
+}
+
+.hrt-bottom {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+
+  &:empty { display: none; }
+  .hrt-queue { margin-left: auto; }
+}
+
+.hrt-round {
+  flex: none;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(226, 182, 90, 0.16);
+  color: $hud-gold;
+  font-weight: 700;
+  font-size: 11.5px;
+  letter-spacing: 0.04em;
+}
+
+.hrt-phases,
+.hrt-steps {
+  display: flex;
+  align-items: center;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  min-width: 0;
+}
+
+.hrt-phases {
+  flex: 1;
+  gap: 4px;
+
+  .phase-action & { flex: none; }
+}
+
+.hrt-phase {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: rgba(255, 244, 220, 0.5);
+  white-space: nowrap;
+
+  & + &::before {
+    content: "";
+    width: 14px;
+    height: 1px;
+    margin-right: 2px;
+    background: rgba(255, 236, 190, 0.25);
+  }
+
+  .hrt-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    border: 1.5px solid currentColor;
+  }
+
+  &.done {
+    color: rgba(160, 210, 150, 0.85);
+    .hrt-dot { background: currentColor; }
+  }
+
+  &.now {
+    color: $hud-gold;
+    font-weight: 700;
+    .hrt-dot {
+      background: currentColor;
+      box-shadow: 0 0 0 3px rgba(226, 182, 90, 0.25);
+    }
+  }
+
+  &.skipped {
+    color: rgba(255, 244, 220, 0.32);
+    .hrt-phase-name { text-decoration: line-through; }
+  }
+
+  .hrt-skip { font-size: 10px; opacity: 0.8; }
+}
+
+.hrt-toggle {
+  flex: none;
+  margin-left: auto;
+  width: 26px;
+  height: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 236, 190, 0.15);
+  background: transparent;
+  color: rgba(255, 244, 220, 0.7);
+  cursor: pointer;
+
+  svg { transition: transform 0.15s; }
+  &.open svg { transform: rotate(180deg); }
+  &:hover { background: rgba(255, 236, 190, 0.08); }
+}
+
+.hrt-steps {
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.hrt-step {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 9px 4px 5px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 236, 190, 0.1);
+  background: rgba(0, 0, 0, 0.18);
+  color: rgba(255, 244, 220, 0.55);
+  white-space: nowrap;
+
+  .hrt-step-icon {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    object-fit: cover;
+    opacity: 0.6;
+
+    &.raven {
+      padding: 3px;
+      background: rgba(255, 236, 190, 0.12);
+      filter: brightness(0) invert(0.9);
+    }
+
+    &.star {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: $hud-gold;
+    }
+  }
+
+  .hrt-step-badge {
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    border-radius: 999px;
+    background: rgba(255, 236, 190, 0.14);
+    color: #fff4dc;
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 18px;
+    text-align: center;
+
+    &.done {
+      background: rgba(120, 190, 110, 0.25);
+      color: #bfe6b3;
+    }
+  }
+
+  &.done {
+    color: rgba(190, 225, 180, 0.7);
+    .hrt-step-icon { opacity: 0.45; filter: grayscale(0.6); }
+    .hrt-step-icon.raven { filter: brightness(0) invert(0.75); }
+  }
+
+  &.now {
+    color: #fff4dc;
+    font-weight: 700;
+    border-color: rgba(226, 182, 90, 0.75);
+    background: rgba(226, 182, 90, 0.16);
+    box-shadow: 0 0 0 3px rgba(226, 182, 90, 0.12);
+    .hrt-step-icon { opacity: 1; }
+    .hrt-step-badge { background: $hud-gold; color: #241a08; }
+  }
+}
+
+.hrt-now {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  color: #fff4dc;
+
+  .hrt-now-label {
+    flex: none;
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: $hud-gold;
+  }
+
+  .hrt-now-text {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+.hrt-queue {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+
+  .hrt-queue-label {
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgba(255, 244, 220, 0.5);
+  }
+}
+
+.hrt-queue-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 7px 2px 2px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.22);
+  border: 1px solid transparent;
+  color: rgba(255, 244, 220, 0.85);
+  font-size: 12px;
+
+  &.current {
+    border-color: rgba(226, 182, 90, 0.8);
+    background: rgba(226, 182, 90, 0.14);
+  }
+
+  &.mine b { color: $hud-gold; }
+}
+
+body.hud-phone {
+  .hud-round-tracker {
+    margin-bottom: 8px;
+    padding: 6px 8px;
+    gap: 5px;
+    font-size: 12px;
+  }
+
+  .hrt-phase + .hrt-phase::before { width: 6px; }
+  .hrt-phase .hrt-skip { display: none; }
+
+  .hrt-steps {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    &::-webkit-scrollbar { display: none; }
+  }
+
+  .hrt-step {
+    padding: 3px 7px 3px 3px;
+    .hrt-step-icon { width: 18px; height: 18px; }
+  }
+}
+
+/* ---------- Marcha: movimentos planejados, deixar ficha de Poder, Forças Neutras ---------- */
+.march-moves {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 236, 190, 0.1);
+  background: rgba(255, 236, 190, 0.035);
+  text-align: left;
+}
+
+.march-moves-title {
+  font-size: 12px;
+  color: rgba(255, 244, 220, 0.75);
+}
+
+.march-move {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 8px;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.22);
+}
+
+.march-move-units {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.march-move-unit {
+  position: relative;
+  display: inline-flex;
+  padding: 2px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 236, 190, 0.15);
+  background: rgba(255, 236, 190, 0.05);
+  cursor: pointer;
+
+  .march-move-x {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #b5463a;
+    color: #fff;
+    font-size: 12px;
+    line-height: 15px;
+    text-align: center;
+    opacity: 0.85;
+  }
+
+  &:hover {
+    border-color: rgba(220, 110, 90, 0.8);
+    .march-move-x { opacity: 1; }
+  }
+}
+
+.march-move-arrow {
+  color: $hud-gold;
+  font-size: 18px;
+}
+
+.march-move-target {
+  font-weight: 700;
+  color: #fff4dc;
+}
+
+.march-moves-hint {
+  font-size: 11.5px;
+  color: rgba(255, 244, 220, 0.55);
+}
+
+.leave-pt {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  margin: 6px 0;
+  text-align: left;
+}
+
+.leave-pt-question {
+  color: #fff4dc;
+  font-size: 13.5px;
+}
+
+.leave-pt-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.leave-pt-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1.5px solid rgba(255, 236, 190, 0.14);
+  background: rgba(0, 0, 0, 0.22);
+  color: rgba(255, 244, 220, 0.9);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s, transform 0.1s;
+
+  &:hover { border-color: rgba(226, 182, 90, 0.55); }
+  &:active { transform: scale(0.98); }
+
+  &.selected {
+    border-color: $hud-gold;
+    background: rgba(226, 182, 90, 0.14);
+    box-shadow: 0 0 0 3px rgba(226, 182, 90, 0.15);
+  }
+
+  &.no.selected {
+    border-color: #d9b9a0;
+    background: rgba(255, 236, 190, 0.08);
+  }
+}
+
+.leave-pt-token {
+  flex: none;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background-size: cover;
+  background-position: center;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+
+  &.none {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1.5px dashed rgba(255, 236, 190, 0.35);
+    color: rgba(255, 244, 220, 0.6);
+    font-size: 20px;
+    box-shadow: none;
+  }
+}
+
+.leave-pt-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+
+  b { font-size: 13.5px; }
+  small { font-size: 11.5px; color: rgba(255, 244, 220, 0.6); line-height: 1.3; }
+}
+
+.march-neutral {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 8px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px dashed rgba(226, 182, 90, 0.45);
+  background: rgba(226, 182, 90, 0.06);
+  text-align: left;
+}
+
+.march-neutral-text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+
+  b { color: #fff4dc; font-size: 13px; }
+  small { color: rgba(255, 244, 220, 0.6); font-size: 11.5px; }
+}
+
+.march-neutral-button {
+  flex: none;
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1px solid $hud-gold;
+  background: rgba(226, 182, 90, 0.15);
+  color: $hud-gold;
+  font-weight: 700;
+  font-size: 12.5px;
+  cursor: pointer;
+
+  &:hover { background: rgba(226, 182, 90, 0.25); }
+}
+
+body.hud-phone {
+  .leave-pt-option { padding: 8px 9px; gap: 8px; }
+  .leave-pt-token { width: 30px; height: 30px; }
+  .march-neutral { flex-direction: column; align-items: stretch; }
+}
+
+/* ---------- Botão principal genérico das telas novas ---------- */
+.hud-primary-action {
+  display: block;
+  width: 100%;
+  padding: 10px 14px;
+  border: 0;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #f2cf7a, $hud-gold);
+  color: $hud-gold-ink;
+  font-weight: 800;
+  font-size: 15px;
+  box-shadow: 0 6px 18px rgba(226, 182, 90, 0.3);
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.45;
+    box-shadow: none;
+    cursor: default;
+  }
+}
+
+/* ---------- Desempate dos lances ---------- */
+.ties {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 520px;
+  margin: 0 auto 6px;
+  text-align: left;
+}
+
+.ties-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ties-head-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+
+  b { color: #fff4dc; font-size: 14.5px; }
+  small { color: rgba(255, 244, 220, 0.62); font-size: 12px; }
+}
+
+.ties-list {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ties-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 236, 190, 0.08);
+  background: rgba(0, 0, 0, 0.2);
+
+  &.tied {
+    border-color: rgba(226, 182, 90, 0.55);
+    background: rgba(226, 182, 90, 0.08);
+  }
+}
+
+.ties-pos {
+  width: 26px;
+  font-weight: 800;
+  color: $hud-gold;
+  text-align: center;
+}
+
+.ties-name {
+  flex: 1;
+  min-width: 0;
+  color: #fff4dc;
+  font-weight: 600;
+
+  .ties-stars { margin-left: 6px; color: #ffc107; letter-spacing: 1px; }
+}
+
+.ties-tag {
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: rgba(226, 182, 90, 0.2);
+  color: $hud-gold;
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.ties-bid {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+
+  b { min-width: 18px; color: #fff4dc; font-size: 15px; text-align: right; }
+}
+
+.ties-token {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background-size: cover;
+  background-position: center;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+}
+
+.ties-arrows {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.ties-arrow {
+  width: 30px;
+  height: 20px;
+  padding: 0;
+  border-radius: 6px;
+  border: 1px solid rgba(226, 182, 90, 0.5);
+  background: rgba(226, 182, 90, 0.12);
+  color: $hud-gold;
+  font-size: 10px;
+  line-height: 1;
+  cursor: pointer;
+
+  &:disabled { visibility: hidden; }
+  &:hover:not(:disabled) { background: rgba(226, 182, 90, 0.25); }
+}
+
+body.touch-tooltips .ties-arrow {
+  width: 36px;
+  height: 26px;
+}
+
+/* ---------- Escolhas simples (Sim/Não, Ativar/Ignorar...) como cartões ---------- */
+.hud-choice-text {
+  max-width: 620px;
+  margin: 0 auto 10px;
+  color: #fff4dc;
+  font-size: 13.5px;
+  line-height: 1.45;
+  white-space: pre-line;
+  text-align: center;
+}
+
+.hud-choices {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.hud-choice {
+  flex: 1 1 150px;
+  max-width: 260px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 10px 14px;
+  border-radius: 14px;
+  border: 1.5px solid rgba(255, 236, 190, 0.18);
+  background: rgba(0, 0, 0, 0.22);
+  color: #fff4dc;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s, transform 0.1s;
+
+  small { font-weight: 400; font-size: 11.5px; color: rgba(255, 244, 220, 0.62); }
+
+  &:hover { border-color: rgba(226, 182, 90, 0.7); background: rgba(226, 182, 90, 0.08); }
+  &:active { transform: scale(0.98); }
+
+  &.good { border-color: rgba(70, 170, 110, 0.7); background: rgba(58, 163, 107, 0.12); }
+  &.bad { border-color: rgba(201, 71, 59, 0.6); background: rgba(201, 71, 59, 0.08); color: #f3b3ab; }
+}
+
+/* ---------- Telas antigas dentro do painel novo: mesmo visual do resto ---------- */
+.hud-root .hud-action-body {
+  .btn-secondary,
+  .btn-outline-light,
+  .btn-outline-secondary,
+  .btn-outline-primary,
+  .btn-light,
+  .btn-info {
+    border: 1px solid rgba(255, 236, 190, 0.2);
+    background: rgba(0, 0, 0, 0.22);
+    color: #fff4dc;
+  }
+
+  .btn-warning {
+    border: 0;
+    background: linear-gradient(180deg, #e8b45a, #c98f35);
+    color: $hud-gold-ink;
+  }
+
+  .btn:disabled,
+  .btn.disabled {
+    opacity: 0.45;
+    transform: none;
+    box-shadow: none;
+  }
+
+  .form-check {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px 6px 32px;
+    margin: 2px 4px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 236, 190, 0.14);
+    background: rgba(0, 0, 0, 0.18);
+
+    .form-check-input { margin-left: -20px; accent-color: $hud-gold; }
+  }
+
+  .form-control,
+  select.form-control,
+  .custom-select {
+    border-radius: 10px;
+    border: 1px solid rgba(255, 236, 190, 0.2);
+    background-color: rgba(0, 0, 0, 0.3);
+    color: #fff4dc;
+  }
+
+  .table {
+    color: #e6dccb;
+    td, th { border-color: rgba(255, 236, 190, 0.08); }
+  }
+
+  .badge-secondary,
+  .badge-primary {
+    background: rgba(226, 182, 90, 0.2);
+    color: $hud-gold;
+  }
+
+  .row > .col-12.text-center:first-child {
+    color: #fff4dc;
+    line-height: 1.45;
+  }
+}
+
+/* ---------- Escolher Carta de Casa no celular: lista legível ---------- */
+.hcpick-list,
+.hcpick-preview {
+  display: none;
+}
+
+body.hud-phone {
+  .choose-house-cards {
+    display: none !important;
+  }
+
+  .hcpick-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 2px 2px 6px;
+    text-align: left;
+  }
+
+  .hcpick {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 6px 10px 6px 6px;
+    border-radius: 12px;
+    border: 1.5px solid rgba(255, 236, 190, 0.12);
+    background: rgba(0, 0, 0, 0.24);
+    color: #fff4dc;
+    text-align: left;
+    cursor: pointer;
+
+    &.selected {
+      border-color: $hud-gold;
+      background: rgba(226, 182, 90, 0.14);
+      box-shadow: 0 0 0 3px rgba(226, 182, 90, 0.15);
+    }
+  }
+
+  .hcpick-img {
+    flex: none;
+    width: 38px;
+    height: 60px;
+    border-radius: 5px;
+    object-fit: cover;
+  }
+
+  .hcpick-strength {
+    flex: none;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: rgba(226, 182, 90, 0.18);
+    color: $hud-gold;
+    font-size: 19px;
+    font-weight: 800;
+    line-height: 34px;
+    text-align: center;
+  }
+
+  .hcpick-body {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  .hcpick-name {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+
+    b { font-size: 14px; }
+  }
+
+  .hcpick-icon {
+    font-size: 12px;
+    letter-spacing: 1px;
+    &.sword { color: #f08c7c; }
+    &.tower { color: #9cc3e8; }
+  }
+
+  .hcpick-ability {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    font-size: 11.5px;
+    line-height: 1.3;
+    color: rgba(255, 244, 220, 0.68);
+  }
+
+  .hcpick-preview {
+    display: block;
+    width: 46vw;
+    max-width: 200px;
+    margin: 4px auto 6px;
+    border-radius: 10px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  }
+}
+
+// Celular: o marcador da rodada fica em duas linhas curtas (a rodada e a fase já
+// aparecem na barra de cima). Só a etapa atual mostra o nome; as outras, o símbolo.
+body.hud-phone {
+  .hrt-round,
+  .hrt-phases {
+    display: none;
+  }
+
+  .hud-round-tracker:not(.phase-action) .hrt-top {
+    display: none;
+  }
+
+  .hrt-top { flex-wrap: nowrap; }
+
+  .hrt-steps { flex: 1; gap: 4px; }
+
+  .hrt-step:not(.now) {
+    padding: 3px;
+    .hrt-step-name { display: none; }
+  }
+
+  .hrt-step.done .hrt-step-badge.done {
+    position: absolute;
+    right: -4px;
+    bottom: -4px;
+    min-width: 13px;
+    height: 13px;
+    padding: 0;
+    font-size: 8px;
+    line-height: 13px;
+  }
+
+  .hrt-toggle { width: 24px; height: 24px; }
+
+  .hrt-bottom {
+    flex-wrap: nowrap;
+    gap: 8px;
+  }
+
+  .hrt-now {
+    flex: 1;
+    .hrt-now-label { display: none; }
+  }
+
+  .hrt-queue {
+    flex: none;
+    flex-wrap: nowrap;
+    gap: 3px;
+    .hrt-queue-label { display: none; }
+  }
+
+  .hrt-queue-item {
+    padding: 1px 5px 1px 1px;
+    font-size: 11px;
+  }
+}
+
+// Menu de ordens: a ordem que já está na área e um sinal de "não pode" nas bloqueadas
+.ordpick-token.here {
+  border-color: $hud-gold;
+  background: rgba(226, 182, 90, 0.18);
+  cursor: default;
+
+  .ordpick-badge {
+    color: $hud-gold-ink;
+    background: $hud-gold;
+  }
+}
+
+.ordpick-token:disabled:not(.restricted)::before {
+  content: "⊘";
+  position: absolute;
+  top: 0;
+  right: 2px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: rgba(20, 14, 8, 0.92);
+  color: #d9a39b;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 18px;
+  text-align: center;
+  box-shadow: 0 0 0 1px rgba(217, 163, 155, 0.5);
+}
+
+.ordpick-label {
+  word-break: normal;
+  overflow-wrap: normal;
+  hyphens: none;
+}
+
+// Celular: o menu de ordens vira uma folha presa embaixo (não sai mais da tela)
+body.hud-phone .popover.order-popover {
+  position: fixed !important;
+  inset: auto 8px calc(8px + env(safe-area-inset-bottom, 0px)) 8px !important;
+  transform: none !important;
+  max-width: none;
+  max-height: 72vh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  z-index: 1080;
+
+  > .arrow { display: none; }
+
+  .ordpick-row { grid-template-columns: 96px 1fr; }
+  .ordpick-label { font-size: 10.5px; letter-spacing: 0.05em; }
+  .ordpick-tokens { justify-content: space-around; }
+}
+
+/* ---------- Chat e histórico (computador e celular) ---------- */
+.hud-chat-body {
+  > .card {
+    color: #e6dccb;
+  }
+
+  .card-header {
+    padding: 8px 10px 6px;
+    border-bottom: 1px solid rgba(255, 236, 190, 0.1);
+    background: rgba(0, 0, 0, 0.18);
+  }
+
+  .nav-tabs {
+    flex-wrap: nowrap;
+    gap: 4px;
+    border-bottom: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+
+    &::-webkit-scrollbar { display: none; }
+
+    .nav-item { margin-bottom: 0; }
+
+    .nav-link {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 38px;
+      height: 34px;
+      padding: 0 10px;
+      border: 1px solid transparent !important;
+      border-radius: 10px;
+      background: transparent;
+      color: rgba(255, 244, 220, 0.6);
+      outline: none;
+      box-shadow: none;
+
+      svg { color: rgba(255, 244, 220, 0.7) !important; }
+      &:hover { background: rgba(255, 236, 190, 0.07); }
+
+      &.active {
+        background: rgba(226, 182, 90, 0.16);
+        border-color: rgba(226, 182, 90, 0.5) !important;
+        svg { color: $hud-gold !important; }
+      }
+    }
+
+    // aviso de novidade / chat desconectado: um pontinho em vez da borda grossa
+    div.orange-border,
+    div.disconnected {
+      position: relative;
+      border: 0 !important;
+
+      &::after {
+        content: "";
+        position: absolute;
+        top: 3px;
+        right: 3px;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #f39c12;
+        box-shadow: 0 0 0 2px #17130f;
+        pointer-events: none;
+      }
+    }
+
+    div.disconnected::after { background: #c9473b; }
+  }
+
+  .dropdown-toggle.btn-secondary,
+  .card-header .btn-secondary {
+    border: 1px solid rgba(255, 236, 190, 0.2);
+    border-radius: 10px;
+    background: rgba(0, 0, 0, 0.25);
+    color: #fff4dc;
+    font-size: 12.5px;
+    padding: 4px 10px;
+  }
+
+  #game-log-panel {
+    font-size: 13px;
+    line-height: 1.45;
+    padding-top: 6px;
+  }
+
+  // histórico
+  .game-log-content {
+    padding: 4px 8px;
+    border-radius: 8px;
+
+    &, p, ul { margin-bottom: 0.25em; }
+    b, strong { color: #fff4dc; }
+
+    h3 {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 14px 0 6px;
+      font-size: 15px;
+
+      &::before,
+      &::after {
+        content: "";
+        flex: 1;
+        height: 1px;
+        background: rgba(226, 182, 90, 0.35);
+      }
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: $hud-gold;
+    }
+
+    h4, h5 {
+      margin: 10px 0 4px;
+      font-size: 13.5px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #d9c39a;
+    }
+
+  }
+
+  #game-log-panel .row > .col-auto.text-muted small {
+    display: inline-block;
+    min-width: 38px;
+    margin-top: 6px;
+    padding: 1px 5px;
+    border-radius: 6px;
+    background: rgba(255, 236, 190, 0.06);
+    color: rgba(255, 244, 220, 0.45);
+    font-size: 10.5px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  hr.red {
+    border-top: 1px solid rgba(201, 71, 59, 0.6);
+  }
+
+  .highlight-log {
+    background-color: rgba(226, 182, 90, 0.08) !important;
+    border: 0;
+    box-shadow: inset 3px 0 0 $hud-gold;
+  }
+
+  // conversa
+  .own-message,
+  .foreign-message {
+    max-width: 100%;
+    border-radius: 14px;
+    font-size: 13.5px;
+    line-height: 1.4;
+  }
+
+  .foreign-message {
+    background: rgba(255, 236, 190, 0.07) !important;
+    color: #f1e8d6;
+    border-bottom-left-radius: 4px;
+  }
+
+  .own-message {
+    background: rgba(226, 182, 90, 0.2) !important;
+    color: #fff4dc;
+    border-bottom-right-radius: 4px;
+  }
+
+  // a linha com o nome fica pequena e sem balão
+  .col-12 > .own-message,
+  .col-12 > .foreign-message {
+    padding: 0 4px !important;
+    background: transparent !important;
+    color: rgba(255, 244, 220, 0.55);
+    font-size: 11px;
+    font-weight: 600;
+  }
+
+  form .form-control {
+    height: 42px;
+    border-radius: 21px;
+    border: 1px solid rgba(255, 236, 190, 0.18);
+    background: rgba(0, 0, 0, 0.35);
+    color: #fff4dc;
+    font-size: 14px;
+    padding: 0 16px;
+
+    &:focus {
+      border-color: rgba(226, 182, 90, 0.7);
+      box-shadow: 0 0 0 3px rgba(226, 182, 90, 0.15);
+    }
+  }
+
+  form .btn {
+    min-width: 42px;
+    height: 42px;
+    border-radius: 21px;
+    border: 1px solid rgba(255, 236, 190, 0.2);
+    background: rgba(0, 0, 0, 0.3);
+    color: #fff4dc;
+  }
+
+  form .btn-success,
+  form .btn-primary {
+    border: 0;
+    background: linear-gradient(180deg, #f2cf7a, $hud-gold);
+    color: $hud-gold-ink;
+  }
+
+  .alert-warning {
+    margin: 6px 8px;
+    padding: 8px 12px;
+    border: 1px solid rgba(243, 156, 18, 0.4);
+    border-radius: 10px;
+    background: rgba(243, 156, 18, 0.1);
+    color: #f6d39a;
+    font-size: 12.5px;
+  }
+}
+
+// "Últimos acontecimentos": um pouco mais de respiro e o horário apagado
+.hud-recent-body {
+  .game-log-content b { color: #fff4dc; }
+}
+
+.hud-choice-text .support-where {
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;
+  color: rgba(255, 244, 220, 0.6);
+}
+
+.hud-choice {
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  &.support-choice {
+    gap: 6px;
+  }
+
+  .support-none {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    border: 1.5px dashed currentColor;
+    font-size: 18px;
+    opacity: 0.8;
+  }
+}
+
+.hud-muted-line {
+  color: rgba(255, 244, 220, 0.6);
+  font-size: 13px;
+}
+
+/* ---------- Incursão: sua ordem → alvo ---------- */
+.raid-flow {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: stretch;
+  gap: 8px;
+  max-width: 560px;
+  margin: 0 auto 4px;
+}
+
+.raid-slot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px;
+  border-radius: 14px;
+  border: 1.5px solid rgba(226, 182, 90, 0.55);
+  background: rgba(226, 182, 90, 0.08);
+  text-align: center;
+
+  small {
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: $hud-gold;
+  }
+
+  b { color: #fff4dc; font-size: 13px; }
+
+  &.target { border-color: rgba(201, 71, 59, 0.6); background: rgba(201, 71, 59, 0.08); }
+  &.target small { color: #f0a59d; }
+
+  &.empty {
+    border-style: dashed;
+    border-color: rgba(255, 236, 190, 0.2);
+    background: rgba(0, 0, 0, 0.18);
+    b { color: rgba(255, 244, 220, 0.55); font-weight: 500; font-size: 12px; }
+  }
+}
+
+.raid-token {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background-size: cover;
+  background-position: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+
+  &.empty {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1.5px dashed rgba(255, 236, 190, 0.3);
+    color: rgba(255, 244, 220, 0.45);
+    font-size: 18px;
+    font-weight: 700;
+    box-shadow: none;
+  }
+}
+
+.raid-arrow {
+  align-self: center;
+  color: $hud-gold;
+  font-size: 22px;
+}
+
+.raid-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 8px;
+
+  .hud-primary-action { flex: 1; }
+}
+
+.raid-reset {
+  padding: 0 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(201, 71, 59, 0.75);
+  background: rgba(201, 71, 59, 0.1);
+  color: #f0a59d;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+// o botão de recolher as etapas fica sempre no canto, sem ocupar uma linha sozinho
+.hud-round-tracker {
+  position: relative;
+  padding-right: 42px;
+}
+
+.hrt-toggle {
+  position: absolute;
+  top: 7px;
+  right: 8px;
+}

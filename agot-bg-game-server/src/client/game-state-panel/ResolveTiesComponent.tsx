@@ -17,6 +17,10 @@ import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import HouseIconComponent from "./utils/HouseIconComponent";
 import HouseNumberResultsComponent from "../HouseNumberResultsComponent";
 import { t } from "../i18n/i18n";
+import hudSettings from "../hud/hudSettings";
+import HouseChip from "../hud/HouseChip";
+import housePowerTokensImages from "../housePowerTokensImages";
+import classNames from "classnames";
 
 @observer
 export default class ResolveTiesComponent extends Component<GameStateComponentProps<ResolveTiesGameState>> {
@@ -28,7 +32,68 @@ export default class ResolveTiesComponent extends Component<GameStateComponentPr
         this.currentOrdering = _.flatten(props.gameState.bidResults.map(([_bid, houses]) => houses));
     }
 
+    private get trackName(): string {
+        const keys = ["tracks.ironThrone", "tracks.fiefdoms", "tracks.kingsCourt"] as const;
+        return t(keys[this.props.gameState.parentGameState.currentTrackI] ?? keys[0]);
+    }
+
+    // Tela nova: lista vertical da trilha (1º, 2º...), com o lance e o símbolo de Poder de cada
+    // Casa; as setas aparecem só para quem está empatado.
+    private renderHud(): ReactNode {
+        const gs = this.props.gameState;
+        const canDecide = this.props.gameClient.doesControlHouse(gs.decider);
+        const ordering = canDecide ? this.currentOrdering : _.flatten(gs.bidResults.map(([, houses]) => houses));
+        const tied = new Set(_.flatten(gs.getTiesToResolve().filter(x => x.houses.length > 1).map(x => x.houses)));
+        return (
+            <Col xs={12}>
+                <div className="ties">
+                    <div className="ties-head">
+                        <HouseChip house={gs.decider} size={26} />
+                        <div className="ties-head-text">
+                            <b>{t("ties.title", { track: this.trackName })}</b>
+                            <small>{canDecide ? t("ties.youDecide") : t("ties.waiting", { house: gs.decider.name })}</small>
+                        </div>
+                    </div>
+                    <ol className="ties-list">
+                        {ordering.map((h, i) => {
+                            const up = canDecide && this.displayArrow(i, -1);
+                            const down = canDecide && this.displayArrow(i, 1);
+                            const stars = gs.stars ? (gs.game.starredOrderRestrictions[i] ?? 0) : 0;
+                            return (
+                                <li key={`ties_${h.id}`} className={classNames("ties-row", { tied: tied.has(h) })}>
+                                    <span className="ties-pos">{i + 1}º</span>
+                                    <HouseChip house={h} size={26} />
+                                    <span className="ties-name">
+                                        {h.name}
+                                        {stars > 0 && <small className="ties-stars" title={t("hud.tracks.stars", { n: stars })}>{"★".repeat(stars)}</small>}
+                                    </span>
+                                    {tied.has(h) && <span className="ties-tag">{t("ties.tied")}</span>}
+                                    <span className="ties-bid" title={t("ties.bid", { n: gs.getBidOfHouse(h) })}>
+                                        <span className="ties-token" style={{ backgroundImage: `url(${housePowerTokensImages.get(h.id)})` }} />
+                                        <b>{gs.getBidOfHouse(h)}</b>
+                                    </span>
+                                    {canDecide && (
+                                        <span className="ties-arrows">
+                                            <button type="button" className="ties-arrow" disabled={!up} aria-label={t("ties.up", { house: h.name })} title={t("ties.up", { house: h.name })} onClick={() => this.changeOrder(i, -1)}>▲</button>
+                                            <button type="button" className="ties-arrow" disabled={!down} aria-label={t("ties.down", { house: h.name })} title={t("ties.down", { house: h.name })} onClick={() => this.changeOrder(i, 1)}>▼</button>
+                                        </span>
+                                    )}
+                                </li>
+                            );
+                        })}
+                    </ol>
+                    {canDecide && (
+                        <button type="button" className="hud-primary-action ties-confirm" onClick={() => this.submit()}>
+                            {t("ties.confirm")}
+                        </button>
+                    )}
+                </div>
+            </Col>
+        );
+    }
+
     render(): ReactNode {
+        if (hudSettings.hudActive) return this.renderHud();
         const results = _.flatMap(this.props.gameState.bidResults.map(([bid, houses]) => houses.map(h => [h, bid] as [House, number])));
         return (
             <>

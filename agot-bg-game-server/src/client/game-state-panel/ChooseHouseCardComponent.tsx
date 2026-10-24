@@ -14,6 +14,9 @@ import Player from "../../common/ingame-game-state/Player";
 import { FormCheck, OverlayTrigger, Tooltip } from "react-bootstrap";
 import House from "../../common/ingame-game-state/game-data-structure/House";
 import { t, tr } from "../i18n/i18n";
+import * as _ from "lodash";
+import classNames from "classnames";
+import houseCardImages from "../houseCardImages";
 
 @observer
 export default class ChooseHouseCardComponent extends Component<
@@ -119,6 +122,34 @@ export default class ChooseHouseCardComponent extends Component<
                   </Col>
                 ))}
               </Row>
+              {/* Celular: lista com a força, os símbolos e o efeito escritos (as cartas pequenas
+                  eram difíceis de ler e de tocar). No computador fica escondida. */}
+              <div className="hcpick-list" role="radiogroup" aria-label={t("auto.game-state-panel.ChooseHouseCardComponent.0")}>
+                {_.sortBy(this.getChoosableHouseCards(), (hc) => -hc.combatStrength).map((hc) => (
+                  <button
+                    type="button"
+                    role="radio"
+                    aria-checked={this.selectedHouseCard == hc}
+                    key={`hcpick_${hc.id}`}
+                    className={classNames("hcpick", { selected: this.selectedHouseCard == hc })}
+                    onClick={() => (this.selectedHouseCard = hc)}
+                  >
+                    <img className="hcpick-img" src={houseCardImages.get(hc.id)} alt="" aria-hidden="true" />
+                    <span className="hcpick-strength">{hc.combatStrength}</span>
+                    <span className="hcpick-body">
+                      <span className="hcpick-name">
+                        <b>{hc.name}</b>
+                        {hc.swordIcons > 0 && <span className="hcpick-icon sword" title={t("houseCard.swords", { n: hc.swordIcons })}>{"⚔".repeat(hc.swordIcons)}</span>}
+                        {hc.towerIcons > 0 && <span className="hcpick-icon tower" title={t("houseCard.towers", { n: hc.towerIcons })}>{"▲".repeat(hc.towerIcons)}</span>}
+                      </span>
+                      <small className="hcpick-ability">{hc.ability ? hc.ability.description : t("houseCard.noAbility")}</small>
+                    </span>
+                  </button>
+                ))}
+              </div>
+              {this.selectedHouseCard && (
+                <img className="hcpick-preview" src={houseCardImages.get(this.selectedHouseCard.id)} alt={this.selectedHouseCard.name} />
+              )}
               <div className="choose-house-card-summary text-center">
                 {this.selectedHouseCard ? (
                   <>

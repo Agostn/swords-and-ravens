@@ -7,6 +7,8 @@ import Button from "react-bootstrap/Button";
 import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
 import { t } from "../i18n/i18n";
+import hudSettings from "../hud/hudSettings";
+import classNames from "classnames";
 import { translateServerText, letteredChoices, LabeledChoice } from "../i18n/serverText";
 
 @observer
@@ -15,7 +17,45 @@ export default class SimpleChoiceComponent extends Component<GameStateComponentP
         return letteredChoices(this.props.gameState.description, this.props.gameState.choices);
     }
 
+    // Tela nova: o texto da escolha e as opções como cartões grandes (fáceis de tocar).
+    private renderHud(): JSX.Element {
+        const gs = this.props.gameState;
+        const mine = this.props.gameClient.doesControlHouse(gs.house);
+        const lettered = this.lettered;
+        return (
+            <Col xs={12}>
+                <div className="hud-choice-text">{translateServerText(gs.description)}</div>
+                {mine ? (
+                    <div className="hud-choices">
+                        {lettered
+                            ? lettered.map(c => (
+                                <button type="button" key={`hud-choice-l_${c.index}`} className="hud-choice" onClick={() => this.choose(c.index)}>
+                                    <span>{c.letter}) {c.title}</span>
+                                    {c.detail && <small>{c.detail}</small>}
+                                </button>
+                            ))
+                            : gs.choices.map((s, i) => (
+                                <button
+                                    type="button"
+                                    key={`hud-choice_${i}`}
+                                    className={classNames("hud-choice", { good: s == "Activate" || s == "Yes", bad: s == "Ignore" || s == "No" })}
+                                    onClick={() => this.choose(i)}
+                                >
+                                    {translateServerText(s)}
+                                </button>
+                            ))}
+                    </div>
+                ) : (
+                    <div className="text-center hud-muted-line">
+                        {t("common.waitingFor", { who: gs.parentGameState.ingame.getControllerOfHouse(gs.house).house.name })}
+                    </div>
+                )}
+            </Col>
+        );
+    }
+
     render(): JSX.Element {
+        if (hudSettings.hudActive) return this.renderHud();
         return (
             <>
                 <Col xs={12} className="text-center" style={{whiteSpace: "pre-line"}}>
