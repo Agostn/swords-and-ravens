@@ -1,6 +1,7 @@
 > **O GoT dos Games (versão em português):** para abrir o site e jogar com os amigos, clique em
 > [**abrir no Codespaces**](https://codespaces.new/Agostn/swords-and-ravens?quickstart=1&ref=design-novo),
 > espere aparecer "PRONTO!" no terminal e abra o link. Passo a passo em [docs/JOGAR-COM-AMIGOS.md](docs/JOGAR-COM-AMIGOS.md).
+> Para rodar no seu próprio PC (de graça, com um link para os amigos): [docs/JOGAR-NO-PC.md](docs/JOGAR-NO-PC.md).
 
 # Swords and Ravens
 

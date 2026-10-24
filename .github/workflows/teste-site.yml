@@ -80,13 +80,28 @@ jobs:
           node tools/qa/site/partida-completa.js prints/computador 1500 | tee /tmp/computador.log
           grep -q "FIM DE JOGO" /tmp/computador.log
 
+      # O celular entra por 127.0.0.1 (e não "localhost"): assim o jogo conecta pelo
+      # próprio site em /game-ws, o mesmo caminho usado no túnel do PC.
       - name: Partida inteira no celular
         env:
           PLAYWRIGHT_MODULE: /tmp/pw/node_modules/playwright
           DEVICE: iPhone 13
+          BASE: http://127.0.0.1:8000
         run: |
           node tools/qa/site/partida-completa.js prints/celular 1500 | tee /tmp/celular.log
           grep -q "FIM DE JOGO" /tmp/celular.log
+
+      - name: Jogar pelo túnel gratuito (como no PC de casa)
+        continue-on-error: true
+        env:
+          PLAYWRIGHT_MODULE: /tmp/pw/node_modules/playwright
+        run: |
+          bash .devcontainer/jogar-online.sh | tee /tmp/tunel-saida.log
+          URL=$(cat /tmp/link-do-site.txt)
+          BASE="$URL" timeout 900 node tools/qa/site/partida-completa.js prints/tunel 60 | tee /tmp/tunel-partida.log
+          grep -q "rodada 2" /tmp/tunel-partida.log
+          ! grep -qi "erro na página" /tmp/tunel-partida.log
+          bash .devcontainer/jogar-online.sh --parar
 
       - name: Logs
         if: always()

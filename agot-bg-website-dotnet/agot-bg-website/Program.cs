@@ -584,6 +584,8 @@ app.UseRequestLocalization(
 
 app.UseCookiePolicy();
 app.UseWebSockets();
+// O jogo em si (servidor TypeScript) também pelo endereço do site: "/game-ws"
+app.MapGameServerWebSocketProxy();
 app.UseRouting();
 
 // Enforce RequireLocalPort restrictions (see EndpointRoutingExtensions.cs) before authentication

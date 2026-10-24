@@ -305,12 +305,18 @@ export default class GameClient {
     const codespacesMatch = location.hostname.match(
       /^(.+)-\d+\.(app\.github\.dev)$/
     );
+    // Em qualquer outro endereço (o site no seu PC aberto pelo túnel, ex.:
+    // "<algo>.trycloudflare.com", ou pelo IP da rede), o site repassa a conexão
+    // para o servidor do jogo em "/game-ws". Assim só precisa de UM endereço.
+    const sameOrigin = `${location.protocol == "https:" ? "wss" : "ws"}://${location.host}/game-ws`;
     const websocketHost =
       location.hostname == "localhost"
         ? "ws://localhost:5000"
         : codespacesMatch
           ? `wss://${codespacesMatch[1]}-5000.${codespacesMatch[2]}`
-          : "wss://play." + location.hostname;
+          : location.hostname.endsWith("swordsandravens.net")
+            ? "wss://play." + location.hostname
+            : sameOrigin;
 
     console.log(`Connecting to ${websocketHost}`);
 
