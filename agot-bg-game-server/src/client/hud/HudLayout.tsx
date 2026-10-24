@@ -63,6 +63,7 @@ import HudSupplyTrack from "./HudSupplyTrack";
 import HudSituation from "./HudSituation";
 import displayedVictoryPoints from "./displayedVictoryPoints";
 import hudSettings from "./hudSettings";
+import { readableTextOn } from "./houseColor";
 import { installTouchTooltips } from "./touchTooltips";
 import { getPiecesStyle, setPiecesStyle } from "../unitImages";
 import { t, TranslationKey } from "../i18n/i18n";
@@ -479,7 +480,16 @@ export default class HudLayout extends Component<HudLayoutProps> {
     if (!this.turnBanner || !this.isOwnTurn) return null;
     const title = this.actionTitle();
     return (
-      <div className="hud-turn-banner" role="status" onClick={() => (this.turnBanner = false)}>
+      <div
+        className={classNames("hud-turn-banner", { "house-colored": this.myHouse != null })}
+        role="status"
+        onClick={() => (this.turnBanner = false)}
+        style={
+          this.myHouse
+            ? ({ "--turn-color": this.myHouse.color, color: readableTextOn(this.myHouse.color) } as React.CSSProperties)
+            : undefined
+        }
+      >
         <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
           <path d="M3 18h18l-2-10-5 4-2-7-2 7-5-4z" />
         </svg>
@@ -1022,7 +1032,14 @@ export default class HudLayout extends Component<HudLayoutProps> {
         aria-label={t("hud.action.title")}
       >
         <div className="hud-action-header">
-          <span className={classNames("hud-badge", badge.cls)}>
+          <span
+            className={classNames("hud-badge", badge.cls, { "house-colored": ownTurn && me != null })}
+            style={
+              ownTurn && me
+                ? ({ "--turn-color": me.color, color: readableTextOn(me.color) } as React.CSSProperties)
+                : undefined
+            }
+          >
             {ownTurn && (
               <svg
                 width="14"

@@ -11,6 +11,7 @@ import { t } from "../i18n/i18n";
 import HouseChip from "../hud/HouseChip";
 import classNames from "classnames";
 import * as _ from "lodash";
+import hudSettings from "../hud/hudSettings";
 
 @observer
 export default class BiddingComponent<ParentGameState extends BiddingGameStateParent> extends Component<GameStateComponentProps<BiddingGameState<ParentGameState>>> {
@@ -68,7 +69,103 @@ export default class BiddingComponent<ParentGameState extends BiddingGameStatePa
         );
     }
 
+    // Tela nova: número grande no meio com − e +, atalhos (nada / metade / tudo),
+    // botão que diz o lance e as Casas com as fichas e quem já deu o lance.
+    renderHud(): ReactNode {
+        const me = this.authenticatedPlayer?.house ?? null;
+        const max = me?.powerTokens ?? 0;
+        const participates = me != null && this.gameState.participatingHouses.includes(me);
+        const already = this.biddenPowerTokens >= 0;
+        const n = this.powerTokensToBid;
+        const setBid = (v: number): void => {
+            this.gameState.powerTokensToBid = Math.max(0, Math.min(max, v));
+        };
+        const houses = _.sortBy(this.gameState.participatingHouses, h => -h.powerTokens);
+        const left = this.gameState.getHousesLeftToBid();
+        return (
+            <Col xs={12}>
+                <div className="bidx">
+                    {participates && (
+                        <div className="bidx-card">
+                            <div className="bidx-label">{t("bid.yourBid")}</div>
+                            <div className="bidx-control">
+                                <button type="button" className="bidx-step" aria-label={t("bid.less")}
+                                    disabled={n <= 0} onClick={() => setBid(n - 1)}>−</button>
+                                <div className="bidx-value" aria-live="polite">
+                                    <b>{n}</b>
+                                    <small>{t("bid.ofYourTokens", { max })}</small>
+                                </div>
+                                <button type="button" className="bidx-step" aria-label={t("bid.more")}
+                                    disabled={n >= max} onClick={() => setBid(n + 1)}>+</button>
+                            </div>
+                            <input
+                                type="range"
+                                className="bidx-range"
+                                min={0}
+                                max={max}
+                                value={n}
+                                aria-label={t("bid.yourBid")}
+                                onChange={e => setBid(parseInt(e.target.value))}
+                                disabled={max == 0}
+                                style={{ "--fill": `${max > 0 ? (n / max) * 100 : 0}%` } as React.CSSProperties}
+                            />
+                            <div className="bidx-quick">
+                                {[
+                                    [0, t("bid.quick.none")],
+                                    [Math.floor(max / 2), t("bid.quick.half")],
+                                    [max, t("bid.quick.all")]
+                                ].map(([v, label]) => (
+                                    <button key={`bidx-q-${label}`} type="button"
+                                        className={classNames("bidx-chip", { active: n == v })}
+                                        onClick={() => setBid(v as number)} disabled={max == 0 && v != 0}>
+                                        {label} <small>({v})</small>
+                                    </button>
+                                ))}
+                            </div>
+                            <button type="button" className="bidx-confirm"
+                                disabled={!this.dirty} onClick={() => this.bid(n)}>
+                                {already && !this.dirty
+                                    ? t("bid.sent", { n })
+                                    : already
+                                        ? t("bid.change", { n })
+                                        : t("bid.give", { n })}
+                            </button>
+                            <div className="bidx-secret">{t("bid.secret")}</div>
+                        </div>
+                    )}
+                    <div className="bidx-houses">
+                        <div className="bidx-label">{t("bid.powerOfHouses")}</div>
+                        <div className="bidx-house-list">
+                            {houses.map(h => {
+                                const done = this.gameState.bids.has(h);
+                                return (
+                                    <div key={`bidx-h-${h.id}`} className={classNames("bidx-house", { mine: h == me, done })}>
+                                        <HouseChip house={h} size={26} />
+                                        <span className="bidx-house-name">{h.name}</span>
+                                        <span className="bidx-house-power" title={t("hud.stats.power", { n: h.powerTokens })}>
+                                            <b>{h.powerTokens}</b>
+                                            <small>{t("bid.tokensWord", { n: h.powerTokens })}</small>
+                                        </span>
+                                        <span className={classNames("bidx-house-state", { done })}>
+                                            {done ? t("bid.state.done") : t("bid.state.thinking")}
+                                        </span>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                        {left.length > 0 && (
+                            <div className="bidx-waiting">
+                                {t("common.waitingFor", { who: left.map(h => this.props.gameState.ingame.getControllerOfHouse(h).house.name).join(", ") })}
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </Col>
+        );
+    }
+
     render(): ReactNode {
+        if (hudSettings.hudActive) return this.renderHud();
         const max = this.authenticatedPlayer?.house.powerTokens ?? 0;
         const setBid = (n: number): void => {
             this.gameState.powerTokensToBid = Math.max(0, Math.min(max, n));

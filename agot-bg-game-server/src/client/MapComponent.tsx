@@ -47,7 +47,7 @@ import {
 import PlaceOrdersGameState from "../common/ingame-game-state/planning-game-state/place-orders-game-state/PlaceOrdersGameState";
 import PlaceOrdersForVassalsGameState from "../common/ingame-game-state/planning-game-state/place-orders-for-vassals-game-state/PlaceOrdersForVassalsGameState";
 import UseRavenGameState from "../common/ingame-game-state/action-game-state/use-raven-game-state/UseRavenGameState";
-import { renderRegionTooltip } from "./regionTooltip";
+import { renderRegionTooltip, renderUnitStrength } from "./regionTooltip";
 import getGarrisonToken from "./garrisonTokens";
 import { ship } from "../common/ingame-game-state/game-data-structure/unitTypes";
 import { OverlayChildren } from "react-bootstrap/esm/Overlay";
@@ -1102,6 +1102,7 @@ export default class MapComponent extends Component<MapComponentProps> {
                           {getDragonPrefix(dragonStrength)}
                           {u.type.name}
                         </b>), p1: (<b>{u.allegiance?.name ?? controller?.name ?? t("auto2.MapComponent.0")}</b>), p2: (<b>{r.name}</b>) })}
+                        {renderUnitStrength(u)}
                       </div>
                     </Tooltip>
                   }

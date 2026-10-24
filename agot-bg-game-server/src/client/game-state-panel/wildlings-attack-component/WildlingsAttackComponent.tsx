@@ -4,6 +4,7 @@ import WildlingsAttackGameState
     from "../../../common/ingame-game-state/westeros-game-state/wildlings-attack-game-state/WildlingsAttackGameState";
 import BiddingGameState from "../../../common/ingame-game-state/westeros-game-state/bidding-game-state/BiddingGameState";
 import BiddingComponent from "../BiddingComponent";
+import hudSettings from "../../hud/hudSettings";
 import SimpleChoiceGameState from "../../../common/ingame-game-state/simple-choice-game-state/SimpleChoiceGameState";
 import SimpleChoiceComponent from "../SimpleChoiceComponent";
 import PreemptiveRaidWildlingVictoryGameState
@@ -59,6 +60,43 @@ export default class WildlingsAttackComponent extends Component<GameStateCompone
         const results = this.props.gameState.biddingResults
             ? _.flatMap(this.props.gameState.biddingResults.map(([bid, houses]) => houses.map(h => [h, bid] as [House, number])))
             : null;
+        if (hudSettings.hudActive && this.props.gameState.childGameState instanceof BiddingGameState) {
+            const gs = this.props.gameState;
+            return (
+                <>
+                    <Col xs={12}>
+                        <div className="wl-head">
+                            <div className="wl-strength">
+                                <img src={mammothImage} width={34} alt="" />
+                                <b>{gs.wildlingStrength}</b>
+                                <small>{t("wl.strength")}</small>
+                            </div>
+                            <div className="wl-explain">
+                                <b className="wl-title">{t("auto.game-state-panel.wildlings-attack-component.WildlingsAttackComponent.0")}</b>
+                                <div className="wl-outcomes">
+                                    <div className="wl-outcome nw">
+                                        <span className="wl-outcome-head">{t("wl.nwWins", { n: gs.wildlingStrength })}</span>
+                                        <span>{t("wl.nwWinsText")}</span>
+                                    </div>
+                                    <div className="wl-outcome wl">
+                                        <span className="wl-outcome-head">{t("wl.wlWins", { n: gs.wildlingStrength })}</span>
+                                        <span>{t("wl.wlWinsText")}</span>
+                                    </div>
+                                </div>
+                                {gs.excludedHouses.length > 0 && (
+                                    <small className="wl-excluded">
+                                        {t("wl.excluded", { houses: gs.excludedHouses.map(h => h.name).join(", ") })}
+                                    </small>
+                                )}
+                            </div>
+                        </div>
+                    </Col>
+                    <Row>
+                        {renderChildGameState(this.props, [[BiddingGameState, BiddingComponent]])}
+                    </Row>
+                </>
+            );
+        }
         return (
             <>
                 {!this.props.gameState.biddingResults && <Row className="justify-content-center mt-2 mb-1">

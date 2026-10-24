@@ -13,6 +13,7 @@ import { t, tr } from "./i18n/i18n";
 import DefenseOrderType from "../common/ingame-game-state/game-data-structure/order-types/DefenseOrderType";
 import SupportOrderType from "../common/ingame-game-state/game-data-structure/order-types/SupportOrderType";
 import RegionKind from "../common/ingame-game-state/game-data-structure/RegionKind";
+import Unit from "../common/ingame-game-state/game-data-structure/Unit";
 
 /**
  * Força da área para uma batalha, sem contar as Cartas de Casa:
@@ -90,6 +91,23 @@ function renderStrength(region: Region): React.ReactNode {
   );
 }
 
+/** Força de combate de uma peça (para o balão da peça no mapa). */
+export function renderUnitStrength(u: Unit): React.ReactNode {
+  if (u.wounded) {
+    return <div className="unit-tip-strength wounded">{t("map.unit.woundedNoStrength")}</div>;
+  }
+  const normal = u.getCombatStrength(false);
+  const castle = u.getCombatStrength(true);
+  return (
+    <div className="unit-tip-strength">
+      <span>{t("map.unit.strength")}</span> <b>{normal}</b>
+      {castle != normal && (
+        <small className="d-block">{t("map.unit.strengthCastle", { n: castle })}</small>
+      )}
+    </div>
+  );
+}
+
 // Unidades da área como ícones com a quantidade ao lado (feridas à parte)
 function renderUnits(region: Region): React.ReactNode {
   const units = region.units.values;
@@ -119,6 +137,9 @@ function renderUnits(region: Region): React.ReactNode {
               aria-hidden="true"
             />
             <b>{list.length}</b>
+            <small className="region-tip-unit-str">
+              {t("map.unit.eachStrength", { n: u.getCombatStrength(false) })}
+            </small>
           </span>
         );
       })}
