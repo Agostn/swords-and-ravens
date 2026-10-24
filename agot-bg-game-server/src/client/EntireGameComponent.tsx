@@ -558,7 +558,8 @@ export default class EntireGameComponent extends Component<EntireGameComponentPr
       this.props.gameClient.sfxManager.playNotificationSound();
 
       const player = this.props.gameClient.authenticatedPlayer;
-      if (player) {
+      // Tela nova: a faixa "Sua vez" aparece no próprio mapa (HudLayout)
+      if (player && !hudSettings.hudActive) {
         // must be truthy but so what
         toast(
           <div>

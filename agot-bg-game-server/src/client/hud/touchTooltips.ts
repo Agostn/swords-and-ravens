@@ -21,7 +21,7 @@ let startY = 0;
 let holding = false;
 let shownOn: Element | null = null;
 
-function isTouchDevice(): boolean {
+export function isTouchDevice(): boolean {
   try {
     return (
       window.matchMedia("(hover: none)").matches ||

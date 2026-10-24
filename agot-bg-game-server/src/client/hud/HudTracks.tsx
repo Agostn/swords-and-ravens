@@ -20,6 +20,8 @@ interface HudTracksProps {
   ingame: IngameGameState;
   tracks: InfluenceTrackDetails[];
   myHouse: House | null;
+  // Coluna da esquerda: cada trilha numa linha, com a posição embaixo
+  vertical?: boolean;
 }
 
 /**
@@ -65,11 +67,17 @@ export default class HudTracks extends Component<HudTracksProps> {
     ];
 
     return (
-      <div className="hud-panel hud-tracks" aria-label={t("hud.tracks.title")}>
+      <div
+        className={classNames("hud-tracks", {
+          "hud-panel": !this.props.vertical,
+          vertical: this.props.vertical
+        })}
+        aria-label={t("hud.tracks.title")}
+      >
         {this.props.tracks.map((track, i) => (
           <div className="hud-track" key={`hud-track-${i}`}>
             <OverlayTrigger
-              placement="bottom"
+              placement={this.props.vertical ? "right" : "bottom"}
               overlay={
                 <Tooltip
                   id={`hud-track-tooltip-${i}`}
@@ -100,7 +108,7 @@ export default class HudTracks extends Component<HudTracksProps> {
                   {h ? (
                     <HouseChip
                       house={h}
-                      size={24}
+                      size={this.props.vertical ? 28 : 24}
                       mine={h == this.props.myHouse}
                       tooltip={
                         <>
@@ -144,6 +152,11 @@ export default class HudTracks extends Component<HudTracksProps> {
                       })}
                     >
                       {_.repeat("★", game.starredOrderRestrictions[j] ?? 0)}
+                    </span>
+                  )}
+                  {this.props.vertical && (
+                    <span className="hud-track-pos" aria-hidden="true">
+                      {j + 1}º
                     </span>
                   )}
                 </span>

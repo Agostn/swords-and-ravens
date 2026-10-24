@@ -4,7 +4,7 @@
 
 // ===== tablet =====
 
-.hud-root.hud-tablet {
+.hud-root.hud-tablet:not(.hud-two-columns) {
   .hud-top-left {
     max-width: calc(100vw - 170px);
   }
@@ -32,7 +32,7 @@
 }
 
 // cabeçalho da partida (relógio, nome, avisos) numa 2ª faixa, à esquerda
-body.hud-tablet .hud-game-header {
+body.hud-tablet:not(.hud-two-columns) .hud-game-header {
   top: 62px;
   right: $hud-gap;
   max-width: min(420px, calc(100vw - 24px));
@@ -408,4 +408,29 @@ body.hud-sheet-open .hud-game-header {
 // "É a sua vez!" menor no celular, para não cobrir o painel
 body.hud-phone .Toastify__toast {
   zoom: 0.62;
+}
+
+// Fase: no celular só o nome ("Planejamento"); no resto, "Fase de Planejamento"
+.hud-phase-short {
+  display: none;
+}
+
+.hud-root.hud-phone {
+  .hud-phase-full {
+    display: none;
+  }
+
+  .hud-phase-short {
+    display: inline;
+  }
+
+  // painel da jogada: no máximo ~40% da tela, o resto rola por dentro
+  .hud-action-body {
+    max-height: 38vh;
+  }
+
+  // Cartas de Westeros da rodada: começam recolhidas no celular
+  .hud-westeros-strip-title {
+    margin-bottom: 2px;
+  }
 }

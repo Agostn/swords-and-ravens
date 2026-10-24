@@ -17,63 +17,20 @@ import BiddingGameState from "../../common/ingame-game-state/westeros-game-state
 import ChooseHouseCardGameState from "../../common/ingame-game-state/action-game-state/resolve-march-order-game-state/combat-game-state/choose-house-card-game-state/ChooseHouseCardGameState";
 import PlaceOrdersGameState from "../../common/ingame-game-state/planning-game-state/place-orders-game-state/PlaceOrdersGameState";
 import HouseChip from "./HouseChip";
+import HudSupplyTrack from "./HudSupplyTrack";
 import displayedVictoryPoints from "./displayedVictoryPoints";
 import { t } from "../i18n/i18n";
 
-import castleImage from "../../../public/images/icons/castle.svg";
-import crownImage from "../../../public/images/icons/crown.svg";
-import barrelImage from "../../../public/images/icons/barrel.svg";
-
-type StatKind = "vp" | "power" | "supply" | "cards";
-
-const STAT_ICONS: Record<Exclude<StatKind, "cards">, string> = {
-  vp: castleImage,
-  power: crownImage,
-  supply: barrelImage
-};
-
-// Ícone de carta (desenhado aqui; não há um pronto nas imagens do jogo)
-function CardIcon(): JSX.Element {
-  return (
-    <svg
-      className="hud-stat-icon"
-      width="14"
-      height="14"
-      viewBox="0 0 24 24"
-      aria-hidden="true"
-    >
-      <rect
-        x="5"
-        y="2.5"
-        width="14"
-        height="19"
-        rx="2"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-      />
-      <path d="M12 7l2.2 5L12 17l-2.2-5z" fill="currentColor" />
-    </svg>
-  );
-}
-
-export function StatIcon({ kind }: { kind: StatKind }): JSX.Element {
-  if (kind == "cards") return <CardIcon />;
-  return (
-    <img
-      className="hud-stat-icon"
-      src={STAT_ICONS[kind]}
-      width={14}
-      height={14}
-      alt=""
-    />
-  );
-}
+import StatIcon, { StatKind } from "./StatIcon";
 
 interface HudHouseListProps {
   gameClient: GameClient;
   ingame: IngameGameState;
   mapControls: MapControls;
+  // "cards": cada Casa num cartão (coluna da direita da tela de duas colunas)
+  variant?: "rows" | "cards";
+  // A trilha de Suprimento vai para a coluna da esquerda na tela de duas colunas
+  showSupplyTrack?: boolean;
 }
 
 interface HouseLine {
@@ -186,8 +143,10 @@ export default class HudHouseList extends Component<HudHouseListProps> {
     const waited = this.waitedUsers();
     const houses: House[] = this.props.gameClient.getPotentialWinners();
 
+    const cardsView = this.props.variant == "cards";
     return (
-      <div className="hud-house-list">
+      <div className={classNames("hud-house-list", { cards: cardsView })}>
+        {!cardsView && (
         <div className="hud-house-list-head">
           <span>{t("hud.houses.house")}</span>
           {this.renderHeadLabel("vp", t("hud.houses.vpShort"), t("hud.stats.vpHelp", { n: game.victoryPointsCountNeededToWin }))}
@@ -195,6 +154,7 @@ export default class HudHouseList extends Component<HudHouseListProps> {
           {this.renderHeadLabel("supply", t("hud.houses.supplyShort"), t("hud.stats.supplyHelp"))}
           {this.renderHeadLabel("cards", t("hud.houses.cardsShort"), t("hud.stats.cardsHelp"))}
         </div>
+        )}
         {houses.map((h, position) => {
           const l = this.line(h, waited);
           const cards = h.houseCards.values.filter(
@@ -208,7 +168,7 @@ export default class HudHouseList extends Component<HudHouseListProps> {
             <OverlayTrigger
               key={`hud-house-${h.id}`}
               trigger="click"
-              placement="left"
+              placement={cardsView ? "left-start" : "left"}
               rootClose
               overlay={
                 <Popover
@@ -228,15 +188,19 @@ export default class HudHouseList extends Component<HudHouseListProps> {
             >
               <button
                 type="button"
-                className={classNames("hud-house-line", {
-                  mine: l.mine,
-                  leader: position == 0 && !this.ingame.isEndedOrCancelled
-                })}
+                className={classNames(
+                  cardsView ? "hud-house-card" : "hud-house-line",
+                  {
+                    mine: l.mine,
+                    leader: position == 0 && !this.ingame.isEndedOrCancelled,
+                    waited: l.statusClass != "ready"
+                  }
+                )}
                 style={{ "--house-color": h.color } as React.CSSProperties}
                 title={t("hud.houses.details")}
               >
                 <span className="hud-house-who">
-                  <HouseChip house={h} size={30} mine={l.mine} />
+                  <HouseChip house={h} size={cardsView ? 36 : 30} mine={l.mine} />
                   <span className="hud-house-names">
                     <b style={{ color: h.color }} className="hud-house-name">
                       {h.name}
@@ -254,6 +218,7 @@ export default class HudHouseList extends Component<HudHouseListProps> {
                     )}
                   </span>
                 </span>
+                <span className="hud-house-stats">
                 {this.renderStat(h, "vp", vp, t("hud.stats.vp", { n: vp, max: game.victoryPointsCountNeededToWin }))}
                 {this.renderStat(h, "power", h.powerTokens, t("hud.stats.power", { n: h.powerTokens }))}
                 {this.renderStat(
@@ -270,11 +235,14 @@ export default class HudHouseList extends Component<HudHouseListProps> {
                   })
                 )}
                 {this.renderStat(h, "cards", cards, t("hud.stats.cards", { n: cards, total: totalCards }))}
+                </span>
               </button>
             </OverlayTrigger>
           );
         })}
 
+        {this.props.showSupplyTrack != false && (
+          <>
         <button
           type="button"
           className="hud-section-toggle"
@@ -297,60 +265,15 @@ export default class HudHouseList extends Component<HudHouseListProps> {
             <path d={this.supplyOpen ? "M6 15l6-6 6 6" : "M6 9l6 6 6-6"} />
           </svg>
         </button>
-        {this.supplyOpen && this.renderSupplyTrack(houses)}
+        {this.supplyOpen && (
+          <HudSupplyTrack
+            gameClient={this.props.gameClient}
+            ingame={this.ingame}
+          />
+        )}
+          </>
+        )}
         {this.renderSpectators()}
-      </div>
-    );
-  }
-
-  // Trilha de Suprimento em linhas grandes: cada nível mostra o tamanho
-  // dos exércitos permitidos e as Casas que estão nele.
-  private renderSupplyTrack(houses: House[]): ReactNode {
-    const game = this.ingame.game;
-    const me = this.props.gameClient.authenticatedPlayer?.house ?? null;
-    const levels = _.range(game.supplyRestrictions.length - 1, -1, -1);
-    return (
-      <div className="hud-supply-track">
-        <div className="hud-supply-row hud-supply-head">
-          <span>{t("hud.supply.level")}</span>
-          <span>{t("hud.supply.armies")}</span>
-          <span>{t("hud.supply.houses")}</span>
-        </div>
-        {levels.map((level) => {
-          const here = houses.filter((h) => h.supplyLevel == level);
-          return (
-            <div
-              key={`hud-supply-${level}`}
-              className={classNames("hud-supply-row", {
-                occupied: here.length > 0,
-                mine: me != null && me.supplyLevel == level
-              })}
-            >
-              <span className="hud-supply-level">
-                <StatIcon kind="supply" />
-                {level}
-              </span>
-              <span className="hud-supply-armies">
-                {game.supplyRestrictions[level].map((size, i) => (
-                  <span key={`hud-army-${level}-${i}`} className="hud-army-size">
-                    {size}
-                  </span>
-                ))}
-              </span>
-              <span className="hud-supply-houses">
-                {here.map((h) => (
-                  <HouseChip
-                    key={`hud-supply-house-${h.id}`}
-                    house={h}
-                    size={22}
-                    mine={h == me}
-                  />
-                ))}
-              </span>
-            </div>
-          );
-        })}
-        <div className="hud-supply-note">{t("hud.supply.note")}</div>
       </div>
     );
   }

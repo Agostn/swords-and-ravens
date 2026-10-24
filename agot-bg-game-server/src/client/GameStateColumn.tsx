@@ -71,7 +71,8 @@ interface GameStateColumnProps {
   onColumnSwapClick: (e: React.MouseEvent<HTMLButtonElement>) => void;
   // Tela nova (mapa em tela cheia): "status" mostra só a barra de rodada,
   // fase e Selvagens; "action" mostra só o painel da jogada atual.
-  hudPart?: "status" | "action";
+  // "westeros": a mesma informação de "status", em coluna (tela de duas colunas).
+  hudPart?: "status" | "action" | "westeros";
 }
 
 @observer
@@ -257,6 +258,18 @@ export default class GameStateColumn extends Component<GameStateColumnProps> {
         >
           {phaseAndState}
         </div>
+      );
+    }
+
+    if (this.props.hudPart == "westeros") {
+      return this.renderHudWesteros(
+        phases.map((p) => ({ name: p.name, active: isPhaseActive(p) })),
+        roundWarning,
+        roundCritical,
+        wildlingsWarning,
+        wildlingsCritical,
+        knowsWildlingCard,
+        nextWildlingCard?.type
       );
     }
 
@@ -508,7 +521,9 @@ export default class GameStateColumn extends Component<GameStateColumnProps> {
               rootClose
             >
               <button type="button" className="hud-text-button">
-                <b>{t("phase.label", { phase: activePhaseName })}</b>
+                <b className="hud-phase-full">{t("phase.label", { phase: activePhaseName })}</b>
+                {/* celular: só o nome da fase, para caber */}
+                <b className="hud-phase-short">{activePhaseName}</b>
                 <span className="hud-caret" aria-hidden="true">▾</span>
               </button>
             </OverlayTrigger>
@@ -576,6 +591,202 @@ export default class GameStateColumn extends Component<GameStateColumnProps> {
               </span>
             </OverlayTrigger>
           </>
+        )}
+      </div>
+    );
+  }
+
+  // Coluna "Westeros" da tela de duas colunas: rodada, fase e Selvagens
+  // em blocos grandes, um embaixo do outro.
+  private renderHudWesteros(
+    phases: { name: string; active: boolean }[],
+    roundWarning: boolean,
+    roundCritical: boolean,
+    wildlingsWarning: boolean,
+    wildlingsCritical: boolean,
+    knowsWildlingCard: boolean,
+    nextWildlingCard: WildlingCardType | undefined
+  ): ReactNode {
+    const turn = this.game.turn;
+    const max = this.game.maxTurns;
+    const wildlingPercent = Math.round(
+      (this.game.wildlingStrength / MAX_WILDLING_STRENGTH) * 100
+    );
+    const anyPhase = phases.some((p) => p.active);
+    return (
+      <div className="hud-west" role="status">
+        <div className="hud-west-sec">
+          <div className="hud-west-label">
+            <img src={hourglassImage} width={14} height={14} alt="" />
+            <span>{t("hud.west.round")}</span>
+            <OverlayTrigger
+              overlay={
+                <Tooltip id="hud-west-colors-tooltip">
+                  {hudSettings.showHouseColors
+                    ? t("hud.status.houseColorsOff")
+                    : t("hud.status.houseColorsOn")}
+                </Tooltip>
+              }
+              placement="bottom"
+            >
+              <button
+                type="button"
+                className={classNames("hud-west-mini-button", {
+                  active: hudSettings.showHouseColors
+                })}
+                aria-pressed={hudSettings.showHouseColors}
+                aria-label={t("hud.status.houseColors")}
+                onClick={() => hudSettings.toggleHouseColors()}
+              >
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  aria-hidden="true"
+                >
+                  <path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2z" />
+                  <path d="M9 4v14M15 6v14" />
+                </svg>
+                <span>{t("hud.status.houseColors")}</span>
+              </button>
+            </OverlayTrigger>
+          </div>
+          <OverlayTrigger
+            overlay={
+              <Tooltip id="hud-west-round-tooltip">
+                {t("ingame.roundOf", { turn, max })}
+              </Tooltip>
+            }
+            placement="right"
+          >
+            <div className="hud-west-round">
+              <b
+                className={classNames({
+                  "txt-warning": roundWarning,
+                  "txt-critical": roundCritical
+                })}
+              >
+                {turn}
+              </b>
+              <span>{t("hud.west.ofMax", { max })}</span>
+            </div>
+          </OverlayTrigger>
+          <div className="hud-west-segments" aria-hidden="true">
+            {_.range(max).map((i) => (
+              <span
+                key={`hud-west-seg-${i}`}
+                className={classNames({
+                  done: i < turn - 1,
+                  current: i == turn - 1
+                })}
+              />
+            ))}
+          </div>
+        </div>
+
+        {anyPhase && (
+          <div className="hud-west-sec">
+            <div className="hud-west-label">
+              <span>{t("hud.west.phase")}</span>
+            </div>
+            <OverlayTrigger
+              overlay={this.renderRemainingWesterosCards()}
+              trigger="click"
+              placement="right-start"
+              rootClose
+            >
+              <button
+                type="button"
+                className="hud-west-phases"
+                title={t("hud.west.phaseHint")}
+              >
+                {phases.map((p) => (
+                  <span
+                    key={`hud-west-phase-${p.name}`}
+                    className={classNames({ active: p.active })}
+                  >
+                    {p.name}
+                  </span>
+                ))}
+              </button>
+            </OverlayTrigger>
+          </div>
+        )}
+
+        <OverlayTrigger
+          overlay={this.renderWildlingDeckPopover(
+            knowsWildlingCard,
+            nextWildlingCard
+          )}
+          trigger="click"
+          placement="right-start"
+          rootClose
+        >
+          <button
+            type="button"
+            className={classNames("hud-west-sec hud-west-wildlings", {
+              "weak-box-outline": knowsWildlingCard
+            })}
+            title={t("hud.status.wildlingsHint")}
+          >
+            <span className="hud-west-label">
+              <img
+                src={mammothImage}
+                width={16}
+                height={16}
+                alt=""
+                className={classNames(
+                  { "dye-warning": wildlingsWarning },
+                  { "dye-critical": wildlingsCritical }
+                )}
+              />
+              <span>{t("hud.west.wildlings")}</span>
+              <b
+                className={classNames("hud-west-count", {
+                  "txt-warning": wildlingsWarning,
+                  "txt-critical": wildlingsCritical
+                })}
+              >
+                {this.game.wildlingStrength} / {MAX_WILDLING_STRENGTH}
+              </b>
+            </span>
+            <span className="hud-meter wide" aria-hidden="true">
+              <span
+                className={classNames("hud-meter-fill", {
+                  warning: wildlingsWarning,
+                  critical: wildlingsCritical
+                })}
+                style={{ width: `${wildlingPercent}%` }}
+              />
+            </span>
+            <small className="hud-west-note">
+              {t("hud.west.wildlingsNote", { max: MAX_WILDLING_STRENGTH })}
+            </small>
+          </button>
+        </OverlayTrigger>
+
+        {this.game.dragonStrengthTokens.length > 0 && (
+          <OverlayTrigger
+            overlay={this.renderDragonStrengthTooltip()}
+            placement="right"
+          >
+            <div
+              className="hud-west-sec hud-west-dragons"
+              onMouseEnter={() => this.highlightRegionsWithDragons()}
+              onMouseLeave={() => this.highlightedRegions.clear()}
+            >
+              <span className="hud-west-label">
+                <img src={spikedDragonHeadImage} width={16} height={16} alt="" />
+                <span>{t("hud.west.dragons")}</span>
+                <b className="hud-west-count">
+                  {this.game.currentDragonStrength}
+                </b>
+              </span>
+            </div>
+          </OverlayTrigger>
         )}
       </div>
     );
@@ -816,7 +1027,7 @@ export default class GameStateColumn extends Component<GameStateColumnProps> {
     // Tela nova: botão "Cores das Casas" ligado pinta o mapa o tempo todo
     // (calculado na hora, então acompanha as marchas).
     if (
-      this.props.hudPart == "status" &&
+      (this.props.hudPart == "status" || this.props.hudPart == "westeros") &&
       hudSettings.showHouseColors &&
       this.highlightedRegions.size == 0
     ) {

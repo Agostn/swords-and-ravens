@@ -17,6 +17,7 @@ import PlaceOrdersForVassalsComponent from "./PlaceOrdersForVassalsComponent";
 import classNames from "classnames";
 import hudSettings from "../hud/hudSettings";
 import { t } from "../i18n/i18n";
+import { isTouchDevice } from "../hud/touchTooltips";
 
 @observer
 export default class PlanningComponent extends Component<GameStateComponentProps<PlanningGameState>> {
@@ -28,13 +29,27 @@ export default class PlanningComponent extends Component<GameStateComponentProps
     private renderHudWesterosStrip(): ReactNode {
         const cards = this.props.gameState.revealedWesterosCards;
         if (cards.length == 0) return null;
+        const collapsed = hudSettings.isCollapsed("westerosCards");
+        const touch = isTouchDevice();
         return (
-            <div className="hud-westeros-strip">
-                <div className="hud-westeros-strip-title">
-                    {t("hud.westeros.title")}
-                    <span className="hud-muted"> · {t("hud.westeros.hint")}</span>
-                </div>
-                <div className="hud-westeros-strip-cards">
+            <div className={classNames("hud-westeros-strip", { collapsed })}>
+                <button
+                    type="button"
+                    className="hud-westeros-strip-title"
+                    aria-expanded={!collapsed}
+                    onClick={() => hudSettings.toggleSection("westerosCards")}
+                >
+                    <span>
+                        {t("hud.westeros.title")}
+                        {collapsed
+                            ? <span className="hud-muted"> · {cards.map((wc) => wc.type.name).join(" · ")}</span>
+                            : <span className="hud-muted"> · {touch ? t("hud.westeros.hintTouch") : t("hud.westeros.hint")}</span>}
+                    </span>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                        <path d={collapsed ? "M6 9l6 6 6-6" : "M6 15l6-6 6 6"} />
+                    </svg>
+                </button>
+                {!collapsed && <div className="hud-westeros-strip-cards">
                     {cards.map((wc, i) => {
                         const restricts = PlanningComponent.RESTRICTING_CARDS.includes(wc.type.id);
                         return (
@@ -58,7 +73,7 @@ export default class PlanningComponent extends Component<GameStateComponentProps
                             </div>
                         );
                     })}
-                </div>
+                </div>}
             </div>
         );
     }

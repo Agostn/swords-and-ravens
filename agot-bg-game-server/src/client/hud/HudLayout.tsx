@@ -1,7 +1,7 @@
 import * as React from "react";
 import { Component, ReactNode } from "react";
 import { observer } from "mobx-react";
-import { observable } from "mobx";
+import { observable, reaction, IReactionDisposer } from "mobx";
 import { OverlayTrigger, Popover } from "react-bootstrap";
 import { OverlayChildren } from "react-bootstrap/esm/Overlay";
 import classNames from "classnames";
@@ -59,6 +59,8 @@ import HudOrdersStrip from "./HudOrdersStrip";
 import HudBidResults from "./HudBidResults";
 import HudBattleResult from "./HudBattleResult";
 import HouseChip from "./HouseChip";
+import HudSupplyTrack from "./HudSupplyTrack";
+import HudSituation from "./HudSituation";
 import displayedVictoryPoints from "./displayedVictoryPoints";
 import hudSettings from "./hudSettings";
 import { installTouchTooltips } from "./touchTooltips";
@@ -66,6 +68,8 @@ import { getPiecesStyle, setPiecesStyle } from "../unitImages";
 import { t, TranslationKey } from "../i18n/i18n";
 
 import settingsKnobsImage from "../../../public/images/icons/settings-knobs.svg";
+import hourglassImage from "../../../public/images/icons/hourglass.svg";
+import mammothImage from "../../../public/images/icons/mammoth.svg";
 import speakerImage from "../../../public/images/icons/speaker.svg";
 import speakerOffImage from "../../../public/images/icons/speaker-off.svg";
 
@@ -84,6 +88,10 @@ const TABLET_TOP_BAR_HEIGHT = 110;
 // celular: status, trilhas e cabeçalho ficam em 3 faixas finas no topo
 const PHONE_TOP_BAR_HEIGHT = 136;
 const LEFT_DOCK_WIDTH = 320;
+// tela de duas colunas: altura reservada para o cabeçalho da partida (relógio)
+const HEADER_SPACE = 44;
+// coluna recolhida: só uma faixa fina com ícones
+const STRIP_WIDTH = 56;
 
 type ScreenSize = "phone" | "tablet" | "desktop";
 
@@ -120,6 +128,11 @@ export default class HudLayout extends Component<HudLayoutProps> {
   // Altura dos painéis de baixo (jogada e canto esquerdo), para o mapa poder
   // ser arrastado para cima deles e nenhuma área ficar escondida embaixo.
   @observable bottomPanelsHeight = 0;
+  // Faixa "Sua vez" que aparece por alguns segundos quando chega a vez
+  @observable turnBanner = false;
+  private turnBannerTimer: number | null = null;
+  private turnDisposer: IReactionDisposer | null = null;
+  private baseTitle = document.title;
   private actionDockRef = React.createRef<HTMLElement>();
   private leftDockRef = React.createRef<HTMLDivElement>();
   private panelsObserver: ResizeObserver | null = null;
@@ -132,10 +145,18 @@ export default class HudLayout extends Component<HudLayoutProps> {
     return this.props.ingame;
   }
 
-  // Painel das Casas: lista compacta, então pode ser estreito.
+  // Coluna das Casas (direita)
   private get rightPanelWidth(): number {
-    if (this.windowWidth >= 1800) return 360;
-    return this.windowWidth >= 1280 ? 330 : 300;
+    if (this.windowWidth >= 1800) return 340;
+    if (this.windowWidth >= 1400) return 316;
+    return this.windowWidth >= 1200 ? 296 : 270;
+  }
+
+  // Coluna de Westeros (esquerda)
+  private get leftColumnWidth(): number {
+    if (this.windowWidth >= 1800) return 320;
+    if (this.windowWidth >= 1400) return 296;
+    return this.windowWidth >= 1200 ? 280 : 256;
   }
 
   private onResize = (): void => {
@@ -168,6 +189,12 @@ export default class HudLayout extends Component<HudLayoutProps> {
     const size = this.screenSize;
     document.body.classList.toggle("hud-phone", size == "phone");
     document.body.classList.toggle("hud-tablet", size == "tablet");
+    // computador e tablet: tela de duas colunas (Westeros à esquerda, Casas à direita)
+    document.body.classList.toggle("hud-two-columns", size != "phone");
+    document.body.classList.toggle(
+      "hud-left-closed",
+      size != "phone" && !hudSettings.leftPanelOpen
+    );
     // celular: com Casas ou chat abertos em tela cheia, o cabeçalho some
     document.body.classList.toggle(
       "hud-sheet-open",
@@ -198,6 +225,34 @@ export default class HudLayout extends Component<HudLayoutProps> {
     // celular/tablet: balões de explicação só ao segurar o dedo
     installTouchTooltips();
     this.applyBodyClasses();
+    // Quando chega a vez: faixa grande por alguns segundos e aviso no título da aba
+    this.turnDisposer = reaction(
+      () => this.isOwnTurn,
+      (own) => {
+        this.updateTitle(own);
+        if (own) this.showTurnBanner();
+        else this.turnBanner = false;
+      },
+      { fireImmediately: true }
+    );
+  }
+
+  private showTurnBanner(): void {
+    this.turnBanner = true;
+    if (this.turnBannerTimer != null) window.clearTimeout(this.turnBannerTimer);
+    this.turnBannerTimer = window.setTimeout(() => {
+      this.turnBanner = false;
+      this.turnBannerTimer = null;
+    }, 4500);
+  }
+
+  private updateTitle(own: boolean): void {
+    const prefix = `★ ${t("hud.houses.yourTurn")} · `;
+    const base = document.title.startsWith(prefix)
+      ? document.title.slice(prefix.length)
+      : document.title;
+    this.baseTitle = base;
+    document.title = own ? prefix + base : base;
   }
 
   componentDidUpdate(): void {
@@ -211,13 +266,17 @@ export default class HudLayout extends Component<HudLayoutProps> {
   }
 
   componentWillUnmount(): void {
+    this.turnDisposer?.();
+    if (this.turnBannerTimer != null) window.clearTimeout(this.turnBannerTimer);
+    document.title = this.baseTitle;
     window.removeEventListener("resize", this.onResize);
     this.panelsObserver?.disconnect();
     document.body.classList.remove(
       "hud-active",
       "hud-phone",
       "hud-tablet",
-      "hud-sheet-open"
+      "hud-sheet-open",
+      "hud-two-columns"
     );
   }
 
@@ -323,26 +382,33 @@ export default class HudLayout extends Component<HudLayoutProps> {
 
   render(): ReactNode {
     const phone = this.isPhone;
-    const rightOpen = !phone && hudSettings.rightPanelOpen;
-    const rightSpace = phone ? 0 : rightOpen ? this.rightPanelWidth + 24 : 72;
-    const insets = {
-      top: this.topBarHeight,
-      right: rightSpace,
-      bottom: 0,
-      left: 0
-    };
+    const leftOpen = hudSettings.leftPanelOpen;
+    const rightOpen = hudSettings.rightPanelOpen;
+    const leftSpace = phone
+      ? 0
+      : (leftOpen ? this.leftColumnWidth : STRIP_WIDTH) + 2 * 12;
+    const rightSpace = phone
+      ? 0
+      : (rightOpen ? this.rightPanelWidth : STRIP_WIDTH) + 2 * 12;
+    const insets = phone
+      ? { top: this.topBarHeight, right: 0, bottom: 0, left: 0 }
+      : { top: 12, right: rightSpace, bottom: 0, left: leftSpace };
 
     return (
       <div
         className={classNames("hud-root", `hud-${this.screenSize}`, {
-          "own-turn": this.isOwnTurn
+          "own-turn": this.isOwnTurn,
+          "hud-two-columns": !phone
         })}
         style={
           {
             "--hud-right-panel-width": `${this.rightPanelWidth}px`,
+            "--hud-left-col-width": `${this.leftColumnWidth}px`,
             "--hud-left-dock-width": `${LEFT_DOCK_WIDTH}px`,
             "--hud-right-space": `${rightSpace}px`,
-            "--hud-top-offset": `${this.topBarHeight}px`
+            "--hud-left-space": `${leftSpace}px`,
+            "--hud-header-space": `${HEADER_SPACE}px`,
+            "--hud-top-offset": `${phone ? this.topBarHeight : 12}px`
           } as React.CSSProperties
         }
       >
@@ -359,6 +425,7 @@ export default class HudLayout extends Component<HudLayoutProps> {
           insets={insets}
           panBottom={this.bottomPanelsHeight}
           controlsRight={phone ? 8 : rightSpace}
+          controlsTop={phone ? undefined : 12}
           compactControls={phone}
         >
           <MapComponent
@@ -369,38 +436,222 @@ export default class HudLayout extends Component<HudLayoutProps> {
         </MapViewport>
         <div className="hud-vignette" aria-hidden="true" />
 
-        <div className="hud-top-left">
-          <GameStateColumn
-            ingame={this.ingame}
-            gameClient={this.gameClient}
-            mapControls={this.props.mapControls}
-            onColumnSwapClick={this.props.onColumnSwapClick}
-            hudPart="status"
-          />
-          <HudTracks
-            ingame={this.ingame}
-            tracks={this.props.tracks}
-            myHouse={this.myHouse}
-          />
-        </div>
+        {phone && (
+          <div className="hud-top-left">
+            <GameStateColumn
+              ingame={this.ingame}
+              gameClient={this.gameClient}
+              mapControls={this.props.mapControls}
+              onColumnSwapClick={this.props.onColumnSwapClick}
+              hudPart="status"
+            />
+            <HudTracks
+              ingame={this.ingame}
+              tracks={this.props.tracks}
+              myHouse={this.myHouse}
+            />
+          </div>
+        )}
 
         <HudBidResults ingame={this.ingame} myHouse={this.myHouse} />
         <HudBattleResult ingame={this.ingame} myHouse={this.myHouse} />
-        {this.renderTopRight()}
+        {this.renderTurnBanner()}
         {phone ? (
           <>
+            {this.renderTopRight()}
             {this.renderPhoneBottom()}
             {this.phoneHousesOpen && this.renderPhoneHouses()}
             {this.chatOpen && this.renderPhoneChat()}
           </>
         ) : (
           <>
-            {rightOpen ? this.renderRightPanel() : this.renderHouseStrip()}
-            {this.renderActionDock(rightSpace)}
-            {this.renderLeftDock()}
+            {leftOpen ? this.renderLeftColumn() : this.renderLeftStrip()}
+            {rightOpen ? this.renderRightColumn() : this.renderHouseStrip()}
+            {this.renderActionDock(leftSpace, rightSpace)}
           </>
         )}
       </div>
+    );
+  }
+
+  // Faixa "Sua vez" no alto do mapa, por alguns segundos
+  private renderTurnBanner(): ReactNode {
+    if (!this.turnBanner || !this.isOwnTurn) return null;
+    const title = this.actionTitle();
+    return (
+      <div className="hud-turn-banner" role="status" onClick={() => (this.turnBanner = false)}>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <path d="M3 18h18l-2-10-5 4-2-7-2 7-5-4z" />
+        </svg>
+        <span>
+          {title
+            ? t("hud.turn.banner", { action: title })
+            : t("hud.turn.bannerShort")}
+        </span>
+      </div>
+    );
+  }
+
+  // Botão de recolher/abrir uma parte de uma coluna
+  private renderSection(
+    key: string,
+    title: ReactNode,
+    body: ReactNode
+  ): ReactNode {
+    const collapsed = hudSettings.isCollapsed(key);
+    return (
+      <div className={classNames("hud-col-section", { collapsed })}>
+        <button
+          type="button"
+          className="hud-col-section-head"
+          aria-expanded={!collapsed}
+          title={collapsed ? t("hud.section.expand") : t("hud.section.collapse")}
+          onClick={() => hudSettings.toggleSection(key)}
+        >
+          <span className="hud-col-section-title">{title}</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+            <path d={collapsed ? "M6 9l6 6 6-6" : "M6 15l6-6 6 6"} />
+          </svg>
+        </button>
+        {!collapsed && <div className="hud-col-section-body">{body}</div>}
+      </div>
+    );
+  }
+
+  private chevron(direction: "left" | "right"): ReactNode {
+    return (
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+        <path d={direction == "left" ? "M15 6l-6 6 6 6" : "M9 6l6 6-6 6"} />
+      </svg>
+    );
+  }
+
+  // ---------- coluna da esquerda: Westeros ----------
+
+  private renderLeftColumn(): ReactNode {
+    return (
+      <aside
+        className="hud-panel hud-col hud-col-left"
+        aria-label={t("hud.west.title")}
+      >
+        <div className="hud-col-head">
+          <b className="hud-col-title">{t("hud.west.title")}</b>
+          <button
+            type="button"
+            className="hud-icon-button small"
+            aria-label={t("hud.west.hide")}
+            title={t("hud.west.hide")}
+            onClick={() => hudSettings.toggleLeftPanel()}
+          >
+            {this.chevron("left")}
+          </button>
+        </div>
+        <div className="hud-col-body">
+          <GameStateColumn
+            ingame={this.ingame}
+            gameClient={this.gameClient}
+            mapControls={this.props.mapControls}
+            onColumnSwapClick={this.props.onColumnSwapClick}
+            hudPart="westeros"
+          />
+          {this.renderSection(
+            "tracks",
+            t("hud.west.tracks"),
+            <HudTracks
+              ingame={this.ingame}
+              tracks={this.props.tracks}
+              myHouse={this.myHouse}
+              vertical
+            />
+          )}
+          {this.renderSection(
+            "supply",
+            t("hud.west.supply"),
+            <HudSupplyTrack gameClient={this.gameClient} ingame={this.ingame} />
+          )}
+        </div>
+      </aside>
+    );
+  }
+
+  // Coluna da esquerda escondida: faixa fina com rodada e Selvagens
+  private renderLeftStrip(): ReactNode {
+    const game = this.ingame.game;
+    return (
+      <aside className="hud-side-strip left" aria-label={t("hud.west.title")}>
+        <button
+          type="button"
+          className="hud-icon-button"
+          aria-label={t("hud.west.show")}
+          title={t("hud.west.show")}
+          onClick={() => hudSettings.toggleLeftPanel()}
+        >
+          {this.chevron("right")}
+        </button>
+        <button
+          type="button"
+          className="hud-strip-stat"
+          title={t("ingame.roundOf", { turn: game.turn, max: game.maxTurns })}
+          onClick={() => hudSettings.toggleLeftPanel()}
+        >
+          <img src={hourglassImage} width={18} height={18} alt="" />
+          <b>{game.turn}</b>
+        </button>
+        <button
+          type="button"
+          className="hud-strip-stat"
+          title={t("hud.west.wildlings")}
+          onClick={() => hudSettings.toggleLeftPanel()}
+        >
+          <img src={mammothImage} width={20} height={20} alt="" />
+          <b>{game.wildlingStrength}</b>
+        </button>
+      </aside>
+    );
+  }
+
+  // ---------- coluna da direita: Casas, acontecimentos e chat ----------
+
+  private renderRightColumn(): ReactNode {
+    return (
+      <aside
+        className={classNames("hud-col hud-col-right", {
+          "chat-open": this.chatOpen
+        })}
+        aria-label={t("hud.houses.title")}
+      >
+        {this.renderTopRight()}
+        <div className="hud-panel hud-col-houses">
+          <div className="hud-col-head">
+            <b className="hud-col-title">{t("hud.houses.colTitle")}</b>
+            <span className="hud-col-hint">{t("hud.houses.hint")}</span>
+            <button
+              type="button"
+              className="hud-icon-button small"
+              aria-label={t("hud.houses.collapse")}
+              title={t("hud.houses.collapse")}
+              onClick={() => hudSettings.toggleRightPanel()}
+            >
+              {this.chevron("right")}
+            </button>
+          </div>
+          <div className="hud-col-body">
+            <HudHouseList
+              gameClient={this.gameClient}
+              ingame={this.ingame}
+              mapControls={this.props.mapControls}
+              variant="cards"
+              showSupplyTrack={false}
+            />
+          </div>
+        </div>
+        {this.chatOpen ? this.renderChatPanel() : (
+          <>
+            {this.renderRecent()}
+            {this.renderChatButtons()}
+          </>
+        )}
+      </aside>
     );
   }
 
@@ -414,7 +665,7 @@ export default class HudLayout extends Component<HudLayoutProps> {
     const me = this.myHouse;
     return (
       <div className="hud-phone-bottom" ref={this.leftDockRef}>
-        {this.renderActionDock(0)}
+        {this.renderActionDock(0, 0)}
         <nav className="hud-phone-nav" aria-label={t("hud.phone.nav")}>
           <button
             type="button"
@@ -527,9 +778,9 @@ export default class HudLayout extends Component<HudLayoutProps> {
     );
   }
 
-  private renderTopRight(): ReactNode {
+  private renderTopRight(vertical = false): ReactNode {
     return (
-      <div className="hud-top-right">
+      <div className={classNames("hud-top-right", { vertical })}>
         <OverlayTrigger
           overlay={this.renderHelpPopover()}
           placement="bottom-end"
@@ -660,7 +911,11 @@ export default class HudLayout extends Component<HudLayoutProps> {
   private renderHouseStrip(): ReactNode {
     const houses: House[] = this.gameClient.getPotentialWinners();
     return (
-      <aside className="hud-house-strip" aria-label={t("hud.houses.title")}>
+      <aside
+        className="hud-house-strip hud-side-strip right"
+        aria-label={t("hud.houses.title")}
+      >
+        {this.renderTopRight(true)}
         <button
           type="button"
           className="hud-icon-button"
@@ -707,11 +962,29 @@ export default class HudLayout extends Component<HudLayoutProps> {
             </span>
           </div>
         ))}
+        <span className="hud-strip-spacer" />
+        <button
+          type="button"
+          className="hud-icon-button"
+          aria-label={t("hud.chat.open")}
+          title={t("hud.chat.open")}
+          onClick={() => {
+            hudSettings.toggleRightPanel();
+            this.openDrawer("chat");
+          }}
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#E2B65A" strokeWidth="2" aria-hidden="true">
+            <path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z" />
+          </svg>
+          {this.unreadPublicMessages > 0 && (
+            <span className="hud-count small">{this.unreadPublicMessages}</span>
+          )}
+        </button>
       </aside>
     );
   }
 
-  private renderActionDock(rightSpace: number): ReactNode {
+  private renderActionDock(leftSpace: number, rightSpace: number): ReactNode {
     const ownTurn = this.isOwnTurn;
     const ended = this.ingame.childGameState instanceof GameEndedGameState;
     const cancelled = this.ingame.childGameState instanceof CancelledGameState;
@@ -743,7 +1016,9 @@ export default class HudLayout extends Component<HudLayoutProps> {
           "own-turn": ownTurn,
           minimized: minimized
         })}
-        style={{ right: rightSpace }}
+        style={
+          this.isPhone ? undefined : { left: leftSpace, right: rightSpace }
+        }
         aria-label={t("hud.action.title")}
       >
         <div className="hud-action-header">
@@ -764,6 +1039,30 @@ export default class HudLayout extends Component<HudLayoutProps> {
           {title && <b className="hud-action-title">{title}</b>}
           <span className="hud-action-summary">{summary}</span>
           {me && this.renderCardsButton(me)}
+          {!this.isPhone && (
+            <button
+              type="button"
+              className={classNames("hud-icon-button small", {
+                active: !hudSettings.situationHidden
+              })}
+              aria-pressed={!hudSettings.situationHidden}
+              aria-label={
+                hudSettings.situationHidden
+                  ? t("hud.situation.show")
+                  : t("hud.situation.hide")
+              }
+              title={
+                hudSettings.situationHidden
+                  ? t("hud.situation.show")
+                  : t("hud.situation.hide")
+              }
+              onClick={() => hudSettings.toggleSituation()}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                <path d="M4 19h16M7 15v-4M12 15V7M17 15v-6" />
+              </svg>
+            </button>
+          )}
           <button
             type="button"
             className="hud-icon-button small"
@@ -808,6 +1107,7 @@ export default class HudLayout extends Component<HudLayoutProps> {
               hudPart="action"
             />
         </div>
+        {!this.isPhone && !minimized && this.renderSituationRow()}
       </section>
     );
   }
@@ -854,145 +1154,119 @@ export default class HudLayout extends Component<HudLayoutProps> {
     this.chatOpen = true;
   }
 
-  private renderLeftDock(): ReactNode {
+  private renderSituationRow(): ReactNode {
+    if (hudSettings.situationHidden) return null;
+    return <HudSituation ingame={this.ingame} house={this.myHouse} />;
+  }
+
+  private renderChatPanel(): ReactNode {
+    return (
+      <div className="hud-panel hud-chat-panel">
+        <div className="hud-panel-header">
+          <b>{t("hud.chat.title")}</b>
+          <button
+            type="button"
+            className="hud-icon-button small"
+            aria-label={t("hud.chat.close")}
+            title={t("hud.chat.close")}
+            onClick={() => (this.chatOpen = false)}
+          >
+            ×
+          </button>
+        </div>
+        <div className="hud-chat-body">
+          <GameTabsComponent
+            key={`hud-tabs-${this.chatTab ?? "default"}`}
+            gameClient={this.gameClient}
+            ingame={this.ingame}
+            mapControls={this.props.mapControls}
+            initialTab={this.chatTab}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  private renderRecent(): ReactNode {
+    const minimized = hudSettings.recentMinimized;
+    return (
+      <div className={classNames("hud-panel hud-recent", { minimized })}>
+        <div className="hud-recent-head">
+          <b>{t("hud.recent.title")}</b>
+          <button
+            type="button"
+            className="hud-link-button"
+            onClick={() => this.openDrawer("game-logs")}
+          >
+            {t("hud.recent.history")}
+          </button>
+          <button
+            type="button"
+            className="hud-icon-button small"
+            aria-expanded={!minimized}
+            aria-label={
+              minimized ? t("hud.recent.expand") : t("hud.recent.minimize")
+            }
+            title={minimized ? t("hud.recent.expand") : t("hud.recent.minimize")}
+            onClick={() => hudSettings.toggleRecent()}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+              <path d={minimized ? "M6 15l6-6 6 6" : "M6 9l6 6 6-6"} />
+            </svg>
+          </button>
+        </div>
+        {!minimized && (
+          <div className="hud-recent-body">
+            <GameLogListComponent
+              ingameGameState={this.ingame}
+              gameClient={this.gameClient}
+              currentlyViewed={false}
+              onlyLast={6}
+            />
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  private renderChatButtons(): ReactNode {
     const unread = this.unreadPublicMessages;
     const privateUnread = this.hasUnreadPrivateMessages;
     const lastMessage = _.last(this.publicChatRoom?.messages ?? []);
-
-    if (this.chatOpen) {
-      return (
-        <div className="hud-left-dock" ref={this.leftDockRef}>
-          <div className="hud-panel hud-chat-panel">
-            <div className="hud-panel-header">
-              <b>{t("hud.chat.title")}</b>
-              <button
-                type="button"
-                className="hud-icon-button small"
-                aria-label={t("hud.chat.close")}
-                title={t("hud.chat.close")}
-                onClick={() => (this.chatOpen = false)}
-              >
-                ×
-              </button>
-            </div>
-            <div className="hud-chat-body">
-              <GameTabsComponent
-                key={`hud-tabs-${this.chatTab ?? "default"}`}
-                gameClient={this.gameClient}
-                ingame={this.ingame}
-                mapControls={this.props.mapControls}
-                initialTab={this.chatTab}
-              />
-            </div>
-          </div>
-        </div>
-      );
-    }
-
     return (
-      <div className="hud-left-dock" ref={this.leftDockRef}>
-        <div
-          className={classNames("hud-panel hud-recent", {
-            minimized: hudSettings.recentMinimized
-          })}
+      <div className="hud-left-buttons">
+        <button
+          type="button"
+          className="hud-panel hud-chat-button"
+          onClick={() => this.openDrawer("chat")}
+          aria-label={t("hud.chat.open")}
         >
-          <div className="hud-recent-head">
-            <b>{t("hud.recent.title")}</b>
-            <button
-              type="button"
-              className="hud-link-button"
-              onClick={() => this.openDrawer("game-logs")}
-            >
-              {t("hud.recent.history")}
-            </button>
-            <button
-              type="button"
-              className="hud-icon-button small"
-              aria-expanded={!hudSettings.recentMinimized}
-              aria-label={
-                hudSettings.recentMinimized
-                  ? t("hud.recent.expand")
-                  : t("hud.recent.minimize")
-              }
-              title={
-                hudSettings.recentMinimized
-                  ? t("hud.recent.expand")
-                  : t("hud.recent.minimize")
-              }
-              onClick={() => hudSettings.toggleRecent()}
-            >
-              <svg
-                width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                aria-hidden="true"
-              >
-                <path
-                  d={
-                    hudSettings.recentMinimized
-                      ? "M6 15l6-6 6 6"
-                      : "M6 9l6 6 6-6"
-                  }
-                />
-              </svg>
-            </button>
-          </div>
-          {!hudSettings.recentMinimized && (
-            <div className="hud-recent-body">
-              <GameLogListComponent
-                ingameGameState={this.ingame}
-                gameClient={this.gameClient}
-                currentlyViewed={false}
-                onlyLast={2}
-              />
-            </div>
-          )}
-        </div>
-        <div className="hud-left-buttons">
-          <button
-            type="button"
-            className="hud-panel hud-chat-button"
-            onClick={() => this.openDrawer("chat")}
-            aria-label={t("hud.chat.open")}
-          >
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="#E2B65A"
-              strokeWidth="2"
-              aria-hidden="true"
-            >
-              <path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z" />
-            </svg>
-            <span className="hud-chat-preview">
-              {lastMessage ? (
-                <>
-                  <b>{lastMessage.user.name}:</b>{" "}
-                  <span className="hud-muted">{lastMessage.text}</span>
-                </>
-              ) : (
-                t("hud.chat.label")
-              )}
-            </span>
-            {unread > 0 && <span className="hud-count">{unread}</span>}
-          </button>
-          <button
-            type="button"
-            className="hud-panel hud-ravens-button"
-            onClick={() => this.openDrawer("chat")}
-            title={t("hud.chat.ravensHint")}
-          >
-            {t("hud.chat.ravens")}
-            {privateUnread && (
-              <span className="hud-dot" title={t("hud.chat.privateUnread")} />
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#E2B65A" strokeWidth="2" aria-hidden="true">
+            <path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z" />
+          </svg>
+          <span className="hud-chat-preview">
+            {lastMessage ? (
+              <>
+                <b>{lastMessage.user.name}:</b>{" "}
+                <span className="hud-muted">{lastMessage.text}</span>
+              </>
+            ) : (
+              t("hud.chat.label")
             )}
-          </button>
-        </div>
+          </span>
+          {unread > 0 && <span className="hud-count">{unread}</span>}
+        </button>
+        <button
+          type="button"
+          className="hud-panel hud-ravens-button"
+          onClick={() => this.openDrawer("chat")}
+          title={t("hud.chat.ravensHint")}
+        >
+          ✉ {t("hud.chat.ravens")}
+          {privateUnread && (
+            <span className="hud-dot" title={t("hud.chat.privateUnread")} />
+          )}
+        </button>
       </div>
     );
   }

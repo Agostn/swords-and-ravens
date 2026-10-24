@@ -29,6 +29,8 @@ interface MapViewportProps {
   // Distância dos botões de zoom e do mini-mapa até a borda direita
   // (para não ficarem embaixo do painel das Casas).
   controlsRight?: number;
+  // Distância dos botões até o topo (padrão: abaixo da barra do topo)
+  controlsTop?: number;
   // Celular: sem +/− e sem mini-mapa (a pinça faz o zoom); só "ver tudo".
   compactControls?: boolean;
 }
@@ -175,7 +177,10 @@ export default class MapViewport extends Component<MapViewportProps> {
         className={
           "hud-map-controls" + (this.props.compactControls ? " compact" : "")
         }
-        style={{ right: this.props.controlsRight ?? 12 }}
+        style={{
+          right: this.props.controlsRight ?? 12,
+          ...(this.props.controlsTop != null ? { top: this.props.controlsTop } : {})
+        }}
         onPointerDown={(e) => e.stopPropagation()}
         onWheel={(e) => e.stopPropagation()}
       >
@@ -249,6 +254,44 @@ export default class MapViewport extends Component<MapViewportProps> {
               {hudSettings.minimapHidden && <path d="M3 3l18 18" />}
             </svg>
           </button>
+          {!this.props.compactControls && (
+            <button
+              type="button"
+              className={
+                "hud-icon-button" + (hudSettings.mapOnly ? " active" : "")
+              }
+              aria-pressed={hudSettings.mapOnly}
+              aria-label={
+                hudSettings.mapOnly ? t("hud.map.showPanels") : t("hud.map.mapOnly")
+              }
+              title={
+                hudSettings.mapOnly ? t("hud.map.showPanels") : t("hud.map.mapOnly")
+              }
+              onClick={() => hudSettings.toggleMapOnly()}
+            >
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                aria-hidden="true"
+              >
+                {hudSettings.mapOnly ? (
+                  <>
+                    <rect x="3" y="4" width="18" height="16" rx="2" />
+                    <path d="M8 4v16M16 4v16M8 15h8" />
+                  </>
+                ) : (
+                  <>
+                    <rect x="3" y="4" width="18" height="16" rx="2" />
+                    <path d="M9 9l6 6M15 9l-6 6" />
+                  </>
+                )}
+              </svg>
+            </button>
+          )}
         </div>
         {!hudSettings.minimapHidden && (
         <div
