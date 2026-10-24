@@ -92,6 +92,7 @@ jobs:
           grep -q "FIM DE JOGO" /tmp/celular.log
 
       - name: Jogar pelo túnel gratuito (como no PC de casa)
+        if: always()
         continue-on-error: true
         env:
           PLAYWRIGHT_MODULE: /tmp/pw/node_modules/playwright

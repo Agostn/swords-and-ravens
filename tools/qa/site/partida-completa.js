@@ -47,8 +47,11 @@ function botTick() {
         const key = r.id + "@" + eg.ingameGameState.game.turn;
         window.__marchTries = window.__marchTries || {};
         const tries = (window.__marchTries[key] = (window.__marchTries[key] || 0) + 1);
+        // 1ª: todas as unidades; depois 1 unidade em cada alvo possível; por fim, não move
+        const alvo = tries == 1 ? target : targets[(tries - 2) % Math.max(1, targets.length)];
         const moving = tries == 1 ? units : units.slice(0, 1);
-        leaf.sendMoves(r, { entries: target && tries < 3 ? [[target, moving]] : [] }, false);
+        const desistir = tries > targets.length + 2;
+        leaf.sendMoves(r, { entries: alvo && !desistir ? [[alvo, moving]] : [] }, false);
         return name + ":marcha";
       }
       case "ResolveSingleConsolidatePowerGameState": {
