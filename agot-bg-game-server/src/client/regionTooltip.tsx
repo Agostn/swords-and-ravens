@@ -147,12 +147,10 @@ function renderUnits(region: Region): React.ReactNode {
   );
 }
 
-// Pontos de recrutamento: Castelo = 1, Fortaleza = 2 (o que vale é o nível atual,
-// que cartas e melhorias podem mudar). Custos: Soldado 1, Navio 1, Cavaleiro 2,
-// Máquina de cerco 2; trocar um Soldado por Cavaleiro ou Máquina custa 1.
+// Pontos de recrutamento: Castelo = 1, Fortaleza = 2 (vale o nível atual,
+// que cartas e melhorias podem mudar).
 export function renderMusterInfo(region: Region, level: number): React.ReactNode {
   if (level <= 0) return null;
-  const base = region.staticRegion.castleLevel;
   return (
     <div className={classNames("region-tip-muster", { stronghold: level >= 2 })}>
       <div className="region-tip-muster-head">
@@ -163,12 +161,6 @@ export function renderMusterInfo(region: Region, level: number): React.ReactNode
         </span>
         <b>{t("map.muster.points", { n: level })}</b>
       </div>
-      {level != base && base > 0 && (
-        <small className="region-tip-muster-mod">{t("map.muster.changed", { n: base })}</small>
-      )}
-      <small className="region-tip-muster-costs">
-        {level >= 2 ? t("map.muster.costs2") : t("map.muster.costs1")}
-      </small>
     </div>
   );
 }
