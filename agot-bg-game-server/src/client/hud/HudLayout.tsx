@@ -122,6 +122,8 @@ const ACTION_TITLES: [unknown, TranslationKey][] = [
  */
 @observer
 export default class HudLayout extends Component<HudLayoutProps> {
+  // Celular: tela limpa (só o mapa e o botão para voltar)
+  @observable phoneClean = false;
   @observable chatOpen = false;
   @observable chatTab: string | undefined = undefined;
   @observable windowWidth = window.innerWidth;
@@ -394,13 +396,14 @@ export default class HudLayout extends Component<HudLayoutProps> {
       ? 0
       : (rightOpen ? this.rightPanelWidth : STRIP_WIDTH) + 2 * 12;
     const insets = phone
-      ? { top: this.topBarHeight, right: 0, bottom: 0, left: 0 }
+      ? { top: this.phoneClean ? 0 : this.topBarHeight, right: 0, bottom: 0, left: 0 }
       : { top: 12, right: rightSpace, bottom: 0, left: leftSpace };
 
     return (
       <div
         className={classNames("hud-root", `hud-${this.screenSize}`, {
           "own-turn": this.isOwnTurn,
+          "hud-clean": phone && this.phoneClean,
           "hud-two-columns": !phone
         })}
         style={
@@ -426,7 +429,7 @@ export default class HudLayout extends Component<HudLayoutProps> {
           contentHeight={this.mapSize.height}
           minimapImage={this.mapImage}
           insets={insets}
-          panBottom={this.bottomPanelsHeight}
+          panBottom={phone && this.phoneClean ? 0 : this.bottomPanelsHeight}
           controlsRight={phone ? 8 : rightSpace}
           controlsTop={phone ? undefined : 12}
           compactControls={phone}
@@ -839,6 +842,30 @@ export default class HudLayout extends Component<HudLayoutProps> {
             alt=""
           />
         </button>
+        {this.isPhone && (
+          <button
+            type="button"
+            className={classNames("hud-icon-button hud-clean-toggle", { active: this.phoneClean })}
+            aria-pressed={this.phoneClean}
+            aria-label={this.phoneClean ? t("hud.clean.show") : t("hud.clean.hide")}
+            title={this.phoneClean ? t("hud.clean.show") : t("hud.clean.hide")}
+            onClick={() => (this.phoneClean = !this.phoneClean)}
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+              {this.phoneClean ? (
+                <>
+                  <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z" />
+                  <circle cx="12" cy="12" r="3" />
+                </>
+              ) : (
+                <>
+                  <path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" />
+                  <path d="M9 12h6" />
+                </>
+              )}
+            </svg>
+          </button>
+        )}
       </div>
     );
   }

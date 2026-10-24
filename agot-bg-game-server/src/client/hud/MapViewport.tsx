@@ -1,7 +1,7 @@
 import * as React from "react";
 import { Component, ReactNode } from "react";
 import { observer } from "mobx-react";
-import { observable } from "mobx";
+import { observable, reaction, IReactionDisposer } from "mobx";
 import hudSettings from "./hudSettings";
 import { t } from "../i18n/i18n";
 
@@ -82,6 +82,11 @@ export default class MapViewport extends Component<MapViewportProps> {
   @observable viewportWidth = 0;
   @observable viewportHeight = 0;
   @observable isDragging = false;
+  // Só enquanto o mapa se mexe o navegador trata ele como "imagem pronta" que
+  // só é esticada (rápido). Parado, ele é redesenhado na escala certa (nítido).
+  @observable moving = false;
+  private movingTimer: number | null = null;
+  private movingReaction: IReactionDisposer | null = null;
 
   viewportRef = React.createRef<HTMLDivElement>();
   private resizeObserver: ResizeObserver | null = null;
@@ -146,8 +151,14 @@ export default class MapViewport extends Component<MapViewportProps> {
           style={{
             width: contentWidth,
             height: contentHeight,
-            transform: `translate(${this.x}px, ${this.y}px) scale(${this.scale})`
-          }}
+            transform: `translate(${this.x}px, ${this.y}px) scale(${this.scale})`,
+            willChange: this.moving ? "transform" : "auto",
+            // plaquinhas de nome: com o mapa pequeno elas crescem para continuar legíveis
+            // (no celular ficam do tamanho das plaquinhas do mapa, só mais nítidas)
+            ["--map-label-scale" as string]: this.props.compactControls
+              ? 1
+              : Math.max(1, Math.min(3.2, 1.25 / this.scale))
+          } as React.CSSProperties}
         >
           {this.props.children}
         </div>
@@ -157,6 +168,8 @@ export default class MapViewport extends Component<MapViewportProps> {
   }
 
   private renderControls(): ReactNode {
+    // Celular: sem botões no mapa (zoom com os dedos; cores das Casas fica na barra de cima)
+    if (this.props.compactControls) return null;
     const { contentWidth, contentHeight } = this.props;
     const miniWidth = contentWidth > contentHeight ? 150 : 86;
     const miniScale = miniWidth / contentWidth;
@@ -222,24 +235,20 @@ export default class MapViewport extends Component<MapViewportProps> {
               <path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" />
             </svg>
           </button>
-          {this.props.compactControls ? (
-            // Celular: no lugar do mini-mapa, o botão de pintar o mapa com as cores das Casas
-            <button
-              type="button"
-              className={"hud-icon-button" + (hudSettings.showHouseColors ? " active" : "")}
-              aria-pressed={hudSettings.showHouseColors}
-              aria-label={hudSettings.showHouseColors ? t("hud.status.houseColorsOff") : t("hud.status.houseColorsOn")}
-              title={hudSettings.showHouseColors ? t("hud.status.houseColorsOff") : t("hud.status.houseColorsOn")}
-              onClick={() => hudSettings.toggleHouseColors()}
-            >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-                <path d="M12 3a9 9 0 1 0 0 18c1.1 0 1.8-.8 1.8-1.7 0-.5-.2-.9-.5-1.2-.3-.3-.5-.7-.5-1.2 0-.9.8-1.7 1.7-1.7H17a4 4 0 0 0 4-4c0-4.4-4-8.2-9-8.2z" />
-                <circle cx="7.5" cy="11" r="1.3" fill="currentColor" />
-                <circle cx="10" cy="7" r="1.3" fill="currentColor" />
-                <circle cx="14.5" cy="7" r="1.3" fill="currentColor" />
-              </svg>
-            </button>
-          ) : (
+          <button
+            type="button"
+            className={"hud-icon-button" + (hudSettings.mapNamesHidden ? "" : " active")}
+            aria-pressed={!hudSettings.mapNamesHidden}
+            aria-label={hudSettings.mapNamesHidden ? t("hud.map.showNames") : t("hud.map.hideNames")}
+            title={hudSettings.mapNamesHidden ? t("hud.map.showNames") : t("hud.map.hideNames")}
+            onClick={() => hudSettings.toggleMapNames()}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+              <rect x="2.5" y="7" width="19" height="10" rx="2" />
+              <path d="M7 14l2-5 2 5M7.7 12.4h2.6M14 9.5v4.5M14 9.5h2.2a1.2 1.2 0 0 1 0 2.4H14M14 11.9h2.5a1.1 1.1 0 0 1 0 2.1H14" />
+              {hudSettings.mapNamesHidden && <path d="M3 3l18 18" />}
+            </svg>
+          </button>
           <button
             type="button"
             className={
@@ -272,7 +281,6 @@ export default class MapViewport extends Component<MapViewportProps> {
               {hudSettings.minimapHidden && <path d="M3 3l18 18" />}
             </svg>
           </button>
-          )}
           {!this.props.compactControls && (
             <button
               type="button"
@@ -352,6 +360,18 @@ export default class MapViewport extends Component<MapViewportProps> {
     this.resizeObserver = new ResizeObserver(() => this.measure());
     this.resizeObserver.observe(el);
     this.measure();
+
+    this.movingReaction = reaction(
+      () => [this.x, this.y, this.scale],
+      () => {
+        if (!this.moving) this.moving = true;
+        if (this.movingTimer != null) window.clearTimeout(this.movingTimer);
+        this.movingTimer = window.setTimeout(() => {
+          this.movingTimer = null;
+          this.moving = false;
+        }, 220);
+      }
+    );
   }
 
   componentDidUpdate(prev: MapViewportProps): void {
@@ -377,6 +397,8 @@ export default class MapViewport extends Component<MapViewportProps> {
     );
     this.resizeObserver?.disconnect();
     if (this.saveTimer != null) window.clearTimeout(this.saveTimer);
+    if (this.movingTimer != null) window.clearTimeout(this.movingTimer);
+    this.movingReaction?.();
   }
 
   private preventPageScroll = (e: WheelEvent): void => {

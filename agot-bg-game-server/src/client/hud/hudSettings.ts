@@ -18,6 +18,7 @@ interface StoredHudSettings {
   leftPanelOpen?: boolean;
   collapsedSections?: string[];
   situationHidden?: boolean;
+  mapNamesHidden?: boolean;
 }
 
 function load(): StoredHudSettings {
@@ -45,6 +46,8 @@ class HudSettings {
   @observable collapsedSections: string[] = [];
   // Linha "sua situação" embaixo do painel da jogada
   @observable situationHidden = false;
+  // Nomes das áreas em plaquinhas nítidas por cima do mapa (legíveis em qualquer zoom)
+  @observable mapNamesHidden = false;
 
   constructor() {
     const s = load();
@@ -63,6 +66,7 @@ class HudSettings {
       ? s.collapsedSections.filter((x) => typeof x == "string")
       : [];
     this.situationHidden = s.situationHidden ?? false;
+    this.mapNamesHidden = s.mapNamesHidden ?? false;
   }
 
   isCollapsed(section: string): boolean {
@@ -104,7 +108,8 @@ class HudSettings {
           recentMinimized: this.recentMinimized,
           leftPanelOpen: this.leftPanelOpen,
           collapsedSections: this.collapsedSections,
-          situationHidden: this.situationHidden
+          situationHidden: this.situationHidden,
+          mapNamesHidden: this.mapNamesHidden
         })
       );
     } catch {
@@ -124,6 +129,11 @@ class HudSettings {
 
   toggleHouseColors(): void {
     this.showHouseColors = !this.showHouseColors;
+    this.save();
+  }
+
+  toggleMapNames(): void {
+    this.mapNamesHidden = !this.mapNamesHidden;
     this.save();
   }
 

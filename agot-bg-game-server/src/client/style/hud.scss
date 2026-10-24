@@ -76,7 +76,6 @@ $hud-display-font: "IM Fell English SC", Georgia, serif;
   left: 0;
   top: 0;
   transform-origin: 0 0;
-  will-change: transform;
 
   .map {
     border-radius: 6px;
@@ -6357,4 +6356,113 @@ body.hud-phone .popover.hud-cards-popover {
 
   .hcards-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   .hcards-card .vertical-game-card.small { width: 100%; height: auto; aspect-ratio: 74 / 116; }
+}
+
+/* ---------- Nomes das áreas: plaquinhas nítidas por cima do mapa ---------- */
+.map-name-plaques {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.map-name-plaque {
+  position: absolute;
+  transform: translate(-50%, -50%) scale(var(--map-label-scale, 1));
+  transform-origin: center;
+  padding: 3px 8px 2.5px;
+  border-radius: 3px;
+  border: 1px solid #7a5a26;
+  background: linear-gradient(180deg, #f6ead0 0%, #ead6a6 55%, #dcc189 100%);
+  box-shadow:
+    0 0 0 1px rgba(255, 246, 220, 0.55) inset,
+    0 1px 3px rgba(0, 0, 0, 0.55);
+  color: #1d2740;
+  font-family: $hud-display-font;
+  font-size: 9.5px;
+  line-height: 1.15;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  text-rendering: geometricPrecision;
+  -webkit-font-smoothing: antialiased;
+
+  &.sea {
+    border-color: #4c6077;
+    background: linear-gradient(180deg, #eef2f2 0%, #d8e0e0 60%, #c3cfd1 100%);
+    color: #1b2f45;
+    font-style: italic;
+  }
+}
+
+// Celular: peças do mapa (soldados, cavaleiros, navios...). O "passar o mouse"
+// fica preso na última peça tocada e a regra que tira o brilho dele apagava também
+// a cor de seleção (amarelo/branco sumia). Aqui: sem efeito de hover, sem animação
+// de transição, e a cor de seleção vale sempre (mesmo com o hover preso).
+body.touch-tooltips .map .unit-icon {
+  transition: none !important;
+  -webkit-tap-highlight-color: transparent;
+
+  &,
+  &:hover {
+    filter: none;
+  }
+
+  &.medium-outline,
+  &.medium-outline:hover {
+    filter: drop-shadow(0 0 1.5px #fff) drop-shadow(0 0 2.5px rgba(255, 255, 255, 0.9));
+  }
+
+  &.highlight-yellow,
+  &.highlight-yellow:hover {
+    filter: drop-shadow(0 0 1.5px #ffd52e) drop-shadow(0 0 3px #ffd52e);
+  }
+
+  &.highlight-red,
+  &.highlight-red:hover {
+    filter: drop-shadow(0 0 1.5px #ff4d5e) drop-shadow(0 0 3px #ff4d5e);
+  }
+
+  &.highlight-green,
+  &.highlight-green:hover {
+    filter: drop-shadow(0 0 1.5px #3ddc84) drop-shadow(0 0 3px #3ddc84);
+  }
+
+  // selecionada (amarelo): um pontinho com ✓ no canto, para não depender só do brilho
+  &.highlight-yellow::after {
+    content: "✓";
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    width: 13px;
+    height: 13px;
+    border-radius: 50%;
+    background: #ffd52e;
+    color: #1a140c;
+    font-size: 9px;
+    font-weight: 900;
+    line-height: 13px;
+    text-align: center;
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.6);
+    pointer-events: none;
+  }
+}
+
+// Celular: "tela limpa" esconde tudo menos o mapa e o botão de voltar.
+// (só esconde: o painel da jogada continua montado, então o mapa segue respondendo)
+.hud-root.hud-clean {
+  .hud-top-left,
+  .hud-phone-bottom,
+  .hud-turn-banner,
+  .hud-vignette,
+  .hud-top-right > :not(.hud-clean-toggle) {
+    display: none !important;
+  }
+}
+
+body:has(.hud-root.hud-clean) .hud-game-header {
+  display: none !important;
+}
+
+.hud-clean-toggle.active {
+  border-color: $hud-gold !important;
+  color: $hud-gold;
 }

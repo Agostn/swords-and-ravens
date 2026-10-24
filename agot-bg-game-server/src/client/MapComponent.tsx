@@ -64,6 +64,7 @@ import { getClassNameForDragonStrength } from "./WorldSnapshotComponent";
 import House from "../common/ingame-game-state/game-data-structure/House";
 import { t, tr } from "./i18n/i18n";
 import hudSettings from "./hud/hudSettings";
+import RegionKind from "../common/ingame-game-state/game-data-structure/RegionKind";
 
 export const MAP_HEIGHT = 1378;
 export const MAP_WIDTH = 741;
@@ -538,6 +539,7 @@ export default class MapComponent extends Component<MapComponentProps> {
             : <Tooltip id="region-hover-empty" />}
         </Overlay>
         <div style={{ position: "relative" }}>
+          {hudSettings.hudActive && !hudSettings.mapNamesHidden && this.renderNamePlaques(allRegions)}
           {allRegions.map((r) => (
             <div key={`map_${r.id}`}>
               {r.staticRegion.castleLevel > 0 && !castleModifiers.has(r) && (
@@ -995,6 +997,26 @@ export default class MapComponent extends Component<MapComponentProps> {
         </ConditionalWrap>
       );
     });
+  }
+
+  // Nomes das áreas em plaquinhas de texto de verdade (nítidas em qualquer zoom),
+  // por cima das plaquinhas desenhadas no mapa. Portos não têm plaquinha.
+  renderNamePlaques(allRegions: Region[]): ReactNode {
+    return (
+      <div className="map-name-plaques" aria-hidden="true">
+        {allRegions
+          .filter((r) => r.type.id != "port")
+          .map((r) => (
+            <span
+              key={`name-plaque_${r.id}`}
+              className={classNames("map-name-plaque", { sea: r.type.kind == RegionKind.SEA })}
+              style={{ left: r.nameSlot.x, top: r.nameSlot.y }}
+            >
+              {r.name}
+            </span>
+          ))}
+      </div>
+    );
   }
 
   renderRegionTexts(
