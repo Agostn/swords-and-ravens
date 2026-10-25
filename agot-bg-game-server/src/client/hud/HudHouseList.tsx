@@ -180,6 +180,15 @@ export default class HudHouseList extends Component<HudHouseListProps> {
                   id={`hud-house-details-${h.id}`}
                   className="hud-house-popover"
                 >
+                  {/* celular: a janela abre no meio da tela e fecha no × */}
+                  <button
+                    type="button"
+                    className="hud-house-popover-close"
+                    aria-label={t("orders.close")}
+                    onClick={() => document.body.click()}
+                  >
+                    ×
+                  </button>
                   <ListGroup variant="flush">
                     <HouseRowComponent
                       gameClient={this.props.gameClient}
