@@ -124,6 +124,8 @@ const ACTION_TITLES: [unknown, TranslationKey][] = [
 export default class HudLayout extends Component<HudLayoutProps> {
   // Celular: tela limpa (só o mapa e o botão para voltar)
   @observable phoneClean = false;
+  // Computador: canto de baixo à direita com acontecimentos, chat e corvos (aba que abre)
+  @observable commsOpen = false;
   @observable chatOpen = false;
   @observable chatTab: string | undefined = undefined;
   @observable windowWidth = window.innerWidth;
@@ -404,6 +406,8 @@ export default class HudLayout extends Component<HudLayoutProps> {
         className={classNames("hud-root", `hud-${this.screenSize}`, {
           "own-turn": this.isOwnTurn,
           "hud-clean": phone && this.phoneClean,
+          "comms-open": !phone && this.commsOpen,
+          "comms-chat": !phone && this.commsOpen && this.chatOpen,
           "hud-two-columns": !phone
         })}
         style={
@@ -474,6 +478,7 @@ export default class HudLayout extends Component<HudLayoutProps> {
             {leftOpen ? this.renderLeftColumn() : this.renderLeftStrip()}
             {rightOpen ? this.renderRightColumn() : this.renderHouseStrip()}
             {this.renderActionDock(leftSpace, rightSpace)}
+            {this.renderCommsCorner()}
           </>
         )}
       </div>
@@ -630,9 +635,7 @@ export default class HudLayout extends Component<HudLayoutProps> {
   private renderRightColumn(): ReactNode {
     return (
       <aside
-        className={classNames("hud-col hud-col-right", {
-          "chat-open": this.chatOpen
-        })}
+        className="hud-col hud-col-right"
         aria-label={t("hud.houses.title")}
       >
         {this.renderTopRight()}
@@ -660,12 +663,6 @@ export default class HudLayout extends Component<HudLayoutProps> {
             />
           </div>
         </div>
-        {this.chatOpen ? this.renderChatPanel() : (
-          <>
-            {this.renderRecent()}
-            {this.renderChatButtons()}
-          </>
-        )}
       </aside>
     );
   }
@@ -1005,24 +1002,6 @@ export default class HudLayout extends Component<HudLayoutProps> {
             </span>
           </div>
         ))}
-        <span className="hud-strip-spacer" />
-        <button
-          type="button"
-          className="hud-icon-button"
-          aria-label={t("hud.chat.open")}
-          title={t("hud.chat.open")}
-          onClick={() => {
-            hudSettings.toggleRightPanel();
-            this.openDrawer("chat");
-          }}
-        >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#E2B65A" strokeWidth="2" aria-hidden="true">
-            <path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z" />
-          </svg>
-          {this.unreadPublicMessages > 0 && (
-            <span className="hud-count small">{this.unreadPublicMessages}</span>
-          )}
-        </button>
       </aside>
     );
   }
@@ -1245,6 +1224,44 @@ export default class HudLayout extends Component<HudLayoutProps> {
   private openDrawer(tab?: string): void {
     this.chatTab = tab;
     this.chatOpen = true;
+    this.commsOpen = true;
+  }
+
+  // Canto de baixo à direita (computador): fechado é uma abinha com o ícone do
+  // chat (e o aviso de mensagem nova); aberto mostra os últimos acontecimentos,
+  // Chat e Corvos, ou a conversa.
+  private renderCommsCorner(): ReactNode {
+    const unread = this.unreadPublicMessages;
+    const privateUnread = this.hasUnreadPrivateMessages;
+    if (!this.commsOpen) {
+      return (
+        <button
+          type="button"
+          className="hud-panel hud-comms-tab"
+          aria-label={t("hud.comms.open")}
+          title={t("hud.comms.open")}
+          onClick={() => (this.commsOpen = true)}
+        >
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#E2B65A" strokeWidth="2" aria-hidden="true">
+            <path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z" />
+          </svg>
+          {unread > 0 && <span className="hud-count small">{unread}</span>}
+          {privateUnread && <span className="hud-dot" title={t("hud.chat.privateUnread")} />}
+        </button>
+      );
+    }
+    return (
+      <div className={classNames("hud-comms-corner", { "chat-open": this.chatOpen })}>
+        {this.chatOpen ? (
+          this.renderChatPanel()
+        ) : (
+          <>
+            {this.renderRecent(() => (this.commsOpen = false))}
+            {this.renderChatButtons()}
+          </>
+        )}
+      </div>
+    );
   }
 
   private renderSituationRow(): ReactNode {
@@ -1280,8 +1297,8 @@ export default class HudLayout extends Component<HudLayoutProps> {
     );
   }
 
-  private renderRecent(): ReactNode {
-    const minimized = hudSettings.recentMinimized;
+  private renderRecent(onCollapse?: () => void): ReactNode {
+    const minimized = onCollapse ? false : hudSettings.recentMinimized;
     return (
       <div className={classNames("hud-panel hud-recent", { minimized })}>
         <div className="hud-recent-head">
@@ -1298,10 +1315,10 @@ export default class HudLayout extends Component<HudLayoutProps> {
             className="hud-icon-button small"
             aria-expanded={!minimized}
             aria-label={
-              minimized ? t("hud.recent.expand") : t("hud.recent.minimize")
+              onCollapse ? t("hud.comms.close") : minimized ? t("hud.recent.expand") : t("hud.recent.minimize")
             }
-            title={minimized ? t("hud.recent.expand") : t("hud.recent.minimize")}
-            onClick={() => hudSettings.toggleRecent()}
+            title={onCollapse ? t("hud.comms.close") : minimized ? t("hud.recent.expand") : t("hud.recent.minimize")}
+            onClick={() => (onCollapse ? onCollapse() : hudSettings.toggleRecent())}
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
               <path d={minimized ? "M6 15l6-6 6 6" : "M6 9l6 6 6-6"} />

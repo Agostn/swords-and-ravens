@@ -464,6 +464,8 @@ const ptBRIngame: { [key in keyof typeof enIngame]: string } = {
   "hud.ravens.noMessages": "Nenhuma mensagem ainda",
   "hud.ravens.start": "Toque para mandar um corvo",
   "hud.ravens.new": "nova",
+  "hud.comms.open": "Acontecimentos, chat e corvos",
+  "hud.comms.close": "Recolher",
   "hud.situation.next": "Depois",
   "hud.situation.nextPlanning": "Planejamento: colocar ordens",
   "hud.situation.nextAction": "Ação: Incursões → Marchas → Consolidar",

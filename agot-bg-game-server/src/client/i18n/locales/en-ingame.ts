@@ -463,6 +463,8 @@ const enIngame = {
   "hud.ravens.noMessages": "No messages yet",
   "hud.ravens.start": "Tap to send a raven",
   "hud.ravens.new": "new",
+  "hud.comms.open": "Events, chat and ravens",
+  "hud.comms.close": "Collapse",
   "hud.situation.next": "Next",
   "hud.situation.nextPlanning": "Planning: place orders",
   "hud.situation.nextAction": "Action: Raids → Marches → Consolidate",

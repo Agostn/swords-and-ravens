@@ -6638,3 +6638,92 @@ body.hud-phone .popover.deck-popover {
   font-weight: 800;
   box-shadow: 0 8px 22px rgba(0, 0, 0, 0.55);
 }
+
+/* ---------- Computador: canto de baixo à direita (acontecimentos, chat, corvos) ---------- */
+$comms-recent-h: 300px;
+$comms-chat-h: min(600px, 64vh);
+
+.hud-root.hud-two-columns {
+  // a coluna das Casas deixa lugar para a abinha / o canto aberto
+  .hud-col-right {
+    bottom: calc(#{$hud-gap} + 56px);
+  }
+
+  &.comms-open .hud-col-right {
+    bottom: calc(#{$hud-gap} + #{$comms-recent-h} + 8px);
+  }
+
+  &.comms-chat .hud-col-right {
+    bottom: calc(#{$hud-gap} + #{$comms-chat-h} + 8px);
+  }
+
+  .hud-comms-tab {
+    position: absolute;
+    right: $hud-gap;
+    bottom: $hud-gap;
+    z-index: 7;
+    width: 48px;
+    height: 48px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border-radius: 14px;
+    cursor: pointer;
+
+    &:hover { border-color: $hud-gold; }
+
+    .hud-count {
+      position: absolute;
+      top: -6px;
+      right: -6px;
+    }
+
+    .hud-dot {
+      position: absolute;
+      bottom: -3px;
+      right: -3px;
+    }
+  }
+
+  .hud-comms-corner {
+    position: absolute;
+    right: $hud-gap;
+    bottom: $hud-gap;
+    z-index: 7;
+    width: var(--hud-right-panel-width, 316px);
+    height: $comms-recent-h;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+
+    .hud-recent {
+      flex: 1 1 auto;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .hud-recent-body {
+      flex: 1;
+      min-height: 0;
+      max-height: none;
+      overflow: hidden;
+      mask-image: linear-gradient(180deg, #000 80%, transparent 100%);
+    }
+
+    .hud-left-buttons { flex: none; }
+
+    &.chat-open {
+      height: $comms-chat-h;
+    }
+
+    .hud-chat-panel {
+      flex: 1;
+      width: auto;
+      height: auto;
+      min-height: 0;
+    }
+  }
+}
