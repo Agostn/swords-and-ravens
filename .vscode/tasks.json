@@ -1,0 +1,27 @@
+{
+  // Atalhos sem digitar nada: menu Terminal → Executar Tarefa... (Run Task...)
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "1. Ligar / atualizar o site",
+      "type": "shell",
+      "command": "bash .devcontainer/iniciar.sh",
+      "presentation": { "reveal": "always", "panel": "dedicated", "focus": true },
+      "problemMatcher": []
+    },
+    {
+      "label": "2. Jogar online (gerar o link para os amigos)",
+      "type": "shell",
+      "command": "bash .devcontainer/jogar-online.sh",
+      "presentation": { "reveal": "always", "panel": "dedicated", "focus": true },
+      "problemMatcher": []
+    },
+    {
+      "label": "3. Desligar o link dos amigos",
+      "type": "shell",
+      "command": "bash .devcontainer/jogar-online.sh --parar",
+      "presentation": { "reveal": "always", "panel": "dedicated" },
+      "problemMatcher": []
+    }
+  ]
+}
