@@ -59,7 +59,9 @@
 </head>
 <body class="min-h-screen bg-base-100 text-base-content flex flex-col lg:h-screen lg:overflow-hidden">
     <div class="site-backdrop" aria-hidden="true"></div>
-    <header class="shrink-0 sticky top-0 z-30">
+    @* No iPhone com o site na Tela de Início (barra de status transparente), o topo fica
+       por baixo da hora e da bateria: o espaço da "safe area" empurra o menu para baixo. *@
+    <header class="shrink-0 sticky top-0 z-30" style="padding-top: env(safe-area-inset-top, 0px); padding-left: env(safe-area-inset-left, 0px); padding-right: env(safe-area-inset-right, 0px); background: var(--color-base-100, #120f0c);">
         <nav class="navbar bg-base-100/95 backdrop-blur border-b border-base-300 shadow-md">
             <div class="page-container flex items-center justify-between">
                 <a class="brand flex items-center gap-2 shrink-0 px-1 sm:px-2 text-xl sm:text-2xl" asp-area="" asp-page="/Index">
