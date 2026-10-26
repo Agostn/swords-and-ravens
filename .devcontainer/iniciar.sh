@@ -82,7 +82,11 @@ VERSAO_DEPOIS="$(cat agot-bg-website-dotnet/agot-bg-website/wwwroot/static_game/
 
 # Abrir o Codespace de novo (ou em outro aparelho) NÃO derruba o site de quem está jogando:
 # se já está tudo ligado e nada mudou, só mostra o link.
-if site_ok && jogo_ok && [ "$VERSAO_ANTES" == "$VERSAO_DEPOIS" ] && [ "$ATUALIZOU" != "1" ]; then
+# Versão do código que está rodando: se o código mudou (mesmo atualizado por fora, ex.: botão
+# de sincronizar do VS Code), religa o site e o servidor do jogo para usar a versão nova.
+CODIGO="$(git log -1 --format=%H -- agot-bg-website-dotnet agot-bg-game-server/src 2>/dev/null)"
+if site_ok && jogo_ok && [ "$VERSAO_ANTES" == "$VERSAO_DEPOIS" ] && [ "$ATUALIZOU" != "1" ] \
+   && [ "$(cat /tmp/rodando.versao 2>/dev/null)" == "$CODIGO" ]; then
   echo "---> O site já está ligado."
 else
   # Para o que estiver rodando de uma vez anterior
@@ -123,6 +127,7 @@ else
     sleep 2
   done
   site_ok || { tail -20 /tmp/site.log; echo "ERRO: o site não respondeu em 10 minutos (veja /tmp/site.log)."; exit 1; }
+  echo "$CODIGO" > /tmp/rodando.versao
 fi
 
 echo "---> Deixando o site público (para você e os amigos)"
