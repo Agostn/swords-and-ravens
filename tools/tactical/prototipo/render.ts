@@ -1,8 +1,10 @@
 /** Desenho do campo (posicionamento e luta) no canvas. */
 import { Lane } from "../../../agot-bg-game-server/src/common/tactical-battle/tacticalBattle";
-import { FIELD_LANES, FieldType, FIGURES, Role, Row, SquadKind, Terrain } from "../../../agot-bg-game-server/src/common/tactical-battle/tacticalBattleData";
+import { FIELD_LANES, FieldType, Role, Row, SquadKind, Terrain } from "../../../agot-bg-game-server/src/common/tactical-battle/tacticalBattleData";
 import { rng } from "../solver";
 import { House, TERRAIN_NAMES } from "./data";
+import { grassImage } from "./assets";
+import { drawSquad, kindOf } from "./figures";
 
 export const W = 600;
 export const H = 780;
@@ -28,6 +30,9 @@ const BASE: Record<Terrain, [string, string]> = {
   mar: ["#2f5d7c", "#244a64"]
 };
 
+/** Terrenos com chão de grama (usam a textura). */
+const GRASSY: Partial<Record<Terrain, number>> = { aberto: 0.62, mata: 0.5, colina: 0.32, rio: 0.55, vau: 0.55, pantano: 0.4, calcada: 0.4, muralha: 0.6, portao: 0.6 };
+
 function paintLane(ctx: CanvasRenderingContext2D, x: number, w: number, t: Terrain, seed: number): void {
   const r = rng(seed);
   const [a, b] = BASE[t];
@@ -35,12 +40,30 @@ function paintLane(ctx: CanvasRenderingContext2D, x: number, w: number, t: Terra
   g.addColorStop(0, a);
   g.addColorStop(0.5, b);
   g.addColorStop(1, a);
-  ctx.fillStyle = g;
-  ctx.fillRect(x, 0, w, H);
   ctx.save();
   ctx.beginPath();
   ctx.rect(x, 0, w, H);
   ctx.clip();
+  const grass = grassImage();
+  const ga = GRASSY[t];
+  if (grass && ga) {
+    // textura de grama (CC0) por baixo, tingida com a cor do terreno por cima
+    const pat = ctx.createPattern(grass, "repeat") as CanvasPattern;
+    pat.setTransform(new DOMMatrix().translate(seed % 97, (seed * 7) % 131).scale(0.6));
+    ctx.fillStyle = pat;
+    ctx.fillRect(x, 0, w, H);
+    ctx.globalAlpha = 1 - ga;
+    ctx.fillStyle = g;
+    ctx.fillRect(x, 0, w, H);
+    ctx.globalAlpha = 1;
+    ctx.globalCompositeOperation = "multiply";
+    ctx.fillStyle = "rgba(190,180,140,.35)";
+    ctx.fillRect(x, 0, w, H);
+    ctx.globalCompositeOperation = "source-over";
+  } else {
+    ctx.fillStyle = g;
+    ctx.fillRect(x, 0, w, H);
+  }
   // grão do chão
   for (let i = 0; i < 900; i++) {
     ctx.fillStyle = r() < 0.5 ? "rgba(255,250,220,.05)" : "rgba(0,0,0,.06)";
@@ -221,13 +244,14 @@ function paintLane(ctx: CanvasRenderingContext2D, x: number, w: number, t: Terra
 }
 
 export function terrainImage(field: FieldType): HTMLCanvasElement {
-  const cached = terrainCache.get(field);
+  const key = field + (grassImage() ? "+g" : "");
+  const cached = terrainCache.get(key);
   if (cached) return cached;
-  const c = document.createElement("canvas");
-  c.width = W * 2;
-  c.height = H * 2;
-  const ctx = c.getContext("2d") as CanvasRenderingContext2D;
-  ctx.scale(2, 2);
+  // pintado em 1× e ampliado sem suavizar: o chão fica com o mesmo "pixel" dos bonequinhos
+  const c1 = document.createElement("canvas");
+  c1.width = W;
+  c1.height = H;
+  const ctx = c1.getContext("2d") as CanvasRenderingContext2D;
   FIELD_LANES[field].forEach((t, i) => paintLane(ctx, i * LW, LW, t, 1000 + i * 77 + field.length));
   ctx.strokeStyle = "rgba(25,18,10,.6)";
   ctx.lineWidth = 2;
@@ -239,7 +263,13 @@ export function terrainImage(field: FieldType): HTMLCanvasElement {
     ctx.stroke();
   });
   ctx.setLineDash([]);
-  terrainCache.set(field, c);
+  const c = document.createElement("canvas");
+  c.width = W * 2;
+  c.height = H * 2;
+  const big = c.getContext("2d") as CanvasRenderingContext2D;
+  big.imageSmoothingEnabled = false;
+  big.drawImage(c1, 0, 0, W * 2, H * 2);
+  terrainCache.set(key, c);
   return c;
 }
 
@@ -280,195 +310,6 @@ export function drawWall(ctx: CanvasRenderingContext2D, lane: number, gate: bool
       ctx.fill();
     }
   }
-}
-
-// ---------------------------------------------------------------- fichas (as "bolinhas")
-export function glyphPath(ctx: CanvasRenderingContext2D, role: Role): void {
-  // desenha na caixa 0..24
-  const p = new Path2D();
-  const fill: Path2D | null = role == "dragao" || role == "lanceiro" ? new Path2D() : null;
-  switch (role) {
-    case "lanceiro":
-      p.moveTo(6.5, 17.5);
-      p.lineTo(16.5, 7.5);
-      fill?.moveTo(18.5, 5.5);
-      fill?.lineTo(13, 6.8);
-      fill?.lineTo(17.2, 11);
-      fill?.closePath();
-      break;
-    case "escudeiro":
-      p.moveTo(12, 4.5);
-      p.lineTo(18.5, 6.8);
-      p.lineTo(18.5, 12);
-      p.bezierCurveTo(18.5, 15.8, 15.3, 18.4, 12, 20);
-      p.bezierCurveTo(8.7, 18.4, 5.5, 15.8, 5.5, 12);
-      p.lineTo(5.5, 6.8);
-      p.closePath();
-      p.moveTo(12, 7);
-      p.lineTo(12, 17);
-      break;
-    case "arqueiro":
-    case "flechas":
-      p.moveTo(8, 4.5);
-      p.bezierCurveTo(16, 7.5, 16, 16.5, 8, 19.5);
-      p.moveTo(8, 4.5);
-      p.lineTo(8, 19.5);
-      p.moveTo(5, 12);
-      p.lineTo(18, 12);
-      p.moveTo(15.5, 9.5);
-      p.lineTo(18, 12);
-      p.lineTo(15.5, 14.5);
-      break;
-    case "cavalaria":
-      p.moveTo(5.5, 17);
-      p.lineTo(12, 6);
-      p.lineTo(18.5, 17);
-      p.moveTo(8.8, 12.8);
-      p.lineTo(15.2, 12.8);
-      break;
-    case "batedores":
-      p.moveTo(5, 9);
-      p.lineTo(13, 9);
-      p.moveTo(10, 6);
-      p.lineTo(13, 9);
-      p.lineTo(10, 12);
-      p.moveTo(9, 15);
-      p.lineTo(18, 15);
-      p.moveTo(15, 12);
-      p.lineTo(18, 15);
-      p.lineTo(15, 18);
-      break;
-    case "catapulta":
-      p.moveTo(5.5, 17.5);
-      p.lineTo(18.5, 17.5);
-      p.moveTo(8.5, 17.5);
-      p.lineTo(12, 11);
-      p.lineTo(15.5, 17.5);
-      p.moveTo(12, 11);
-      p.lineTo(17.5, 5.5);
-      p.arc(17.5, 5.5, 1.6, 0, Math.PI * 2);
-      break;
-    case "dragao":
-      fill?.moveTo(3.5, 14);
-      fill?.lineTo(12, 6.5);
-      fill?.lineTo(20.5, 14);
-      fill?.lineTo(15, 12);
-      fill?.lineTo(12, 18);
-      fill?.lineTo(9, 12);
-      fill?.closePath();
-      break;
-    case "torre":
-      p.moveTo(7, 18.5);
-      p.lineTo(7, 8);
-      p.lineTo(9, 8);
-      p.lineTo(9, 5.5);
-      p.lineTo(11, 5.5);
-      p.lineTo(11, 8);
-      p.lineTo(13, 8);
-      p.lineTo(13, 5.5);
-      p.lineTo(15, 5.5);
-      p.lineTo(15, 8);
-      p.lineTo(17, 8);
-      p.lineTo(17, 18.5);
-      p.closePath();
-      break;
-    case "ariete":
-      p.moveTo(4.5, 14);
-      p.lineTo(15, 14);
-      p.lineTo(19.5, 12);
-      p.lineTo(15, 10);
-      p.lineTo(4.5, 10);
-      break;
-    case "abordagem":
-      p.moveTo(6.5, 17.5);
-      p.lineTo(17.5, 6.5);
-      p.moveTo(6.5, 6.5);
-      p.lineTo(17.5, 17.5);
-      break;
-  }
-  ctx.stroke(p);
-  if (fill) ctx.fill(fill);
-}
-
-export interface TokenOpts {
-  dead?: number; // 0..1
-  selected?: boolean;
-  ghost?: boolean;
-}
-
-export function drawToken(ctx: CanvasRenderingContext2D, x: number, y: number, r: number, house: House, role: Role, kind: SquadKind, o: TokenOpts = {}): void {
-  const d = o.dead ?? 0;
-  ctx.save();
-  ctx.globalAlpha *= o.ghost ? 0.55 : 1 - d * 0.7;
-  // sombra no chão
-  ctx.fillStyle = "rgba(0,0,0,.35)";
-  ctx.beginPath();
-  ctx.ellipse(x + r * 0.15, y + r * 0.75, r * 0.95, r * 0.42, 0, 0, Math.PI * 2);
-  ctx.fill();
-  if (o.selected) {
-    ctx.strokeStyle = "rgba(255,214,110,.95)";
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.arc(x, y, r + 4, 0, Math.PI * 2);
-    ctx.stroke();
-  }
-  // borda escura (a "espessura" da ficha)
-  ctx.fillStyle = d > 0 ? "#3d3a35" : house.dark;
-  ctx.beginPath();
-  ctx.arc(x, y + r * 0.14, r, 0, Math.PI * 2);
-  ctx.fill();
-  // face com brilho
-  const g = ctx.createRadialGradient(x - r * 0.35, y - r * 0.45, r * 0.1, x, y, r);
-  g.addColorStop(0, d > 0 ? "#7a766f" : lighten(house.color, 0.35));
-  g.addColorStop(0.7, d > 0 ? "#5c5852" : house.color);
-  g.addColorStop(1, d > 0 ? "#4a4741" : house.dark);
-  ctx.fillStyle = g;
-  ctx.beginPath();
-  ctx.arc(x, y, r, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.strokeStyle = "rgba(0,0,0,.55)";
-  ctx.lineWidth = 1.2;
-  ctx.stroke();
-  // anel interno
-  ctx.strokeStyle = d > 0 ? "rgba(0,0,0,.3)" : "rgba(255,255,255,.28)";
-  ctx.lineWidth = 1;
-  ctx.beginPath();
-  ctx.arc(x, y, r * 0.8, 0, Math.PI * 2);
-  ctx.stroke();
-  // símbolo
-  ctx.translate(x - r * 0.78, y - r * 0.78);
-  ctx.scale((r * 1.56) / 24, (r * 1.56) / 24);
-  ctx.strokeStyle = d > 0 ? "#26231f" : house.ink;
-  ctx.fillStyle = d > 0 ? "#26231f" : house.ink;
-  ctx.lineWidth = kind == "knight" || kind == "dragon" ? 2.4 : 2.2;
-  ctx.lineCap = "round";
-  ctx.lineJoin = "round";
-  glyphPath(ctx, role);
-  ctx.restore();
-}
-
-function lighten(hex: string, t: number): string {
-  const n = parseInt(hex.slice(1), 16);
-  const c = [(n >> 16) & 255, (n >> 8) & 255, n & 255].map((v) => Math.round(v + (255 - v) * t));
-  return `rgb(${c[0]},${c[1]},${c[2]})`;
-}
-
-export function tokenRadius(kind: SquadKind): number {
-  return kind == "knight" || kind == "dragon" || kind == "siege-engine" || kind == "garrison" ? 14 : 10.5;
-}
-
-/** Posições das bolinhas de um esquadrão em volta de (cx, cy). */
-export function squadLayout(kind: SquadKind, cx: number, cy: number, flip: boolean): [number, number][] {
-  const n = FIGURES[kind];
-  const r = tokenRadius(kind);
-  if (n == 3) return [[cx - r * 1.05, cy + (flip ? -r * 0.55 : r * 0.55)], [cx + r * 1.05, cy + (flip ? -r * 0.55 : r * 0.55)], [cx, cy - (flip ? -r * 0.95 : r * 0.95)]];
-  if (n == 2) return [[cx - r * 1.05, cy], [cx + r * 1.05, cy]];
-  return [[cx, cy]];
-}
-
-export function squadWidth(kind: SquadKind): number {
-  const r = tokenRadius(kind);
-  return FIGURES[kind] == 1 ? r * 2.4 : r * 4.4;
 }
 
 // ---------------------------------------------------------------- posicionamento
@@ -574,22 +415,37 @@ export function drawPlacement(ctx: CanvasRenderingContext2D, v: PlaceView, t: nu
     ctx.fillStyle = "rgba(255,240,205,.8)";
     ctx.fillText(s.row == "frente" ? "FRENTE" : "TRÁS", s.x + 10, s.y + 8);
   }
-  // esquadrões posicionados
+  // esquadrões posicionados: cada peça vira 4 bonequinhos; cabem pelo menos 2 peças por casinha
   const placed: PlacedToken[] = [];
+  const SQ = 1.1;
+  const widthOf = (k: SquadKind): number => (kindOf(k) == "horse" ? 70 : kindOf(k) == "foot" ? 46 : 50) * SQ * 0.92;
   for (const s of slots(v.field)) {
     const here = v.squads.filter((q) => q.lane == s.lane && q.row == s.row);
     if (!here.length) continue;
-    const perRow = Math.max(1, Math.floor((s.w - 10) / 62));
-    here.forEach((q, i) => {
-      const col = i % perRow;
-      const line = Math.floor(i / perRow);
-      const cols = Math.min(perRow, here.length - line * perRow);
-      const cw = (s.w - 10) / cols;
-      const cx = s.x + 5 + cw * (col + 0.5);
-      const cy = s.y + s.h * 0.58 + line * 44 - (Math.ceil(here.length / perRow) - 1) * 22;
-      const ghost = v.dragging == q.id;
-      squadLayout(q.kind, cx, cy, false).forEach(([x, y]) => drawToken(ctx, x, y, tokenRadius(q.kind), v.house, q.role, q.kind, { selected: v.selected == q.id, ghost }));
-      placed.push({ id: q.id, x: cx - 30, y: cy - 26, w: 60, h: 52 });
+    // arruma em linhas
+    const lines: (typeof here)[] = [[]];
+    let used = 0;
+    for (const q of here) {
+      const w = widthOf(q.kind);
+      if (used + w > s.w - 6 && lines[lines.length - 1].length) {
+        lines.push([]);
+        used = 0;
+      }
+      lines[lines.length - 1].push(q);
+      used += w;
+    }
+    const n = lines.length;
+    lines.forEach((line, li) => {
+      const total = line.reduce((acc, q) => acc + widthOf(q.kind), 0);
+      let x = s.x + s.w / 2 - total / 2;
+      const fy = n == 1 ? s.y + s.h * 0.8 : s.y + s.h * (0.5 + (0.42 * li) / (n - 1));
+      const scale = n > 2 ? SQ * 0.85 : SQ;
+      line.forEach((q) => {
+        const w = widthOf(q.kind);
+        const box = drawSquad(ctx, x + w / 2, fy, q.kind, q.role, v.house, { scale, selected: v.selected == q.id, ghost: v.dragging == q.id, time: t });
+        placed.push({ id: q.id, ...box });
+        x += w;
+      });
     });
   }
   return placed;

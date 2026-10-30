@@ -2,7 +2,8 @@
 import { Role, SquadKind } from "../../../agot-bg-game-server/src/common/tactical-battle/tacticalBattleData";
 import { drawFigure } from "./battle";
 import { HOUSES, House } from "./data";
-import { H, LW, W, drawToken, drawWall, roundRect, terrainImage, tokenRadius, squadLayout } from "./render";
+import { drawSquad } from "./figures";
+import { H, LW, W, drawWall, roundRect, terrainImage } from "./render";
 
 export interface Slide {
   title: string;
@@ -54,11 +55,12 @@ function ground(ctx: CanvasRenderingContext2D, field: Parameters<typeof terrainI
 }
 
 function squad(ctx: CanvasRenderingContext2D, kind: SquadKind, role: Role, x: number, y: number, h: House): void {
-  squadLayout(kind, x, y, false).forEach(([px, py]) => drawToken(ctx, px, py, tokenRadius(kind), h, role, kind));
+  drawSquad(ctx, x, y + 22, kind, role, h, { scale: 1.1 });
 }
 
-function men(ctx: CanvasRenderingContext2D, role: Role, kind: SquadKind, cx: number, cy: number, h: House, side: "attacker" | "defender", n = 3): void {
-  for (let i = 0; i < n; i++) drawFigure(ctx, cx + (i - (n - 1) / 2) * 16, cy, role, kind, side, h);
+function men(ctx: CanvasRenderingContext2D, role: Role, kind: SquadKind, cx: number, cy: number, h: House, side: "attacker" | "defender", n = 3, scale = 1.05): void {
+  const gap = (kind == "knight" ? 30 : 16) * scale;
+  for (let i = 0; i < n; i++) drawFigure(ctx, cx + (i - (n - 1) / 2) * gap, cy + 13 * scale, role, kind, side, h, 0, scale);
 }
 
 export const SLIDES: Slide[] = [
@@ -116,13 +118,13 @@ export const SLIDES: Slide[] = [
         ctx.beginPath();
         ctx.arc(x, y, 34, 0, Math.PI * 2);
         ctx.fill();
-        men(ctx, r, "footman", x, y - 4, A, "attacker", 3);
+        men(ctx, r, "footman", x, y - 8, A, "defender", 3, 1.45);
         label(ctx, names[r], x, y + 38, "rgba(18,14,10,.9)", "#efe3c6", 15);
       });
       // cavalaria
-      drawFigure(ctx, 70, 300, "cavalaria", "knight", "attacker", D);
+      drawFigure(ctx, 70, 318, "cavalaria", "knight", "attacker", D, 0, 1.3);
       label(ctx, "Cavalaria", 70, 338, "rgba(18,14,10,.9)", "#efe3c6", 14);
-      drawFigure(ctx, 530, 300, "batedores", "knight", "attacker", D);
+      drawFigure(ctx, 530, 318, "batedores", "knight", "defender", D, 0, 1.3);
       label(ctx, "Batedores", 530, 338, "rgba(18,14,10,.9)", "#efe3c6", 14);
     }
   },
@@ -132,9 +134,9 @@ export const SLIDES: Slide[] = [
     draw: (ctx) => {
       ground(ctx, "planicie", H * 0.3);
       // escudeiros na frente, arqueiros atrás, flechas por cima
-      for (let i = 0; i < 6; i++) drawFigure(ctx, 210 + i * 18, 150, "escudeiro", "footman", "attacker", A);
-      for (let i = 0; i < 6; i++) drawFigure(ctx, 210 + i * 18, 250, "arqueiro", "footman", "attacker", A);
-      for (let i = 0; i < 4; i++) drawFigure(ctx, 230 + i * 26, 40, "cavalaria", "knight", "defender", D);
+      for (let i = 0; i < 6; i++) drawFigure(ctx, 210 + i * 18, 163, "escudeiro", "footman", "attacker", A);
+      for (let i = 0; i < 6; i++) drawFigure(ctx, 210 + i * 18, 263, "arqueiro", "footman", "attacker", A);
+      for (let i = 0; i < 4; i++) drawFigure(ctx, 220 + i * 36, 53, "cavalaria", "knight", "defender", D);
       ctx.strokeStyle = "#f6edd6";
       ctx.lineWidth = 1.6;
       for (let i = 0; i < 5; i++) {

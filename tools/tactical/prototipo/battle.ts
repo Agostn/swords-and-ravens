@@ -7,13 +7,12 @@ import { Lane, Side, Squad, TacticalBattleResult } from "../../../agot-bg-game-s
 import { FIELD_LANES, FieldType, Role, Row, SquadKind } from "../../../agot-bg-game-server/src/common/tactical-battle/tacticalBattleData";
 import { rng } from "../solver";
 import { House, TERRAIN_NAMES } from "./data";
+import { Kind, Pose, drawFallen, drawUnit, kindOf } from "./figures";
 import { H, LW, W, drawWall, ease, roundRect, terrainImage } from "./render";
 
 export const T_END = 9;
 const T_FIGHT = 3.0; // começam as baixas
 const T_ROUT = 6.6; // quem perdeu foge
-
-type Kind = "foot" | "horse" | "siege" | "dragon" | "tower" | "ship";
 
 interface Man {
   side: Side;
@@ -36,6 +35,12 @@ interface Man {
   nextShot: number;
   flank: boolean;
   phase: number;
+  flip: boolean; // virado para a esquerda
+  walk: number; // fase do passo
+  atk: number; // golpe, 0..1
+  fight: boolean;
+  shotAt: number;
+  seed: number;
 }
 
 interface Arrow {
@@ -68,24 +73,14 @@ export interface Sim {
 
 const ranged = (r: Role): boolean => r == "arqueiro" || r == "flechas";
 
-function kindOf(k: SquadKind): Kind {
-  if (k == "knight") return "horse";
-  if (k == "siege-engine") return "siege";
-  if (k == "dragon") return "dragon";
-  if (k == "garrison") return "tower";
-  if (k == "ship") return "ship";
-  return "foot";
-}
+/** Tamanho dos bonequinhos na luta. */
+export const FIG = 1.35;
 
-/** Formação de um esquadrão: posições em volta do centro. */
+/** Formação de um esquadrão: 4 bonequinhos (2 × 2) em volta do centro. */
 function formation(kind: Kind, cx: number, cy: number, side: Side): [number, number][] {
   const s = side == "attacker" ? 1 : -1;
-  if (kind == "foot") {
-    const out: [number, number][] = [];
-    for (let r = 0; r < 2; r++) for (let c = 0; c < 3; c++) out.push([cx + (c - 1) * 21, cy + s * r * 21]);
-    return out;
-  }
-  if (kind == "horse") return [[cx - 16, cy], [cx + 16, cy], [cx - 16, cy + s * 32], [cx + 16, cy + s * 32]];
+  if (kind == "foot") return [[cx - 11, cy], [cx + 11, cy], [cx - 7, cy + s * 19], [cx + 15, cy + s * 19]];
+  if (kind == "horse") return [[cx - 20, cy], [cx + 20, cy], [cx - 14, cy + s * 30], [cx + 26, cy + s * 30]];
   return [[cx, cy]];
 }
 
@@ -100,12 +95,12 @@ export function createSim(field: FieldType, res: TacticalBattleResult, squads: R
     squads[side].forEach((sq) => {
       const same = squads[side].filter((o) => o.lane == sq.lane && o.row == sq.row);
       const idx = same.findIndex((o) => o.id == sq.id);
-      const spread = Math.min(80, (LW - 20) / Math.max(1, same.length));
+      const spread = Math.min(96, (LW - 20) / Math.max(1, same.length));
       const cx = sq.lane * LW + LW / 2 + (idx - (same.length - 1) / 2) * spread;
       const kind = kindOf(sq.kind);
       formation(kind, cx, rowY[side][sq.row], side).forEach(([x, y]) => {
-        const jx = (rand() - 0.5) * 3;
-        const jy = (rand() - 0.5) * 3;
+        const jx = (rand() - 0.5) * 2.5;
+        const jy = (rand() - 0.5) * 2.5;
         men.push({
           side,
           lane: sq.lane,
@@ -118,7 +113,7 @@ export function createSim(field: FieldType, res: TacticalBattleResult, squads: R
           fy: y + jy,
           dir: side == "attacker" ? -Math.PI / 2 : Math.PI / 2,
           speed: kind == "horse" ? 62 : kind == "dragon" ? 70 : kind == "ship" ? 30 : kind == "foot" ? 30 + rand() * 4 : 0,
-          reach: kind == "horse" ? 22 : kind == "dragon" ? 50 : kind == "ship" ? 36 : sq.role == "lanceiro" ? 22 : 16,
+          reach: kind == "horse" ? 26 : kind == "dragon" ? 50 : kind == "ship" ? 40 : sq.role == "lanceiro" ? 26 : 19,
           target: null,
           dieAt: Infinity,
           dead: false,
@@ -126,7 +121,13 @@ export function createSim(field: FieldType, res: TacticalBattleResult, squads: R
           swing: rand() * 6,
           nextShot: 1 + rand() * 0.8,
           flank: false,
-          phase: rand() * 6.28
+          phase: rand() * 6.28,
+          flip: kind == "horse" ? sq.lane == 2 || (sq.lane == 1 && side == "defender") : rand() < 0.3,
+          walk: rand() * 6,
+          atk: 0,
+          fight: false,
+          shotAt: -9,
+          seed: Math.floor(rand() * 1000)
         });
       });
     });
@@ -192,7 +193,10 @@ export function stepSim(sim: Sim, dt: number): void {
   const t = sim.t;
   const r = sim.rand;
   const contested = (lane: Lane): boolean => sim.res.lanes[lane].winner != null;
+  const before = sim.men.map((m) => [m.x, m.y]);
   for (const m of sim.men) {
+    m.atk = 0;
+    m.fight = false;
     if (m.dead) continue;
     if (t >= m.dieAt) {
       m.dead = true;
@@ -216,10 +220,11 @@ export function stepSim(sim: Sim, dt: number): void {
         const tg = nearestEnemy(sim, m);
         const wallY = H * 0.415;
         if (m.kind == "siege" && sim.breach[m.lane] && t < T_FIGHT + 0.6) {
-          sim.arrows.push({ x0: m.x, y0: m.y, x1: m.lane * LW + LW / 2 + (r() - 0.5) * 40, y1: wallY, t0: t, dur: 0.9, kind: "stone" });
+          sim.arrows.push({ x0: m.x, y0: m.y - 34 * FIG, x1: m.lane * LW + LW / 2 + (r() - 0.5) * 40, y1: wallY, t0: t, dur: 0.9, kind: "stone" });
         } else if (tg) {
-          sim.arrows.push({ x0: m.x, y0: m.y, x1: tg.x, y1: tg.y, t0: t, dur: m.kind == "siege" ? 0.9 : 0.55, kind: m.kind == "siege" ? "stone" : "arrow" });
+          sim.arrows.push({ x0: m.x, y0: m.y - (m.kind == "siege" ? 34 : 33) * FIG, x1: tg.x, y1: tg.y - 10 * FIG, t0: t, dur: m.kind == "siege" ? 0.9 : 0.55, kind: m.kind == "siege" ? "stone" : "arrow" });
         }
+        m.shotAt = t;
         m.nextShot = t + (m.kind == "siege" ? 1.3 : 0.7) + r() * 0.4;
       }
       continue;
@@ -243,11 +248,15 @@ export function stepSim(sim: Sim, dt: number): void {
       if (dist > range) {
         m.x += (dx / dist) * m.speed * dt;
         m.y += (dy / dist) * m.speed * dt;
-      } else if (t > m.nextShot && t < T_ROUT) {
-        sim.arrows.push({ x0: m.x, y0: m.y, x1: tg.x + (r() - 0.5) * 8, y1: tg.y + (r() - 0.5) * 8, t0: t, dur: Math.max(0.3, dist / 380), kind: "arrow" });
-        m.nextShot = t + 0.75 + r() * 0.6;
+      } else if (t < T_ROUT) {
+        // puxa a corda e solta
+        m.atk = Math.max(0, Math.min(1, 1 - (m.nextShot - t) / 0.55));
+        if (t > m.nextShot) {
+          const d = Math.cos(m.dir) < 0 ? -1 : 1;
+          sim.arrows.push({ x0: m.x + 9 * d * FIG, y0: m.y - 14 * FIG, x1: tg.x + (r() - 0.5) * 8, y1: tg.y - 10 * FIG + (r() - 0.5) * 8, t0: t, dur: Math.max(0.3, dist / 380), kind: "arrow" });
+          m.nextShot = t + 0.75 + r() * 0.6;
+        }
       }
-      if (dist < 26) m.swing += dt * 10;
       continue;
     }
     if (m.kind == "dragon") {
@@ -261,12 +270,15 @@ export function stepSim(sim: Sim, dt: number): void {
       m.y += (ddy / dd) * Math.min(dd, m.speed * dt * 1.4);
       m.dir = Math.atan2(tg.y - m.y, tg.x - m.x);
       if (t > m.nextShot && t < T_ROUT) {
-        sim.arrows.push({ x0: m.x, y0: m.y, x1: tg.x, y1: tg.y, t0: t, dur: 0.45, kind: "fire" });
+        const d = Math.cos(m.dir) < 0 ? -1 : 1;
+        sim.arrows.push({ x0: m.x + 42 * d * FIG, y0: m.y - 30 * FIG, x1: tg.x, y1: tg.y - 8 * FIG, t0: t + 0.25, dur: 0.45, kind: "fire" });
+        m.shotAt = t;
         m.nextShot = t + 1.0 + r() * 0.4;
       }
       continue;
     }
     // corpo a corpo: vai até o inimigo e luta
+    m.fight = m.kind == "horse" && dist < 110 && t > 1.2;
     if (dist > m.reach) {
       const sp = m.speed * (t < 1.6 ? 0.6 : 1);
       // não passar por cima dos aliados: pequeno desvio
@@ -277,7 +289,7 @@ export function stepSim(sim: Sim, dt: number): void {
         const ex = m.x - o.x;
         const ey = m.y - o.y;
         const e2 = ex * ex + ey * ey;
-        if (e2 < 380 && e2 > 0.01) {
+        if (e2 < 480 && e2 > 0.01) {
           ax += ex / e2;
           ay += ey / e2;
         }
@@ -286,231 +298,31 @@ export function stepSim(sim: Sim, dt: number): void {
       m.y += ((dy / dist) * sp + ay * 40) * dt;
     } else {
       m.swing += dt * (m.kind == "horse" ? 9 : 11);
+      m.atk = Math.max(0, Math.sin(m.swing));
       if (Math.floor(m.swing / Math.PI) != Math.floor((m.swing - dt * 11) / Math.PI) && r() < 0.35 && t > T_FIGHT - 0.5) {
-        sim.sparks.push({ x: (m.x + tg.x) / 2, y: (m.y + tg.y) / 2, t0: t });
+        sim.sparks.push({ x: (m.x + tg.x) / 2, y: (m.y + tg.y) / 2 - 12 * FIG, t0: t });
       }
     }
   }
+  // passo e para que lado olha
+  sim.men.forEach((m, i) => {
+    if (m.dead) return;
+    const moved = Math.hypot(m.x - before[i][0], m.y - before[i][1]);
+    if (moved > 0.01) m.walk += moved * (m.kind == "horse" ? 0.32 : 0.42);
+    const c = Math.cos(m.dir);
+    if (Math.abs(c) > 0.35) m.flip = c < 0;
+    if ((m.kind == "siege" || m.kind == "tower") && t - m.shotAt < 0.5) m.atk = 1 - (t - m.shotAt) / 0.5;
+    if (m.kind == "dragon" && t - m.shotAt < 0.7) m.atk = 1 - (t - m.shotAt) / 0.7;
+  });
   // limpa o que já passou
   sim.arrows = sim.arrows.filter((a) => t - a.t0 < a.dur + 0.05);
   sim.sparks = sim.sparks.filter((s) => t - s.t0 < 0.35);
   void t0;
 }
 
-// ---------------------------------------------------------------- desenho dos homenzinhos
-/** Tamanho dos homenzinhos (o campo tem 600 de largura; no celular ele fica bem menor). */
-const FIG_SCALE = 1.5;
-const SKIN = "#e2c3a0";
-const STEEL = "#cfd3d6";
-const WOOD = "#7a5530";
-
-export function drawMan(ctx: CanvasRenderingContext2D, m: { x: number; y: number; dir: number; role: Role; kind: Kind; swing: number; dead: boolean; side: Side }, h: House, alpha = 1): void {
-  ctx.save();
-  ctx.translate(m.x, m.y);
-  ctx.scale(FIG_SCALE, FIG_SCALE);
-  ctx.globalAlpha *= alpha;
-  if (m.dead) {
-    ctx.globalAlpha *= 0.55;
-    ctx.rotate(m.dir + Math.PI / 2 + 0.6);
-    ctx.fillStyle = "rgba(90,20,15,.45)";
-    ctx.beginPath();
-    ctx.ellipse(2, 3, 9, 5, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = "#4e4a44";
-    ctx.beginPath();
-    ctx.ellipse(0, 0, m.kind == "horse" ? 11 : 6, m.kind == "horse" ? 5 : 3.2, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.restore();
-    return;
-  }
-  // sombra
-  ctx.fillStyle = "rgba(0,0,0,.3)";
-  ctx.beginPath();
-  ctx.ellipse(2, 3, m.kind == "horse" ? 12 : m.kind == "dragon" ? 22 : 7, m.kind == "horse" ? 6 : m.kind == "dragon" ? 10 : 4, 0, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.rotate(m.dir + Math.PI / 2); // "para cima" = para onde olha
-  const swing = Math.sin(m.swing);
-  if (m.kind == "horse") {
-    // cavalo
-    ctx.fillStyle = "#6b4a2c";
-    ctx.beginPath();
-    ctx.ellipse(0, 2, 5.2, 11, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.ellipse(0, -10, 2.6, 4.5, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = h.color; // manta com a cor da Casa
-    ctx.fillRect(-5.5, -1, 11, 7);
-    // cavaleiro
-    ctx.fillStyle = h.color;
-    ctx.strokeStyle = "rgba(0,0,0,.6)";
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.arc(0, 0, 4.6, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.stroke();
-    ctx.fillStyle = STEEL;
-    ctx.beginPath();
-    ctx.arc(0, -1, 2.4, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.strokeStyle = WOOD;
-    ctx.lineWidth = 1.8;
-    ctx.beginPath();
-    if (m.role == "cavalaria") {
-      ctx.moveTo(3.5, 3);
-      ctx.lineTo(3.5 + swing * 1.5, -20 - Math.max(0, swing) * 4);
-    } else {
-      ctx.moveTo(-4, 0);
-      ctx.quadraticCurveTo(-8, -6, -4, -12);
-    }
-    ctx.stroke();
-    if (m.role == "cavalaria") {
-      ctx.fillStyle = STEEL;
-      ctx.beginPath();
-      ctx.moveTo(3.5 + swing * 1.5, -24 - Math.max(0, swing) * 4);
-      ctx.lineTo(2 + swing * 1.5, -19 - Math.max(0, swing) * 4);
-      ctx.lineTo(5 + swing * 1.5, -19 - Math.max(0, swing) * 4);
-      ctx.fill();
-    }
-    ctx.restore();
-    return;
-  }
-  if (m.kind == "dragon") {
-    const flap = Math.sin(m.swing * 0.6 + performance.now() / 120) * 0.35;
-    ctx.fillStyle = h.dark;
-    ctx.strokeStyle = "rgba(0,0,0,.6)";
-    for (const s of [-1, 1]) {
-      ctx.beginPath();
-      ctx.moveTo(0, -2);
-      ctx.lineTo(s * 26, -10 + flap * 14);
-      ctx.lineTo(s * 20, 4);
-      ctx.lineTo(s * 8, 6);
-      ctx.closePath();
-      ctx.fill();
-      ctx.stroke();
-    }
-    ctx.fillStyle = h.color;
-    ctx.beginPath();
-    ctx.ellipse(0, 2, 6, 14, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.ellipse(0, -13, 3.5, 5, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.restore();
-    return;
-  }
-  if (m.kind == "siege") {
-    ctx.fillStyle = WOOD;
-    ctx.fillRect(-9, -7, 18, 14);
-    ctx.strokeStyle = "#3a2612";
-    ctx.lineWidth = 1.5;
-    ctx.strokeRect(-9, -7, 18, 14);
-    ctx.strokeStyle = WOOD;
-    ctx.lineWidth = 2.5;
-    ctx.beginPath();
-    ctx.moveTo(0, 4);
-    ctx.lineTo(0, -14 + Math.sin(m.swing) * 3);
-    ctx.stroke();
-    ctx.fillStyle = h.color;
-    ctx.beginPath();
-    ctx.arc(-11, 6, 3.4, 0, Math.PI * 2);
-    ctx.arc(11, 6, 3.4, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.restore();
-    return;
-  }
-  if (m.kind == "tower") {
-    ctx.fillStyle = "#a9a294";
-    ctx.strokeStyle = "#4a463f";
-    ctx.lineWidth = 1.5;
-    ctx.fillRect(-12, -12, 24, 24);
-    ctx.strokeRect(-12, -12, 24, 24);
-    ctx.fillStyle = h.color;
-    ctx.beginPath();
-    ctx.arc(0, 0, 4.5, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.restore();
-    return;
-  }
-  if (m.kind == "ship") {
-    ctx.fillStyle = "#6b4a2c";
-    ctx.strokeStyle = "#2c1b0d";
-    ctx.lineWidth = 1.2;
-    ctx.beginPath();
-    ctx.moveTo(0, -22);
-    ctx.quadraticCurveTo(10, -6, 8, 16);
-    ctx.lineTo(-8, 16);
-    ctx.quadraticCurveTo(-10, -6, 0, -22);
-    ctx.fill();
-    ctx.stroke();
-    ctx.fillStyle = h.color;
-    ctx.fillRect(-10, -4, 20, 6);
-    ctx.fillStyle = "rgba(255,255,255,.5)";
-    for (let i = -1; i <= 1; i++) {
-      ctx.beginPath();
-      ctx.arc(i * 4, 8, 1.6, 0, Math.PI * 2);
-      ctx.fill();
-    }
-    ctx.restore();
-    return;
-  }
-  // soldado a pé
-  if (m.role == "escudeiro") {
-    ctx.fillStyle = h.dark;
-    ctx.strokeStyle = "rgba(0,0,0,.6)";
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.ellipse(-1, -6, 6.5, 2.6, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.stroke();
-  }
-  ctx.fillStyle = h.color;
-  ctx.strokeStyle = "rgba(0,0,0,.6)";
-  ctx.lineWidth = 1;
-  ctx.beginPath();
-  ctx.ellipse(0, 0, 5.2, 4.2, 0, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.stroke();
-  ctx.fillStyle = m.role == "arqueiro" ? SKIN : STEEL;
-  ctx.beginPath();
-  ctx.arc(0, -0.6, 2.4, 0, Math.PI * 2);
-  ctx.fill();
-  if (m.role == "lanceiro") {
-    const th = Math.max(0, swing) * 5;
-    ctx.strokeStyle = WOOD;
-    ctx.lineWidth = 1.5;
-    ctx.beginPath();
-    ctx.moveTo(3.5, 6);
-    ctx.lineTo(3.5, -15 - th);
-    ctx.stroke();
-    ctx.fillStyle = STEEL;
-    ctx.beginPath();
-    ctx.moveTo(3.5, -19 - th);
-    ctx.lineTo(2, -14 - th);
-    ctx.lineTo(5, -14 - th);
-    ctx.fill();
-  } else if (m.role == "escudeiro") {
-    ctx.strokeStyle = STEEL;
-    ctx.lineWidth = 1.6;
-    ctx.beginPath();
-    ctx.moveTo(4.5, 0);
-    ctx.lineTo(4.5 + swing * 3, -8);
-    ctx.stroke();
-  } else {
-    ctx.strokeStyle = WOOD;
-    ctx.lineWidth = 1.4;
-    ctx.beginPath();
-    ctx.arc(0, -2, 7, Math.PI * 1.15, Math.PI * 1.85);
-    ctx.stroke();
-    ctx.strokeStyle = "rgba(240,235,220,.8)";
-    ctx.lineWidth = 0.7;
-    ctx.beginPath();
-    ctx.moveTo(-5.7, -6);
-    ctx.lineTo(5.7, -6);
-    ctx.stroke();
-  }
-  ctx.restore();
+// ---------------------------------------------------------------- desenho
+function pose(m: Man, h: House, t: number): Pose {
+  return { role: m.role, kind: m.kind, house: h, back: Math.sin(m.dir) < -0.15, flip: m.flip, walk: m.walk, atk: m.atk, fight: m.fight, seed: m.seed, time: t + m.phase };
 }
 
 export function drawSim(ctx: CanvasRenderingContext2D, sim: Sim): void {
@@ -546,7 +358,13 @@ export function drawSim(ctx: CanvasRenderingContext2D, sim: Sim): void {
   const appear = ease(t / 0.8);
   // mortos embaixo, vivos por cima, ordenados pela altura
   const order = [...sim.men].sort((a, b) => Number(b.dead) - Number(a.dead) || (a.kind == "dragon" ? 1 : 0) - (b.kind == "dragon" ? 1 : 0) || a.y - b.y);
-  for (const m of order) drawMan(ctx, m, sim.houses[m.side], appear);
+  ctx.save();
+  ctx.globalAlpha = appear;
+  for (const m of order) {
+    if (m.dead) drawFallen(ctx, m.x, m.y, FIG, pose(m, sim.houses[m.side], t), t - m.deadAt);
+    else drawUnit(ctx, m.x, m.y, FIG, pose(m, sim.houses[m.side], t), m.dir);
+  }
+  ctx.restore();
   // flechas, pedras e fogo
   for (const a of sim.arrows) {
     const p = (t - a.t0) / a.dur;
@@ -622,7 +440,9 @@ export function drawSim(ctx: CanvasRenderingContext2D, sim: Sim): void {
   }
 }
 
-/** Para as imagens do tutorial: um homenzinho parado. */
-export function drawFigure(ctx: CanvasRenderingContext2D, x: number, y: number, role: Role, kind: SquadKind, side: Side, h: House, swing = 0): void {
-  drawMan(ctx, { x, y, dir: side == "attacker" ? -Math.PI / 2 : Math.PI / 2, role, kind: kindOf(kind), swing, dead: false, side }, h);
+/** Para as imagens do tutorial: um bonequinho parado. */
+export function drawFigure(ctx: CanvasRenderingContext2D, x: number, y: number, role: Role, kind: SquadKind, side: Side, h: House, swing = 0, scale = 1.05): void {
+  const k = kindOf(kind);
+  const dir = side == "attacker" ? -Math.PI / 2 : Math.PI / 2;
+  drawUnit(ctx, x, y, scale, { role, kind: k, house: h, back: side == "attacker" && k != "horse", flip: k == "horse" ? side == "defender" : false, walk: 0, atk: swing, fight: false, seed: Math.round(x), time: 0 }, dir);
 }

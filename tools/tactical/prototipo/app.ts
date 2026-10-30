@@ -4,7 +4,7 @@
  * Gerar a página: node tools/tactical/prototipo/build.js
  */
 import { resolveTacticalBattle, Squad, Lane, Side, TacticalBattleResult, LaneFactor } from "../../../agot-bg-game-server/src/common/tactical-battle/tacticalBattle";
-import { FIELD_LANES, FieldType, Role, Row, SquadKind, rolesFor, FIGURES } from "../../../agot-bg-game-server/src/common/tactical-battle/tacticalBattleData";
+import { FIELD_LANES, FieldType, Role, Row, SquadKind, rolesFor } from "../../../agot-bg-game-server/src/common/tactical-battle/tacticalBattleData";
 import { computerStrategy, Piece, Scenario } from "../solver";
 import {
   EMPTY_SIDE,
@@ -25,6 +25,8 @@ import {
 import { H, PlacedToken, W, drawPlacement, slots } from "./render";
 import { Sim, T_END, createSim, drawSim, stepSim } from "./battle";
 import { SLIDES, drawSlide } from "./tutorial";
+import { drawSquad, drawUnit, kindOf } from "./figures";
+import { loadAssets } from "./assets";
 
 // ---------------------------------------------------------------- estado
 interface Config {
@@ -215,10 +217,38 @@ function tokenSvg(h: House, role: Role, size = 30): string {
   </svg>`;
 }
 
+// desenhos dos bonequinhos para os botões (feitos uma vez no canvas e guardados)
+const imgCache = new Map<string, string>();
+function canvasImg(key: string, w: number, hgt: number, draw: (ctx: CanvasRenderingContext2D) => void): string {
+  const hit = imgCache.get(key);
+  if (hit) return hit;
+  const c = document.createElement("canvas");
+  c.width = w * 2;
+  c.height = hgt * 2;
+  const ctx = c.getContext("2d") as CanvasRenderingContext2D;
+  ctx.scale(2, 2);
+  draw(ctx);
+  const url = c.toDataURL("image/png");
+  imgCache.set(key, url);
+  return url;
+}
+
+/** A peça como ela aparece no campo: 4 bonequinhos (ou a máquina, o dragão, a torre, o navio). */
 function squadSvg(h: House, u: { kind: SquadKind; role: Role }): string {
-  const n = FIGURES[u.kind];
-  const s = u.kind == "footman" || u.kind == "ship" ? 26 : 34;
-  return `<span class="squad-figs">${Array.from({ length: n }, () => tokenSvg(h, u.role, s)).join("")}</span>`;
+  const k = kindOf(u.kind);
+  const url = canvasImg(`sq|${h.name}|${u.kind}|${u.role}`, 72, 58, (ctx) => {
+    if (k == "dragon" || k == "ship") drawUnit(ctx, 36, 27, k == "dragon" ? 0.95 : 1, { role: u.role, kind: k, house: h, back: false, flip: false, walk: 0, atk: 0 });
+    else drawSquad(ctx, 36, 47, u.kind, u.role, h, { scale: 0.92, back: false });
+  });
+  return `<img class="squad-figs" src="${url}" width="72" height="58" alt="">`;
+}
+
+/** Um bonequinho de frente (cartões de função). Navio usa o símbolo, porque o navio é igual para todas. */
+function roleIcon(h: House, kind: SquadKind, r: Role): string {
+  const k = kindOf(kind);
+  if (k != "foot" && k != "horse") return tokenSvg(h, r, 34);
+  const url = canvasImg(`ro|${h.name}|${kind}|${r}`, 54, 50, (ctx) => drawUnit(ctx, 27, 46, k == "horse" ? 1.15 : 1.3, { role: r, kind: k, house: h, back: false, flip: false, walk: 0, atk: 0, seed: 1 }));
+  return `<img class="role-fig" src="${url}" width="54" height="50" alt="">`;
 }
 
 // ---------------------------------------------------------------- telas
@@ -493,7 +523,7 @@ function renderPanel(): void {
                 .map((r) => {
                   const bt = BEATS[r];
                   return `<button type="button" class="role-card${sel.role == r ? " on" : ""}" data-role="${r}" aria-pressed="${sel.role == r}">
-                    ${tokenSvg(h, r, 34)}
+                    ${roleIcon(h, sel.kind, r)}
                     <b>${ROLE_NAMES[r]}</b>
                     ${bt ? `<span class="beats"><span class="ok" title="vence">✓</span>${bt.vence.map((x) => tokenSvg(enemyH, x, 18)).join("")}</span><span class="beats"><span class="no" title="teme">✗</span>${bt.teme.map((x) => tokenSvg(enemyH, x, 18)).join("")}</span>` : ""}
                   </button>`;
@@ -905,6 +935,10 @@ function closeTutorial(): void {
 
 // ---------------------------------------------------------------- início
 function init(): void {
+  // textura do chão: quando chegar, o campo é repintado (o tutorial aberto também)
+  void loadAssets().then(() => {
+    if (!$("tutorial").hidden) renderSlide();
+  });
   renderHome();
   document.querySelectorAll<HTMLButtonElement>("#mode-seg [data-mode]").forEach((b) =>
     b.addEventListener("click", () => {
