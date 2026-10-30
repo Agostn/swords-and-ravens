@@ -353,37 +353,131 @@ export interface PlaceView {
   hoverSlot: { lane: Lane; row: Row } | null;
   dragging: string | null;
   showHint: boolean;
+  /** quanto a peça escolhida rende em cada casinha (só pelo lugar) */
+  preview?: { lane: Lane; row: Row; pct: number; best: boolean }[] | null;
+}
+
+// ---------------------------------------------------------------- névoa (pixel art)
+const FOG_CELL = 4; // cada "pixel" da névoa
+const FOG_W = W / FOG_CELL; // 150
+const FOG_H = Math.ceil((H * 0.56) / FOG_CELL);
+const fogLayers: HTMLCanvasElement[] = [];
+
+/** Nuvens de névoa: ruído suave, que se repete na horizontal, em poucos tons (cara de pixel art). */
+function fogLayer(seed: number, light: [number, number, number], dark: [number, number, number], density: number): HTMLCanvasElement {
+  const r = rng(seed);
+  const grid = (n: number, m: number): number[][] => Array.from({ length: m + 1 }, () => Array.from({ length: n }, () => r()));
+  const octaves = [
+    { n: 6, m: 5, w: 0.55 },
+    { n: 12, m: 9, w: 0.3 },
+    { n: 25, m: 18, w: 0.15 }
+  ].map((o) => ({ ...o, g: grid(o.n, o.m) }));
+  const sm = (x: number): number => x * x * (3 - 2 * x);
+  const c = document.createElement("canvas");
+  c.width = FOG_W;
+  c.height = FOG_H;
+  const ctx = c.getContext("2d") as CanvasRenderingContext2D;
+  const img = ctx.createImageData(FOG_W, FOG_H);
+  for (let y = 0; y < FOG_H; y++)
+    for (let x = 0; x < FOG_W; x++) {
+      let v = 0;
+      for (const o of octaves) {
+        const fx = (x / FOG_W) * o.n;
+        const fy = (y / FOG_H) * o.m;
+        const x0 = Math.floor(fx);
+        const y0 = Math.floor(fy);
+        const tx = sm(fx - x0);
+        const ty = sm(fy - y0);
+        const a = o.g[y0][x0 % o.n];
+        const b = o.g[y0][(x0 + 1) % o.n];
+        const cc = o.g[y0 + 1][x0 % o.n];
+        const d = o.g[y0 + 1][(x0 + 1) % o.n];
+        v += o.w * ((a * (1 - tx) + b * tx) * (1 - ty) + (cc * (1 - tx) + d * tx) * ty);
+      }
+      // poucos degraus de tom e de transparência
+      const k = Math.max(0, Math.min(1, (v - (1 - density)) / density));
+      const step = Math.round(k * 4) / 4;
+      const fade = y > FOG_H * 0.78 ? Math.max(0, 1 - (y - FOG_H * 0.78) / (FOG_H * 0.22)) : 1;
+      const i = (y * FOG_W + x) * 4;
+      const col = step > 0.5 ? light : dark;
+      img.data[i] = col[0];
+      img.data[i + 1] = col[1];
+      img.data[i + 2] = col[2];
+      img.data[i + 3] = Math.round(step * 200 * Math.round(fade * 4) / 4);
+    }
+  ctx.putImageData(img, 0, 0);
+  return c;
+}
+
+function drawFog(ctx: CanvasRenderingContext2D, t: number, enemy: House, count: number): void {
+  if (!fogLayers.length) {
+    fogLayers.push(fogLayer(11, [150, 160, 172], [88, 98, 110], 0.75));
+    fogLayers.push(fogLayer(29, [205, 212, 220], [130, 140, 152], 0.55));
+  }
+  // o lado inimigo fica escuro e frio
+  const g = ctx.createLinearGradient(0, 0, 0, H * 0.53);
+  g.addColorStop(0, "rgba(16,20,26,.82)");
+  g.addColorStop(0.75, "rgba(16,20,26,.62)");
+  g.addColorStop(1, "rgba(16,20,26,0)");
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, W, H * 0.53);
+  ctx.save();
+  ctx.imageSmoothingEnabled = false;
+  const speeds = [7, -11];
+  fogLayers.forEach((layer, i) => {
+    const off = (((t * speeds[i]) % W) + W) % W;
+    const x = Math.round(off / FOG_CELL) * FOG_CELL;
+    ctx.globalAlpha = i == 0 ? 0.9 : 0.55;
+    ctx.drawImage(layer, x - W, 0, W, FOG_H * FOG_CELL);
+    ctx.drawImage(layer, x, 0, W, FOG_H * FOG_CELL);
+  });
+  ctx.restore();
+  // estandarte do inimigo
+  const cx = W / 2;
+  const top = H * 0.08;
+  const bw = 150;
+  const bh = 72;
+  ctx.fillStyle = "#3a2a18";
+  ctx.fillRect(cx - bw / 2 - 10, top - 6, bw + 20, 6);
+  ctx.fillStyle = "rgba(0,0,0,.35)";
+  ctx.beginPath();
+  ctx.moveTo(cx - bw / 2 + 4, top + 4);
+  ctx.lineTo(cx + bw / 2 + 4, top + 4);
+  ctx.lineTo(cx + bw / 2 + 4, top + bh + 4);
+  ctx.lineTo(cx + 4, top + bh - 14 + 4);
+  ctx.lineTo(cx - bw / 2 + 4, top + bh + 4);
+  ctx.fill();
+  ctx.fillStyle = enemy.color;
+  ctx.beginPath();
+  ctx.moveTo(cx - bw / 2, top);
+  ctx.lineTo(cx + bw / 2, top);
+  ctx.lineTo(cx + bw / 2, top + bh);
+  ctx.lineTo(cx, top + bh - 14);
+  ctx.lineTo(cx - bw / 2, top + bh);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = enemy.dark;
+  ctx.lineWidth = 4;
+  ctx.stroke();
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillStyle = enemy.ink;
+  ctx.font = "24px 'IM Fell English SC', Georgia, serif";
+  ctx.fillText(enemy.name, cx, top + 24);
+  ctx.font = "800 13px 'Alegreya Sans', 'Trebuchet MS', sans-serif";
+  ctx.fillText(`${count} ${count == 1 ? "peça escondida" : "peças escondidas"}`, cx, top + 46);
 }
 
 export function drawPlacement(ctx: CanvasRenderingContext2D, v: PlaceView, t: number): PlacedToken[] {
   ctx.setTransform(2, 0, 0, 2, 0, 0);
+  ctx.imageSmoothingEnabled = false;
   ctx.drawImage(terrainImage(v.field), 0, 0, W, H);
+  ctx.imageSmoothingEnabled = true;
   const lanesT = FIELD_LANES[v.field];
   lanesT.forEach((tt, i) => {
     if (tt == "muralha" || tt == "portao") drawWall(ctx, i, tt == "portao", false);
   });
-  // névoa sobre o lado do inimigo
-  const fog = ctx.createLinearGradient(0, 0, 0, H * 0.5);
-  fog.addColorStop(0, "rgba(22,18,14,.92)");
-  fog.addColorStop(0.85, "rgba(22,18,14,.78)");
-  fog.addColorStop(1, "rgba(22,18,14,0)");
-  ctx.fillStyle = fog;
-  ctx.fillRect(0, 0, W, H * 0.5);
-  const fr = rng(Math.floor(t * 2));
-  ctx.fillStyle = "rgba(255,255,255,.025)";
-  for (let i = 0; i < 6; i++) {
-    ctx.beginPath();
-    ctx.ellipse(((fr() * W + t * 14 * (i + 1)) % (W + 200)) - 100, 40 + fr() * H * 0.35, 120, 30, 0, 0, Math.PI * 2);
-    ctx.fill();
-  }
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  ctx.fillStyle = "#efe3c6";
-  ctx.font = "26px 'IM Fell English SC', Georgia, serif";
-  ctx.fillText(`${v.enemy.name}`, W / 2, H * 0.17);
-  ctx.font = "600 17px 'Alegreya Sans', 'Trebuchet MS', sans-serif";
-  ctx.fillStyle = "rgba(239,227,198,.75)";
-  ctx.fillText(`${v.enemyCount} esquadrão(ões) escondidos na névoa`, W / 2, H * 0.17 + 30);
+  drawFog(ctx, t, v.enemy, v.enemyCount);
   // nome do terreno de cada faixa (na linha do meio)
   lanesT.forEach((tt, i) => {
     const label = TERRAIN_NAMES[tt];
@@ -414,6 +508,27 @@ export function drawPlacement(ctx: CanvasRenderingContext2D, v: PlaceView, t: nu
     ctx.textBaseline = "top";
     ctx.fillStyle = "rgba(255,240,205,.8)";
     ctx.fillText(s.row == "frente" ? "FRENTE" : "TRÁS", s.x + 10, s.y + 8);
+    // quanto a peça escolhida rende aqui
+    const pv = v.preview?.find((x) => x.lane == s.lane && x.row == s.row);
+    if (pv) {
+      const txt = pv.pct == 0 ? "normal" : `${pv.pct > 0 ? "+" : "−"}${Math.abs(pv.pct)}%`;
+      ctx.font = "800 17px 'Alegreya Sans', 'Trebuchet MS', sans-serif";
+      const tw = ctx.measureText(txt).width + 18;
+      const bx = s.x + s.w - tw - 6;
+      const by = s.y + 6;
+      ctx.fillStyle = pv.pct > 0 ? "#2f6b2a" : pv.pct < 0 ? "#8a2f25" : "rgba(30,24,18,.85)";
+      roundRect(ctx, bx, by, tw, 26, 13);
+      ctx.fill();
+      if (pv.best && pv.pct > 0) {
+        ctx.strokeStyle = "#f2cf7e";
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      }
+      ctx.fillStyle = "#fff6e2";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(txt, bx + tw / 2, by + 13.5);
+    }
   }
   // esquadrões posicionados: cada peça vira 4 bonequinhos; cabem pelo menos 2 peças por casinha
   const placed: PlacedToken[] = [];

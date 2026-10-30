@@ -4,7 +4,7 @@
  * Gerar a página: node tools/tactical/prototipo/build.js
  */
 import { resolveTacticalBattle, Squad, Lane, Side, TacticalBattleResult, LaneFactor } from "../../../agot-bg-game-server/src/common/tactical-battle/tacticalBattle";
-import { FIELD_LANES, FieldType, Role, Row, SquadKind, rolesFor } from "../../../agot-bg-game-server/src/common/tactical-battle/tacticalBattleData";
+import { FIELD_LANES, FieldType, ROW_FACTOR, Role, Row, SquadKind, TERRAIN, rolesFor } from "../../../agot-bg-game-server/src/common/tactical-battle/tacticalBattleData";
 import { computerStrategy, Piece, Scenario } from "../solver";
 import {
   EMPTY_SIDE,
@@ -17,7 +17,6 @@ import {
   Preset,
   ROLE_NAMES,
   ROLE_PLURAL,
-  ROLE_TIP,
   SideConfig,
   TERRAIN_HINT,
   TERRAIN_NAMES
@@ -254,8 +253,57 @@ function roleIcon(h: House, kind: SquadKind, r: Role): string {
 // ---------------------------------------------------------------- telas
 function show(id: "home" | "custom" | "play"): void {
   ["home", "custom", "play"].forEach((x) => ($(x).hidden = x != id));
+  document.body.dataset.screen = id;
   window.scrollTo({ top: 0 });
 }
+
+function setPhase(p: "place" | "battle" | "result"): void {
+  $("play").dataset.phase = p;
+  document.body.dataset.phase = p;
+}
+
+function goHome(): void {
+  stopTimer();
+  if (raf != null) cancelAnimationFrame(raf);
+  raf = null;
+  renderHome();
+  show("home");
+}
+
+/**
+ * Quanto a peça rende numa casinha, só pelo lugar (terreno + frente/trás), sem contar o inimigo.
+ * É o que aparece nas casinhas quando a peça está escolhida.
+ */
+function slotBonus(u: Unit, lane: Lane, row: Row, side: Side): { pct: number; why: string[] } {
+  const terrain = FIELD_LANES[config.field][lane];
+  const rules = TERRAIN[terrain];
+  const why: string[] = [];
+  let f = 1;
+  const rf = ROW_FACTOR[u.role][row];
+  if (rf != 1) why.push(`${row == "frente" ? "na frente" : "atrás"} ${rf > 1 ? "+" : "−"}${Math.round(Math.abs(rf - 1) * 100)}%`);
+  f *= rf;
+  const tf = rules.role?.[u.role] ?? 1;
+  if (tf != 1) why.push(`${TERRAIN_NAMES[terrain].toLowerCase()} ${tf > 1 ? "+" : "−"}${Math.round(Math.abs(tf - 1) * 100)}%`);
+  f *= tf;
+  const sf = side == "attacker" ? rules.attacker ?? 1 : rules.defender ?? 1;
+  if (sf != 1) why.push(`${side == "attacker" ? "quem ataca" : "quem defende"} ${sf > 1 ? "+" : "−"}${Math.round(Math.abs(sf - 1) * 100)}%`);
+  f *= sf;
+  if (u.role == "catapulta" && !rules.wall) {
+    why.push("sem muralha −50%");
+    f *= 0.5;
+  }
+  return { pct: Math.round((f - 1) * 100), why };
+}
+
+function previewFor(u: Unit | null): { lane: Lane; row: Row; pct: number; best: boolean }[] | null {
+  if (!u || u.locked) return null;
+  const list = slots(config.field).map((s) => ({ lane: s.lane, row: s.row, pct: slotBonus(u, s.lane, s.row, placingSide).pct, best: false }));
+  const max = Math.max(...list.map((x) => x.pct));
+  list.forEach((x) => (x.best = x.pct == max && max > -100));
+  return list;
+}
+
+const listPt = (xs: Role[]): string => xs.map((x) => ROLE_NAMES[x].toLowerCase()).join(xs.length > 1 ? " e " : "");
 
 function renderHome(): void {
   const card = (p: Preset): string => {
@@ -493,9 +541,8 @@ const BEATS: Partial<Record<Role, { vence: Role[]; teme: Role[] }>> = {
 
 function renderPanel(): void {
   if (phase != "place") return;
-  $("play").dataset.phase = phase;
+  setPhase("place");
   const h = houseOf(placingSide);
-  const enemyH = houseOf(other(placingSide));
   const mine = units[placingSide];
   const placed = mine.filter((u) => u.lane != null).length;
   const st = stepNow();
@@ -506,36 +553,45 @@ function renderPanel(): void {
       ${squadSvg(h, u)}
       <span class="piece-name">${ROLE_NAMES[u.role]}</span>
       <span class="piece-where">${u.lane == null ? "na reserva" : where}</span>
+      ${u.lane != null ? `<span class="piece-ok" aria-hidden="true">✓</span>` : ""}
     </button>`;
   };
   const roles = sel ? rolesFor(sel.kind, isSea()) : [];
+  const bt = sel ? BEATS[sel.role] : undefined;
+  const here = sel && sel.lane != null ? slotBonus(sel, sel.lane, sel.row, placingSide) : null;
+  const say = sel
+    ? `<p class="role-say"><b>${ROLE_NAMES[sel.role]}</b>${bt ? ` — <span class="ok">vence ${listPt(bt.vence)}</span> · <span class="no">perde para ${listPt(bt.teme)}</span>` : ""}${
+        here ? `<br><span class="here">Neste lugar: ${here.why.length ? here.why.join(", ") : "nada muda"}</span>` : `<br><span class="here">Os números nas casinhas mostram quanto ela rende em cada lugar.</span>`
+      }</p>`
+    : "";
   const editor = sel
     ? `<div class="editor">
         <div class="editor-head">
           ${squadSvg(h, sel)}
           <div class="editor-title"><b>${KIND_NAMES[sel.kind]}${sel.support ? " de apoio" : ""}${sel.strength && (sel.kind == "dragon" || sel.kind == "garrison") ? ` · força ${sel.strength}` : ""}</b>
-          <small>${sel.locked ? "fica sempre atrás, no centro" : sel.lane == null ? "Toque numa casinha do campo para colocar." : `No campo: ${LANE_NAMES[sel.lane].toLowerCase()}, ${sel.row == "frente" ? "frente" : "trás"}. Toque noutra casinha para mudar.`}</small></div>
-          ${sel.lane != null && !sel.locked ? `<button type="button" class="btn small" data-back="${sel.id}">Tirar do campo</button>` : ""}
+          <small>${sel.locked ? "fica sempre atrás, no centro" : sel.lane == null ? "Toque numa casinha do campo para colocar." : "Toque noutra casinha para mudar de lugar."}</small></div>
         </div>
-        ${
-          roles.length > 1
-            ? `<div class="role-grid">${roles
-                .map((r) => {
-                  const bt = BEATS[r];
-                  return `<button type="button" class="role-card${sel.role == r ? " on" : ""}" data-role="${r}" aria-pressed="${sel.role == r}">
+        <div class="role-row">
+          ${
+            roles.length > 1
+              ? roles
+                  .map(
+                    (r) => `<button type="button" class="role-card${sel.role == r ? " on" : ""}" data-role="${r}" aria-pressed="${sel.role == r}">
                     ${roleIcon(h, sel.kind, r)}
                     <b>${ROLE_NAMES[r]}</b>
-                    ${bt ? `<span class="beats"><span class="ok" title="vence">✓</span>${bt.vence.map((x) => tokenSvg(enemyH, x, 18)).join("")}</span><span class="beats"><span class="no" title="teme">✗</span>${bt.teme.map((x) => tokenSvg(enemyH, x, 18)).join("")}</span>` : ""}
-                  </button>`;
-                })
-                .join("")}</div>`
-            : ""
-        }
-        ${ROLE_TIP[sel.role] ? `<p class="tip">${ROLE_TIP[sel.role]}</p>` : ""}
+                  </button>`
+                  )
+                  .join("")
+              : ""
+          }
+          ${sel.lane != null && !sel.locked ? `<button type="button" class="role-card back-card" data-back="${sel.id}"><span class="back-ico" aria-hidden="true">↩</span><b>Tirar</b></button>` : ""}
+        </div>
+        ${say}
       </div>`
-    : `<div class="editor empty"><p>Toque numa peça acima para escolher a função dela.</p></div>`;
+    : `<div class="editor empty"><p>Toque numa peça para escolher a função e ver onde ela rende mais.</p></div>`;
   $("panel").innerHTML = `
     <div class="turn-head">
+      <button type="button" class="quit-btn" id="quit" aria-label="Sair para o início">‹</button>
       <h2><span class="dot" style="background:${h.color}"></span>${h.name} <small>${placingSide == "attacker" ? "ataca" : "defende"}</small></h2>
       <div class="turn-tools">
         <span id="timer" class="timer" style="--p:${(timeLeft / 75) * 100}%">${timeLeft}s</span>
@@ -547,13 +603,13 @@ function renderPanel(): void {
       <li class="${st == 2 ? "now" : st > 2 ? "done" : ""}"><b>2</b>Toque numa casinha</li>
       <li class="${st == 3 ? "now" : ""}"><b>3</b>Pronto</li>
     </ol>
+    ${editor}
     <div class="tray-wrap">
       <div class="tray-head"><b>Suas peças</b><span>${placed} de ${mine.length} no campo</span></div>
       <div class="tray">${mine.map(chip).join("")}</div>
     </div>
-    ${editor}
     <div class="actions">
-      <button type="button" class="btn" id="auto">Posicionar automático</button>
+      <button type="button" class="btn" id="auto">Automático</button>
       <button type="button" class="btn primary" id="ready" ${placed == 0 ? "disabled" : ""}>${placed < mine.length ? `Pronto (${mine.length - placed} vão para o centro)` : "Pronto"}</button>
     </div>`;
 
@@ -595,6 +651,7 @@ function renderPanel(): void {
   });
   $("ready").addEventListener("click", finishTurn);
   $("help-play").addEventListener("click", () => openTutorial(0));
+  $("quit").addEventListener("click", goHome);
 }
 
 function renderLaneInfo(): void {
@@ -739,7 +796,7 @@ function runBattle(): void {
   newSim();
   renderBattlePanel();
   startLoop();
-  $("stage").scrollIntoView({ behavior: "smooth", block: "start" });
+  window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
 function newSim(): void {
@@ -756,9 +813,9 @@ function newSim(): void {
 }
 
 function renderBattlePanel(): void {
-  $("play").dataset.phase = "battle";
+  setPhase("battle");
   $("panel").innerHTML = `
-    <div class="turn-head"><h2>A luta</h2><button type="button" class="help-btn" id="help-battle" aria-label="Como funciona o combate">?</button></div>
+    <div class="turn-head"><button type="button" class="quit-btn" id="quit" aria-label="Sair para o início">‹</button><h2>A luta</h2><button type="button" class="help-btn" id="help-battle" aria-label="Como funciona o combate">?</button></div>
     <p class="muted">A conta já decidiu quem ganha cada faixa; a luta mostra como foi.</p>
     <div class="speed" role="group" aria-label="Velocidade">
       <button type="button" class="btn${speed == 1 ? " on" : ""}" data-speed="1">1×</button>
@@ -777,6 +834,7 @@ function renderBattlePanel(): void {
     if (sim) while (sim.t < T_END) stepSim(sim, 0.05);
   });
   $("help-battle").addEventListener("click", () => openTutorial(0));
+  $("quit").addEventListener("click", goHome);
 }
 
 function startLoop(): void {
@@ -797,7 +855,8 @@ function startLoop(): void {
         selected,
         hoverSlot,
         dragging: dragging?.moved ? dragging.id : null,
-        showHint: !!selected
+        showHint: !!selected,
+        preview: previewFor(units[placingSide].find((u) => u.id == selected) ?? null)
       };
       placedHit = drawPlacement(ctx, view, (now - t0) / 1000);
     } else if (sim) {
@@ -824,9 +883,9 @@ function factorText(f: LaneFactor): string | null {
   const who = houseOf(f.side).name;
   switch (f.kind) {
     case "counter":
-      return f.role && f.vs ? `${who}: ${ROLE_PLURAL[f.role]} renderam bem contra ${ROLE_PLURAL[f.vs]}` : null;
+      return f.role && f.vs ? `${who}: ${ROLE_PLURAL[f.role]} ${f.role == "dragao" ? "rendeu" : "renderam"} bem contra ${ROLE_PLURAL[f.vs]}` : null;
     case "weak":
-      return f.role && f.vs ? `${who}: ${ROLE_PLURAL[f.role]} sofreram contra ${ROLE_PLURAL[f.vs]}` : null;
+      return f.role && f.vs ? `${who}: ${ROLE_PLURAL[f.role]} ${f.role == "dragao" ? "sofreu" : "sofreram"} contra ${ROLE_PLURAL[f.vs]}` : null;
     case "wall":
       return `${who}: a muralha protegeu quem defende`;
     case "wall-breach":
@@ -843,7 +902,7 @@ function factorText(f: LaneFactor): string | null {
 }
 
 function showResult(): void {
-  $("play").dataset.phase = "result";
+  setPhase("result");
   const res = lastResult as TacticalBattleResult;
   const lanesT = FIELD_LANES[config.field];
   const human = config.mode == "cpu" ? config.humanSide : null;
@@ -884,6 +943,7 @@ function showResult(): void {
       ${res.metInCenter ? `<p class="note">Ninguém se encontrou nas faixas escolhidas, então os exércitos marcharam e lutaram no centro.</p>` : ""}
       <ol class="lanes-res">${lanesHtml}</ol>
       <div class="actions">
+        <button type="button" class="btn" id="home-btn">Início</button>
         <button type="button" class="btn" id="replay">Ver de novo</button>
         <button type="button" class="btn" id="swap">${config.mode == "cpu" ? "Trocar de lado" : "Revanche"}</button>
         <button type="button" class="btn primary" id="again">Jogar de novo</button>
@@ -895,6 +955,7 @@ function showResult(): void {
     renderBattlePanel();
   });
   $("again").addEventListener("click", startPlacement);
+  $("home-btn").addEventListener("click", goHome);
   $("swap").addEventListener("click", () => {
     if (config.mode == "cpu") config.humanSide = other(config.humanSide);
     startPlacement();
@@ -957,13 +1018,7 @@ function init(): void {
     startPlacement();
   });
   $("custom-back").addEventListener("click", () => show("home"));
-  $("go-home").addEventListener("click", () => {
-    stopTimer();
-    if (raf != null) cancelAnimationFrame(raf);
-    raf = null;
-    renderHome();
-    show("home");
-  });
+  $("go-home").addEventListener("click", goHome);
   $("how").addEventListener("click", () => openTutorial(0));
   $("tut-prev").addEventListener("click", () => {
     slide = Math.max(0, slide - 1);

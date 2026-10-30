@@ -939,7 +939,8 @@ function blitSprite(ctx: CanvasRenderingContext2D, sp: Sprite, x: number, y: num
 /** Dragão da folha de sprites (voando; cuspindo fogo quando atk > 0). */
 function drawDragonSprite(ctx: CanvasRenderingContext2D, x: number, y: number, s: number, p: Pose, faceRight: boolean): boolean {
   const t = p.time ?? 0;
-  const fr = p.atk > 0.05 ? dragonFrame("special", Math.min(5, Math.floor((1 - p.atk) * 6))) : p.fight === false && p.walk == 0 ? dragonFrame("idle", Math.floor(t * 4) % 6) : dragonFrame("flight", Math.floor(t * 9) % 6);
+  // cuspindo fogo: segura as asas abertas (o fogo é desenhado pela luta, da boca até o alvo)
+  const fr = p.atk > 0.05 ? dragonFrame("flight", 4) : p.fight === false && p.walk == 0 ? dragonFrame("idle", Math.floor(t * 4) % 6) : dragonFrame("flight", Math.floor(t * 9) % 6);
   if (!fr) return false;
   const k = s * 0.95;
   ctx.save();
@@ -947,7 +948,7 @@ function drawDragonSprite(ctx: CanvasRenderingContext2D, x: number, y: number, s
   if (p.walk != 0 || p.fight !== false) {
     ctx.fillStyle = "rgba(0,0,0,.22)";
     ctx.beginPath();
-    ctx.ellipse(x, y + 26 * s, 30 * s, 7 * s, 0, 0, Math.PI * 2);
+    ctx.ellipse(x, y + 40 * s, 30 * s, 7 * s, 0, 0, Math.PI * 2);
     ctx.fill();
   }
   ctx.imageSmoothingEnabled = false;

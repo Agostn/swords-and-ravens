@@ -180,6 +180,19 @@
   .beats .ok { color: #8fd17a; }
   .beats .no { color: #e3786b; }
   .tip { margin: 0; font-size: 13.5px; color: var(--muted); }
+  .role-row { display: flex; flex-wrap: wrap; gap: 8px; }
+  .role-row .role-card { flex: 1 1 96px; min-width: 0; }
+  .back-card { flex: 0 0 auto !important; min-width: 64px; }
+  .back-ico { display: grid; place-items: center; width: 40px; height: 40px; font-size: 24px; color: var(--gold); }
+  .role-say { margin: 0; font-size: 14px; color: var(--muted); line-height: 1.4; }
+  .role-say b { color: var(--parch); }
+  .role-say .ok { color: #9bd786; font-weight: 700; }
+  .role-say .no { color: #ef8d80; font-weight: 700; }
+  .role-say .here { color: var(--parch); }
+  .piece { position: relative; }
+  .piece-ok { position: absolute; top: 4px; right: 6px; color: #9bd786; font-weight: 800; font-size: 13px; }
+  .quit-btn { flex: none; width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--line); background: var(--panel-2); color: var(--parch); font: inherit; font-size: 26px; line-height: 1; cursor: pointer; display: none; }
+  .turn-head h2 { flex: 1; min-width: 0; }
   .tut-box { max-width: 640px; gap: 10px; }
   .tut-top { display: flex; justify-content: space-between; align-items: center; }
   .tut-x { width: 38px; height: 38px; border-radius: 50%; border: 1px solid var(--line); background: var(--panel-2); color: var(--parch); font-size: 22px; cursor: pointer; }
@@ -227,26 +240,46 @@
 
   @media (max-width: 899px) {
     .hero { grid-template-columns: 1fr; }
-    .play { display: flex; flex-direction: column; align-items: stretch; gap: 10px; }
+    /* no celular, durante a partida: tudo numa tela só, com o campo no meio */
+    body[data-screen="play"] { padding-block: 0; }
+    body[data-screen="play"] .topbar { display: none; }
+    body[data-screen="play"] .wrap { gap: 0; }
+    .play { display: flex; flex-direction: column; align-items: stretch; gap: 8px; }
     #stage, #panel { display: contents; }
-    .turn-head { order: 1; }
-    .steps { order: 2; }
-    .tray-wrap { order: 3; }
-    .editor { order: 4; }
-    .board-frame { order: 5; padding: 5px; display: flex; justify-content: center; }
-    canvas#board { width: auto; max-width: 100%; max-height: 56vh; max-height: 56svh; }
-    #panel > .actions { order: 6; }
-    #panel > .muted, .speed, .result, .warn { order: 6; }
-    .lane-info { order: 7; }
-    .editor-head .squad-figs, .editor .tip { display: none; }
-    .editor { padding: 10px; gap: 8px; }
-    .role-grid { grid-template-columns: repeat(auto-fit, minmax(96px, 1fr)); gap: 6px; }
-    .role-card { padding: 8px 4px; }
-    .tray-wrap { padding: 8px; }
-    .steps li { font-size: 12.5px; padding: 6px; }
-    .turn-head h2 { font-size: 24px; }
-    .tray { grid-template-columns: repeat(auto-fill, minmax(88px, 1fr)); }
+    .quit-btn { display: block; width: 36px; height: 36px; font-size: 24px; }
+    .turn-head { order: 1; padding-top: max(6px, env(safe-area-inset-top, 0px)); gap: 8px; }
+    .turn-head h2 { font-size: 21px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .turn-head h2 small { font-size: 13px; }
+    .timer { padding: 4px 10px; font-size: 14px; }
+    .help-btn { width: 36px; height: 36px; font-size: 18px; }
+    .steps, .lane-info, .editor-head, .tray-head { display: none; }
+    .board-frame { order: 2; padding: 4px; display: flex; justify-content: center; align-items: center; min-height: 0; }
+    .editor { order: 3; padding: 8px; gap: 6px; }
+    .tray-wrap { order: 4; padding: 6px; }
+    #panel > .actions { order: 5; padding-bottom: max(8px, env(safe-area-inset-bottom, 0px)); flex-wrap: nowrap; }
     #panel > .actions .btn { flex: 1 1 auto; }
+    #panel > .actions #auto { flex: 0 0 auto; }
+    #panel > .muted, .speed, .result, .warn { order: 5; }
+    .play[data-phase="place"], .play[data-phase="battle"] { height: 100vh; height: 100svh; }
+    .play[data-phase="place"] .board-frame, .play[data-phase="battle"] .board-frame { flex: 1 1 0; }
+    .play[data-phase="place"] canvas#board, .play[data-phase="battle"] canvas#board { height: 100%; width: auto; max-width: 100%; }
+    .play[data-phase="result"] canvas#board { width: auto; max-width: 100%; max-height: 50svh; }
+    .play[data-phase="battle"] #panel > .muted { display: none; }
+    .speed { padding-bottom: max(8px, env(safe-area-inset-bottom, 0px)); flex-wrap: nowrap; }
+    .speed .btn { flex: 1 1 auto; padding: 8px 10px; }
+    .role-row { gap: 6px; flex-wrap: nowrap; }
+    .role-row .role-card { flex: 1 1 0; flex-direction: row; justify-content: center; padding: 4px 6px; gap: 4px; min-height: 48px; }
+    .role-row .role-card b { font-size: 13.5px; }
+    .role-fig { width: 34px; height: auto; }
+    .back-card { min-width: 0; }
+    .back-ico { width: 24px; height: 24px; font-size: 18px; }
+    .role-say { font-size: 12.5px; line-height: 1.35; }
+    .tray { display: flex; gap: 6px; flex-wrap: wrap; }
+    .piece { flex: 1 1 62px; max-width: 96px; padding: 4px 2px 3px; gap: 0; }
+    .piece .squad-figs { width: 52px; height: auto; }
+    .piece-where { display: none; }
+    .piece-name { font-size: 11.5px; }
+    .editor.empty { padding: 8px 10px; font-size: 13.5px; }
   }
   @media (max-width: 520px) {
     .lane-info { grid-template-columns: 1fr; }
