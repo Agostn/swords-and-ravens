@@ -35,7 +35,7 @@ A conta oficial (tropas + apoio + carta + guarnição + espada) continua mandand
 | Peça do tabuleiro | No mini-mapa | Função |
 |---|---|---|
 | Soldado | 3 bolinhas | escolhe: **Lanceiro** (para cavalaria), **Escudeiro** (segura a linha, aguenta flecha), **Arqueiro** (de longe, fraco de perto) |
-| Cavaleiro | 2 bolinhas grandes | rápido, destrói arqueiros, perde para lanças |
+| Cavaleiro | 2 bolinhas grandes | escolhe: **Cavalaria** (carga: destrói arqueiros, perde para lanças) ou **Batedores** (leve: contorna lanças, perde para escudos) |
 | Máquina de cerco | 1 catapulta | quebra muralha, acerta grupos; fraca em campo aberto |
 | Navio | 1 navio | só no Mar |
 | Dragão | 1 dragão | voa por cima de uma faixa e solta fogo |
@@ -67,9 +67,9 @@ Depois da animação aparece um **resumo por faixa** ("Esquerda: seus lanceiros 
 
 | # | Etapa | O que sai | Aprovação do Agostinho |
 |---|---|---|---|
-| 1 | **Regras no papel** | tabela de números (força, vantagens, terreno, carta) e lista área → campo dos 4 mapas | ✅ antes de seguir |
-| 2 | **Motor da conta** | código da conta separado do resto (mesmo código no servidor, no protótipo e nos testes), sempre dá o mesmo resultado | — |
-| 3 | **Equilíbrio** | o computador joga milhares de mini-batalhas em cada campo; ajuste até nenhuma tropa/carta vencer demais e o castelo não ficar impossível | relatório |
+| 1 | **Regras no papel** — FEITO 30/out (`docs/COMBATE-TATICO-REGRAS.md`) | tabela de números (força, vantagens, terreno, carta) e lista área → campo dos 4 mapas | ⏳ aguardando aprovação |
+| 2 | **Motor da conta** — FEITO 30/out (`src/common/tactical-battle`, 7 testes) | código da conta separado do resto (mesmo código no servidor, no protótipo e nos testes), sempre dá o mesmo resultado | — |
+| 3 | **Equilíbrio** — FEITO 30/out (`tools/tactical/equilibrio.ts`, 51 cenários) | o computador procura o jogo ótimo dos dois lados em cada campo; ajuste até nenhuma tropa/carta vencer demais e o castelo não ficar impossível | relatório no fim das regras |
 | 4 | **Protótipo jogável** | página separada: posicionar, escolher funções, conta, animação, 2×/pular, resumo; contra robô ou passando o celular | ✅ testar com os amigos |
 | 5 | **No jogo** | opção na sala de espera; etapa nova da batalha (depois das cartas, antes da Espada); relógio, "Pronto", automático; +1/+2 no total; histórico; painel e quadro da batalha mostram o bônus | — |
 | 6 | **Telas** | posicionamento e animação no computador e no celular, no visual da tela nova | ✅ prints |
