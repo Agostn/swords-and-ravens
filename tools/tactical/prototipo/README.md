@@ -5,7 +5,9 @@ Usa exatamente a mesma conta do jogo (`agot-bg-game-server/src/common/tactical-b
 "computador" do teste de equilíbrio (`tools/tactical/solver.ts`).
 
 - `app.ts`: telas (início com batalhas prontas, montar batalha, posicionar, luta e resultado) e o arrastar/tocar.
-- `render.ts`: desenho do campo no canvas (terreno pintado, fichas, muralhas, névoa, animação da luta).
+- `render.ts`: desenho do campo no canvas (terreno pintado, fichas, muralhas, névoa).
+- `battle.ts`: a luta animada com soldadinhos (andam, lutam, atiram e fogem). Só ilustra o resultado que a conta já decidiu.
+- `tutorial.ts`: o tutorial ilustrado do botão "?" (6 telas).
 - `data.ts`: textos, Casas e batalhas prontas (inspiradas nos livros).
 - `worker.ts`: o computador pensa em segundo plano (Web Worker), para a tela não travar.
 - `template.html`: estilo e estrutura da página.

@@ -17,13 +17,14 @@ import {
   Preset,
   ROLE_NAMES,
   ROLE_PLURAL,
-  ROLE_SHORT,
   ROLE_TIP,
   SideConfig,
   TERRAIN_HINT,
   TERRAIN_NAMES
 } from "./data";
-import { BattleScene, H, PlacedToken, T_END, W, drawBattle, drawPlacement, prepareBattle, slots } from "./render";
+import { H, PlacedToken, W, drawPlacement, slots } from "./render";
+import { Sim, T_END, createSim, drawSim, stepSim } from "./battle";
+import { SLIDES, drawSlide } from "./tutorial";
 
 // ---------------------------------------------------------------- estado
 interface Config {
@@ -69,13 +70,13 @@ let placedHit: PlacedToken[] = [];
 let timer: number | null = null;
 let timeLeft = 75;
 let phase: "place" | "battle" | "result" = "place";
-let scene: BattleScene | null = null;
+let sim: Sim | null = null;
+let simSeed = 1;
 let lastResult: TacticalBattleResult | null = null;
-let battleT = 0;
 let speed = 1;
 let raf: number | null = null;
 let lastFrame = 0;
-let t0 = performance.now();
+const t0 = performance.now();
 
 const $ = <T extends HTMLElement = HTMLElement>(id: string): T => document.getElementById(id) as T;
 const isSea = (): boolean => config.field == "mar";
@@ -398,7 +399,7 @@ function startPlacement(): void {
   placingSide = config.mode == "cpu" ? config.humanSide : "attacker";
   phase = "place";
   beginTurn();
-  if (!store("tactical-tutorial-seen")) openTutorial();
+  if (!store("tactical-tutorial-seen")) openTutorial(0);
 }
 
 function beginTurn(): void {
@@ -448,66 +449,90 @@ function stepNow(): number {
   return selected ? 2 : 1;
 }
 
+/** Mini-ícones "vence" / "teme" de uma função. */
+const BEATS: Partial<Record<Role, { vence: Role[]; teme: Role[] }>> = {
+  lanceiro: { vence: ["cavalaria", "escudeiro"], teme: ["arqueiro", "batedores"] },
+  escudeiro: { vence: ["arqueiro", "batedores"], teme: ["lanceiro", "cavalaria"] },
+  arqueiro: { vence: ["lanceiro"], teme: ["escudeiro", "cavalaria"] },
+  cavalaria: { vence: ["arqueiro", "escudeiro"], teme: ["lanceiro"] },
+  batedores: { vence: ["lanceiro"], teme: ["escudeiro"] },
+  abordagem: { vence: ["ariete"], teme: ["flechas"] },
+  ariete: { vence: ["flechas"], teme: ["abordagem"] },
+  flechas: { vence: ["abordagem"], teme: ["ariete"] }
+};
+
 function renderPanel(): void {
   if (phase != "place") return;
   $("play").dataset.phase = phase;
   const h = houseOf(placingSide);
+  const enemyH = houseOf(other(placingSide));
   const mine = units[placingSide];
   const placed = mine.filter((u) => u.lane != null).length;
   const st = stepNow();
-  const card = (u: Unit): string => {
-    const roles = rolesFor(u.kind, isSea());
-    const where = u.lane == null ? "Na reserva" : `${LANE_NAMES[u.lane]} · ${u.row == "frente" ? "frente" : "trás"}`;
-    const extra = u.support ? " · apoio" : u.strength && (u.kind == "dragon" || u.kind == "garrison") ? ` · força ${u.strength}` : "";
-    return `<li class="unit-card${selected == u.id ? " sel" : ""}${u.lane == null ? " reserve" : ""}${u.locked ? " locked" : ""}" data-unit="${u.id}">
-      <div class="uc-top" data-grab="${u.id}" role="button" tabindex="0" aria-label="${KIND_NAMES[u.kind]}, ${ROLE_NAMES[u.role]}. ${where}">
-        ${squadSvg(h, u)}
-        <span class="uc-name"><b>${KIND_NAMES[u.kind]}${extra}</b><small>${where}</small></span>
-        ${u.lane != null && !u.locked ? `<button type="button" class="uc-back" data-back="${u.id}" aria-label="Voltar para a reserva">↩</button>` : ""}
-      </div>
-      ${
-        roles.length > 1
-          ? `<div class="uc-roles" role="radiogroup" aria-label="Função">${roles
-              .map(
-                (r) =>
-                  `<button type="button" class="role-pill${u.role == r ? " on" : ""}" data-unit="${u.id}" data-role="${r}" role="radio" aria-checked="${u.role == r}">${tokenSvg(h, r, 20)}<span>${ROLE_NAMES[r]}</span></button>`
-              )
-              .join("")}</div>`
-          : ""
-      }
-      <p class="uc-hint">${ROLE_NAMES[u.role]}: vence ${ROLE_SHORT[u.role].vence}; teme ${ROLE_SHORT[u.role].teme}.${ROLE_TIP[u.role] ? " " + ROLE_TIP[u.role] : ""}</p>
-    </li>`;
+  const sel = mine.find((u) => u.id == selected) ?? null;
+  const chip = (u: Unit): string => {
+    const where = u.lane == null ? "reserva" : `${LANE_NAMES[u.lane].toLowerCase()} · ${u.row == "frente" ? "frente" : "trás"}`;
+    return `<button type="button" class="piece${selected == u.id ? " sel" : ""}${u.lane == null ? " in-reserve" : " on-field"}" data-grab="${u.id}" aria-pressed="${selected == u.id}" aria-label="${KIND_NAMES[u.kind]} ${ROLE_NAMES[u.role]}, ${where}">
+      ${squadSvg(h, u)}
+      <span class="piece-name">${ROLE_NAMES[u.role]}</span>
+      <span class="piece-where">${u.lane == null ? "na reserva" : where}</span>
+    </button>`;
   };
-  const guideRoles = isSea() ? (["abordagem", "ariete", "flechas"] as Role[]) : (["lanceiro", "escudeiro", "arqueiro", "cavalaria", "batedores"] as Role[]);
+  const roles = sel ? rolesFor(sel.kind, isSea()) : [];
+  const editor = sel
+    ? `<div class="editor">
+        <div class="editor-head">
+          ${squadSvg(h, sel)}
+          <div class="editor-title"><b>${KIND_NAMES[sel.kind]}${sel.support ? " de apoio" : ""}${sel.strength && (sel.kind == "dragon" || sel.kind == "garrison") ? ` · força ${sel.strength}` : ""}</b>
+          <small>${sel.locked ? "fica sempre atrás, no centro" : sel.lane == null ? "Toque numa casinha do campo para colocar." : `No campo: ${LANE_NAMES[sel.lane].toLowerCase()}, ${sel.row == "frente" ? "frente" : "trás"}. Toque noutra casinha para mudar.`}</small></div>
+          ${sel.lane != null && !sel.locked ? `<button type="button" class="btn small" data-back="${sel.id}">Tirar do campo</button>` : ""}
+        </div>
+        ${
+          roles.length > 1
+            ? `<div class="role-grid">${roles
+                .map((r) => {
+                  const bt = BEATS[r];
+                  return `<button type="button" class="role-card${sel.role == r ? " on" : ""}" data-role="${r}" aria-pressed="${sel.role == r}">
+                    ${tokenSvg(h, r, 34)}
+                    <b>${ROLE_NAMES[r]}</b>
+                    ${bt ? `<span class="beats"><span class="ok" title="vence">✓</span>${bt.vence.map((x) => tokenSvg(enemyH, x, 18)).join("")}</span><span class="beats"><span class="no" title="teme">✗</span>${bt.teme.map((x) => tokenSvg(enemyH, x, 18)).join("")}</span>` : ""}
+                  </button>`;
+                })
+                .join("")}</div>`
+            : ""
+        }
+        ${ROLE_TIP[sel.role] ? `<p class="tip">${ROLE_TIP[sel.role]}</p>` : ""}
+      </div>`
+    : `<div class="editor empty"><p>Toque numa peça acima para escolher a função dela.</p></div>`;
   $("panel").innerHTML = `
     <div class="turn-head">
       <h2><span class="dot" style="background:${h.color}"></span>${h.name} <small>${placingSide == "attacker" ? "ataca" : "defende"}</small></h2>
-      <span id="timer" class="timer" style="--p:${(timeLeft / 75) * 100}%">${timeLeft}s</span>
+      <div class="turn-tools">
+        <span id="timer" class="timer" style="--p:${(timeLeft / 75) * 100}%">${timeLeft}s</span>
+        <button type="button" class="help-btn" id="help-play" aria-label="Como funciona o combate">?</button>
+      </div>
     </div>
     <ol class="steps">
-      <li class="${st == 1 ? "now" : st > 1 ? "done" : ""}"><b>1</b>Escolha a peça e a função</li>
-      <li class="${st == 2 ? "now" : st > 2 ? "done" : ""}"><b>2</b>Toque ou arraste até uma casinha</li>
-      <li class="${st == 3 ? "now" : ""}"><b>3</b>Clique em Pronto</li>
+      <li class="${st == 1 ? "now" : st > 1 ? "done" : ""}"><b>1</b>Toque numa peça</li>
+      <li class="${st == 2 ? "now" : st > 2 ? "done" : ""}"><b>2</b>Toque numa casinha</li>
+      <li class="${st == 3 ? "now" : ""}"><b>3</b>Pronto</li>
     </ol>
-    <ul class="unit-list">${mine.map(card).join("")}</ul>
+    <div class="tray-wrap">
+      <div class="tray-head"><b>Suas peças</b><span>${placed} de ${mine.length} no campo</span></div>
+      <div class="tray">${mine.map(chip).join("")}</div>
+    </div>
+    ${editor}
     <div class="actions">
       <button type="button" class="btn" id="auto">Posicionar automático</button>
       <button type="button" class="btn primary" id="ready" ${placed == 0 ? "disabled" : ""}>${placed < mine.length ? `Pronto (${mine.length - placed} vão para o centro)` : "Pronto"}</button>
-    </div>
-    <details class="guide" ${store("tactical-guide-open") == "0" ? "" : "open"}>
-      <summary>Quem vence quem</summary>
-      <ul>${guideRoles
-        .map((r) => `<li>${tokenSvg(h, r, 24)}<span><b>${ROLE_NAMES[r]}</b> vence ${ROLE_SHORT[r].vence} · teme ${ROLE_SHORT[r].teme}</span></li>`)
-        .join("")}</ul>
-      <p class="guide-note">Quem vence mais faixas leva <b>+1</b> na batalha do tabuleiro; todas as faixas, <b>+2</b>. Faixa sem inimigo não conta, mas quem está nela ajuda as vizinhas pelo lado.</p>
-    </details>`;
+    </div>`;
 
   const list = $("panel");
   list.querySelectorAll<HTMLElement>("[data-grab]").forEach((el) => {
     el.addEventListener("pointerdown", (e) => startDrag(e, el.dataset.grab as string, false));
-    el.addEventListener("keydown", (e) => {
-      if (e.key == "Enter" || e.key == " ") {
-        e.preventDefault();
+    el.addEventListener("click", (e) => {
+      // teclado (Enter/Espaço) gera click sem pointerdown
+      if ((e as MouseEvent).detail == 0) {
         selected = el.dataset.grab as string;
         renderPanel();
       }
@@ -515,21 +540,14 @@ function renderPanel(): void {
   });
   list.querySelectorAll<HTMLButtonElement>("[data-role]").forEach((b) =>
     b.addEventListener("click", () => {
-      const u = mine.find((x) => x.id == b.dataset.unit);
-      if (u) u.role = b.dataset.role as Role;
-      selected = b.dataset.unit as string;
+      if (sel) sel.role = b.dataset.role as Role;
       renderPanel();
     })
   );
   list.querySelectorAll<HTMLButtonElement>("[data-back]").forEach((b) =>
-    b.addEventListener("pointerdown", (e) => e.stopPropagation())
-  );
-  list.querySelectorAll<HTMLButtonElement>("[data-back]").forEach((b) =>
-    b.addEventListener("click", (e) => {
-      e.stopPropagation();
+    b.addEventListener("click", () => {
       const u = mine.find((x) => x.id == b.dataset.back);
       if (u) u.lane = null;
-      selected = u?.id ?? null;
       renderPanel();
     })
   );
@@ -546,11 +564,7 @@ function renderPanel(): void {
     });
   });
   $("ready").addEventListener("click", finishTurn);
-  list.querySelector<HTMLDetailsElement>(".guide")?.addEventListener("toggle", (e) => store("tactical-guide-open", (e.target as HTMLDetailsElement).open ? "1" : "0"));
-  // no celular a lista de peças rola de lado: mostra a peça escolhida (sem rolar a página)
-  const sel = list.querySelector<HTMLElement>(".unit-card.sel");
-  const ul = list.querySelector<HTMLElement>(".unit-list");
-  if (sel && ul && ul.scrollWidth > ul.clientWidth) ul.scrollTo({ left: Math.max(0, sel.offsetLeft - ul.offsetLeft - (ul.clientWidth - sel.clientWidth) / 2), behavior: "smooth" });
+  $("help-play").addEventListener("click", () => openTutorial(0));
 }
 
 function renderLaneInfo(): void {
@@ -691,24 +705,31 @@ function runBattle(): void {
     attacker: { squads: toSquads(units.attacker), card: config.attacker.card, orderBonus: config.attacker.order },
     defender: { squads: toSquads(units.defender), card: config.defender.card, orderBonus: config.defender.order }
   });
-  scene = prepareBattle(
-    config.field,
-    lastResult,
-    { attacker: toSquads(units.attacker), defender: toSquads(units.defender) },
-    { attacker: houseOf("attacker"), defender: houseOf("defender") },
-    Math.floor(Math.random() * 1e9)
-  );
-  battleT = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ? T_END : 0;
+  simSeed = Math.floor(Math.random() * 1e9);
+  newSim();
   renderBattlePanel();
   startLoop();
   $("stage").scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
+function newSim(): void {
+  sim = createSim(
+    config.field,
+    lastResult as TacticalBattleResult,
+    { attacker: toSquads(units.attacker), defender: toSquads(units.defender) },
+    { attacker: houseOf("attacker"), defender: houseOf("defender") },
+    simSeed
+  );
+  if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) {
+    while (sim.t < T_END) stepSim(sim, 0.05);
+  }
+}
+
 function renderBattlePanel(): void {
   $("play").dataset.phase = "battle";
   $("panel").innerHTML = `
-    <div class="turn-head"><h2>A luta</h2></div>
-    <p class="muted">A conta já decidiu o resultado; a animação só mostra o que aconteceu em cada faixa.</p>
+    <div class="turn-head"><h2>A luta</h2><button type="button" class="help-btn" id="help-battle" aria-label="Como funciona o combate">?</button></div>
+    <p class="muted">A conta já decidiu quem ganha cada faixa; a luta mostra como foi.</p>
     <div class="speed" role="group" aria-label="Velocidade">
       <button type="button" class="btn${speed == 1 ? " on" : ""}" data-speed="1">1×</button>
       <button type="button" class="btn${speed == 2 ? " on" : ""}" data-speed="2">2×</button>
@@ -722,7 +743,10 @@ function renderBattlePanel(): void {
         renderBattlePanel();
       })
     );
-  $("skip").addEventListener("click", () => (battleT = T_END));
+  $("skip").addEventListener("click", () => {
+    if (sim) while (sim.t < T_END) stepSim(sim, 0.05);
+  });
+  $("help-battle").addEventListener("click", () => openTutorial(0));
 }
 
 function startLoop(): void {
@@ -731,7 +755,7 @@ function startLoop(): void {
   const c = $<HTMLCanvasElement>("board");
   const ctx = c.getContext("2d") as CanvasRenderingContext2D;
   const frame = (now: number): void => {
-    const dt = Math.min(0.1, (now - lastFrame) / 1000);
+    const dt = Math.min(0.05, (now - lastFrame) / 1000);
     lastFrame = now;
     if (phase == "place") {
       const view = {
@@ -746,10 +770,16 @@ function startLoop(): void {
         showHint: !!selected
       };
       placedHit = drawPlacement(ctx, view, (now - t0) / 1000);
-    } else if (scene) {
-      battleT = Math.min(T_END, battleT + dt * speed);
-      drawBattle(ctx, scene, battleT);
-      if (battleT >= T_END && phase == "battle") {
+    } else if (sim) {
+      // passos pequenos para a simulação ficar estável
+      let left = dt * speed;
+      while (left > 0) {
+        const d = Math.min(0.02, left);
+        stepSim(sim, d);
+        left -= d;
+      }
+      drawSim(ctx, sim);
+      if (sim.t >= T_END && phase == "battle") {
         phase = "result";
         showResult();
       }
@@ -831,7 +861,7 @@ function showResult(): void {
     </div>`;
   $("replay").addEventListener("click", () => {
     phase = "battle";
-    battleT = 0;
+    newSim();
     renderBattlePanel();
   });
   $("again").addEventListener("click", startPlacement);
@@ -842,9 +872,35 @@ function showResult(): void {
 }
 
 // ---------------------------------------------------------------- tutorial
-function openTutorial(): void {
+let slide = 0;
+function openTutorial(i = 0): void {
+  slide = i;
   $("tutorial").hidden = false;
-  $("tut-ok").focus();
+  renderSlide();
+  $("tut-next").focus();
+}
+
+function renderSlide(): void {
+  const sl = SLIDES[slide];
+  $("tut-title").textContent = sl.title;
+  $("tut-text").textContent = sl.text;
+  drawSlide($<HTMLCanvasElement>("tut-canvas"), slide);
+  $("tut-dots").innerHTML = SLIDES.map((_, i) => `<button type="button" class="tdot${i == slide ? " on" : ""}" data-slide="${i}" aria-label="Passo ${i + 1}"></button>`).join("");
+  $("tut-dots")
+    .querySelectorAll<HTMLButtonElement>("[data-slide]")
+    .forEach((b) =>
+      b.addEventListener("click", () => {
+        slide = Number(b.dataset.slide);
+        renderSlide();
+      })
+    );
+  ($("tut-prev") as HTMLButtonElement).disabled = slide == 0;
+  $("tut-next").textContent = slide == SLIDES.length - 1 ? "Entendi, vamos lá" : "Próximo";
+}
+
+function closeTutorial(): void {
+  $("tutorial").hidden = true;
+  store("tactical-tutorial-seen", "1");
 }
 
 // ---------------------------------------------------------------- início
@@ -874,10 +930,30 @@ function init(): void {
     renderHome();
     show("home");
   });
-  $("how").addEventListener("click", openTutorial);
-  $("tut-ok").addEventListener("click", () => {
-    $("tutorial").hidden = true;
-    store("tactical-tutorial-seen", "1");
+  $("how").addEventListener("click", () => openTutorial(0));
+  $("tut-prev").addEventListener("click", () => {
+    slide = Math.max(0, slide - 1);
+    renderSlide();
+  });
+  $("tut-next").addEventListener("click", () => {
+    if (slide == SLIDES.length - 1) closeTutorial();
+    else {
+      slide++;
+      renderSlide();
+    }
+  });
+  $("tut-close").addEventListener("click", closeTutorial);
+  document.addEventListener("keydown", (e) => {
+    if ($("tutorial").hidden) return;
+    if (e.key == "Escape") closeTutorial();
+    if (e.key == "ArrowRight" && slide < SLIDES.length - 1) {
+      slide++;
+      renderSlide();
+    }
+    if (e.key == "ArrowLeft" && slide > 0) {
+      slide--;
+      renderSlide();
+    }
   });
   $("handoff-go").addEventListener("click", () => {
     $("handoff").hidden = true;
