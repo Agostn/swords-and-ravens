@@ -70,7 +70,7 @@ Depois da animação aparece um **resumo por faixa** ("Esquerda: seus lanceiros 
 | 1 | **Regras no papel** — FEITO 30/out (`docs/COMBATE-TATICO-REGRAS.md`) | tabela de números (força, vantagens, terreno, carta) e lista área → campo dos 4 mapas | ⏳ aguardando aprovação |
 | 2 | **Motor da conta** — FEITO 30/out (`src/common/tactical-battle`, 7 testes) | código da conta separado do resto (mesmo código no servidor, no protótipo e nos testes), sempre dá o mesmo resultado | — |
 | 3 | **Equilíbrio** — FEITO 30/out (`tools/tactical/equilibrio.ts`, 51 cenários) | o computador procura o jogo ótimo dos dois lados em cada campo; ajuste até nenhuma tropa/carta vencer demais e o castelo não ficar impossível | relatório no fim das regras |
-| 4 | **Protótipo jogável** | página separada: posicionar, escolher funções, conta, animação, 2×/pular, resumo; contra robô ou passando o celular | ✅ testar com os amigos |
+| 4 | **Protótipo jogável** — FEITO 30/out (`tools/tactical/prototipo`, gerar com `node tools/tactical/prototipo/build.js`) | página separada: posicionar, escolher funções, conta, animação, 2×/pular, resumo; contra robô ou passando o celular | ✅ testar com os amigos |
 | 5 | **No jogo** | opção na sala de espera; etapa nova da batalha (depois das cartas, antes da Espada); relógio, "Pronto", automático; +1/+2 no total; histórico; painel e quadro da batalha mostram o bônus | — |
 | 6 | **Telas** | posicionamento e animação no computador e no celular, no visual da tela nova | ✅ prints |
 | 7 | **Testes** | robô posiciona automático; partidas inteiras com a regra ligada (computador e celular) no teste do GitHub; RISCOS.md | — |

@@ -1,4 +1,4 @@
-# Combate tático — regras e números (versão 2, 30/out, para aprovar)
+# Combate tático — regras e números (versão 3, 30/out, para aprovar)
 
 Regra opcional (liga/desliga na sala de espera). O tabuleiro e a batalha do jogo original não mudam:
 o mini-mapa só soma **+1 ou +2** para quem lutar melhor. Plano das etapas: `docs/PLANO-COMBATE-TATICO.md`.
@@ -61,13 +61,13 @@ Tabela (quanto rende quem está na linha contra quem está na coluna):
 | Aberto | Cavalaria +25%, Batedores +15% |
 | Mata | Arqueiro −40%, Cavalaria −30%, Batedores −20%, Catapulta −40%; Lanceiro e Escudeiro +10% |
 | Colina | Arqueiro +20%; quem defende +25% |
-| Rio | quem ataca −25%; cavalos −20% |
-| Vau | quem ataca −10% |
-| Pântano | cavalaria −40%, batedores −30%, catapulta −50%, escudeiro −10%; quem ataca −15%, quem defende +10% (conhece o caminho) |
+| Rio | quem ataca −20%; cavalos −20% |
+| Vau | quem ataca −5% |
+| Pântano | cavalaria −40%, batedores −30%, catapulta −50%, escudeiro −10%; quem ataca −10%, quem defende +10% (conhece o caminho) |
 | Calçada | a estrada por cima do pântano: cavalos −10%, quem ataca −10% |
 | Areia | armadura pesada sofre no calor: cavalaria −20%, escudeiro −10%; batedores +20% e lanceiro +5% (lanças dornesas); quem ataca −10% |
-| Muralha | quem defende +40%; cavalos −30%. **Catapulta do atacante na faixa derruba**: o defensor perde o bônus |
-| Portão | quem defende +15%; catapulta também derruba |
+| Muralha | quem defende +30%; cavalos −30%. **Catapulta do atacante na faixa derruba**: o defensor perde o bônus |
+| Portão | quem defende +10%; catapulta também derruba |
 | Bloqueado | faixa fechada (montanha) |
 
 ## 5. Os campos (esquerda · centro · direita)
@@ -107,6 +107,10 @@ Com isso, Marcha +1 contra Defesa +1 se anulam, como no tabuleiro.
 5. Diferença de até 5% numa faixa = empate na faixa.
 
 ## 8. Resultado
+- **Ninguém se encontrou?** Se em nenhuma faixa os dois lados estão, o ataque não passa sem luta:
+  os exércitos marcham e **se encontram no centro** (cada esquadrão mantém a linha e a função)
+  e a conta é feita lá. Testamos também "empate" e "a defesa segura a área": o empate deixava
+  metade das batalhas sem nada acontecer, e dar a vitória à defesa a deixava forte demais.
 - Quem vencer **mais faixas com luta** ganha o mini-mapa.
 - **+2** se venceu **todas** as faixas com luta (e houve pelo menos 2); senão **+1**.
 - Mesmo número de faixas: desempata pela soma das faixas (+1). Igual de novo: empate, ninguém ganha bônus.
@@ -137,27 +141,24 @@ destruir o castelo. Mar é sempre **Mar**.
 ## 10. O que o teste de equilíbrio mostrou
 O computador procurou o jeito ótimo de os dois lados jogarem (e também jogou "no chute") em
 **79 batalhas**: 7 tipos de exército em cada um dos 9 campos de terra, mais cerco, guarnição, dragão,
-apoio (inclusive de navio), ordens, mar e cartas.
+apoio (inclusive de navio), ordens, mar e cartas. Resultado completo: `tools/tactical/resultado.txt`.
 
-- **Exércitos iguais:** em Planície, Colinas, Floresta, Montanha, Deserto e Castelo ninguém tem vitória
-  garantida (valor ≈ 0). Toda função é usada: não existe escolha que sempre ganha.
-- **Quem defende** leva uma pequena vantagem onde faz sentido: **Rio, Pântano e Fortaleza**
-  (média de −0,1 a −0,3 para quem ataca).
-- **Exército maior:** leva vantagem, mas não certeza: jogando perfeito ganha de 0 a 53% das vezes
-  (39–81% no chute), média do bônus entre 0 e +0,5. Dois cavaleiros contra três soldados não têm
-  vitória garantida: o outro lado pode adivinhar e pôr lanceiros.
-- **Exército muito menor (1 contra 3):** quase sempre perde ou empata (2–10% de vitória), como no jogo
-  original. O bônus de quem é maior fica em +1.
-- **Máquina de cerco:** contra castelo, 2 soldados + máquina contra 2 soldados → média +0,33; contra
-  3 soldados fica equilibrado. Fora de castelo ela não muda nada (igual ao jogo original).
-  Contra fortaleza com guarnição 2, 2 soldados + máquina contra 2 soldados ganha o mini-mapa sempre
-  (+1): no tabuleiro esse ataque também é bem mais forte (6 contra 4).
-- **Ordens:** Marcha +1 contra Defesa +1 se anulam; Marcha +1 sozinha: +0,09; Marcha −1 contra Defesa +2: −0,11.
-- **Navio apoiando em terra:** +0,14 para quem recebe o apoio.
-- **Carta forte (3–4):** ajuda pouco (+0,1 a +0,2), como queríamos.
-- **Dragão** (força 2 contra 2 soldados): perde se o outro adivinhar e juntar arqueiros; com força maior, domina.
-- **Mar:** igual entre iguais; 3 navios contra 1 vence na média.
-- **Empates:** jogando perfeito, os dois lados se anulam em cerca de metade das batalhas (ninguém
-  ganha bônus); jogando "no chute", cerca de 1 em cada 4 batalhas empata (24% em média).
+- **Exércitos iguais (é onde o mini-mapa decide mais):** em Planície, Colinas, Floresta, Montanha e
+  Deserto ninguém tem vitória garantida (cerca de 35–40% para cada lado, o resto empate, jogando perfeito).
+  Toda função é usada: não existe escolha que sempre ganha.
+- **Quem defende** leva vantagem onde faz sentido: **Rio, Pântano, Castelo e Fortaleza**
+  (média de −0,2 a −0,55 para quem ataca).
+- **Exército maior:** jogando perfeito, quem tem mais tropas vence o mini-mapa (+1, raramente +2).
+  Jogando normal (no chute), o menor ainda vence de 2% a 28% das vezes, conforme a diferença. Isso combina com o jogo
+  original: a força das tropas manda; o mini-mapa decide as batalhas parelhas.
+- **Lanceiros contra cavaleiros:** dois cavaleiros contra três soldados no Pântano, no Rio ou no Castelo
+  não têm vitória garantida.
+- **Máquina de cerco:** contra castelo ela decide o mini-mapa a favor de quem ataca (+1), mesmo contra
+  3 soldados; fora de castelo não muda nada (igual ao jogo original).
+- **Ordens:** Marcha +1 contra Defesa +1 se anulam; Marcha +1 sozinha: +0,27; Marcha −1 contra Defesa +2: −0,34.
+- **Carta forte (3–4):** ajuda um pouco (+0,3 a +0,5).
+- **Dragão** (força 2 contra 2 soldados): se o outro juntar arqueiros, empata; com força maior, domina.
+- **Mar:** igual entre iguais; 3 navios contra 1 vence.
+- **Empates:** raros agora (cerca de 6% jogando no chute), porque os exércitos sempre se encontram.
 
-Próximo passo depois da aprovação: o protótipo jogável (etapa 4).
+Próximo passo: o protótipo jogável (etapa 4) — feito, link no chat e em `tools/tactical/prototipo`.

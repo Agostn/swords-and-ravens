@@ -98,7 +98,7 @@ export const ADVANTAGE: Record<Role, Partial<Record<Role, number>>> = {
   cavalaria: { arqueiro: 1.8, escudeiro: 1.3, lanceiro: 0.6, cavalaria: 1.0, batedores: 1.2, catapulta: 2.0, dragao: 0.7, torre: 0.5 },
   batedores: { lanceiro: 1.3, arqueiro: 1.0, escudeiro: 0.8, cavalaria: 0.85, batedores: 1.0, catapulta: 1.8, dragao: 0.7, torre: 0.5 },
   catapulta: { lanceiro: 0.7, escudeiro: 0.7, arqueiro: 0.7, cavalaria: 0.5, batedores: 0.5, catapulta: 1.0, dragao: 0.3, torre: 1.5 },
-  dragao: { lanceiro: 1.5, escudeiro: 1.5, arqueiro: 1.2, cavalaria: 1.5, batedores: 1.5, catapulta: 1.5, dragao: 1.0, torre: 1.3 },
+  dragao: { lanceiro: 1.5, escudeiro: 1.5, arqueiro: 1.3, cavalaria: 1.5, batedores: 1.5, catapulta: 1.5, dragao: 1.0, torre: 1.3 },
   torre: { lanceiro: 1.0, escudeiro: 0.7, arqueiro: 1.0, cavalaria: 1.0, batedores: 1.0, catapulta: 1.0, dragao: 1.0, torre: 1.0 },
   ariete: { flechas: 1.6, abordagem: 0.7, ariete: 1.0 },
   abordagem: { ariete: 1.6, flechas: 0.7, abordagem: 1.0 },
@@ -160,15 +160,15 @@ export const TERRAIN: Record<Terrain, TerrainRules> = {
   aberto: { role: { cavalaria: 1.25, batedores: 1.15 } },
   mata: { role: { arqueiro: 0.6, cavalaria: 0.7, batedores: 0.8, lanceiro: 1.1, escudeiro: 1.1, catapulta: 0.6 } },
   colina: { role: { arqueiro: 1.2 }, defender: 1.25 },
-  rio: { attacker: 0.75, role: { cavalaria: 0.8, batedores: 0.8 } },
-  vau: { attacker: 0.9 },
+  rio: { attacker: 0.8, role: { cavalaria: 0.8, batedores: 0.8 } },
+  vau: { attacker: 0.95 },
   // Gargalo (Neck): cavalo e máquina atolam; quem é de lá conhece o caminho
-  pantano: { role: { cavalaria: 0.6, batedores: 0.7, catapulta: 0.5, escudeiro: 0.9 }, attacker: 0.85, defender: 1.1 },
+  pantano: { role: { cavalaria: 0.6, batedores: 0.7, catapulta: 0.5, escudeiro: 0.9 }, attacker: 0.9, defender: 1.1 },
   calcada: { role: { cavalaria: 0.9, batedores: 0.9 }, attacker: 0.9 },
   // Dorne: armadura pesada sofre no calor; cavalaria leve e lanças dornesas brilham
   areia: { role: { cavalaria: 0.8, escudeiro: 0.9, batedores: 1.2, lanceiro: 1.05 }, attacker: 0.9 },
-  muralha: { defender: 1.4, role: { cavalaria: 0.7, batedores: 0.7 }, wall: true },
-  portao: { defender: 1.15, wall: true },
+  muralha: { defender: 1.3, role: { cavalaria: 0.7, batedores: 0.7 }, wall: true },
+  portao: { defender: 1.1, wall: true },
   bloqueado: {},
   mar: {}
 };
@@ -232,6 +232,24 @@ export const UNOPPOSED_FLANK_SHARE = 0.3;
 
 /** Diferença mínima para uma faixa não ser empate (5%). */
 export const LANE_TIE_MARGIN = 0.05;
+
+/**
+ * Quando nenhuma faixa tem os dois lados (os exércitos se esquivaram):
+ *  - "center": eles se encontram no centro e a conta é feita lá;
+ *  - "defender": o ataque não achou a defesa: quem defende segura a área (+1);
+ *  - "draw": ninguém ganha bônus.
+ */
+export const NO_CONTACT_RULE: "center" | "defender" | "draw" = (globalThis as { __NO_CONTACT__?: "center" | "defender" | "draw" }).__NO_CONTACT__ ?? "center";
+
+/**
+ * O tamanho do exército já conta na batalha do tabuleiro. Para o mini-mapa medir mais
+ * QUEM LUTOU MELHOR do que quem tem mais tropas, o valor de cada lado é aproximado do
+ * outro: valor × (média dos dois totais / total do lado) ^ SIZE_EQUALIZE.
+ * 0 = tamanho conta inteiro; 1 = os dois lados valem igual; 0,5 = no meio.
+ * Testado (30/out): aproximar quase não ajuda o lado menor e estraga a máquina de cerco
+ * (o valor dela era "diluído"), então fica 0.
+ */
+export const SIZE_EQUALIZE: number = (globalThis as { __SIZE_EQ__?: number }).__SIZE_EQ__ ?? 0;
 
 /** Bônus na batalha do tabuleiro para quem vence o mini-mapa. */
 export const BONUS_ALL_LANES = 2;

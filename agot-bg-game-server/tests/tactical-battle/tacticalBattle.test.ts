@@ -40,11 +40,21 @@ describe("combate tático", () => {
   it("faixa sem inimigo não conta como vitória", () => {
     const r = resolveTacticalBattle({
       field: "planicie",
-      attacker: { squads: [sq("a", "footman", "lanceiro", 0)] },
+      attacker: { squads: [sq("a1", "footman", "lanceiro", 0), sq("a2", "footman", "lanceiro", 2)] },
+      defender: { squads: [sq("d1", "footman", "lanceiro", 2), sq("d2", "footman", "arqueiro", 1, "tras")] }
+    });
+    expect(r.lanes[0].winner).toBeNull();
+    expect(r.lanesWon.attacker + r.lanesWon.defender).toBeLessThanOrEqual(2);
+  });
+
+  it("se ninguém se encontrar, os exércitos lutam no centro", () => {
+    const r = resolveTacticalBattle({
+      field: "planicie",
+      attacker: { squads: [sq("a", "footman", "arqueiro", 0, "tras")] },
       defender: { squads: [sq("d", "footman", "lanceiro", 2)] }
     });
-    expect(r.winner).toBeNull();
-    expect(r.bonus).toBe(0);
+    expect(r.metInCenter).toBe(true);
+    expect(r.lanes[1].winner).toBe("attacker");
   });
 
   it("vencer todas as faixas com luta (2 ou mais) dá +2", () => {
@@ -71,7 +81,9 @@ describe("combate tático", () => {
       defender: { squads: [sq("d1", "footman", "lanceiro", 0)] }
     });
     expect(com.lanes[0].attackerScore).toBeGreaterThan(sem.lanes[0].attackerScore);
-    expect(com.lanes[0].defenderScore).toBeLessThan(sem.lanes[0].defenderScore);
+    expect(sem.lanes[0].factors.some((f) => f.kind == "wall")).toBe(true);
+    expect(com.lanes[0].factors.some((f) => f.kind == "wall-breach")).toBe(true);
+    expect(com.lanes[0].factors.some((f) => f.kind == "wall")).toBe(false);
   });
 
   it("máquina de cerco só luta quando ataca castelo/fortaleza (como no jogo original)", () => {

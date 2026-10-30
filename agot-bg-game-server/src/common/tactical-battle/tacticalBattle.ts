@@ -30,7 +30,9 @@ import {
   SUPPORT_FACTOR,
   Terrain,
   TERRAIN,
-  UNOPPOSED_FLANK_SHARE
+  UNOPPOSED_FLANK_SHARE,
+  NO_CONTACT_RULE,
+  SIZE_EQUALIZE
 } from "./tacticalBattleData";
 
 export type Side = "attacker" | "defender";
@@ -99,6 +101,12 @@ export interface TacticalBattleResult {
   winner: Side | null;
   /** bônus que o vencedor soma na batalha do tabuleiro (0, 1 ou 2) */
   bonus: number;
+  /**
+   * Os dois lados se esquivaram (nenhuma faixa com os dois): o ataque não pode
+   * passar sem luta, então os exércitos se encontram no centro (cada um mantém
+   * a linha e a função) e a conta é feita de novo lá.
+   */
+  metInCenter?: boolean;
 }
 
 /** Força da peça nesta batalha, como no jogo original. */
@@ -232,6 +240,22 @@ function compare(a: number, d: number): Side | "tie" | null {
 const NEIGHBOURS: Record<Lane, Lane[]> = { 0: [1], 1: [0, 2], 2: [1] };
 
 export function resolveTacticalBattle(input: TacticalBattleInput): TacticalBattleResult {
+  const first = resolveOnce(input);
+  const fought = first.lanes.some((l) => !l.blocked && l.winner != null);
+  const hasA = prepare(input.attacker.squads, "attacker", input.field).length > 0;
+  const hasD = prepare(input.defender.squads, "defender", input.field).length > 0;
+  if (fought || !hasA || !hasD) return first;
+  if (NO_CONTACT_RULE == "draw") return first;
+  if (NO_CONTACT_RULE == "defender") return { ...first, winner: "defender", bonus: BONUS_MAJORITY };
+  const toCenter = (side: TacticalSideInput): TacticalSideInput => ({
+    ...side,
+    squads: side.squads.map((s) => ({ ...s, lane: 1 as Lane }))
+  });
+  const again = resolveOnce({ ...input, attacker: toCenter(input.attacker), defender: toCenter(input.defender) });
+  return { ...again, metInCenter: true };
+}
+
+function resolveOnce(input: TacticalBattleInput): TacticalBattleResult {
   const terrains = FIELD_LANES[input.field];
   const atkCard = cardFactor(input.attacker.card, input.defender.card, input.attacker.orderBonus ?? 0);
   const defCard = cardFactor(input.defender.card, input.attacker.card, input.defender.orderBonus ?? 0);
@@ -239,6 +263,17 @@ export function resolveTacticalBattle(input: TacticalBattleInput): TacticalBattl
     attacker: prepare(input.attacker.squads, "attacker", input.field),
     defender: prepare(input.defender.squads, "defender", input.field)
   };
+  // aproxima o tamanho dos dois exércitos (o tamanho já conta no tabuleiro)
+  const total = (side: Side): number => prepared[side].reduce((a, s) => a + (s.value ?? 0), 0);
+  const tA = total("attacker");
+  const tD = total("defender");
+  if (tA > 0 && tD > 0 && SIZE_EQUALIZE > 0) {
+    const avg = (tA + tD) / 2;
+    (["attacker", "defender"] as Side[]).forEach((side) => {
+      const k = Math.pow(avg / (side == "attacker" ? tA : tD), SIZE_EQUALIZE);
+      prepared[side] = prepared[side].map((s) => ({ ...s, value: (s.value ?? 0) * k }));
+    });
+  }
   const squadsIn = (side: Side, lane: Lane): Squad[] => prepared[side].filter((s) => s.lane == lane);
   const cardOf = (side: Side): number => (side == "attacker" ? atkCard : defCard);
 
