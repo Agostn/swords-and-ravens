@@ -262,7 +262,7 @@ function sample<T>(arr: T[], max: number, rand: () => number): T[] {
  * que ainda está escondida) e sorteia uma jogada dela. Para exércitos grandes, usa uma
  * amostra das jogadas possíveis, para caber no tempo do navegador.
  */
-export function computerStrategy(sc: Scenario, side: "attacker" | "defender", seed: number, maxStrategies = 2500): Strategy {
+export function computerStrategy(sc: Scenario, side: "attacker" | "defender", seed: number, maxStrategies = 1200): Strategy {
   const rand = rng(seed);
   ORDERS = [sc.attackerOrder ?? 0, sc.defenderOrder ?? 0];
   const A = sample(enumerate(sc.attacker, sc.field), maxStrategies, rand);
@@ -272,9 +272,9 @@ export function computerStrategy(sc: Scenario, side: "attacker" | "defender", se
   const SA: number[] = [Math.floor(rand() * A.length)];
   const SD: number[] = [Math.floor(rand() * D.length)];
   let sol = { x: [1], y: [1], v: 0 };
-  for (let it = 0; it < 30; it++) {
+  for (let it = 0; it < 20; it++) {
     const M = SA.map((i) => SD.map((j) => payoff(sc.field, A[i], D[j], ac, dc)));
-    sol = solveMatrix(M, 1500);
+    sol = solveMatrix(M, 600);
     let bestA = -1;
     let bestAV = -Infinity;
     for (let i = 0; i < A.length; i++) {
