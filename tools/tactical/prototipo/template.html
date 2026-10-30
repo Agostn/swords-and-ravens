@@ -189,6 +189,8 @@
   .role-say .ok { color: #9bd786; font-weight: 700; }
   .role-say .no { color: #ef8d80; font-weight: 700; }
   .role-say .here { color: var(--parch); }
+  .role-say .rng { color: var(--gold); }
+  .btn .sub { display: block; font-size: 11.5px; font-weight: 600; opacity: .8; line-height: 1.1; }
   .piece { position: relative; }
   .piece-ok { position: absolute; top: 4px; right: 6px; color: #9bd786; font-weight: 800; font-size: 13px; }
   .quit-btn { flex: none; width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--line); background: var(--panel-2); color: var(--parch); font: inherit; font-size: 26px; line-height: 1; cursor: pointer; display: none; }
@@ -267,19 +269,27 @@
     .play[data-phase="battle"] #panel > .muted { display: none; }
     .speed { padding-bottom: max(8px, env(safe-area-inset-bottom, 0px)); flex-wrap: nowrap; }
     .speed .btn { flex: 1 1 auto; padding: 8px 10px; }
-    .role-row { gap: 6px; flex-wrap: nowrap; }
-    .role-row .role-card { flex: 1 1 0; flex-direction: row; justify-content: center; padding: 4px 6px; gap: 4px; min-height: 48px; }
-    .role-row .role-card b { font-size: 13.5px; }
-    .role-fig { width: 34px; height: auto; }
-    .back-card { min-width: 0; }
-    .back-ico { width: 24px; height: 24px; font-size: 18px; }
-    .role-say { font-size: 12.5px; line-height: 1.35; }
-    .tray { display: flex; gap: 6px; flex-wrap: wrap; }
-    .piece { flex: 1 1 62px; max-width: 96px; padding: 4px 2px 3px; gap: 0; }
-    .piece .squad-figs { width: 52px; height: auto; }
+    /* parte de baixo com ALTURA FIXA: o campo não muda de tamanho ao trocar de peça ou função */
+    .play[data-phase="place"] .editor { flex: 0 0 auto; height: 108px; box-sizing: border-box; overflow: hidden; }
+    .play[data-phase="place"] .tray-wrap { flex: 0 0 auto; height: 70px; box-sizing: border-box; overflow-x: auto; overflow-y: hidden; overscroll-behavior-x: contain; scrollbar-width: none; }
+    .tray-wrap::-webkit-scrollbar { display: none; }
+    .role-row { gap: 5px; flex-wrap: nowrap; }
+    .role-row .role-card { flex: 1 1 0; flex-direction: column; justify-content: center; padding: 2px 2px 3px; gap: 0; min-height: 0; height: 54px; min-width: 0; }
+    .role-row .role-card b { font-size: 12px; max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .role-fig { width: 30px; height: auto; }
+    .back-card { flex: 0 0 48px !important; }
+    .back-ico { width: 28px; height: 28px; font-size: 18px; }
+    .role-say { font-size: 12px; line-height: 1.3; height: 2.6em; overflow: hidden; }
+    .role-row .role-card { height: 50px !important; }
+    .tray { display: flex; gap: 6px; flex-wrap: nowrap; height: 100%; }
+    .piece { flex: 0 0 64px; padding: 3px 2px; gap: 0; justify-content: center; }
+    .piece .squad-figs { width: 50px; height: auto; }
     .piece-where { display: none; }
-    .piece-name { font-size: 11.5px; }
+    .piece-name { font-size: 11px; max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .piece-ok { top: 2px; right: 4px; }
+    .editor.empty { display: flex; align-items: center; justify-content: center; text-align: center; }
     .editor.empty { padding: 8px 10px; font-size: 13.5px; }
+    #panel > .actions .btn { min-height: 46px; }
   }
   @media (max-width: 520px) {
     .lane-info { grid-template-columns: 1fr; }

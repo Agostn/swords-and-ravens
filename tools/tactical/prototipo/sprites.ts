@@ -323,3 +323,17 @@ export function fallenSprite(id: string, sp: Sprite, turn = true): Sprite {
   cache.set("x|" + id, s);
   return s;
 }
+
+/** Silhueta branca (o "pisca" quando leva um golpe). */
+export function whiteSprite(id: string, sp: Sprite): Sprite {
+  const hit = cache.get("w|" + id);
+  if (hit) return hit;
+  const [c, ctx] = newCanvas(sp.c.width, sp.c.height);
+  ctx.drawImage(sp.c, 0, 0);
+  ctx.globalCompositeOperation = "source-in";
+  ctx.fillStyle = "#fff";
+  ctx.fillRect(0, 0, c.width, c.height);
+  const s = { c, ax: sp.ax, ay: sp.ay };
+  cache.set("w|" + id, s);
+  return s;
+}

@@ -22,7 +22,7 @@ import {
   TERRAIN_NAMES
 } from "./data";
 import { H, PlacedToken, W, drawPlacement, slots } from "./render";
-import { Sim, T_END, createSim, drawSim, stepSim } from "./battle";
+import { REACH_LABEL, Sim, T_END, createSim, drawSim, setGore, stepSim } from "./battle";
 import { SLIDES, drawSlide } from "./tutorial";
 import { drawSquad, drawUnit, kindOf } from "./figures";
 import { loadAssets } from "./assets";
@@ -75,6 +75,7 @@ let sim: Sim | null = null;
 let simSeed = 1;
 let lastResult: TacticalBattleResult | null = null;
 let speed = 1;
+let goreOn = true;
 let raf: number | null = null;
 let lastFrame = 0;
 const t0 = performance.now();
@@ -560,8 +561,8 @@ function renderPanel(): void {
   const bt = sel ? BEATS[sel.role] : undefined;
   const here = sel && sel.lane != null ? slotBonus(sel, sel.lane, sel.row, placingSide) : null;
   const say = sel
-    ? `<p class="role-say"><b>${ROLE_NAMES[sel.role]}</b>${bt ? ` — <span class="ok">vence ${listPt(bt.vence)}</span> · <span class="no">perde para ${listPt(bt.teme)}</span>` : ""}${
-        here ? `<br><span class="here">Neste lugar: ${here.why.length ? here.why.join(", ") : "nada muda"}</span>` : `<br><span class="here">Os números nas casinhas mostram quanto ela rende em cada lugar.</span>`
+    ? `<p class="role-say">${bt ? `<span class="ok">✓ vence ${listPt(bt.vence)}</span> <span class="no">✗ perde p/ ${listPt(bt.teme)}</span>` : `<b>${ROLE_NAMES[sel.role]}</b>`}<br><span class="rng">${REACH_LABEL[sel.role]}</span> · ${
+        here ? `<span class="here">aqui: ${here.why.length ? here.why.join(", ") : "normal"}</span>` : `<span class="here">veja o % de cada casinha</span>`
       }</p>`
     : "";
   const editor = sel
@@ -589,6 +590,9 @@ function renderPanel(): void {
         ${say}
       </div>`
     : `<div class="editor empty"><p>Toque numa peça para escolher a função e ver onde ela rende mais.</p></div>`;
+  // guarda a rolagem da faixa de peças (senão ela volta para o começo a cada toque)
+  const oldTray = document.querySelector<HTMLElement>("#panel .tray-wrap");
+  const keepScroll = oldTray ? oldTray.scrollLeft : 0;
   $("panel").innerHTML = `
     <div class="turn-head">
       <button type="button" class="quit-btn" id="quit" aria-label="Sair para o início">‹</button>
@@ -610,10 +614,12 @@ function renderPanel(): void {
     </div>
     <div class="actions">
       <button type="button" class="btn" id="auto">Automático</button>
-      <button type="button" class="btn primary" id="ready" ${placed == 0 ? "disabled" : ""}>${placed < mine.length ? `Pronto (${mine.length - placed} vão para o centro)` : "Pronto"}</button>
+      <button type="button" class="btn primary" id="ready" ${placed == 0 ? "disabled" : ""}>${placed < mine.length ? `Pronto <small class="sub">${mine.length - placed} ${mine.length - placed == 1 ? "vai" : "vão"} p/ o centro</small>` : "Pronto"}</button>
     </div>`;
 
   const list = $("panel");
+  const newTray = list.querySelector<HTMLElement>(".tray-wrap");
+  if (newTray) newTray.scrollLeft = keepScroll;
   list.querySelectorAll<HTMLElement>("[data-grab]").forEach((el) => {
     el.addEventListener("pointerdown", (e) => startDrag(e, el.dataset.grab as string, false));
     el.addEventListener("click", (e) => {
@@ -820,7 +826,8 @@ function renderBattlePanel(): void {
     <div class="speed" role="group" aria-label="Velocidade">
       <button type="button" class="btn${speed == 1 ? " on" : ""}" data-speed="1">1×</button>
       <button type="button" class="btn${speed == 2 ? " on" : ""}" data-speed="2">2×</button>
-      <button type="button" class="btn" id="skip">Pular para o resultado</button>
+      <button type="button" class="btn" id="skip">Pular</button>
+      <button type="button" class="btn${goreOn ? " on" : ""}" id="gore" aria-pressed="${goreOn}">Sangue: ${goreOn ? "sim" : "não"}</button>
     </div>`;
   $("panel")
     .querySelectorAll<HTMLButtonElement>("[data-speed]")
@@ -830,6 +837,12 @@ function renderBattlePanel(): void {
         renderBattlePanel();
       })
     );
+  $("gore").addEventListener("click", () => {
+    goreOn = !goreOn;
+    setGore(goreOn);
+    store("tactical-gore", goreOn ? "1" : "0");
+    renderBattlePanel();
+  });
   $("skip").addEventListener("click", () => {
     if (sim) while (sim.t < T_END) stepSim(sim, 0.05);
   });
@@ -996,6 +1009,8 @@ function closeTutorial(): void {
 
 // ---------------------------------------------------------------- início
 function init(): void {
+  goreOn = store("tactical-gore") != "0";
+  setGore(goreOn);
   // textura do chão: quando chegar, o campo é repintado (o tutorial aberto também)
   void loadAssets().then(() => {
     if (!$("tutorial").hidden) renderSlide();

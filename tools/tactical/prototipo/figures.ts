@@ -5,7 +5,7 @@
  */
 import { Role, SquadKind } from "../../../agot-bg-game-server/src/common/tactical-battle/tacticalBattleData";
 import { House } from "./data";
-import { Sprite, dragonFrame, fallenSprite, pixelSprite, soldierSprite } from "./sprites";
+import { Sprite, dragonFrame, fallenSprite, pixelSprite, soldierSprite, whiteSprite } from "./sprites";
 
 export type Kind = "foot" | "horse" | "siege" | "dragon" | "tower" | "ship";
 
@@ -27,6 +27,8 @@ export interface Pose {
   seed?: number;
   /** tempo (bandeira, asas) */
   time?: number;
+  /** acabou de levar golpe: pisca branco (0..1) */
+  flash?: number;
 }
 
 export function kindOf(k: SquadKind): Kind {
@@ -976,7 +978,14 @@ export function drawUnit(ctx: CanvasRenderingContext2D, x: number, y: number, s:
     else groundShadow(ctx, p.kind == "horse" ? 14 : p.kind == "foot" ? 7 : 15, p.kind == "foot" ? 2.4 : 4);
     ctx.restore();
     const bob = p.kind == "foot" ? Math.round(Math.abs(Math.sin(p.walk)) * 1.5) : 0;
-    blitSprite(ctx, sp, x, y - bob * s, s, p.kind == "ship" ? false : faceRight);
+    const fr = p.kind == "ship" ? false : faceRight;
+    blitSprite(ctx, sp, x, y - bob * s, s, fr);
+    if (p.flash && p.flash > 0.02) {
+      ctx.save();
+      ctx.globalAlpha *= Math.min(1, p.flash);
+      blitSprite(ctx, whiteSprite(got[1], sp), x, y - bob * s, s, fr);
+      ctx.restore();
+    }
     return;
   }
   // sem as imagens ainda: desenho em vetor
