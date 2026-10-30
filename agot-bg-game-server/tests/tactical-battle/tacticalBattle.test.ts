@@ -74,6 +74,41 @@ describe("combate tático", () => {
     expect(com.lanes[0].defenderScore).toBeLessThan(sem.lanes[0].defenderScore);
   });
 
+  it("máquina de cerco só luta quando ataca castelo/fortaleza (como no jogo original)", () => {
+    const campo = resolveTacticalBattle({
+      field: "planicie",
+      attacker: { squads: [sq("s", "siege-engine", "catapulta", 0, "tras")] },
+      defender: { squads: [sq("d", "footman", "lanceiro", 0)] }
+    });
+    expect(campo.lanes[0].winner).toBeNull();
+    const defendendo = resolveTacticalBattle({
+      field: "castelo",
+      attacker: { squads: [sq("a", "footman", "lanceiro", 0)] },
+      defender: { squads: [sq("s", "siege-engine", "catapulta", 0, "tras")] }
+    });
+    expect(defendendo.lanes[0].winner).toBeNull();
+  });
+
+  it("Marcha +1 ajuda o atacante e Defesa +2 ajuda o defensor", () => {
+    const base = {
+      field: "planicie" as const,
+      attacker: { squads: [sq("a", "footman", "lanceiro", 1)] },
+      defender: { squads: [sq("d", "footman", "lanceiro", 1)] }
+    };
+    expect(resolveTacticalBattle(base).winner).toBeNull();
+    expect(resolveTacticalBattle({ ...base, attacker: { ...base.attacker, orderBonus: 1 } }).winner).toBe("attacker");
+    expect(resolveTacticalBattle({ ...base, defender: { ...base.defender, orderBonus: 2 } }).winner).toBe("defender");
+  });
+
+  it("peça ferida não luta", () => {
+    const r = resolveTacticalBattle({
+      field: "planicie",
+      attacker: { squads: [sq("a", "footman", "lanceiro", 1)] },
+      defender: { squads: [{ ...sq("d", "footman", "lanceiro", 1), wounded: true }] }
+    });
+    expect(r.lanes[1].winner).toBeNull();
+  });
+
   it("toda função tem vantagem contra todas as outras da mesma família", () => {
     for (const role of [...ROLES_BY_KIND.footman, ...ROLES_BY_KIND.knight]) {
       for (const vs of [...ROLES_BY_KIND.footman, ...ROLES_BY_KIND.knight]) {
@@ -94,6 +129,7 @@ describe("combate tático", () => {
     }
     expect(getBattleField("winterfell", false, 2)).toBe("fortaleza");
     expect(getBattleField("winterfell", false, 0)).toBe("floresta");
+    expect(getBattleField("moat-cailin", false, 0)).toBe("pantano");
     expect(getBattleField("the-narrow-sea", true, 0)).toBe("mar");
   });
 });

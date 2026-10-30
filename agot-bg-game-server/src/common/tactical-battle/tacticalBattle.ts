@@ -22,7 +22,10 @@ import {
   ROW_FACTOR,
   Row,
   SCREEN_RATIO,
-  SIEGE_VS_WALL,
+  SIEGE_OPEN_FACTOR,
+  SIEGE_STRENGTH_VS_CASTLE,
+  BOARD_STRENGTH,
+  ORDER_FACTOR,
   SquadKind,
   SUPPORT_FACTOR,
   Terrain,
@@ -40,10 +43,16 @@ export interface Squad {
   role: Role;
   lane: Lane;
   row: Row;
-  /** força da peça quando ela varia (dragão, guarnição); senão 1 */
+  /** força da peça quando ela varia (dragão, guarnição); senão a do jogo original */
   strength?: number;
   /** veio de apoio de uma área vizinha */
   support?: boolean;
+  /** bônus da ordem de Apoio de quem mandou este esquadrão (+0/+1) */
+  supportOrderBonus?: number;
+  /** peça ferida (recuou numa batalha): no jogo original vale 0 e não entra */
+  wounded?: boolean;
+  /** calculado pela conta: valor do esquadrão nesta batalha */
+  value?: number;
 }
 
 export interface CardInfo {
@@ -55,6 +64,8 @@ export interface CardInfo {
 export interface TacticalSideInput {
   squads: Squad[];
   card?: CardInfo | null;
+  /** ordem da área: Marcha −1/0/+1 (atacante) ou Defesa +1/+2 (defensor) */
+  orderBonus?: number;
 }
 
 export interface TacticalBattleInput {
@@ -90,9 +101,30 @@ export interface TacticalBattleResult {
   bonus: number;
 }
 
+/** Força da peça nesta batalha, como no jogo original. */
+export function boardStrength(s: Squad, side: Side, field: FieldType): number {
+  if (s.wounded) return 0;
+  if (s.kind == "siege-engine") {
+    // só vale quando ataca (ou apoia o ataque a) castelo/fortaleza
+    return side == "attacker" && (field == "castelo" || field == "fortaleza") ? SIEGE_STRENGTH_VS_CASTLE : 0;
+  }
+  return s.strength ?? BOARD_STRENGTH[s.kind];
+}
+
 export function squadValue(s: Squad): number {
-  const strength = s.strength ?? 1;
+  if (s.value != null) return s.value;
+  const strength = s.strength ?? BOARD_STRENGTH[s.kind];
   return BASE_VALUE[s.kind] * strength * (s.support ? SUPPORT_FACTOR : 1);
+}
+
+/** Prepara os esquadrões: calcula o valor e tira quem vale 0 (não luta). */
+function prepare(squads: Squad[], side: Side, field: FieldType): Squad[] {
+  return squads
+    .map((s) => ({
+      ...s,
+      value: BASE_VALUE[s.kind] * boardStrength(s, side, field) * (s.support ? SUPPORT_FACTOR : 1)
+    }))
+    .filter((s) => (s.value ?? 0) > 0);
 }
 
 export function isValidRole(kind: SquadKind, role: Role): boolean {
@@ -103,8 +135,8 @@ function other(side: Side): Side {
   return side == "attacker" ? "defender" : "attacker";
 }
 
-function cardFactor(card: CardInfo | null | undefined, enemyCard: CardInfo | null | undefined): number {
-  let f = 1;
+function cardFactor(card: CardInfo | null | undefined, enemyCard: CardInfo | null | undefined, orderBonus = 0): number {
+  let f = 1 + ORDER_FACTOR * orderBonus;
   if (card) {
     f *= 1 + CARD_STRENGTH_FACTOR * card.strength + CARD_SWORD_FACTOR * card.swords;
   }
@@ -161,7 +193,8 @@ function laneDamage(
     f *= rules.role?.[s.role] ?? 1;
     if (side == "attacker") f *= rules.attacker ?? 1;
     if (side == "defender") f *= rules.defender != null && !enemyBreached ? rules.defender : 1;
-    if (breached && s.role == "catapulta") f *= SIEGE_VS_WALL;
+    if (s.role == "catapulta" && !rules.wall) f *= SIEGE_OPEN_FACTOR;
+    if (s.supportOrderBonus) f *= 1 + ORDER_FACTOR * s.supportOrderBonus;
     total += squadValue(s) * f;
 
     if (adv >= 1.3) factors.push({ side, kind: "counter", role: s.role, vs: dominantEnemy(theirs) });
@@ -200,9 +233,13 @@ const NEIGHBOURS: Record<Lane, Lane[]> = { 0: [1], 1: [0, 2], 2: [1] };
 
 export function resolveTacticalBattle(input: TacticalBattleInput): TacticalBattleResult {
   const terrains = FIELD_LANES[input.field];
-  const atkCard = cardFactor(input.attacker.card, input.defender.card);
-  const defCard = cardFactor(input.defender.card, input.attacker.card);
-  const squadsIn = (side: Side, lane: Lane): Squad[] => input[side].squads.filter((s) => s.lane == lane);
+  const atkCard = cardFactor(input.attacker.card, input.defender.card, input.attacker.orderBonus ?? 0);
+  const defCard = cardFactor(input.defender.card, input.attacker.card, input.defender.orderBonus ?? 0);
+  const prepared: Record<Side, Squad[]> = {
+    attacker: prepare(input.attacker.squads, "attacker", input.field),
+    defender: prepare(input.defender.squads, "defender", input.field)
+  };
+  const squadsIn = (side: Side, lane: Lane): Squad[] => prepared[side].filter((s) => s.lane == lane);
   const cardOf = (side: Side): number => (side == "attacker" ? atkCard : defCard);
 
   // 1ª passada: cada faixa sozinha. Só há luta onde os dois lados têm esquadrões.

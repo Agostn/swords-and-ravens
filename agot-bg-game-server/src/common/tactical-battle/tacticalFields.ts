@@ -11,37 +11,37 @@ import { FieldType } from "./tacticalBattleData";
 
 export const REGION_TERRAIN: Record<string, FieldType> = {
   // Norte
-  "castle-black": "planicie",
-  karhold: "planicie",
-  "the-stony-shore": "montanha",
-  "white-harbor": "rio",
-  "widows-watch": "planicie",
-  "moat-cailin": "rio",
-  "greywater-watch": "rio",
-  "flints-finger": "montanha",
-  winterfell: "floresta",
+  "castle-black": "planicie", // a Muralha fica ao norte; o castelo não tem muralha própria
+  karhold: "floresta", // à beira de um rio arborizado
+  "the-stony-shore": "colinas", // costa de seixos; para dentro, colinas e lagos
+  "white-harbor": "rio", // foz do Faca Branca
+  "widows-watch": "planicie", // ponta de península na costa
+  "moat-cailin": "pantano", // o Gargalo
+  "greywater-watch": "pantano", // o Gargalo (cranogmanos)
+  "flints-finger": "colinas", // península rochosa
+  winterfell: "floresta", // Mata dos Lobos
   // Terras dos Rios e Ilhas de Ferro
   "the-twins": "rio",
   seagard: "planicie",
   riverrun: "rio",
-  harrenhal: "rio",
-  "stoney-sept": "planicie",
+  harrenhal: "rio", // margem do lago Olho de Deus
+  "stoney-sept": "colinas", // cidade murada num morro, perto do Bosque dos Três Tostões
   pyke: "montanha",
   // Oeste
   lannisport: "planicie",
-  "searoad-marches": "planicie",
+  "searoad-marches": "colinas", // colinas do Oeste até a Campina
   // Vale
   "the-eyrie": "montanha",
   "the-mountains-of-the-moon": "montanha",
-  "the-fingers": "montanha",
+  "the-fingers": "colinas", // pedregoso, sem árvores e varrido pelo vento
   "the-vale-of-arryn": "planicie",
   // Terras da Coroa e da Tempestade
-  "crackclaw-point": "floresta",
+  "crackclaw-point": "floresta", // vales, brejos e mata fechada
   blackwater: "rio",
   "kings-landing": "planicie",
   kingswood: "floresta",
   dragonstone: "montanha",
-  "storms-end": "floresta",
+  "storms-end": "floresta", // Mata da Chuva
   // Campina
   "the-reach": "planicie",
   highgarden: "planicie",
@@ -49,20 +49,20 @@ export const REGION_TERRAIN: Record<string, FieldType> = {
   "the-arbor": "planicie",
   "three-towers": "planicie",
   // Dorne
-  "dornish-marches": "montanha",
+  "dornish-marches": "planicie", // campo aberto de capim e charneca
   "the-boneway": "montanha",
   "princes-pass": "montanha",
-  starfall: "rio",
-  yronwood: "montanha",
-  "salt-shore": "planicie",
-  sunspear: "planicie",
+  starfall: "rio", // foz do Torrentine
+  yronwood: "deserto", // leste de Dorne: seco e pedregoso
+  "salt-shore": "deserto",
+  sunspear: "deserto",
   // Essos (Mãe dos Dragões)
   braavos: "rio",
   pentos: "planicie",
-  myr: "planicie",
-  norvos: "montanha",
+  myr: "planicie", // costa fértil
+  norvos: "colinas", // Colinas de Norvos, à beira do Noyne
   volantis: "rio",
-  "the-disputed-lands": "planicie",
+  "the-disputed-lands": "planicie", // capim seco, terra arrasada
   "the-rhoyne": "rio"
 };
 
