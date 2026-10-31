@@ -130,7 +130,7 @@ export const SLIDES: Slide[] = [
   },
   {
     title: "3. Frente e trás",
-    text: "Arqueiros rendem mais atrás: atiram por cima da sua linha da frente. Quem luta corpo a corpo (lanceiro, escudeiro, cavalaria) rende mais na frente. Se a sua frente for forte, ela protege quem está atrás da carga da cavalaria inimiga.",
+    text: "Arqueiros rendem mais atrás: atiram por cima da sua linha da frente. Quem luta corpo a corpo (lanceiro, escudeiro, cavalaria) rende mais na frente. Se a sua frente for forte, ela protege quem está atrás da carga da cavalaria inimiga. FORMAÇÃO: na mesma faixa, corpo a corpo na frente + arqueiros atrás rende +15% (aparece um selo dourado). Misturar é mais seguro que apostar tudo numa função só.",
     draw: (ctx) => {
       ground(ctx, "planicie", H * 0.3);
       // escudeiros na frente, arqueiros atrás, flechas por cima

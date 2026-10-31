@@ -3,7 +3,7 @@
  * Usa a MESMA conta do jogo (src/common/tactical-battle) e o mesmo "computador" do teste de equilíbrio.
  * Gerar a página: node tools/tactical/prototipo/build.js
  */
-import { boardStrength, resolveTacticalBattle, Squad, Lane, Side, TacticalBattleResult, LaneFactor } from "../../../agot-bg-game-server/src/common/tactical-battle/tacticalBattle";
+import { boardStrength, hasFormation, resolveTacticalBattle, Squad, Lane, Side, TacticalBattleResult, LaneFactor } from "../../../agot-bg-game-server/src/common/tactical-battle/tacticalBattle";
 import { BASE_VALUE, FAR_FLANK_SHARE, FIELD_LANES, FieldType, ROW_FACTOR, Role, Row, SUPPORT_FACTOR, SquadKind, TERRAIN, UNOPPOSED_FLANK_SHARE, rolesFor } from "../../../agot-bg-game-server/src/common/tactical-battle/tacticalBattleData";
 import { bestReply, computerStrategy, Piece, Scenario, rng } from "../solver";
 import {
@@ -639,6 +639,17 @@ function stepNow(): number {
   return selected ? 2 : 1;
 }
 
+/** Dica da formação: corpo a corpo na frente + atirador atrás, na mesma faixa = +15%. */
+function formationTip(u: Unit): string {
+  const shooter = u.role == "arqueiro" || u.role == "flechas" || u.role == "catapulta";
+  const melee = !shooter && u.kind != "dragon" && u.kind != "garrison";
+  if (!shooter && !melee) return "";
+  const lane = u.lane;
+  const on = lane != null && hasFormation(toSquads(units[placingSide]).filter((q) => q.lane == lane));
+  if (on) return ` · <b class="ok">formação +15%</b>`;
+  return shooter ? " · atrás de um corpo a corpo: +15%" : " · na frente de arqueiros: +15%";
+}
+
 /** Mini-ícones "vence" / "teme" de uma função. */
 const BEATS: Partial<Record<Role, { vence: Role[]; teme: Role[] }>> = {
   lanceiro: { vence: ["cavalaria", "escudeiro"], teme: ["arqueiro", "batedores"] },
@@ -674,7 +685,7 @@ function renderPanel(): void {
   const bt = sel ? BEATS[sel.role] : undefined;
   const here = sel && sel.lane != null ? slotBonus(sel, sel.lane, sel.row, placingSide) : null;
   const say = sel
-    ? `<p class="role-say">${bt ? `<span class="ok">✓ vence ${listPt(bt.vence)}</span> <span class="no">✗ perde p/ ${listPt(bt.teme)}</span>` : `<b>${ROLE_NAMES[sel.role]}</b>`}<br><span class="rng">${REACH_LABEL[sel.role]}</span> · ${
+    ? `<p class="role-say">${bt ? `<span class="ok">✓ vence ${listPt(bt.vence)}</span> <span class="no">✗ perde p/ ${listPt(bt.teme)}</span>` : `<b>${ROLE_NAMES[sel.role]}</b>`}<br><span class="rng">${REACH_LABEL[sel.role]}</span>${formationTip(sel)} · ${
         here ? `<span class="here">aqui: força ${fmt(forceAt(sel, sel.lane as Lane, sel.row, placingSide))} de ${fmt(baseValue(sel, placingSide))}${here.why.length ? ` (${here.why.join(", ")})` : ""}</span>` : `<span class="here">força normal ${fmt(baseValue(sel, placingSide))}</span>`
       }</p>`
     : "";
@@ -1244,6 +1255,7 @@ function startLoop(): void {
         enemySquads: reacting ? units[other(placingSide)] : undefined,
         enemyChanged: reacting ? reactChanged[other(placingSide)] : null,
         changed: reacting ? changedId() : null,
+        formation: ([0, 1, 2] as Lane[]).map((L) => hasFormation(toSquads(units[placingSide]).filter((q) => q.lane == L))),
         laneOutcome: nowRes ? nowRes.lanes.map((l) => (l.blocked || l.winner == null ? null : l.winner == "tie" ? "tie" : l.winner == placingSide ? "win" : "lose")) : undefined,
         enemyForce: totalForce(other(placingSide)),
         previewLabel: (() => {

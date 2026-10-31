@@ -196,6 +196,8 @@ export interface PlaceView {
   enemyChanged?: string | null;
   /** esquadrão seu que você mudou na reação */
   changed?: string | null;
+  /** faixas onde você tem formação (corpo a corpo na frente + atirador atrás): +15% */
+  formation?: boolean[];
   /** reação: quem ganharia cada faixa se a luta fosse agora */
   laneOutcome?: ("win" | "lose" | "tie" | null)[];
 }
@@ -476,6 +478,25 @@ export function drawPlacement(ctx: CanvasRenderingContext2D, v: PlaceView, t: nu
       ctx.fillText(txt, bx + tw / 2, by + 15.5);
     }
   }
+  // formação: selo dourado entre a frente e a trás da faixa
+  v.formation?.forEach((on, i) => {
+    if (!on) return;
+    const cx = i * LW + LW / 2;
+    const y = H * 0.725;
+    const txt = "formação +15%";
+    ctx.font = "800 17px 'Alegreya Sans', 'Trebuchet MS', sans-serif";
+    const tw = ctx.measureText(txt).width + 18;
+    ctx.fillStyle = "#c99a2e";
+    roundRect(ctx, cx - tw / 2, y - 13, tw, 26, 13);
+    ctx.fill();
+    ctx.strokeStyle = "#5a3d0c";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.fillStyle = "#24180a";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(txt, cx, y + 1);
+  });
   // esquadrões posicionados: cada peça vira 4 bonequinhos; cabem pelo menos 2 peças por casinha
   const placed: PlacedToken[] = [];
   const SQ = 1.1;
