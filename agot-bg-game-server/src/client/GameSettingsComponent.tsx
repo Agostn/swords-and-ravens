@@ -19,6 +19,7 @@ import { t, tr, TranslationKey } from "./i18n/i18n";
 import {
   getSetupName,
   getSetupShortName,
+  isKnownSetup,
   renderSetupTooltip
 } from "./i18n/setupNames";
 
@@ -54,6 +55,19 @@ export default class GameSettingsComponent extends Component<GameSettingsCompone
   render(): ReactNode {
     const isIngame =
       this.props.entireGame.childGameState instanceof IngameGameState;
+    if (!isIngame) {
+      return (
+        <Col id="game-settings-container" xs={12} className="mt-2">
+          {this.renderModeChooser()}
+          {this.props.entireGame.childGameState instanceof LobbyGameState && (
+            <>
+              <div className="mode-more-title">{t("mode.more")}</div>
+              {this.renderLobbySettings()}
+            </>
+          )}
+        </Col>
+      );
+    }
     return (
       <Col id="game-settings-container" xs={12} className="mt-2">
         <Row id="live-pbem-row" className="justify-content-center mb-2">
@@ -248,6 +262,250 @@ export default class GameSettingsComponent extends Component<GameSettingsCompone
     );
   }
 
+  /**
+   * Modo de jogo (sala de espera): cenário e jogadores, ritmo (ao vivo / por turnos) e o Combate evoluído (BETA).
+   * O resto das regras fica embaixo, em "Mais regras e expansões".
+   */
+  renderModeChooser(): ReactNode {
+    const gs = this.gameSettings;
+    const owner = this.canChangeGameSettings;
+    const numbers = (from: number, to: number): ReactNode =>
+      Array.from({ length: to - from + 1 }, (_, i) => (
+        <option key={from + i} value={from + i}>
+          {from + i}
+        </option>
+      ));
+    const toggle = (
+      id: string,
+      label: TranslationKey,
+      tooltip: TranslationKey,
+      checked: boolean,
+      flip: () => void
+    ): ReactNode => (
+      <FormCheck
+        id={id}
+        type="switch"
+        disabled={!owner}
+        label={
+          <OverlayTrigger
+            overlay={<Tooltip id={`${id}-tooltip`}>{tr(tooltip)}</Tooltip>}
+          >
+            <label htmlFor={id}>{tr(label)}</label>
+          </OverlayTrigger>
+        }
+        checked={checked}
+        onChange={() => this.changeGameSettings(flip)}
+      />
+    );
+    return (
+      <div className="mode-chooser">
+        <div className="mode-head">
+          <h3>{t("mode.title")}</h3>
+          {!owner && <span className="mode-owner-note">{t("mode.ownerOnly")}</span>}
+        </div>
+        <div className="mode-cards">
+          <section className="mode-card mode-scenario">
+            <div className="mode-card-head">
+              <span className="mode-step">1</span>
+              <h4>{t("mode.scenario")}</h4>
+            </div>
+            <OverlayTrigger
+              overlay={
+                <Tooltip id="game-setups-tooltip" className="tooltip-w-100">
+                  {this.renderGameSetupsTooltipContent()}
+                </Tooltip>
+              }
+              placement="top"
+              delay={{ show: 250, hide: 750 }}
+            >
+              <select
+                className="custom-select mode-select"
+                id="game-setups"
+                name="setups"
+                disabled={!owner}
+                value={gs.setupId}
+                onChange={(e) => this.onSetupChange(e.target.value)}
+              >
+                {this.createSetupItems()}
+              </select>
+            </OverlayTrigger>
+            {isKnownSetup(gs.setupId) && (
+              <p className="mode-desc mode-clamp">
+                {t(`setupTooltip.${gs.setupId}.text` as TranslationKey)}
+              </p>
+            )}
+            <div className="mode-numbers">
+              <label className="mode-field">
+                <span>{t("mode.players")}</span>
+                <select
+                  id="player-count"
+                  name="playerCount"
+                  disabled={!owner}
+                  value={gs.playerCount}
+                  onChange={(e) => this.onPlayerCountChange(e.target.value)}
+                >
+                  {this.createPlayerCountItems()}
+                </select>
+              </label>
+              <OverlayTrigger
+                overlay={
+                  <Tooltip id="vp-count-setting-tooltip">
+                    {t("settings.vps.tooltip")}
+                  </Tooltip>
+                }
+              >
+                <label className="mode-field">
+                  <span>{t("mode.vps")}</span>
+                  <select
+                    id="vp-count-setting"
+                    disabled={!owner}
+                    value={gs.victoryPointsCountNeededToWin}
+                    onChange={(e) => this.onVpCountChange(e.target.value)}
+                  >
+                    {numbers(6, 15)}
+                  </select>
+                </label>
+              </OverlayTrigger>
+              {gs.playerCount >= 8 && (
+                <OverlayTrigger
+                  overlay={
+                    <Tooltip id="lt-count-setting-tooltip">
+                      {t("settings.lts.tooltip")}
+                    </Tooltip>
+                  }
+                >
+                  <label className="mode-field">
+                    <span>{t("mode.lts")}</span>
+                    <select
+                      id="lt-count-setting"
+                      disabled={!owner}
+                      value={gs.loyaltyTokenCountNeededToWin}
+                      onChange={(e) => this.onLtCountChange(e.target.value)}
+                    >
+                      {numbers(6, 15)}
+                    </select>
+                  </label>
+                </OverlayTrigger>
+              )}
+            </div>
+          </section>
+
+          <section className="mode-card mode-pace">
+            <div className="mode-card-head">
+              <span className="mode-step">2</span>
+              <h4>{t("mode.pace")}</h4>
+            </div>
+            <div className="mode-seg" role="group" aria-label={t("mode.pace")}>
+              <button
+                type="button"
+                id="pbem-live"
+                className={!gs.pbem ? "on" : ""}
+                aria-pressed={!gs.pbem}
+                disabled={!owner}
+                onClick={() => this.changeGameSettings(() => (gs.pbem = false))}
+              >
+                <b>{t("mode.live")}</b>
+                <small>{t("mode.live.desc")}</small>
+              </button>
+              <button
+                type="button"
+                id="pbem-pbem"
+                className={gs.pbem ? "on" : ""}
+                aria-pressed={gs.pbem}
+                disabled={!owner}
+                onClick={() => this.changeGameSettings(() => (gs.pbem = true))}
+              >
+                <b>{t("mode.pbem")}</b>
+                <small>{t("mode.pbem.desc")}</small>
+              </button>
+            </div>
+            <div className="mode-toggles">
+              {gs.pbem &&
+                toggle(
+                  "start-when-full-setting",
+                  "settings.startWhenFull.label",
+                  "settings.startWhenFull.tooltip",
+                  gs.startWhenFull,
+                  () => (gs.startWhenFull = !gs.startWhenFull)
+                )}
+              {!gs.pbem &&
+                toggle(
+                  "only-live-setting",
+                  "settings.gameClock.label",
+                  "settings.gameClock.tooltip",
+                  gs.onlyLive,
+                  () => (gs.onlyLive = !gs.onlyLive)
+                )}
+              {gs.onlyLive && (
+                <div className="mode-clock">
+                  <select
+                    id="initial-live-clock"
+                    disabled={!owner}
+                    value={gs.initialLiveClock}
+                    onChange={(e) => this.onInitialLiveClockChange(e.target.value)}
+                  >
+                    {[30, 45, 60, 75, 90, 120].map((m) => (
+                      <option key={m} value={m}>
+                        {m}
+                      </option>
+                    ))}
+                  </select>
+                  &nbsp;{t("settings.gameClock.minutes")}
+                </div>
+              )}
+              {gs.onlyLive &&
+                toggle(
+                  "fixed-clock-setting",
+                  "settings.fixedClock.label",
+                  "settings.fixedClock.tooltip",
+                  gs.fixedClock,
+                  () => (gs.fixedClock = !gs.fixedClock)
+                )}
+              {toggle(
+                "private-game-setting",
+                "settings.private.label",
+                "settings.private.tooltip",
+                gs.private,
+                () => (gs.private = !gs.private)
+              )}
+            </div>
+          </section>
+
+          <section className={`mode-card mode-combat${gs.tacticalCombat ? " on" : ""}`}>
+            <div className="mode-card-head">
+              <span className="mode-step">3</span>
+              <h4>
+                {t("mode.combat")} <span className="beta-badge">{t("mode.beta")}</span>
+              </h4>
+            </div>
+            <p className="mode-desc">{t("mode.combat.desc")}</p>
+            <label className={`mode-big-switch${owner ? "" : " locked"}`} htmlFor="tactical-combat-setting">
+              <input
+                type="checkbox"
+                id="tactical-combat-setting"
+                role="switch"
+                disabled={!owner}
+                checked={gs.tacticalCombat}
+                onChange={() =>
+                  this.changeGameSettings(
+                    () => (gs.tacticalCombat = !gs.tacticalCombat)
+                  )
+                }
+              />
+              <span className="track" aria-hidden="true">
+                <span className="knob" />
+              </span>
+              <span className="state">
+                <b>{gs.tacticalCombat ? t("mode.combat.on") : t("mode.combat.off")}</b>
+                <small>{gs.tacticalCombat ? t("mode.combat.onDesc") : t("mode.combat.offDesc")}</small>
+              </span>
+            </label>
+          </section>
+        </div>
+      </div>
+    );
+  }
+
   groupTitle(key: TranslationKey): ReactNode {
     return <div className="settings-group-title">{t(key)}</div>;
   }
@@ -260,141 +518,7 @@ export default class GameSettingsComponent extends Component<GameSettingsCompone
     return (
       <Row className="mt-2 justify-content-center settings-groups">
         <Col xs="auto" id="base-settings-col" className="no-gutters">
-          {this.groupTitle("settings.group.game")}
-          <OverlayTrigger
-            overlay={
-              <Tooltip id="game-setups-tooltip" className="tooltip-w-100">
-                {this.renderGameSetupsTooltipContent()}
-              </Tooltip>
-            }
-            placement="top"
-            delay={{ show: 250, hide: 750 }}
-          >
-            <Col xs="12">
-              <select
-                className="custom-select"
-                id="game-setups"
-                name="setups"
-                value={this.gameSettings.setupId}
-                onChange={(e) => this.onSetupChange(e.target.value)}
-                style={{ marginBottom: "8px" }}
-              >
-                {this.createSetupItems()}
-              </select>
-            </Col>
-          </OverlayTrigger>
-          <Col xs="auto" className="d-flex justify-content-between">
-            <div className="mr-2">
-              <select
-                id="player-count"
-                name="playerCount"
-                value={this.gameSettings.playerCount}
-                onChange={(e) => this.onPlayerCountChange(e.target.value)}
-                style={{ marginBottom: "8px" }}
-              >
-                {this.createPlayerCountItems()}
-              </select>
-              &nbsp;{t("settings.players")}
-            </div>
-            <OverlayTrigger
-              overlay={
-                <Tooltip id="vp-count-setting-tooltip">
-                  {t("settings.vps.tooltip")}
-                </Tooltip>
-              }
-            >
-              <div>
-                <select
-                  id="vp-count-setting"
-                  value={this.gameSettings.victoryPointsCountNeededToWin}
-                  onChange={(e) => this.onVpCountChange(e.target.value)}
-                  style={{ marginBottom: "8px" }}
-                >
-                  <option key="6" value={6}>
-                    6
-                  </option>
-                  <option key="7" value={7}>
-                    7
-                  </option>
-                  <option key="8" value={8}>
-                    8
-                  </option>
-                  <option key="9" value={9}>
-                    9
-                  </option>
-                  <option key="10" value={10}>
-                    10
-                  </option>
-                  <option key="11" value={11}>
-                    11
-                  </option>
-                  <option key="12" value={12}>
-                    12
-                  </option>
-                  <option key="13" value={13}>
-                    13
-                  </option>
-                  <option key="14" value={14}>
-                    14
-                  </option>
-                  <option key="15" value={15}>
-                    15
-                  </option>
-                </select>
-                &nbsp;{t("settings.vps")}
-              </div>
-            </OverlayTrigger>
-            {this.props.entireGame.gameSettings.playerCount >= 8 && (
-              <OverlayTrigger
-                overlay={
-                  <Tooltip id="lt-count-setting-tooltip">
-                    {t("settings.lts.tooltip")}
-                  </Tooltip>
-                }
-              >
-                <div>
-                  <select
-                    id="lt-count-setting"
-                    value={this.gameSettings.loyaltyTokenCountNeededToWin}
-                    onChange={(e) => this.onLtCountChange(e.target.value)}
-                    style={{ marginBottom: "8px" }}
-                  >
-                    <option key="6" value={6}>
-                      6
-                    </option>
-                    <option key="7" value={7}>
-                      7
-                    </option>
-                    <option key="8" value={8}>
-                      8
-                    </option>
-                    <option key="9" value={9}>
-                      9
-                    </option>
-                    <option key="10" value={10}>
-                      10
-                    </option>
-                    <option key="11" value={11}>
-                      11
-                    </option>
-                    <option key="12" value={12}>
-                      12
-                    </option>
-                    <option key="13" value={13}>
-                      13
-                    </option>
-                    <option key="14" value={14}>
-                      14
-                    </option>
-                    <option key="15" value={15}>
-                      15
-                    </option>
-                  </select>
-                  &nbsp;{t("settings.lts")}
-                </div>
-              </OverlayTrigger>
-            )}
-          </Col>
+          {this.groupTitle("mode.group.cards")}
           {this.props.entireGame.isFeastForCrows && (
             <Col xs="12">
               <FormCheck
@@ -1107,33 +1231,6 @@ export default class GameSettingsComponent extends Component<GameSettingsCompone
                 this.changeGameSettings(
                   () =>
                     (this.gameSettings.fogOfWar = !this.gameSettings.fogOfWar)
-                )
-              }
-            />
-          </Col>
-          <Col xs="12">
-            <FormCheck
-              id="tactical-combat-setting"
-              type="switch"
-              label={
-                <OverlayTrigger
-                  overlay={
-                    <Tooltip id="tactical-combat-setting-tooltip">
-                      {tr("settings.tacticalCombat.tooltip")}
-                    </Tooltip>
-                  }
-                >
-                  <label htmlFor="tactical-combat-setting">
-                    {tr("settings.tacticalCombat.label")}
-                  </label>
-                </OverlayTrigger>
-              }
-              checked={this.gameSettings.tacticalCombat}
-              onChange={() =>
-                this.changeGameSettings(
-                  () =>
-                    (this.gameSettings.tacticalCombat =
-                      !this.gameSettings.tacticalCombat)
                 )
               }
             />

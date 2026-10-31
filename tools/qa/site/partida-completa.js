@@ -172,7 +172,7 @@ const { account, BASE } = require("./flow");
   await p1.waitForTimeout(2000);
   await p1.selectOption("#game-setups", "base-game"); await p1.waitForTimeout(800);
   await p1.selectOption("#player-count", "3"); await p1.waitForTimeout(800);
-  if (live) { await p1.selectOption("#pbem-setting", "Live"); await p1.waitForTimeout(800); }
+  if (live) { await p1.click("#pbem-live"); await p1.waitForTimeout(800); }
   await p1.screenshot({ path: out + "/00-lobby-dono.png" });
   pages = [p1];
   for (const n of ["jogador2", "jogador3"]) {

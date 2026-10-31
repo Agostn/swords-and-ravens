@@ -130,6 +130,11 @@ export default class LobbyComponent extends Component<LobbyComponentProps> {
                   : t("lobby.ui.modeLive")}
               </span>
               <span className="lobby-badge">{this.setupName}</span>
+              {this.settings.tacticalCombat && (
+                <span className="lobby-badge combat">
+                  {t("mode.combat")} <span className="beta-badge">{t("mode.beta")}</span>
+                </span>
+              )}
               {this.settings.private && (
                 <span className="lobby-badge">{t("lobby.ui.private")}</span>
               )}

@@ -492,3 +492,9 @@ o outro vai fazer, mas o que mais conta é escolher a ordem que combina com as S
 
 A Mesa não tem mais cronômetro (antes eram 75 s para posicionar e 45 s para o Corvo). Cada um pensa o quanto
 quiser. No jogo completo, se a sala usar o relógio da partida, ele conta como em qualquer outra decisão.
+
+## Nome na tela: "Combate evoluído" (BETA) (31/out)
+
+Na sala de espera, a opção agora fica na tela **Modo de jogo**, em destaque, como o 3º passo (1. Cenário, 2. Ritmo
+da partida, 3. Combate evoluído). Tem o selo azul **BETA** e um botão grande Ativado/Desativado. Quando está
+ativado, o topo da sala mostra "Combate evoluído BETA". As outras regras ficam embaixo, em "Mais regras e expansões".

@@ -16,7 +16,7 @@ const knownSetups = [
   "learn-the-game"
 ];
 
-function isKnownSetup(setupId: string): boolean {
+export function isKnownSetup(setupId: string): boolean {
   return knownSetups.includes(setupId);
 }
 
