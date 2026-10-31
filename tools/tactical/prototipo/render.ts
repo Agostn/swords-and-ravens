@@ -439,7 +439,7 @@ export function drawPlacement(ctx: CanvasRenderingContext2D, v: PlaceView, t: nu
       ctx.textBaseline = "middle";
       const tw = ctx.measureText(txt).width + 16;
       ctx.fillStyle = flash > 0 ? "rgba(170,40,30,.95)" : "rgba(20,15,10,.8)";
-      const ly = s.y + s.h * 0.4;
+      const ly = s.y + 38;
       roundRect(ctx, s.x + s.w / 2 - tw / 2, ly - 10, tw, 20, 10);
       ctx.fill();
       ctx.fillStyle = "#fff1dc";

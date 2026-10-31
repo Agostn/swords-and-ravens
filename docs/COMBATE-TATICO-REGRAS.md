@@ -360,3 +360,15 @@ o outro vai fazer, mas o que mais conta é escolher a ordem que combina com as S
   e só soma para **quem defende**. É independente das máquinas de cerco: o defensor continua com a guarnição
   tendo ou não máquina de cerco.
 - Estandarte Lannister refeito (leão rampante com juba, faixa e franja douradas), mais perto da referência.
+
+## Apoio sem tropas no campo e faixa de peças por grupo (31/out)
+- **Apoio de áreas vizinhas (soldados, cavaleiros e navios) não entra mais no campo.** Vira bônus pronto, do
+  mesmo tipo da ordem: +1 por peça que apoia na luta das faixas (+6%). Na batalha do tabuleiro soma a força,
+  como no jogo: soldado +1, cavaleiro +2, navio +1 (aparece "apoio +N" na conta). Tela de montar: até 4 de
+  cada tipo.
+- **Limite: 2 esquadrões por casinha** (o Agostinho confirmou que está bom; na montanha 3). Até 12 por lado.
+- **Faixa de peças agrupada por peça do tabuleiro:** cada grupo mostra o nome da peça (Soldado, Cavaleiro,
+  Máquina de cerco…) e os esquadrões que ela virou. O cavaleiro tem no próprio grupo a chave
+  **"a cavalo · 2 | a pé · 4"** (toque para trocar; o grupo fica no mesmo lugar). Saíram os botões "A pé" e
+  "Montar" do meio das funções. No celular, um quadrinho no começo da faixa mostra "6 de 12 esquadrões"; no
+  computador, o topo da faixa mostra o mesmo.

@@ -148,6 +148,8 @@ export interface SideConfig {
   ships: number;
   dragon: number;
   supportFootmen: number;
+  /** cavaleiros apoiando de uma área vizinha (bônus pronto: +2 de força no tabuleiro) */
+  supportKnights?: number;
   supportShips: number;
   garrison: number;
   card: CardInfo;
@@ -177,6 +179,7 @@ export const EMPTY_SIDE: SideConfig = {
   ships: 0,
   dragon: 0,
   supportFootmen: 0,
+  supportKnights: 0,
   supportShips: 0,
   garrison: 0,
   card: { strength: 1, swords: 0, towers: 0 },

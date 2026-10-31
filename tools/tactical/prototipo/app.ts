@@ -133,21 +133,26 @@ function buildUnits(side: Side): Unit[] {
     const siegeCounts = side == "attacker" && (config.field == "castelo" || config.field == "fortaleza");
     if (siegeCounts) for (let i = 0; i < c.siege; i++) add("siege-engine", { row: "tras" }, 2);
     if (c.dragon > 0) add("dragon", { strength: c.dragon });
-    for (let i = 0; i < c.supportFootmen; i++) add("footman", { support: true }, 2);
-    // navios de apoio NÃO entram no campo de terra (31/out: barco no meio do rio ficava estranho):
-    // viram um bônus pronto, igual ao da ordem (ver shipBonus)
+    // APOIO (soldados, cavaleiros e navios de áreas vizinhas) NÃO entra no campo (31/out): vira um bônus pronto,
+    // igual ao da ordem, e soma a força no tabuleiro (ver supportPoints / supportStrength)
     if (side == "defender" && c.garrison > 0) add("garrison", { strength: c.garrison, lane: 1, row: "tras", locked: true });
   }
   return out;
 }
 
-/** Navios apoiando de fora (batalha de terra): +1 cada, como um ponto de ordem (Marcha +1). No tabuleiro, +1 de força cada. */
-function shipBonus(side: Side): number {
-  return isSea() ? 0 : config[side].supportShips ?? 0;
+/** Apoio de áreas vizinhas na luta das faixas: +1 por peça que apoia, como um ponto de ordem (Marcha +1). */
+function supportPoints(side: Side): number {
+  const c = config[side];
+  return (isSea() ? 0 : (c.supportFootmen ?? 0) + (c.supportKnights ?? 0)) + (c.supportShips ?? 0);
 }
-/** ordem + navios de apoio: o bônus pronto que entra na luta das faixas */
+/** Apoio na batalha do tabuleiro: a força das peças que apoiam (soldado 1, cavaleiro 2, navio 1), como no jogo. */
+function supportStrength(side: Side): number {
+  const c = config[side];
+  return (isSea() ? 0 : (c.supportFootmen ?? 0) + 2 * (c.supportKnights ?? 0)) + (c.supportShips ?? 0);
+}
+/** ordem + apoio: o bônus pronto que entra na luta das faixas */
 function orderOf(side: Side): number {
-  return (config[side].order ?? 0) + shipBonus(side);
+  return (config[side].order ?? 0) + supportPoints(side);
 }
 
 function piecesOf(side: Side): Piece[] {
@@ -191,7 +196,10 @@ function toggleMount(side: Side, u: Unit): void {
     fresh[0].lane = u.lane;
     fresh[0].row = u.row;
   }
-  units[side] = [...rest, ...fresh];
+  // a peça fica no mesmo lugar da lista (o grupo não pula para o fim)
+  const at = list.findIndex((x) => x.piece == u.piece);
+  const before = list.slice(0, at).filter((x) => x.piece != u.piece);
+  units[side] = [...before, ...fresh, ...rest.slice(before.length)];
   selected = fresh[0].id;
 }
 /** lugares livres na casinha, sem contar a própria peça */
@@ -463,7 +471,8 @@ const LIMITS: Record<string, [number, number]> = {
   ships: [0, ARMY_MAX],
   dragon: [0, 5],
   supportFootmen: [0, SUPPORT_MAX],
-  supportShips: [0, 2],
+  supportKnights: [0, SUPPORT_MAX],
+  supportShips: [0, SUPPORT_MAX],
   garrison: [0, 4],
   "card.strength": [0, 4],
   "card.swords": [0, 3],
@@ -539,8 +548,9 @@ function renderCustom(): void {
       <details class="more">
         <summary>Apoio, carta e ordem</summary>
         <div class="steps-list">
-          ${!sea ? step(side, "supportFootmen", "Soldados de apoio", tokenSvg(h, "escudeiro", 26), "vêm de áreas vizinhas") : ""}
-          ${!sea ? step(side, "supportShips", "Navios de apoio", tokenSvg(h, "flechas", 26), "+1 cada, como uma ordem (não entram no campo)") : ""}
+          ${!sea ? step(side, "supportFootmen", "Soldados de apoio", tokenSvg(h, "escudeiro", 26), "de área vizinha: +1 de força no tabuleiro e +1 como ordem na luta das faixas (não entram no campo)") : ""}
+          ${!sea ? step(side, "supportKnights", "Cavaleiros de apoio", tokenSvg(h, "cavalaria", 26), "de área vizinha: +2 de força no tabuleiro e +1 como ordem na luta das faixas (não entram no campo)") : ""}
+          ${step(side, "supportShips", "Navios de apoio", tokenSvg(h, "flechas", 26), "de mar vizinho: +1 de força no tabuleiro e +1 como ordem (não entram no campo)")}
           ${step(side, "card.strength", "Carta de Casa: força", "<b class='ico'>4</b>")}
           ${step(side, "card.swords", "Carta: espadas", "<b class='ico'>⚔</b>")}
           ${step(side, "card.towers", "Carta: torres", "<b class='ico'>▲</b>")}
@@ -731,17 +741,35 @@ function renderPanel(): void {
     : "";
   const BACK_SVG = `<svg viewBox="0 0 20 20" width="16" height="16" aria-hidden="true"><path d="M8 4 3 9l5 5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M3.5 9H12a5 5 0 0 1 0 10h-2" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>`;
   const canBack = !!sel && sel.lane != null && !sel.locked && !reacting;
-  // cavaleiro pode lutar a pé: 1 cavaleiro = 2 esquadrões a cavalo OU 4 a pé (mesma força no tabuleiro)
-  const canMount = !!sel && !reacting && !sel.locked && (canDismount(placingSide, sel) || !!sel.dismounted);
-  const mountLabel = sel?.dismounted ? "Montar" : "A pé";
-  const mountHint = sel?.dismounted ? "volta a ser 2 esquadrões de cavalaria" : "o cavaleiro desce do cavalo: vira 4 esquadrões de soldados";
+  // faixa de peças AGRUPADA por peça do tabuleiro (31/out): cada grupo mostra os esquadrões que a peça virou;
+  // o cavaleiro tem a chave "a cavalo · 2 | a pé · 4" no próprio grupo
+  const groups: { piece: string; list: Unit[] }[] = [];
+  mine.forEach((u) => {
+    let g = groups.find((x) => x.piece == u.piece);
+    if (!g) groups.push((g = { piece: u.piece, list: [] }));
+    g.list.push(u);
+  });
+  let chipN = 0;
+  const groupHtml = (g: { piece: string; list: Unit[] }): string => {
+    const u0 = g.list[0];
+    const knightPiece = u0.kind == "knight" || !!u0.dismounted;
+    const title = knightPiece ? "Cavaleiro" : u0.kind == "footman" ? "Soldado" : KIND_NAMES[u0.kind];
+    const footOk = u0.dismounted || canDismount(placingSide, u0);
+    const toggle =
+      knightPiece && !reacting && !u0.support
+        ? `<span class="pg-mode" role="group" aria-label="Como este cavaleiro luta">
+            <button type="button" class="${!u0.dismounted ? "on" : ""}" data-mode="horse" data-piece="${g.piece}" aria-pressed="${!u0.dismounted}">${roleIcon(h, "knight", "cavalaria")}a cavalo · 2</button>
+            <button type="button" class="${u0.dismounted ? "on" : ""}" data-mode="foot" data-piece="${g.piece}" aria-pressed="${!!u0.dismounted}" ${footOk ? "" : `disabled title="Não cabe: o máximo é ${SQUAD_MAX} esquadrões"`}>${roleIcon(h, "footman", "escudeiro")}a pé · 4</button>
+          </span>`
+        : `<small>${g.list.length == 1 ? "1 esquadrão" : `${g.list.length} esquadrões`}</small>`;
+    return `<div class="pgroup"><div class="pg-head"><b>${title}</b>${toggle}</div><div class="pg-cards">${g.list.map((u) => chip(u, chipN++)).join("")}</div></div>`;
+  };
   const editor = sel
     ? `<div class="editor">
         <div class="editor-head">
           ${squadSvg(h, sel)}
-          <div class="editor-title"><b>${KIND_NAMES[sel.kind]}${sel.support ? " de apoio" : ""}${sel.strength && (sel.kind == "dragon" || sel.kind == "garrison") ? ` · força ${sel.strength}` : ""}</b>
+          <div class="editor-title"><b>${sel.dismounted ? "Cavaleiro a pé" : KIND_NAMES[sel.kind]}${sel.support ? " de apoio" : ""}${sel.strength && (sel.kind == "dragon" || sel.kind == "garrison") ? ` · força ${sel.strength}` : ""}</b>
           <small>${sel.locked ? "fica sempre atrás, no centro" : sel.lane == null ? "Toque numa casinha do campo para colocar." : reacting ? "Mude a função aqui ou toque noutra casinha." : "Toque noutra casinha para mudar de lugar."}</small></div>
-          ${canMount ? `<button type="button" class="back-btn mount-btn" data-mount="${sel.id}" title="${mountHint}">${roleIcon(h, sel.dismounted ? "knight" : "footman", sel.dismounted ? "cavalaria" : "lanceiro")}<span>${mountLabel}</span></button>` : ""}
           ${canBack ? `<button type="button" class="back-btn" data-back="${sel.id}" aria-label="Tirar do campo e voltar para a reserva">${BACK_SVG}<span>Voltar p/ reserva</span></button>` : ""}
         </div>
         <div class="role-row">
@@ -757,7 +785,6 @@ function renderPanel(): void {
                   .join("")
               : ""
           }
-          ${canMount ? `<button type="button" class="back-inline mount-inline" data-mount="${sel.id}" title="${mountHint}">${roleIcon(h, sel.dismounted ? "knight" : "footman", sel.dismounted ? "cavalaria" : "lanceiro")}<b>${mountLabel}</b></button>` : ""}
           ${canBack ? `<button type="button" class="back-inline" data-back="${sel.id}" aria-label="Tirar do campo e voltar para a reserva">${BACK_SVG}<b>Reserva</b></button>` : ""}
         </div>
         ${say}
@@ -786,8 +813,8 @@ function renderPanel(): void {
     }
     ${editor}
     <div class="tray-wrap">
-      <div class="tray-head"><b>Suas peças</b><span>${reacting ? (changedId() ? "1 mudança (o máximo)" : "nenhuma mudança") : `${placed} de ${mine.length} no campo`}</span></div>
-      <div class="tray">${mine.map((u, i) => chip(u, i)).join("")}</div>
+      <div class="tray-head"><b>Suas peças</b><span>${reacting ? (changedId() ? "1 mudança (o máximo)" : "nenhuma mudança") : `${placed} de ${mine.length} no campo · ${mine.length} de ${SQUAD_MAX} esquadrões`}</span></div>
+      <div class="tray">${reacting ? "" : `<div class="sq-count" title="Máximo de ${SQUAD_MAX} esquadrões por lado"><b>${mine.length}</b><span>de ${SQUAD_MAX}</span><small>esquadrões</small></div>`}${groups.map(groupHtml).join("")}</div>
     </div>
     ${
       reacting
@@ -823,10 +850,13 @@ function renderPanel(): void {
       renderPanel();
     })
   );
-  list.querySelectorAll<HTMLButtonElement>("[data-mount]").forEach((b) =>
-    b.addEventListener("click", () => {
-      const u = mine.find((x) => x.id == b.dataset.mount);
-      if (u) toggleMount(placingSide, u);
+  list.querySelectorAll<HTMLButtonElement>("[data-mode]").forEach((b) =>
+    b.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const u = mine.find((x) => x.piece == b.dataset.piece);
+      if (!u) return;
+      const wantFoot = b.dataset.mode == "foot";
+      if (wantFoot != !!u.dismounted) toggleMount(placingSide, u);
       renderPanel();
     })
   );
@@ -1269,7 +1299,7 @@ function reactInfoHtml(): string {
  * Empate: no jogo decide a trilha dos Feudos (Lâmina de Aço Valiriano); aqui fica com quem defende.
  */
 interface BoardBattle {
-  totals: Record<Side, { tropas: number; carta: number; ordem: number; navios: number; mini: number; total: number }>;
+  totals: Record<Side, { tropas: number; carta: number; ordem: number; apoio: number; mini: number; total: number }>;
   winner: Side;
   tie: boolean;
   swords: number;
@@ -1288,9 +1318,9 @@ function boardBattle(res: TacticalBattleResult, seed: number): BoardBattle {
     const tropas = toSquads(units[side]).reduce((a, q) => a + boardStrength(q, side, config.field), 0);
     const carta = config[side].card?.strength ?? 0;
     const ordem = config[side].order ?? 0;
-    const navios = shipBonus(side);
+    const apoio = supportStrength(side);
     const mini = res.winner == side ? res.bonus : 0;
-    return { tropas, carta, ordem, navios, mini, total: tropas + carta + ordem + navios + mini };
+    return { tropas, carta, ordem, apoio, mini, total: tropas + carta + ordem + apoio + mini };
   };
   const totals = { attacker: tot("attacker"), defender: tot("defender") };
   const tie = totals.attacker.total == totals.defender.total;
@@ -1338,7 +1368,7 @@ function boardHtml(b: BoardBattle): string {
     const t = b.totals[side];
     const parts = [`tropas ${t.tropas}`, `carta ${t.carta}`];
     if (t.ordem) parts.push(`ordem ${t.ordem > 0 ? "+" : ""}${t.ordem}`);
-    if (t.navios) parts.push(`navios de apoio +${t.navios}`);
+    if (t.apoio) parts.push(`apoio +${t.apoio}`);
     if (t.mini) parts.push(`bônus da batalha +${t.mini}`);
     return `<li><b style="color:${houseOf(side).color}">${houseOf(side).name}</b>: ${parts.join(" + ")} = <b>${t.total}</b></li>`;
   };
