@@ -24,7 +24,7 @@ import { drawSeaWaves } from "./ground";
 // a luta ficou mais longa (31/out): mais tempo de troca de golpes antes de alguém fugir
 export const T_END = 13.5;
 const T_FIGHT = 3.2; // começam as baixas
-const T_DUEL = 8.0; // empate: os outros recuam e os campeões duelam no meio
+const T_DUEL = 6.6; // empate: os outros param e os campeões duelam no meio (até a fuga)
 const T_ROUT = 10.4; // quem perdeu foge
 const DEATH_SPAN = 5.6; // as mortes se espalham por este tempo (de T_FIGHT + 0,5 até perto da fuga)
 
@@ -67,6 +67,8 @@ export function setGore(on: boolean): void {
 }
 
 interface Man {
+  /** de que lado do inimigo ele luta (−1 à esquerda, +1 à direita); escolhido uma vez, para não dar a volta nele */
+  sdir?: number;
   /** id do esquadrão (peça do tabuleiro) */
   sid: string;
   /** está em cima da muralha (desenhado na frente dela) */
@@ -173,7 +175,7 @@ interface Drop {
 
 export interface Sim {
   /** empate decidido no duelo de campeões: quem vence e os dois campeões (escolhidos na hora) */
-  duel?: { winner: Side; a: Man | null; b: Man | null; picked: boolean };
+  duel?: { winner: Side; a: Man | null; b: Man | null; picked: boolean; arena: { x: number; y: number } };
   /** batalha do tabuleiro (quem foge e quem morre); sem ela, cada faixa decide */
   outcome?: BoardOutcome;
   field: FieldType;
@@ -331,18 +333,20 @@ export function createSim(field: FieldType, res: TacticalBattleResult, squads: R
   if (outcome) {
     // Quem morre (só visual, 31/out: "pelo menos metade de cada esquadrão"):
     //  - peça destruída no tabuleiro: o grupo inteiro;
-    //  - todo esquadrão que lutou perde pelo menos metade dos bonecos: o vencedor exatamente metade,
-    //    quem perdeu metade ou um a mais (sempre sobra alguém para fugir);
+    //  - todo esquadrão que lutou perde pelo menos metade dos bonecos, conforme a SUA faixa (o que a barra
+    //    mostra): quem venceu a faixa perde metade, quem perdeu a faixa metade + 1, empate metade cada;
     //  - figura única (dragão, navio, catapulta) só morre se a peça foi destruída.
     const dying: Man[] = [];
     const bySquad = new Map<string, Man[]>();
     men.filter((m) => !isStatic(m)).forEach((m) => bySquad.set(m.sid, [...(bySquad.get(m.sid) ?? []), m]));
     bySquad.forEach((list, sid) => {
       const side = list[0].side;
+      const lw = res.lanes[list[0].lane].winner;
       if (side == outcome.loser && outcome.destroyed.includes(sid)) dying.push(...list);
-      else if (list.length > 1 && res.lanes[list[0].lane].winner != null) {
+      else if (list.length > 1 && lw != null) {
         const half = Math.floor(list.length / 2);
-        const k = side == outcome.loser ? Math.min(list.length - 1, half + (rand() < 0.5 ? 1 : 0)) : half;
+        const lostLane = lw != "tie" && lw != side;
+        const k = lostLane ? Math.min(list.length - 1, half + 1) : half;
         dying.push(...[...list].sort(() => rand() - 0.5).slice(0, k));
       }
     });
@@ -362,7 +366,11 @@ export function createSim(field: FieldType, res: TacticalBattleResult, squads: R
       if (m.dieAt < Infinity) m.dieAt = T_FIGHT + 0.3 + Math.max(0, (m.dieAt - T_FIGHT - 0.5) / (DEATH_SPAN + 0.3)) * (T_DUEL - T_FIGHT - 0.6);
     });
   }
-  const sim: Sim = { duel: res.duel && res.winner ? { winner: res.winner, a: null, b: null, picked: false } : undefined, outcome, field, res, houses, men, shots: [], breaths: [], sparks: [], drops: [], dust: [], slashes: [], floor: null, t: 0, stop: 0, shake: 0, breach, rand, frontY };
+  // arena do duelo: no meio das faixas onde houve luta (onde os exércitos estão)
+  const fought = ([0, 1, 2] as Lane[]).filter((l) => res.lanes[l].winner != null);
+  const arenaLane = fought.length ? fought.reduce((a: number, l) => a + l, 0) / fought.length : 1;
+  const arena = { x: Math.max(70, Math.min(W - 70, arenaLane * LW + LW / 2)), y: frontY[Math.round(arenaLane)] ?? H * 0.5 };
+  const sim: Sim = { duel: res.duel && res.winner ? { winner: res.winner, a: null, b: null, picked: false, arena } : undefined, outcome, field, res, houses, men, shots: [], breaths: [], sparks: [], drops: [], dust: [], slashes: [], floor: null, t: 0, stop: 0, shake: 0, breach, rand, frontY };
   ([0, 1, 2] as Lane[]).forEach((lane) => {
     if (res.lanes[lane].winner != null) pairUp(sim, lane);
   });
@@ -422,7 +430,7 @@ function pickChampion(sim: Sim, side: Side): Man | null {
   let best: Man | null = null;
   let bd = Infinity;
   for (const m of pool) {
-    const d = Math.hypot(m.x - W / 2, m.y - H * 0.5);
+    const d = Math.hypot(m.x - (sim.duel?.arena.x ?? W / 2), m.y - (sim.duel?.arena.y ?? H * 0.5));
     if (d < bd) {
       bd = d;
       best = m;
@@ -451,37 +459,57 @@ function duelStep(sim: Sim, m: Man, dt: number): boolean {
       if (c) {
         c.foe = c === d.a ? d.b : d.a;
         c.engaged = false;
-        c.nextHit = T_DUEL + 1.1 + (c === d.a ? 0 : 0.35);
+        c.spot = false;
+        // golpes alternados: o campeão da Lâmina começa
+        c.nextHit = T_DUEL + 1.0 + (c === d.a ? 0 : 0.3);
       }
     });
   }
   if (!d.a || !d.b) return false;
+  const arena = d.arena;
   if (m !== d.a && m !== d.b) {
     if (t >= T_ROUT) return false; // depois do duelo, cada um segue (quem perdeu foge)
-    // assiste: volta um pouco para a sua linha
-    const home = m.side == "attacker" ? Math.max(m.y, H * 0.7) : Math.min(m.y, H * 0.3);
-    steer(m, m.x, home, m.speed * 0.6, dt);
+    // abre espaço em volta do círculo (cada lado para o seu) e olha para o duelo
+    const dx = m.x - arena.x;
+    const dyA = m.y - arena.y;
+    if (Math.hypot(dx * 0.6, dyA) < 62) steer(m, m.x, arena.y + (m.side == "attacker" ? 66 : -66), m.speed, dt);
+    else steer(m, m.x, m.y, 0, dt);
     m.engaged = false;
-    m.flip = m.side == "defender";
+    m.atk = 0;
+    m.flip = arena.x < m.x;
     return true;
   }
+  if (m.dead) return true;
   const foe = (m === d.a ? d.b : d.a) as Man;
-  if (t >= T_ROUT) return m === d.b; // o perdedor fica caído/empurrado um instante
+  if (t >= T_ROUT) return m === d.b; // o perdedor fica caído
+  // cada um vai para o seu lado da arena, rápido
   const left = m.side == "attacker";
-  const sx = W / 2 + (left ? -20 : 20);
-  const sy = H * 0.5;
-  steer(m, sx, sy, m.speed, dt);
+  const sx = arena.x + (left ? -17 : 17);
+  const sy = arena.y;
+  const far = Math.hypot(sx - m.x, sy - m.y);
+  if (t > T_DUEL + 1.0 && far > 3) {
+    // se ainda não chegou, termina de chegar (ninguém fica parado longe do círculo)
+    m.x += (sx - m.x) * Math.min(1, dt * 6);
+    m.y += (sy - m.y) * Math.min(1, dt * 6);
+    m.vx = 0;
+    m.vy = 0;
+  } else steer(m, sx, sy, m.speed * 2, dt);
   m.flip = foe.x < m.x;
-  const near = Math.hypot(foe.x - m.x, foe.y - m.y) < 60;
-  if (near && t >= m.nextHit) {
+  m.engaged = true;
+  if (t >= m.nextHit && t < T_ROUT - 0.3) {
     m.atkStart = t;
-    const final = m === d.a && t > T_ROUT - 0.9;
-    m.nextHit = t + 0.7 + sim.rand() * 0.25;
+    const final = m === d.a && t >= T_ROUT - 1.0;
+    m.nextHit = t + 0.6;
     if (final) {
-      hit(sim, m, foe, 2); // golpe final do campeão da Lâmina
-      foe.nextHit = T_ROUT + 5;
+      // golpe final: o campeão da Lâmina derruba o outro
+      foe.dieAt = t;
+      hit(sim, m, foe, 2);
       m.nextHit = T_ROUT + 5;
-    } else hit(sim, m, foe, 0.6, sim.rand() < 0.45); // golpes e defesas (faísca)
+      foe.nextHit = T_ROUT + 5;
+    } else {
+      // troca de golpes: muitos são defendidos (faísca), alguns acertam
+      hit(sim, m, foe, 0.5, sim.rand() < 0.55);
+    }
   }
   const p = (t - m.atkStart) / 0.4;
   m.atk = p >= 0 && p <= 1 ? (p < 0.4 ? p / 0.4 : 1 - (p - 0.4) / 0.6) : 0;
@@ -513,12 +541,16 @@ function pairUp(sim: Sim, lane: Lane): void {
       const dd = duelDist(a, d);
       a.foe = d;
       d.foe = a;
-      a.gx = sx - dd / 2;
+      // cada um fica do lado em que já está (quem vem da direita luta pela direita): ninguém cruza o outro
+      const o = a.x <= d.x ? -1 : 1;
+      a.gx = sx + (o * dd) / 2;
       a.gy = sy;
-      d.gx = sx + dd / 2;
+      d.gx = sx - (o * dd) / 2;
       d.gy = sy;
       a.spot = true;
       d.spot = true;
+      a.sdir = o;
+      d.sdir = -o;
     }
     const extra = A.length > D.length ? A.slice(pairs) : D.slice(pairs);
     extra.forEach((m, i) => joinFight(sim, m, i));
@@ -546,6 +578,12 @@ function joinFight(sim: Sim, m: Man, i = 0): void {
   }
   m.foe = best;
   m.spot = false; // sem lugar marcado: vai direto no inimigo
+  // luta do lado em que já está (não dá a volta no inimigo); se o outro lado do inimigo estiver livre e
+  // o lado dele estiver cheio, vai para o outro
+  const busySide = (d: number): number => sim.men.filter((x) => x !== m && x.foe === best && !x.dead && x.side == m.side && x.sdir == d).length;
+  let sd = m.x <= best.x ? -1 : 1;
+  if (busySide(sd) > busySide(-sd) + 1) sd = -sd;
+  m.sdir = sd;
   const crowd = sim.men.filter((x) => x.foe === best && x !== m && !x.dead && x.side == m.side).length;
   const gap = m.kind == "ship" ? 52 : 14;
   m.yoff = crowd == 0 ? 0 : (crowd % 2 ? gap : -gap) * Math.ceil(crowd / 2) + (i % 2 ? 1 : -1);
@@ -575,7 +613,8 @@ function steer(m: Man, x: number, y: number, maxSp: number, dt: number): void {
   const want = d < 0.8 ? 0 : Math.min(maxSp, d * 5); // freia ao chegar
   const tvx = d > 0 ? (dx / d) * want : 0;
   const tvy = d > 0 ? (dy / d) * want : 0;
-  const acc = m.kind == "horse" ? 3.2 : m.kind == "dragon" ? 2.5 : m.kind == "ship" ? 1.4 : 8;
+  // cavalo acelera devagar, mas lutando parado ele segura o lugar (senão passa direto pelo inimigo)
+  const acc = m.kind == "horse" ? (m.engaged ? 7 : 3.2) : m.kind == "dragon" ? 2.5 : m.kind == "ship" ? 1.4 : 8;
   const k = 1 - Math.exp(-dt * acc);
   m.vx += (tvx - m.vx) * k;
   m.vy += (tvy - m.vy) * k;
@@ -788,7 +827,9 @@ export function stepSim(sim: Sim, dt: number): void {
       }
     }
     const foe = m.foe;
-    const s = m.side == "attacker" ? -1 : 1; // atacante fica à esquerda do inimigo
+    // lado escolhido; se a luta empurrou um para o outro lado, ele passa a lutar dali (não dá a volta)
+    if (m.sdir != null && Math.abs(m.x - foe.x) > 10 && Math.sign(m.x - foe.x) != m.sdir) m.sdir = -m.sdir;
+    const s = m.sdir ?? (m.side == "attacker" ? -1 : 1);
     const dd = duelDist(m, foe);
     const near = Math.hypot(foe.x - m.x, foe.y - m.y) < dd + 26;
     // golpe: prepara (0,15 s), acerta, volta (0,25 s)
@@ -1216,7 +1257,7 @@ export function drawSim(ctx: CanvasRenderingContext2D, sim: Sim): void {
     ctx.lineWidth = 3;
     ctx.setLineDash([8, 6]);
     ctx.beginPath();
-    ctx.ellipse(W / 2, H * 0.5 + 4, 70, 26, 0, 0, Math.PI * 2);
+    ctx.ellipse(sim.duel.arena.x, sim.duel.arena.y + 4, 62, 24, 0, 0, Math.PI * 2);
     ctx.stroke();
     ctx.restore();
   }

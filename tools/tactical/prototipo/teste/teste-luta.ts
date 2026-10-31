@@ -16,6 +16,9 @@ const R = (): number => (seed = (seed * 16807) % 2147483647) / 2147483647;
 const pick = <T>(a: T[]): T => a[Math.floor(R() * a.length)];
 const out: string[] = [];
 let idleCases = 0;
+let crossings = 0; // alguém atravessou o próprio inimigo (deu a volta nele) para lutar do outro lado
+let crossBattles = 0;
+const dbg: string[] = [];
 for (let n = 0; n < 400; n++) {
   const field = pick(fields);
   const mk = (side: string, count: number): Squad[] =>
@@ -32,9 +35,27 @@ for (let n = 0; n < 400; n++) {
   let idleTime = 0;
   // olha de 4,2 s a 6,2 s: quem fica parado o tempo todo nesse intervalo
   const still = new Map<number, number>();
+  const lastSide = new Map<number, number>();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const lastFoe = new Map<number, any>();
+  let crossedHere = 0;
   const where = new Map<number, string>();
   while (sim.t < 6.2) {
     stepSim(sim, 0.02);
+    men.forEach((m, i) => {
+      if (m.dead || !m.foe || m.foe.dead || m.kind == "dragon" || m.kind == "ship") return;
+      if (Math.abs(m.y - m.foe.y) > 30) return;
+      const ddx = m.x - m.foe.x;
+      if (Math.abs(ddx) < 8) return; // perto demais para dizer de que lado está
+      const sd = Math.sign(ddx);
+      const prevSd = lastSide.get(i);
+      if (prevSd != null && sd != 0 && prevSd != 0 && sd != prevSd && lastFoe.get(i) === m.foe) {
+        crossedHere++;
+        if (dbg.length < 12) dbg.push(`#${n} t${sim.t.toFixed(1)} ${m.side[0]}${m.role}/${m.kind} vs ${m.foe.role} mutual=${m.foe.foe === m} eng=${m.engaged} spot=${m.spot} sdir=${m.sdir} foeSdir=${m.foe.sdir} dy=${Math.round(m.y - m.foe.y)}`);
+      }
+      lastSide.set(i, sd);
+      lastFoe.set(i, m.foe);
+    });
     if (sim.t < 4.2) continue;
     if (sim.duel && sim.t >= 4.9) continue; // duelo de campeões: os outros param para assistir (de propósito)
     men.forEach((m, i) => {
@@ -51,10 +72,12 @@ for (let n = 0; n < 400; n++) {
     });
   }
   still.forEach((v) => (idleTime = Math.max(idleTime, v)));
+  crossings += crossedHere;
+  if (crossedHere > 0) crossBattles++;
   if (idleTime > 1.0) {
     idleCases++;
     if (out.length < 10) out.push(`#${n} ${field} A=${A.map((s) => s.role[0] + s.lane).join(",")} D=${D.map((s) => s.role[0] + s.lane).join(",")} parado ${idleTime.toFixed(1)} s ${[...where.values()].slice(0, 3).join(" | ")}`);
   }
 }
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-(window as any).__RESULT__ = `batalhas 400, com soldado parado mais de 1 s: ${idleCases}\n` + out.join("\n");
+(window as any).__RESULT__ = `batalhas 400, com soldado parado mais de 1 s: ${idleCases}; atravessou o inimigo: ${crossings} vezes em ${crossBattles} batalhas\n` + out.join("\n") + "\n" + dbg.join("\n");
