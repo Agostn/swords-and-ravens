@@ -17,6 +17,7 @@ import { FIELD_LANES, FieldType, Role, Row, SquadKind, TACTIC_NAMES, TACTIC_WIN_
 import { rng } from "../solver";
 import { House, ROLE_NAMES, TERRAIN_NAMES } from "./data";
 import { BANNERS, SIGIL_H, bannerLetter, bannerSigil, styleOf } from "./houseStyle";
+import { dragonImage } from "./assets";
 import { DRAGON_SCALE, Kind, Pose, drawFallen, drawUnit, kindOf } from "./figures";
 import { H, LW, W, ease, roundRect, terrainImage } from "./render";
 import { WALL_Y, drawWalls } from "./walls";
@@ -82,6 +83,8 @@ interface Man {
   burnT?: number;
   /** morreu queimado: desenha o esqueleto carbonizado no lugar do corpo */
   charred?: boolean;
+  /** dragão: pousado no chão (ataque de patas) */
+  landed?: boolean;
   /** dragão: quando escolhe outro alvo */
   retarget?: number;
   /** está em cima da muralha (desenhado na frente dela) */
@@ -1293,16 +1296,16 @@ export function stepSim(sim: Sim, dt: number): void {
         }
       });
       // o fogo fica queimando no chão por uns segundos
-      for (let i = 0; i < 7; i++) {
+      for (let i = 0; i < 9; i++) {
         const a = r() * Math.PI * 2;
-        const d = Math.sqrt(r()) * 24;
-        sim.fires.push({ x: b.to.x + Math.cos(a) * d * 1.3, y: b.to.y + Math.sin(a) * d * 0.55, t0: t + r() * 0.2, life: 3 + r() * 2.5, r: 4.5 + r() * 3.5 });
+        const d = Math.sqrt(r()) * 26;
+        sim.fires.push({ x: b.to.x + Math.cos(a) * d * 1.3, y: b.to.y + Math.sin(a) * d * 0.55, t0: t + r() * 0.2, life: 4 + r() * 3, r: 7 + r() * 4 });
       }
       // perto da muralha: pega fogo nela também (no caminho de ronda e na pedra)
       const wl = Math.max(0, Math.min(2, Math.floor(b.to.x / LW))) as Lane;
       const wt = FIELD_LANES[sim.field][wl];
       if ((wt == "muralha" || wt == "portao") && Math.abs(b.to.y - WALL_Y) < 70) {
-        for (let i = 0; i < 6; i++) sim.fires.push({ x: b.to.x + (r() - 0.5) * 70, y: WALL_Y - 18 + r() * 30, t0: t + r() * 0.3, life: 3 + r() * 3, r: 4.5 + r() * 3.5 });
+        for (let i = 0; i < 6; i++) sim.fires.push({ x: b.to.x + (r() - 0.5) * 70, y: WALL_Y - 18 + r() * 30, t0: t + r() * 0.3, life: 4 + r() * 3, r: 7 + r() * 4 });
       }
       // chão queimado
       for (let i = 0; i < 40; i++) {
@@ -1450,6 +1453,7 @@ function stepDragon(sim: Sim, m: Man, dt: number): void {
     if (m.foe) m.lane = m.foe.lane;
   }
   if (rival && m.foe === rival) {
+    m.landed = false;
     const mx = (m.x + rival.x) / 2;
     const my = Math.max(90, Math.min(H - 120, (m.y + rival.y) / 2));
     const a = Math.atan2(m.y - my, m.x - mx) + 1.4 * dt + 0.05;
@@ -1471,8 +1475,44 @@ function stepDragon(sim: Sim, m: Man, dt: number): void {
     return;
   }
   const side = m.x <= tg.x ? -1 : 1;
-  const hx = Math.max(30, Math.min(W - 30, tg.x + side * 78));
-  const hy = tg.y - 62 + Math.sin(t * 2 + m.phase) * 4;
+  // 31/out: contra arqueiro e lanceiro (que alcançam um dragão no chão: flechas e lanças compridas) ele ataca
+  // VOANDO, com fogo; contra escudeiro e cavalaria (espada curta e cavalo não alcançam o alto) ele DESCE e bate no
+  // chão: pousa ao lado, empina e esmaga quem está em volta (poeira, tremida)
+  const ground = (tg.role == "escudeiro" || tg.role == "cavalaria" || tg.role == "batedores") && t > T_FIGHT - 1.2 && t < T_ROUT;
+  if (ground) {
+    const hx = Math.max(64, Math.min(W - 64, tg.x + side * 52));
+    const hy = tg.y + 2;
+    steer(m, hx, hy, m.speed, dt);
+    m.flip = tg.x < m.x;
+    const wasLanded = !!m.landed;
+    m.landed = Math.hypot(hx - m.x, hy - m.y) < 16;
+    if (m.landed && !wasLanded) {
+      // pousou: bate no chão
+      puff(sim, m.x, m.y, 14, 70, 6);
+      sim.shake = Math.max(sim.shake, 3);
+    }
+    if (m.landed && t > m.nextShot) {
+      m.shotAt = t;
+      m.nextShot = t + 1.3 + sim.rand() * 0.4;
+    }
+    // o golpe acerta no meio do movimento (quando as patas descem)
+    const q = (t - m.shotAt) / 0.6;
+    const pq = (t - dt - m.shotAt) / 0.6;
+    if (pq < 0.55 && q >= 0.55) {
+      sim.shake = Math.max(sim.shake, 6);
+      const cx = m.x + (m.flip ? -1 : 1) * 30;
+      puff(sim, cx, m.y, 18, 90, 6);
+      sim.men.forEach((o) => {
+        if (!o.dead && o.side != m.side && o.kind != "dragon" && !isStatic(o) && Math.hypot(o.x - cx, o.y - m.y) < 42) hit(sim, m, o, 2);
+      });
+    }
+    m.atk = q >= 0 && q < 1 ? q : 0;
+    return;
+  }
+  m.landed = false;
+  const hx = Math.max(64, Math.min(W - 64, tg.x + side * 78));
+  // não sai pelo alto da tela (alvo lá em cima: o dragão fica um pouco abaixo dele, ainda à vista)
+  const hy = Math.max(112, tg.y - 62) + Math.sin(t * 2 + m.phase) * 4;
   steer(m, hx, hy, m.speed, dt);
   m.flip = tg.x < m.x;
   const there = Math.hypot(hx - m.x, hy - m.y) < 18;
@@ -1487,7 +1527,8 @@ function stepDragon(sim: Sim, m: Man, dt: number): void {
 /** Ponto da boca do dragão (o sprite olha para a direita; FIG × 0,95 é a escala dele). */
 export function dragonMouth(x: number, y: number, flip: boolean, s: number): [number, number] {
   const k = s * DRAGON_SCALE;
-  return [x + 58 * (flip ? -1 : 1) * k, y + 1 * k];
+  // folha de sprites (31/out): a boca fica mais para trás e um pouco acima do que no dragão desenhado no código
+  return dragonImage() ? [x + 46 * (flip ? -1 : 1) * k, y - 4 * k] : [x + 58 * (flip ? -1 : 1) * k, y + 1 * k];
 }
 
 // ---------------------------------------------------------------- desenho
@@ -1503,6 +1544,15 @@ function drawFires(ctx: CanvasRenderingContext2D, sim: Sim, t: number, onWall: b
     const w = Math.max(2, Math.round(f.r * 1.4 * k));
     const x = Math.round(f.x);
     const y = Math.round(f.y);
+    // brilho em volta
+    ctx.save();
+    ctx.globalCompositeOperation = "lighter";
+    const gl = ctx.createRadialGradient(x, y - h * 0.4, 0, x, y - h * 0.4, f.r * 3);
+    gl.addColorStop(0, `rgba(255,140,40,${0.35 * k})`);
+    gl.addColorStop(1, "rgba(255,80,0,0)");
+    ctx.fillStyle = gl;
+    ctx.fillRect(x - f.r * 3, y - h * 0.4 - f.r * 3, f.r * 6, f.r * 6);
+    ctx.restore();
     ctx.fillStyle = `rgba(40,20,10,${0.35 * k})`;
     ctx.fillRect(x - w, y, w * 2, 2);
     ctx.fillStyle = "#b8261a";
@@ -1627,7 +1677,8 @@ function pose(m: Man, h: House, t: number): Pose {
     atkPhase: q >= 0 && q < 1 ? q : undefined,
     release: ranged(m.role) && t - m.shotAt < 0.14,
     moving,
-    guard: m.engaged
+    guard: m.engaged,
+    landed: m.landed
   };
 }
 
@@ -1701,7 +1752,6 @@ export function drawSim(ctx: CanvasRenderingContext2D, sim: Sim): void {
   ctx.drawImage(terrainImage(sim.field), 0, 0, W, H);
   // sangue no chão
   if (sim.floor && gore) ctx.drawImage(sim.floor, 0, 0, W, H);
-  drawFires(ctx, sim, t, false);
   ctx.imageSmoothingEnabled = true;
   const lanesT = FIELD_LANES[sim.field];
   const hasWall = lanesT.some((x) => x == "muralha" || x == "portao");
@@ -1763,7 +1813,8 @@ export function drawSim(ctx: CanvasRenderingContext2D, sim: Sim): void {
   ctx.globalAlpha = appear;
   for (const m of order) if (!behind(m)) drawMan(m);
   ctx.restore();
-  // fogo em cima da muralha fica na frente dela
+  // fogo: por cima de tudo (chão e muralha), com brilho, para dar para ver (31/out)
+  drawFires(ctx, sim, t, false);
   drawFires(ctx, sim, t, true);
   drawFlag(ctx, sim);
   // poeira (quadradinhos, no estilo pixel)

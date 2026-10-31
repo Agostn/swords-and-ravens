@@ -92,19 +92,29 @@ export const FIGURES: Record<SquadKind, number> = {
  *   ou "batedores" (cavalaria leve: vence o lanceiro, perde para o escudeiro).
  *   No mar: abordagem > aríete > flechas > abordagem.
  */
+/**
+ * Dragão (31/out, balanceado com tools/tactical/dragao.ts): quanto ele bate em cada tropa (DRG_OUT) e quanto
+ * cada tropa bate nele (DRG_IN). Arqueiro e lanceiro alcançam o dragão no ar (flechas, lança comprida);
+ * escudeiro e cavalaria pouco (por isso, na animação, contra eles o dragão desce e luta no chão).
+ */
+const G = globalThis as { __DOUT__?: number; __DIN__?: number };
+export const DRG_OUT: number = G.__DOUT__ ?? 1.5;
+const DIN = G.__DIN__ ?? 1;
+export const DRG_IN = { arqueiro: 1.3 * DIN, lanceiro: 1.05 * DIN, escudeiro: 0.75 * DIN, cavalaria: 0.75 * DIN };
+
 export const ADVANTAGE: Record<Role, Partial<Record<Role, number>>> = {
-  lanceiro: { cavalaria: 1.6, batedores: 0.8, arqueiro: 0.75, escudeiro: 1.3, lanceiro: 1.0, catapulta: 1.5, dragao: 0.7, torre: 0.6 },
-  escudeiro: { arqueiro: 1.5, cavalaria: 0.8, batedores: 1.25, lanceiro: 0.75, escudeiro: 1.0, catapulta: 1.5, dragao: 0.7, torre: 0.8 },
-  arqueiro: { lanceiro: 1.4, escudeiro: 0.6, cavalaria: 0.75, batedores: 1.0, arqueiro: 1.0, catapulta: 1.5, dragao: 1.1, torre: 0.6 },
-  cavalaria: { arqueiro: 1.8, escudeiro: 1.3, lanceiro: 0.6, cavalaria: 1.0, batedores: 1.2, catapulta: 2.0, dragao: 0.7, torre: 0.5 },
-  batedores: { lanceiro: 1.3, arqueiro: 1.0, escudeiro: 0.8, cavalaria: 0.85, batedores: 1.0, catapulta: 1.8, dragao: 0.7, torre: 0.5 },
+  lanceiro: { cavalaria: 1.6, batedores: 0.8, arqueiro: 0.75, escudeiro: 1.3, lanceiro: 1.0, catapulta: 1.5, dragao: DRG_IN.lanceiro, torre: 0.6 },
+  escudeiro: { arqueiro: 1.5, cavalaria: 0.8, batedores: 1.25, lanceiro: 0.75, escudeiro: 1.0, catapulta: 1.5, dragao: DRG_IN.escudeiro, torre: 0.8 },
+  arqueiro: { lanceiro: 1.4, escudeiro: 0.6, cavalaria: 0.75, batedores: 1.0, arqueiro: 1.0, catapulta: 1.5, dragao: DRG_IN.arqueiro, torre: 0.6 },
+  cavalaria: { arqueiro: 1.8, escudeiro: 1.3, lanceiro: 0.6, cavalaria: 1.0, batedores: 1.2, catapulta: 2.0, dragao: DRG_IN.cavalaria, torre: 0.5 },
+  batedores: { lanceiro: 1.3, arqueiro: 1.0, escudeiro: 0.8, cavalaria: 0.85, batedores: 1.0, catapulta: 1.8, dragao: DRG_IN.cavalaria, torre: 0.5 },
   catapulta: { lanceiro: 0.7, escudeiro: 0.7, arqueiro: 0.7, cavalaria: 0.5, batedores: 0.5, catapulta: 1.0, dragao: 0.3, torre: 1.5 },
-  dragao: { lanceiro: 1.5, escudeiro: 1.5, arqueiro: 1.3, cavalaria: 1.5, batedores: 1.5, catapulta: 1.5, dragao: 1.0, torre: 1.3 },
+  dragao: { lanceiro: DRG_OUT, escudeiro: DRG_OUT, arqueiro: DRG_OUT * 0.87, cavalaria: DRG_OUT, batedores: DRG_OUT, catapulta: DRG_OUT, dragao: 1.0, torre: DRG_OUT * 0.87 },
   torre: { lanceiro: 1.0, escudeiro: 0.7, arqueiro: 1.0, cavalaria: 1.0, batedores: 1.0, catapulta: 1.0, dragao: 1.0, torre: 1.0 },
   ariete: { flechas: 1.6, abordagem: 0.7, ariete: 1.0 },
   abordagem: { ariete: 1.6, flechas: 0.7, abordagem: 1.0 },
   // navio: no mar, pedra-papel-tesoura; em terra (apoio), atira como arqueiro
-  flechas: { abordagem: 1.6, ariete: 0.7, flechas: 1.0, lanceiro: 1.4, escudeiro: 0.6, arqueiro: 1.0, cavalaria: 0.75, batedores: 1.0, catapulta: 1.5, dragao: 1.1, torre: 0.6 }
+  flechas: { abordagem: 1.6, ariete: 0.7, flechas: 1.0, lanceiro: 1.4, escudeiro: 0.6, arqueiro: 1.0, cavalaria: 0.75, batedores: 1.0, catapulta: 1.5, dragao: DRG_IN.arqueiro, torre: 0.6 }
 };
 
 /**
@@ -212,8 +222,8 @@ export const SIEGE_OPEN_FACTOR = 0.5;
  * Dragão voa: além da sua faixa, ajuda as outras faixas com luta (31/out, pedido do Agostinho):
  * faixa ao lado 90% da força; a da outra ponta 80% (no meio, ele alcança as duas com 90%).
  */
-export const DRAGON_AIR_SHARE = 0.9;
-export const DRAGON_AIR_FAR_SHARE = 0.8;
+export const DRAGON_AIR_SHARE: number = (globalThis as { __DAIR__?: number }).__DAIR__ ?? 0.9;
+export const DRAGON_AIR_FAR_SHARE: number = (globalThis as { __DAIRF__?: number }).__DAIRF__ ?? 0.8;
 
 export const ARMY_MAX = 4;
 export const SUPPORT_MAX = 4;

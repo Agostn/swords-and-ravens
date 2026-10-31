@@ -25,7 +25,7 @@ import { H, PlacedToken, W, backBtnRect, drawPlacement, slots } from "./render";
 import { REACH_LABEL, Sim, T_END, createSim, drawSim, laneReasons, setGore, stepSim } from "./battle";
 import { SLIDES, drawSlide } from "./tutorial";
 import { drawSquad, drawUnit, kindOf } from "./figures";
-import { loadAssets } from "./assets";
+import { dragonImage, loadAssets } from "./assets";
 
 // ---------------------------------------------------------------- estado
 interface Config {
@@ -318,7 +318,8 @@ function canvasImg(key: string, w: number, hgt: number, draw: (ctx: CanvasRender
 function squadSvg(h: House, u: { kind: SquadKind; role: Role }): string {
   const k = kindOf(u.kind);
   // tela maior que o desenho: cavaleiro (cabeça e lança) e dragão (asas) não ficam cortados em cima (31/out)
-  const url = canvasImg(`sq|${h.name}|${u.kind}|${u.role}`, 84, 68, (ctx) => {
+  // o dragão usa a folha de sprites quando ela carrega: a chave muda para não ficar com o desenho antigo guardado
+  const url = canvasImg(`sq|${h.name}|${u.kind}|${u.role}|${u.kind == "dragon" && dragonImage() ? "folha" : "codigo"}`, 84, 68, (ctx) => {
     if (k == "dragon" || k == "ship") drawUnit(ctx, 42, 36, k == "dragon" ? 0.82 : 1, { role: u.role, kind: k, house: h, back: false, flip: false, walk: 0, atk: 0 });
     else drawSquad(ctx, 42, 56, u.kind, u.role, h, { scale: k == "horse" ? 0.8 : 0.92, back: false });
   });
@@ -1682,6 +1683,8 @@ function init(): void {
   // textura do chão: quando chegar, o campo é repintado (o tutorial aberto também)
   void loadAssets().then(() => {
     if (!$("tutorial").hidden) renderSlide();
+    // a folha do dragão chegou: repinta a faixa de peças (o cartão do dragão)
+    if (phase == "place" || phase == "react") renderPanel();
   });
   renderHome();
   document.querySelectorAll<HTMLButtonElement>("#mode-seg [data-mode]").forEach((b) =>

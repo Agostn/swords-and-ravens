@@ -7,6 +7,7 @@
  *    olho em brasa e cauda comprida que pende e enrola (como os dragões de ilustração medieval).
  * Desenha em vetor a 1 px = 1 pixel e passa por pixelSprite (cores em degraus + contorno).
  */
+import { dragonImage } from "./assets";
 import { Role } from "../../../agot-bg-game-server/src/common/tactical-battle/tacticalBattleData";
 import { House } from "./data";
 import { Sprite, pixelSprite } from "./sprites";
@@ -503,7 +504,24 @@ function drawDragonIdle(ctx: Ctx, frame: number): void {
 }
 
 /** Quadro do dragão no formato que o desenho usa (virado para a DIREITA, apoio em w/2, h·0,62). */
-export function dragonFrame(row: "idle" | "flight" | "special", i: number): { img: HTMLCanvasElement; sx: number; sy: number; w: number; h: number } {
+/** Folha de sprites do dragão (arte/dragao.png): 6 colunas × 3 linhas (pousado, voando, cuspindo fogo), 103 × 110. */
+const DCW = 103;
+const DCH = 110;
+
+/**
+ * Quadro do dragão, virado para a DIREITA. Usa a folha de sprites (animação mais fluida, 31/out); se a imagem
+ * não carregou, usa o dragão desenhado no código.
+ */
+export function dragonFrame(row: "idle" | "flight" | "special", i: number): { img: CanvasImageSource; sx: number; sy: number; w: number; h: number } {
+  const sheet = dragonImage();
+  if (sheet) {
+    const r = row == "idle" ? 0 : row == "flight" ? 1 : 2;
+    return { img: sheet, sx: (i % 6) * DCW, sy: r * DCH, w: DCW, h: DCH };
+  }
+  return pixelDragonFrame(row, i);
+}
+
+function pixelDragonFrame(row: "idle" | "flight" | "special", i: number): { img: HTMLCanvasElement; sx: number; sy: number; w: number; h: number } {
   const sp = row == "idle" ? dragonSprite("idle", i % 4) : row == "special" ? dragonSprite("breath", 0) : dragonSprite("fly", i % 6);
   return { img: sp.c, sx: 0, sy: 0, w: sp.c.width, h: sp.c.height };
 }

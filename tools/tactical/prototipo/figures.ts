@@ -27,6 +27,8 @@ export interface Pose {
   fight?: boolean;
   /** variação (cor do cavalo, etc.) */
   seed?: number;
+  /** dragão pousado no chão */
+  landed?: boolean;
   /** tempo (bandeira, asas) */
   time?: number;
   /** acabou de levar golpe: pisca branco (0..1) */
@@ -1052,10 +1054,29 @@ export const DRAGON_SCALE = 1.15;
 
 function drawDragonSprite(ctx: CanvasRenderingContext2D, x: number, y: number, s: number, p: Pose, faceRight: boolean): boolean {
   const t = p.time ?? 0;
+  const k = s * DRAGON_SCALE;
+  // pousado (ataque no chão, 31/out): agachado; no golpe empina (asas para cima) e desce as patas
+  if (p.landed) {
+    const q = p.atk;
+    const fr = q > 0.02 && q < 0.75 ? dragonFrame("flight", q < 0.3 ? 4 : q < 0.55 ? 5 : 3) : dragonFrame("idle", Math.floor(t * 6) % 6);
+    const rear = q > 0.02 && q < 0.55 ? Math.sin((q / 0.55) * Math.PI) * 10 * k : 0;
+    ctx.save();
+    ctx.fillStyle = "rgba(0,0,0,.34)";
+    ctx.beginPath();
+    ctx.ellipse(x, y + 1 * k, 42 * k, 7 * k, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.imageSmoothingEnabled = false;
+    ctx.translate(x, y - rear);
+    ctx.scale(faceRight ? k : -k, k);
+    // a folha tem o dragão pousado no alto do quadro (≈ 46 px de altura): os pés ficam na linha y
+    const idle = !(q > 0.02 && q < 0.75);
+    ctx.drawImage(fr.img, fr.sx, fr.sy, fr.w, fr.h, -fr.w / 2, idle ? -fr.h * 0.42 : -fr.h * 0.8, fr.w, fr.h);
+    ctx.restore();
+    return true;
+  }
   // cuspindo fogo: segura as asas abertas (o fogo é desenhado pela luta, da boca até o alvo)
   const flying = p.walk != 0 || p.fight !== false;
-  const fr = p.atk > 0.05 ? dragonFrame("special", 0) : !flying ? dragonFrame("idle", Math.floor(t * 3) % 4) : dragonFrame("flight", Math.floor(t * 9) % 6);
-  const k = s * DRAGON_SCALE;
+  const fr = p.atk > 0.05 ? dragonFrame("special", 0) : !flying ? dragonFrame("idle", Math.floor(t * 4) % 6) : dragonFrame("flight", Math.floor(t * 9) % 6);
   ctx.save();
   // sombra no chão: voando fica longe e clara; pousado, embaixo das patas
   ctx.fillStyle = flying ? "rgba(0,0,0,.2)" : "rgba(0,0,0,.32)";
@@ -1164,7 +1185,8 @@ export function drawFallen(ctx: CanvasRenderingContext2D, x: number, y: number, 
     ctx.rotate((p.flip ? -1 : 1) * (fall < 1 ? fall * 1.1 : 0.12));
     ctx.scale(p.flip ? -k : k, k);
     const img = fall < 1 ? null : darkDragon(fr.img, fr.sx, fr.sy, fr.w, fr.h);
-    if (img) ctx.drawImage(img, -fr.w / 2, -fr.h * 0.62);
+    // caído no chão: a folha tem o dragão pousado no alto do quadro (pés na linha do chão com −0,42)
+    if (img) ctx.drawImage(img, -fr.w / 2, -fr.h * 0.42);
     else ctx.drawImage(fr.img, fr.sx, fr.sy, fr.w, fr.h, -fr.w / 2, -fr.h * 0.62, fr.w, fr.h);
     ctx.restore();
     return;
