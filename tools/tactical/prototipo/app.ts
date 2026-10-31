@@ -1313,6 +1313,12 @@ function boardBattle(res: TacticalBattleResult, seed: number): BoardBattle {
 }
 
 /** frase curta do resultado final, para o fim da animação */
+/** venceu todas as faixas onde houve luta (o bônus agora cresce com o exército, então não dá para saber pelo número) */
+function wonAll(res: TacticalBattleResult): boolean {
+  const fought = res.lanes.filter((l) => l.winner != null);
+  return fought.length >= 2 && fought.every((l) => l.winner == res.winner);
+}
+
 function boardLine(b: BoardBattle): string {
   const Lz = houseOf(other(b.winner)).name;
   const n = b.deadPieces.length;
@@ -1531,7 +1537,7 @@ function showResult(): void {
   const bw = lastBoard?.winner ?? res.winner;
   const verdict = bw ? (human ? (bw == human ? "Você venceu a batalha!" : "Você perdeu a batalha") : `${houseOf(bw).name} venceu a batalha`) : "Empate";
   const bonus = res.winner
-    ? `<b>1. A luta nas faixas:</b> ${houseOf(res.winner).name} ${res.duel ? "venceu o duelo de campeões" : res.bonus >= 2 ? "venceu todas as faixas" : "venceu mais faixas"} → ganha <span class="bonus" style="background:${houseOf(res.winner).color};color:${houseOf(res.winner).ink}">+${res.bonus}</span> de bônus da batalha.`
+    ? `<b>1. A luta nas faixas:</b> ${houseOf(res.winner).name} ${res.duel ? "venceu o duelo de campeões" : res.metInCenter ? "venceu a luta no centro" : wonAll(res) ? "venceu todas as faixas" : "venceu mais faixas"} → ganha <span class="bonus" style="background:${houseOf(res.winner).color};color:${houseOf(res.winner).ink}">+${res.bonus}</span> de bônus da batalha.`
     : "<b>1. A luta nas faixas:</b> empate, ninguém ganha bônus da batalha.";
   const lanesHtml = res.lanes
     .map((L, i) => {
