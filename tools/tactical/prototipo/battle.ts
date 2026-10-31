@@ -223,12 +223,16 @@ function duelDist(a: Man, b: Man): number {
 /**
  * Resultado da batalha do TABULEIRO (regras do jogo original): quem perdeu e quais peças dele
  * morreram (espadas do vencedor − torres do perdedor). A animação segue isso:
- * peça destruída = o grupo inteiro de bonecos morre; peça que sobrevive perde 1 ou 2 bonecos
+ * A batalha do tabuleiro é o ÚLTIMO cálculo e acontece ANTES da animação (31/out): a animação já sabe tudo.
+ * Peça destruída = o grupo inteiro de bonecos morre; peça que sobrevive perde até metade (+1) dos bonecos
  * (só visual) e o resto foge; o vencedor não perde peça. Dragão (1 figura) só morre se for destruído.
  */
 export interface BoardOutcome {
   loser: Side;
   destroyed: string[];
+  /** resultado final (o do tabuleiro), mostrado no fim da animação */
+  winner?: Side;
+  line?: string;
 }
 
 export function createSim(field: FieldType, res: TacticalBattleResult, squads: Record<Side, Squad[]>, houses: Record<Side, House>, seed: number, outcome?: BoardOutcome): Sim {
@@ -1443,28 +1447,62 @@ export function drawSim(ctx: CanvasRenderingContext2D, sim: Sim): void {
     ctx.fillText(`${sub} (${h.name})`, W / 2, y + 17, tw - 20);
     ctx.restore();
   }
+  if (t > T_ROUT + 0.2 && sim.outcome?.winner) {
+    // o resultado de TUDO (batalha do tabuleiro, já calculada antes da animação)
+    const o = sim.outcome;
+    const h = sim.houses[o.winner as Side];
+    const a = ease((t - T_ROUT - 0.2) / 0.6);
+    const title = `${h.name.toUpperCase()} VENCE A BATALHA`;
+    ctx.save();
+    ctx.globalAlpha = a;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.font = "700 17px 'Alegreya Sans', 'Trebuchet MS', sans-serif";
+    const subW = o.line ? ctx.measureText(o.line).width : 0;
+    ctx.font = "800 27px 'Alegreya Sans', 'Trebuchet MS', sans-serif";
+    const tw = Math.min(W - 16, Math.max(ctx.measureText(title).width, subW) + 44);
+    const y = H / 2;
+    ctx.fillStyle = "rgba(0,0,0,.4)";
+    roundRect(ctx, W / 2 - tw / 2 + 3, y - 33, tw, o.line ? 70 : 52, 10);
+    ctx.fill();
+    ctx.fillStyle = h.color;
+    roundRect(ctx, W / 2 - tw / 2, y - 36, tw, o.line ? 70 : 52, 10);
+    ctx.fill();
+    ctx.fillStyle = h.ink;
+    ctx.fillText(title, W / 2, o.line ? y - 13 : y - 10, tw - 20);
+    if (o.line) {
+      ctx.font = "700 17px 'Alegreya Sans', 'Trebuchet MS', sans-serif";
+      ctx.fillText(o.line, W / 2, y + 16, tw - 20);
+    }
+    ctx.restore();
+  }
   if (t > T_ROUT + 0.2) {
     sim.res.lanes.forEach((L, i) => {
       if (L.winner == null) return;
+      // com o resultado final na tela, as faixas viram etiquetas pequenas em cima
+      const small = !!sim.outcome?.winner;
       const a = ease((t - T_ROUT - 0.2) / 0.6);
       ctx.save();
       ctx.globalAlpha = a;
       const label = L.winner == "tie" ? "EMPATE" : sim.houses[L.winner].name.toUpperCase();
       const bg = L.winner == "tie" ? "#2a2722" : sim.houses[L.winner].color;
       const ink = L.winner == "tie" ? "#f1e7d0" : sim.houses[L.winner].ink;
-      ctx.font = "800 24px 'Alegreya Sans', 'Trebuchet MS', sans-serif";
+      ctx.font = small ? "800 15px 'Alegreya Sans', 'Trebuchet MS', sans-serif" : "800 24px 'Alegreya Sans', 'Trebuchet MS', sans-serif";
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
-      const tw = Math.min(LW - 8, ctx.measureText(label).width + 30);
+      const txt = small ? `faixa: ${label.toLowerCase()}` : label;
+      const bh = small ? 26 : 40;
+      const tw = Math.min(LW - 8, ctx.measureText(txt).width + (small ? 18 : 30));
       const cx = i * LW + LW / 2;
+      const cy = small ? H * 0.34 : H / 2;
       ctx.fillStyle = "rgba(0,0,0,.35)";
-      roundRect(ctx, cx - tw / 2 + 3, H / 2 - 17, tw, 40, 6);
+      roundRect(ctx, cx - tw / 2 + 3, cy - bh / 2 + 3, tw, bh, 6);
       ctx.fill();
       ctx.fillStyle = bg;
-      roundRect(ctx, cx - tw / 2, H / 2 - 20, tw, 40, 6);
+      roundRect(ctx, cx - tw / 2, cy - bh / 2, tw, bh, 6);
       ctx.fill();
       ctx.fillStyle = ink;
-      ctx.fillText(label, cx, H / 2, LW - 20);
+      ctx.fillText(txt, cx, cy, LW - 20);
       ctx.restore();
     });
   }

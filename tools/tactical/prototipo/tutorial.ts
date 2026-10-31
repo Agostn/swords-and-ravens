@@ -185,7 +185,7 @@ export const SLIDES: Slide[] = [
   },
   {
     title: "5. Quem vence cada faixa",
-    text: "Só conta a faixa onde os dois lados têm peças: lá a conta compara quem rende mais (função, terreno, frente/trás, carta e ordem). Quem ficou sozinho numa faixa vai ajudar onde tem luta: a vizinha com 30% da força dele; se a luta for na outra ponta, chega cansado e ajuda com 15%. Ninguém fica inútil. Quem vence uma faixa também ajuda as vizinhas (+20%).",
+    text: "Só conta a faixa onde os dois lados têm peças: lá a conta compara quem rende mais (função, terreno, frente/trás e ordem; a carta de Casa não entra aqui). Quem ficou sozinho numa faixa vai ajudar onde tem luta: a vizinha com 30% da força dele; se a luta for na outra ponta, chega cansado e ajuda com 15%. Ninguém fica inútil. Quem vence uma faixa também ajuda as vizinhas (+20%).",
     draw: (ctx) => {
       ground(ctx, "planicie", H * 0.32);
       ctx.strokeStyle = "rgba(25,18,10,.6)";

@@ -288,3 +288,9 @@ o outro vai fazer, mas o que mais conta é escolher a ordem que combina com as S
   (`BONUS_STRENGTH_STEP = 4`). Vencendo todas as faixas, +1 a mais. Exemplos: 2 contra 2 → +1; 4 contra 5 → +2;
   8 contra 9 → +3. Assim, no fim do jogo, com exércitos grandes, o bônus não fica pequeno demais. O Duelo de
   campeões dá o mesmo bônus base.
+- **Ordem dos cálculos (31/out):** 1) luta nas faixas (sem cartas) → bônus da batalha; 2) batalha do tabuleiro
+  (tropas + carta + ordem + bônus) → quem vence; 3) espadas ⚔ do vencedor − torres ▲ do perdedor → quais peças
+  morrem. Só DEPOIS disso a animação toca, então ela já mostra o resultado de tudo. Das cartas, na animação só
+  importam as espadas e as torres (quem morre). Um esquadrão só morre inteiro na animação se a peça morreu no
+  tabuleiro; os outros perdem bonecos, mas sempre sobra pelo menos 1. No fim aparece "X VENCE A BATALHA" com quantas
+  peças morreram, e o resultado de cada faixa fica numa etiqueta pequena.

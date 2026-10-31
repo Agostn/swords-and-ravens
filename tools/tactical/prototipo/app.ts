@@ -1178,6 +1178,13 @@ function boardBattle(res: TacticalBattleResult, seed: number): BoardBattle {
   return { totals, winner, tie, swords, towers, casualties, destroyed };
 }
 
+/** frase curta do resultado final, para o fim da animação */
+function boardLine(b: BoardBattle): string {
+  const Lz = houseOf(other(b.winner)).name;
+  const n = b.destroyed.length;
+  return n == 0 ? `Ninguém morre (${b.swords == 0 ? "carta sem espada ⚔" : "as torres ▲ protegem"}) · ${Lz} recua` : `${n == 1 ? "Morre 1 peça" : `Morrem ${n} peças`} de ${Lz} · o resto recua`;
+}
+
 function boardHtml(b: BoardBattle): string {
   const row = (side: Side): string => {
     const t = b.totals[side];
@@ -1232,7 +1239,7 @@ function newSim(): void {
     { attacker: toSquads(units.attacker), defender: toSquads(units.defender) },
     { attacker: houseOf("attacker"), defender: houseOf("defender") },
     simSeed,
-    lastBoard ? { loser: other(lastBoard.winner), destroyed: lastBoard.destroyed } : undefined
+    lastBoard ? { loser: other(lastBoard.winner), destroyed: lastBoard.destroyed, winner: lastBoard.winner, line: boardLine(lastBoard) } : undefined
   );
   if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) {
     while (sim.t < T_END) stepSim(sim, 0.05);
