@@ -344,11 +344,15 @@ export interface PlaceView {
   dragging: string | null;
   showHint: boolean;
   /** quanto a peça escolhida rende em cada casinha (só pelo lugar) */
-  preview?: { lane: Lane; row: Row; pct: number; best: boolean }[] | null;
+  preview?: { lane: Lane; row: Row; pct: number; best: boolean; force: number; base: number }[] | null;
   /** legenda dos números, ex.: "Peça 2 · Lanceiro" */
   previewLabel?: string;
   /** cor da bandeira das torres (de quem defende) */
   wallFlag?: string;
+  /** sua força em cada faixa se a luta for lá (quem está nela + ajuda de longe) */
+  laneForce?: { total: number; here: number; help: number }[];
+  /** força total do inimigo (as peças dele estão no tabuleiro, todo mundo sabe) */
+  enemyForce?: number;
 }
 
 // ---------------------------------------------------------------- névoa (pixel art)
@@ -403,7 +407,48 @@ function fogLayer(seed: number, light: [number, number, number], dark: [number, 
   return c;
 }
 
-function drawFog(ctx: CanvasRenderingContext2D, t: number, enemy: House, count: number): void {
+const num = (x: number): string => x.toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+
+/** No lado do inimigo: "se a luta for aqui, sua força: X" em cada faixa. */
+function drawLaneForce(ctx: CanvasRenderingContext2D, v: PlaceView): void {
+  const lf = v.laneForce as { total: number; here: number; help: number }[];
+  const max = Math.max(v.enemyForce ?? 0, ...lf.map((x) => x.total), 1);
+  lf.forEach((f, i) => {
+    if (FIELD_LANES[v.field][i] == "bloqueado") return;
+    const cx = i * LW + LW / 2;
+    const y = H * 0.25;
+    const w = LW - 22;
+    ctx.fillStyle = "rgba(14,11,8,.78)";
+    roundRect(ctx, cx - w / 2, y - 26, w, 74, 10);
+    ctx.fill();
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillStyle = "#bba98a";
+    ctx.font = "700 12.5px 'Alegreya Sans', 'Trebuchet MS', sans-serif";
+    ctx.fillText("se a luta for aqui", cx, y - 13);
+    ctx.fillStyle = f.total > 0 ? v.house.color : "#6f6658";
+    ctx.font = "800 26px 'Alegreya Sans', 'Trebuchet MS', sans-serif";
+    ctx.fillText(f.total > 0 ? num(f.total) : "0", cx, y + 9);
+    // barra: sua força aqui × força total do inimigo
+    const bw = w - 20;
+    const bx = cx - bw / 2;
+    ctx.fillStyle = "rgba(255,255,255,.12)";
+    ctx.fillRect(bx, y + 26, bw, 6);
+    ctx.fillStyle = v.house.color;
+    ctx.fillRect(bx, y + 26, (bw * f.here) / max, 6);
+    ctx.fillStyle = "rgba(255,255,255,.45)";
+    ctx.fillRect(bx + (bw * f.here) / max, y + 26, (bw * f.help) / max, 6);
+    if (v.enemyForce) {
+      ctx.fillStyle = v.enemy.color;
+      ctx.fillRect(bx + (bw * v.enemyForce) / max - 1, y + 23, 2, 12);
+    }
+    ctx.fillStyle = "#bba98a";
+    ctx.font = "600 11px 'Alegreya Sans', 'Trebuchet MS', sans-serif";
+    ctx.fillText(f.help > 0.05 ? `${num(f.here)} aqui + ${num(f.help)} de ajuda` : f.here > 0 ? "só quem está aqui" : "ninguém seu perto", cx, y + 41);
+  });
+}
+
+function drawFog(ctx: CanvasRenderingContext2D, t: number, enemy: House, count: number, force?: number): void {
   if (!fogLayers.length) {
     fogLayers.push(fogLayer(11, [150, 160, 172], [88, 98, 110], 0.75));
     fogLayers.push(fogLayer(29, [205, 212, 220], [130, 140, 152], 0.55));
@@ -429,7 +474,7 @@ function drawFog(ctx: CanvasRenderingContext2D, t: number, enemy: House, count: 
   // estandarte do inimigo
   const cx = W / 2;
   const top = H * 0.08;
-  const bw = 150;
+  const bw = 210;
   const bh = 72;
   ctx.fillStyle = "#3a2a18";
   ctx.fillRect(cx - bw / 2 - 10, top - 6, bw + 20, 6);
@@ -459,7 +504,7 @@ function drawFog(ctx: CanvasRenderingContext2D, t: number, enemy: House, count: 
   ctx.font = "24px 'IM Fell English SC', Georgia, serif";
   ctx.fillText(enemy.name, cx, top + 24);
   ctx.font = "800 13px 'Alegreya Sans', 'Trebuchet MS', sans-serif";
-  ctx.fillText(`${count} ${count == 1 ? "peça escondida" : "peças escondidas"}`, cx, top + 46);
+  ctx.fillText(`${count} ${count == 1 ? "peça escondida" : "peças escondidas"}${force ? ` · força ${num(force)}` : ""}`, cx, top + 46);
 }
 
 export function drawPlacement(ctx: CanvasRenderingContext2D, v: PlaceView, t: number): PlacedToken[] {
@@ -468,7 +513,8 @@ export function drawPlacement(ctx: CanvasRenderingContext2D, v: PlaceView, t: nu
   ctx.drawImage(terrainImage(v.field), 0, 0, W, H);
   ctx.imageSmoothingEnabled = true;
   const lanesT = FIELD_LANES[v.field];
-  drawFog(ctx, t, v.enemy, v.enemyCount);
+  drawFog(ctx, t, v.enemy, v.enemyCount, v.enemyForce);
+  if (v.laneForce) drawLaneForce(ctx, v);
   // a muralha é do terreno (todo mundo sabe onde ela está): fica por cima da névoa
   drawWalls(ctx, v.field, [false, false, false], v.wallFlag ?? v.enemy.color);
   drawWallBadges(ctx, v.field);
@@ -505,7 +551,7 @@ export function drawPlacement(ctx: CanvasRenderingContext2D, v: PlaceView, t: nu
     // quanto a peça escolhida rende aqui
     const pv = v.preview?.find((x) => x.lane == s.lane && x.row == s.row);
     if (pv) {
-      const txt = pv.pct == 0 ? "força normal" : `força ${pv.pct > 0 ? "+" : "−"}${Math.abs(pv.pct)}%`;
+      const txt = `força ${num(pv.force)}`;
       ctx.font = "800 15px 'Alegreya Sans', 'Trebuchet MS', sans-serif";
       const tw = ctx.measureText(txt).width + 18;
       const bx = s.x + s.w - tw - 6;

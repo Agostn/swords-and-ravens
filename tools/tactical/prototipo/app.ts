@@ -3,8 +3,8 @@
  * Usa a MESMA conta do jogo (src/common/tactical-battle) e o mesmo "computador" do teste de equilíbrio.
  * Gerar a página: node tools/tactical/prototipo/build.js
  */
-import { resolveTacticalBattle, Squad, Lane, Side, TacticalBattleResult, LaneFactor } from "../../../agot-bg-game-server/src/common/tactical-battle/tacticalBattle";
-import { FIELD_LANES, FieldType, ROW_FACTOR, Role, Row, SquadKind, TERRAIN, rolesFor } from "../../../agot-bg-game-server/src/common/tactical-battle/tacticalBattleData";
+import { boardStrength, resolveTacticalBattle, Squad, Lane, Side, TacticalBattleResult, LaneFactor } from "../../../agot-bg-game-server/src/common/tactical-battle/tacticalBattle";
+import { BASE_VALUE, FAR_FLANK_SHARE, FIELD_LANES, FieldType, ROW_FACTOR, Role, Row, SUPPORT_FACTOR, SquadKind, TERRAIN, UNOPPOSED_FLANK_SHARE, rolesFor } from "../../../agot-bg-game-server/src/common/tactical-battle/tacticalBattleData";
 import { computerStrategy, Piece, Scenario } from "../solver";
 import {
   EMPTY_SIDE,
@@ -296,13 +296,48 @@ function slotBonus(u: Unit, lane: Lane, row: Row, side: Side): { pct: number; wh
   return { pct: Math.round((f - 1) * 100), why };
 }
 
-function previewFor(u: Unit | null): { lane: Lane; row: Row; pct: number; best: boolean }[] | null {
+/** Força de uma peça sem lugar (soldado 3, cavaleiro 6, apoio 80%, cerco só contra castelo). */
+function baseValue(u: Unit, side: Side): number {
+  const sq: Squad = { id: u.id, kind: u.kind, role: u.role, lane: 1, row: u.row, strength: u.strength, support: u.support };
+  return BASE_VALUE[u.kind] * boardStrength(sq, side, config.field) * (u.support ? SUPPORT_FACTOR : 1);
+}
+
+/** Força da peça numa casinha: força dela × terreno × frente/trás × atacar/defender. */
+function forceAt(u: Unit, lane: Lane, row: Row, side: Side): number {
+  return baseValue(u, side) * (1 + slotBonus(u, lane, row, side).pct / 100);
+}
+
+const fmt = (x: number): string => x.toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+
+function previewFor(u: Unit | null): { lane: Lane; row: Row; pct: number; best: boolean; force: number; base: number }[] | null {
   if (!u || u.locked) return null;
-  const list = slots(config.field).map((s) => ({ lane: s.lane, row: s.row, pct: slotBonus(u, s.lane, s.row, placingSide).pct, best: false }));
+  const base = baseValue(u, placingSide);
+  const list = slots(config.field).map((s) => ({ lane: s.lane, row: s.row, pct: slotBonus(u, s.lane, s.row, placingSide).pct, best: false, force: forceAt(u, s.lane, s.row, placingSide), base }));
   const max = Math.max(...list.map((x) => x.pct));
   list.forEach((x) => (x.best = x.pct == max && max > -100));
   return list;
 }
+
+/**
+ * "Se a luta for aqui": a sua força em cada faixa, se o inimigo vier todo para ela.
+ * Conta quem está na faixa (100%) e a ajuda de quem está longe: vizinha 30%, outra ponta 15%.
+ */
+function laneForces(side: Side): { total: number; here: number; help: number }[] {
+  const share = [1, UNOPPOSED_FLANK_SHARE, FAR_FLANK_SHARE];
+  return ([0, 1, 2] as Lane[]).map((L) => {
+    let here = 0;
+    let help = 0;
+    for (const u of units[side]) {
+      if (u.lane == null) continue;
+      const f = forceAt(u, u.lane, u.row, side) * share[Math.abs(u.lane - L)];
+      if (u.lane == L) here += f;
+      else help += f;
+    }
+    return { total: here + help, here, help };
+  });
+}
+
+const totalForce = (side: Side): number => units[side].reduce((a, u) => a + baseValue(u, side), 0);
 
 const listPt = (xs: Role[]): string => xs.map((x) => ROLE_NAMES[x].toLowerCase()).join(xs.length > 1 ? " e " : "");
 
@@ -563,7 +598,7 @@ function renderPanel(): void {
   const here = sel && sel.lane != null ? slotBonus(sel, sel.lane, sel.row, placingSide) : null;
   const say = sel
     ? `<p class="role-say">${bt ? `<span class="ok">✓ vence ${listPt(bt.vence)}</span> <span class="no">✗ perde p/ ${listPt(bt.teme)}</span>` : `<b>${ROLE_NAMES[sel.role]}</b>`}<br><span class="rng">${REACH_LABEL[sel.role]}</span> · ${
-        here ? `<span class="here">aqui: força ${here.pct == 0 ? "normal" : `${here.pct > 0 ? "+" : "−"}${Math.abs(here.pct)}%`}${here.why.length ? ` (${here.why.join(", ")})` : ""}</span>` : `<span class="here">% = força ali</span>`
+        here ? `<span class="here">aqui: força ${fmt(forceAt(sel, sel.lane as Lane, sel.row, placingSide))} de ${fmt(baseValue(sel, placingSide))}${here.why.length ? ` (${here.why.join(", ")})` : ""}</span>` : `<span class="here">força normal ${fmt(baseValue(sel, placingSide))}</span>`
       }</p>`
     : "";
   const editor = sel
@@ -897,6 +932,8 @@ function startLoop(): void {
         showHint: !!selected,
         preview: previewFor(units[placingSide].find((u) => u.id == selected) ?? null),
         wallFlag: houseOf("defender").color,
+        laneForce: laneForces(placingSide),
+        enemyForce: totalForce(other(placingSide)),
         previewLabel: (() => {
           const i = units[placingSide].findIndex((u) => u.id == selected);
           return i >= 0 ? `Peça ${i + 1} · ${ROLE_NAMES[units[placingSide][i].role]}` : undefined;
