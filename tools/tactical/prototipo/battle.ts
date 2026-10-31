@@ -17,7 +17,8 @@ import { FIELD_LANES, FieldType, Role, Row, SquadKind } from "../../../agot-bg-g
 import { rng } from "../solver";
 import { House, ROLE_NAMES, TERRAIN_NAMES } from "./data";
 import { DRAGON_SCALE, Kind, Pose, drawFallen, drawUnit, kindOf } from "./figures";
-import { H, LW, W, drawWall, ease, roundRect, terrainImage } from "./render";
+import { H, LW, W, ease, roundRect, terrainImage } from "./render";
+import { drawWalls } from "./walls";
 
 export const T_END = 10;
 const T_FIGHT = 3.2; // começam as baixas
@@ -971,9 +972,7 @@ export function drawSim(ctx: CanvasRenderingContext2D, sim: Sim): void {
   if (sim.floor && gore) ctx.drawImage(sim.floor, 0, 0, W, H);
   ctx.imageSmoothingEnabled = true;
   const lanesT = FIELD_LANES[sim.field];
-  lanesT.forEach((tt, i) => {
-    if (tt == "muralha" || tt == "portao") drawWall(ctx, i, tt == "portao", sim.breach[i] && t > T_FIGHT + 0.2);
-  });
+  drawWalls(ctx, sim.field, sim.breach.map((b) => b && t > T_FIGHT + 0.2), sim.houses.defender.color);
   const tag = (text: string, cx: number, y: number, bg: string, ink: string): void => {
     ctx.font = "700 16px 'Alegreya Sans', 'Trebuchet MS', sans-serif";
     ctx.textAlign = "center";

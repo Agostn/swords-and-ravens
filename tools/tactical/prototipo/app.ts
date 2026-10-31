@@ -896,6 +896,7 @@ function startLoop(): void {
         dragging: dragging?.moved ? dragging.id : null,
         showHint: !!selected,
         preview: previewFor(units[placingSide].find((u) => u.id == selected) ?? null),
+        wallFlag: houseOf("defender").color,
         previewLabel: (() => {
           const i = units[placingSide].findIndex((u) => u.id == selected);
           return i >= 0 ? `Peça ${i + 1} · ${ROLE_NAMES[units[placingSide][i].role]}` : undefined;

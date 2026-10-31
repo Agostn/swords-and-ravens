@@ -5,6 +5,7 @@ import { rng } from "../solver";
 import { House, TERRAIN_NAMES } from "./data";
 import { grassImage } from "./assets";
 import { drawSquad, kindOf } from "./figures";
+import { drawWallBadges, drawWallLane, drawWalls, paintCastleGround } from "./walls";
 
 export const W = 600;
 export const H = 780;
@@ -94,10 +95,14 @@ function paintLane(ctx: CanvasRenderingContext2D, x: number, w: number, t: Terra
       const ty = r() * H;
       if (Math.abs(ty - H / 2) < 46) continue;
       const rad = 11 + r() * 12;
-      blob(tx + 4, ty + 5, rad, "rgba(10,20,8,.35)");
-      blob(tx, ty, rad, "#2f4a25");
-      blob(tx - rad * 0.25, ty - rad * 0.3, rad * 0.62, "#456a35");
-      blob(tx - rad * 0.4, ty - rad * 0.45, rad * 0.25, "rgba(160,200,120,.35)");
+      // árvore vista de cima: sombra, contorno escuro, copa em 3 tons e brilho
+      blob(tx + 5, ty + 6, rad + 1, "rgba(8,16,6,.42)");
+      blob(tx, ty, rad + 1, "#1b2d14");
+      blob(tx, ty, rad, "#2c4623");
+      blob(tx - rad * 0.2, ty - rad * 0.25, rad * 0.72, "#3b5c2c");
+      blob(tx + rad * 0.35, ty - rad * 0.05, rad * 0.4, "#35532a");
+      blob(tx - rad * 0.38, ty - rad * 0.42, rad * 0.32, "#5a8240");
+      blob(tx - rad * 0.48, ty - rad * 0.52, rad * 0.12, "rgba(190,220,140,.55)");
     }
   }
   if (t == "colina") {
@@ -253,6 +258,25 @@ export function terrainImage(field: FieldType): HTMLCanvasElement {
   c1.height = H;
   const ctx = c1.getContext("2d") as CanvasRenderingContext2D;
   FIELD_LANES[field].forEach((t, i) => paintLane(ctx, i * LW, LW, t, 1000 + i * 77 + field.length));
+  paintCastleGround(ctx, field);
+  // sombra de nuvens e luz vindo de cima à esquerda: o chão fica com volume, sem poluir
+  const sr = rng(field.length * 13 + 5);
+  for (let k = 0; k < 9; k++) {
+    const cx = sr() * W;
+    const cy = sr() * H;
+    const rad = 70 + sr() * 110;
+    const g = ctx.createRadialGradient(cx, cy, rad * 0.2, cx, cy, rad);
+    g.addColorStop(0, "rgba(10,14,8,.16)");
+    g.addColorStop(1, "rgba(10,14,8,0)");
+    ctx.fillStyle = g;
+    ctx.fillRect(cx - rad, cy - rad, rad * 2, rad * 2);
+  }
+  const light = ctx.createLinearGradient(0, 0, W, H);
+  light.addColorStop(0, "rgba(255,244,214,.07)");
+  light.addColorStop(0.55, "rgba(0,0,0,0)");
+  light.addColorStop(1, "rgba(0,0,0,.14)");
+  ctx.fillStyle = light;
+  ctx.fillRect(0, 0, W, H);
   ctx.strokeStyle = "rgba(25,18,10,.6)";
   ctx.lineWidth = 2;
   ctx.setLineDash([10, 8]);
@@ -273,43 +297,9 @@ export function terrainImage(field: FieldType): HTMLCanvasElement {
   return c;
 }
 
+/** Uma faixa de muralha (para o tutorial). O desenho mora em walls.ts. */
 export function drawWall(ctx: CanvasRenderingContext2D, lane: number, gate: boolean, broken: boolean): void {
-  const x = lane * LW;
-  const y = H * 0.415;
-  const segs = 8;
-  for (let i = 0; i < segs; i++) {
-    const sx = x + (LW / segs) * i + 1;
-    const sw = LW / segs - 2;
-    const gateSeg = gate && (i == 3 || i == 4);
-    const gap = broken && i >= 2 && i <= 5;
-    if (gap) continue;
-    if (gateSeg) {
-      ctx.fillStyle = "#5e3d22";
-      ctx.fillRect(sx, y - 7, sw, 14);
-      ctx.strokeStyle = "#2c1b0d";
-      ctx.strokeRect(sx, y - 7, sw, 14);
-      continue;
-    }
-    const g = ctx.createLinearGradient(0, y - 12, 0, y + 12);
-    g.addColorStop(0, "#c2bcae");
-    g.addColorStop(1, "#8a8476");
-    ctx.fillStyle = g;
-    ctx.fillRect(sx, y - 10, sw, 20);
-    ctx.fillRect(sx + 2, y - 16, sw / 3, 7);
-    ctx.fillRect(sx + sw - sw / 3 - 2, y - 16, sw / 3, 7);
-    ctx.strokeStyle = "rgba(40,36,30,.7)";
-    ctx.lineWidth = 1;
-    ctx.strokeRect(sx, y - 10, sw, 20);
-  }
-  if (broken) {
-    const r = rng(lane * 31 + 5);
-    for (let i = 0; i < 14; i++) {
-      ctx.fillStyle = r() < 0.5 ? "#9b958a" : "#77716a";
-      ctx.beginPath();
-      ctx.arc(x + LW * 0.3 + r() * LW * 0.4, y + (r() - 0.5) * 18, 3 + r() * 4, 0, Math.PI * 2);
-      ctx.fill();
-    }
-  }
+  drawWallLane(ctx, lane, gate, broken);
 }
 
 // ---------------------------------------------------------------- posicionamento
@@ -357,6 +347,8 @@ export interface PlaceView {
   preview?: { lane: Lane; row: Row; pct: number; best: boolean }[] | null;
   /** legenda dos números, ex.: "Peça 2 · Lanceiro" */
   previewLabel?: string;
+  /** cor da bandeira das torres (de quem defende) */
+  wallFlag?: string;
 }
 
 // ---------------------------------------------------------------- névoa (pixel art)
@@ -476,10 +468,10 @@ export function drawPlacement(ctx: CanvasRenderingContext2D, v: PlaceView, t: nu
   ctx.drawImage(terrainImage(v.field), 0, 0, W, H);
   ctx.imageSmoothingEnabled = true;
   const lanesT = FIELD_LANES[v.field];
-  lanesT.forEach((tt, i) => {
-    if (tt == "muralha" || tt == "portao") drawWall(ctx, i, tt == "portao", false);
-  });
   drawFog(ctx, t, v.enemy, v.enemyCount);
+  // a muralha é do terreno (todo mundo sabe onde ela está): fica por cima da névoa
+  drawWalls(ctx, v.field, [false, false, false], v.wallFlag ?? v.enemy.color);
+  drawWallBadges(ctx, v.field);
   // nome do terreno de cada faixa (na linha do meio)
   lanesT.forEach((tt, i) => {
     const label = TERRAIN_NAMES[tt];

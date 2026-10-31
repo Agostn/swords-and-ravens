@@ -11,6 +11,8 @@ Usa exatamente a mesma conta do jogo (`agot-bg-game-server/src/common/tactical-b
 - `sprites.ts`: recorta os sprites de `arte/`, troca as cores para as da Casa, põe lança/arco, e "pixela" cavalo, catapulta, torre e navio para ficarem no mesmo estilo.
 - `assets.ts`: as imagens embutidas (dragão, soldados, textura de grama).
 - `galeria.ts`: página de teste com todas as figuras (só para conferir o desenho).
+- `walls.ts`: muralhas, portão, torres, pátio de pedra e estrada (pixel art desenhada no código).
+- `teste/`: teste de 400 lutas aleatórias (`node tools/tactical/prototipo/teste/rodar.js`).
 - `tutorial.ts`: o tutorial ilustrado do botão "?" (6 telas).
 - `data.ts`: textos, Casas e batalhas prontas (inspiradas nos livros).
 - `worker.ts`: o computador pensa em segundo plano (Web Worker), para a tela não travar.
