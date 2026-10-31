@@ -417,3 +417,12 @@ o outro vai fazer, mas o que mais conta é escolher a ordem que combina com as S
   lados).
 - **Botão "Voltar p/ reserva" no campo:** no canto de baixo, à direita, aparece só quando uma peça que já está no
   campo está escolhida; a legenda fica curta à esquerda.
+
+## Tela cheia e ataques do dragão em área (31/out)
+- **Tela cheia:** botão "⛶ Tela cheia" durante a luta. Tenta a tela cheia do navegador; no iPhone (o Safari não
+  deixa) ou dentro de moldura, o campo ocupa a tela toda por cima ("✕ Sair da tela cheia" no canto). No fim da
+  luta sai sozinho, para mostrar o resultado.
+- **Fogo em área:** o bafo pega uma elipse grande em volta do alvo (64 × 30), com explosão laranja que abre, fogo
+  espalhado na área toda e chão queimado.
+- **Golpe no chão em área:** onda de choque em volta das patas (72 × 32), anel de poeira, rachaduras no chão e
+  tremida mais forte; acerta todo mundo dentro da área.

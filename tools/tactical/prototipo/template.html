@@ -374,6 +374,12 @@
   @media (prefers-reduced-motion: reduce) {
     * { transition: none !important; }
   }
+  /* tela cheia da batalha (31/out): o campo ocupa a tela toda, por cima de tudo */
+  .fs-exit { display: none; }
+  body.fs .board-frame { position: fixed; inset: 0; z-index: 60; margin: 0; padding: 0; border: 0; border-radius: 0; background: #0d0a07; display: flex; align-items: center; justify-content: center; }
+  body.fs canvas#board { width: auto !important; height: auto !important; max-width: 100vw; max-height: 100vh; max-height: 100dvh; aspect-ratio: 600 / 780; }
+  body.fs .fs-exit { display: block; position: fixed; top: max(10px, env(safe-area-inset-top, 0px)); right: 10px; z-index: 61; padding: 8px 14px; border-radius: 999px; border: 1px solid rgba(224,179,84,.7); background: rgba(18,14,10,.85); color: var(--gold); font: inherit; font-weight: 700; font-size: 14px; cursor: pointer; }
+  body.fs { overflow: hidden; }
 </style>
 
 <div class="wrap">
@@ -420,7 +426,7 @@
 
   <main id="play" class="play" hidden>
     <section id="stage" aria-label="Campo de batalha">
-      <div class="board-frame"><canvas id="board" width="1200" height="1560" aria-label="Campo de batalha: toque numa casinha para colocar a peça escolhida"></canvas></div>
+      <div class="board-frame"><canvas id="board" width="1200" height="1560" aria-label="Campo de batalha: toque numa casinha para colocar a peça escolhida"></canvas><button type="button" class="fs-exit" id="fs-exit" aria-label="Sair da tela cheia">✕ Sair da tela cheia</button></div>
       <ul class="lane-info" id="lane-info" aria-label="Terreno de cada faixa"></ul>
     </section>
     <section id="panel" aria-live="polite"></section>

@@ -213,6 +213,8 @@ export interface Sim {
   breaths: Breath[];
   /** fogo que fica queimando no chão e nas muralhas depois do bafo do dragão (31/out) */
   fires: { x: number; y: number; t0: number; life: number; r: number }[];
+  /** onda de área: explosão do fogo e golpe do dragão no chão (31/out) */
+  blasts: { x: number; y: number; t0: number; kind: "fire" | "slam"; rx: number; ry: number }[];
   sparks: Spark[];
   drops: Drop[];
   dust: Dust[];
@@ -413,7 +415,7 @@ export function createSim(field: FieldType, res: TacticalBattleResult, squads: R
   const fought = ([0, 1, 2] as Lane[]).filter((l) => res.lanes[l].winner != null);
   const arenaLane = fought.length ? fought.reduce((a: number, l) => a + l, 0) / fought.length : 1;
   const arena = { x: Math.max(70, Math.min(W - 70, arenaLane * LW + LW / 2)), y: frontY[Math.round(arenaLane)] ?? H * 0.5 };
-  const sim: Sim = { duel: res.duel && res.winner ? { winner: res.winner, a: null, b: null, picked: false, arena } : undefined, outcome, field, res, houses, men, shots: [], breaths: [], fires: [], sparks: [], drops: [], dust: [], slashes: [], floor: null, t: 0, stop: 0, shake: 0, breach, rand, frontY };
+  const sim: Sim = { duel: res.duel && res.winner ? { winner: res.winner, a: null, b: null, picked: false, arena } : undefined, outcome, field, res, houses, men, shots: [], breaths: [], fires: [], blasts: [], sparks: [], drops: [], dust: [], slashes: [], floor: null, t: 0, stop: 0, shake: 0, breach, rand, frontY };
   ([0, 1, 2] as Lane[]).forEach((lane) => {
     if (res.lanes[lane].winner != null) pairUp(sim, lane);
   });
@@ -1287,8 +1289,12 @@ export function stepSim(sim: Sim, dt: number): void {
         puff(sim, b.to.x, b.to.y - 20, 10, 60, 5, "255,170,80");
         continue;
       }
+      // fogo em ÁREA (31/out): uma elipse grande em volta do alvo
+      const FRX = 64;
+      const FRY = 30;
+      sim.blasts.push({ x: b.to.x, y: b.to.y, t0: t, kind: "fire", rx: FRX, ry: FRY });
       sim.men.forEach((o) => {
-        if (!o.dead && o.side != b.from.side && Math.hypot(o.x - b.to.x, o.y - b.to.y) < 36) {
+        if (!o.dead && o.side != b.from.side && o.kind != "dragon" && ((o.x - b.to.x) / FRX) ** 2 + ((o.y - b.to.y) / FRY) ** 2 < 1) {
           o.burnT = t;
           // quem ia cair logo cai agora, queimado (o fogo é o golpe final dele)
           if (o.dieAt < t + 2.5 && (o.kind == "foot" || o.kind == "horse")) o.dieAt = t;
@@ -1296,10 +1302,10 @@ export function stepSim(sim: Sim, dt: number): void {
         }
       });
       // o fogo fica queimando no chão por uns segundos
-      for (let i = 0; i < 9; i++) {
+      for (let i = 0; i < 16; i++) {
         const a = r() * Math.PI * 2;
-        const d = Math.sqrt(r()) * 26;
-        sim.fires.push({ x: b.to.x + Math.cos(a) * d * 1.3, y: b.to.y + Math.sin(a) * d * 0.55, t0: t + r() * 0.2, life: 4 + r() * 3, r: 7 + r() * 4 });
+        const d = Math.sqrt(r());
+        sim.fires.push({ x: b.to.x + Math.cos(a) * d * FRX * 0.95, y: b.to.y + Math.sin(a) * d * FRY * 0.95, t0: t + r() * 0.2, life: 4 + r() * 3, r: 7 + r() * 4 });
       }
       // perto da muralha: pega fogo nela também (no caminho de ronda e na pedra)
       const wl = Math.max(0, Math.min(2, Math.floor(b.to.x / LW))) as Lane;
@@ -1307,17 +1313,18 @@ export function stepSim(sim: Sim, dt: number): void {
       if ((wt == "muralha" || wt == "portao") && Math.abs(b.to.y - WALL_Y) < 70) {
         for (let i = 0; i < 6; i++) sim.fires.push({ x: b.to.x + (r() - 0.5) * 70, y: WALL_Y - 18 + r() * 30, t0: t + r() * 0.3, life: 4 + r() * 3, r: 7 + r() * 4 });
       }
-      // chão queimado
-      for (let i = 0; i < 40; i++) {
+      // chão queimado em toda a área
+      for (let i = 0; i < 110; i++) {
         const a = r() * Math.PI * 2;
-        const d = Math.sqrt(r()) * 20;
-        scorch(sim, b.to.x + Math.cos(a) * d * 1.3, b.to.y + Math.sin(a) * d * 0.55);
+        const d = Math.sqrt(r());
+        scorch(sim, b.to.x + Math.cos(a) * d * FRX, b.to.y + Math.sin(a) * d * FRY);
       }
       puff(sim, b.to.x, b.to.y, 8, 50, 5);
     }
   }
   sim.breaths = sim.breaths.filter((b) => t - b.t0 < b.dur);
   sim.fires = sim.fires.filter((f) => t - f.t0 < f.life);
+  sim.blasts = sim.blasts.filter((b) => t - b.t0 < 0.7);
   sim.sparks = sim.sparks.filter((s) => t - s.t0 < 0.35);
   sim.slashes = sim.slashes.filter((s) => t - s.t0 < 0.16);
   sim.dust = sim.dust.filter((d) => {
@@ -1499,11 +1506,20 @@ function stepDragon(sim: Sim, m: Man, dt: number): void {
     const q = (t - m.shotAt) / 0.6;
     const pq = (t - dt - m.shotAt) / 0.6;
     if (pq < 0.55 && q >= 0.55) {
-      sim.shake = Math.max(sim.shake, 6);
-      const cx = m.x + (m.flip ? -1 : 1) * 30;
-      puff(sim, cx, m.y, 18, 90, 6);
+      // golpe em ÁREA (31/out): onda de choque em volta das patas
+      sim.shake = Math.max(sim.shake, 7);
+      const cx = m.x + (m.flip ? -1 : 1) * 26;
+      const SRX = 72;
+      const SRY = 32;
+      sim.blasts.push({ x: cx, y: m.y, t0: t, kind: "slam", rx: SRX, ry: SRY });
+      puff(sim, cx, m.y, 26, 120, 7);
+      // rachaduras no chão
+      for (let k = 0; k < 7; k++) {
+        const a = (k / 7) * Math.PI * 2 + sim.rand() * 0.4;
+        for (let d = 6; d < 40; d += 2) scorch(sim, cx + Math.cos(a) * d * 1.6 + (sim.rand() - 0.5) * 2, m.y + Math.sin(a) * d * 0.7);
+      }
       sim.men.forEach((o) => {
-        if (!o.dead && o.side != m.side && o.kind != "dragon" && !isStatic(o) && Math.hypot(o.x - cx, o.y - m.y) < 42) hit(sim, m, o, 2);
+        if (!o.dead && o.side != m.side && o.kind != "dragon" && !isStatic(o) && ((o.x - cx) / SRX) ** 2 + ((o.y - m.y) / SRY) ** 2 < 1) hit(sim, m, o, 2);
       });
     }
     m.atk = q >= 0 && q < 1 ? q : 0;
@@ -1532,6 +1548,39 @@ export function dragonMouth(x: number, y: number, flip: boolean, s: number): [nu
 }
 
 // ---------------------------------------------------------------- desenho
+/** Ondas de área: explosão de fogo (anel laranja que abre) e golpe no chão (anel de poeira e terra). */
+function drawBlasts(ctx: CanvasRenderingContext2D, sim: Sim, t: number): void {
+  for (const b of sim.blasts) {
+    const p = (t - b.t0) / 0.7;
+    if (p < 0 || p > 1) continue;
+    const e = 1 - (1 - p) * (1 - p);
+    ctx.save();
+    if (b.kind == "fire") {
+      ctx.globalCompositeOperation = "lighter";
+      const g = ctx.createRadialGradient(b.x, b.y, 0, b.x, b.y, b.rx * e);
+      g.addColorStop(0, `rgba(255,220,120,${0.55 * (1 - p)})`);
+      g.addColorStop(0.6, `rgba(255,120,30,${0.45 * (1 - p)})`);
+      g.addColorStop(1, "rgba(200,40,0,0)");
+      ctx.fillStyle = g;
+      ctx.beginPath();
+      ctx.ellipse(b.x, b.y, b.rx * e, b.ry * e, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = `rgba(255,170,60,${0.8 * (1 - p)})`;
+    } else {
+      ctx.fillStyle = `rgba(90,70,45,${0.28 * (1 - p)})`;
+      ctx.beginPath();
+      ctx.ellipse(b.x, b.y, b.rx * e, b.ry * e, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = `rgba(230,210,170,${0.75 * (1 - p)})`;
+    }
+    ctx.lineWidth = 3 * (1 - p) + 1;
+    ctx.beginPath();
+    ctx.ellipse(b.x, b.y, b.rx * e, b.ry * e, 0, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+  }
+}
+
 /** Fogo queimando (pixel art): base vermelha, meio laranja, ponta amarela, tremendo. onWall = só os da muralha. */
 function drawFires(ctx: CanvasRenderingContext2D, sim: Sim, t: number, onWall: boolean): void {
   for (const f of sim.fires) {
@@ -1752,6 +1801,7 @@ export function drawSim(ctx: CanvasRenderingContext2D, sim: Sim): void {
   ctx.drawImage(terrainImage(sim.field), 0, 0, W, H);
   // sangue no chão
   if (sim.floor && gore) ctx.drawImage(sim.floor, 0, 0, W, H);
+  drawBlasts(ctx, sim, t);
   ctx.imageSmoothingEnabled = true;
   const lanesT = FIELD_LANES[sim.field];
   const hasWall = lanesT.some((x) => x == "muralha" || x == "portao");

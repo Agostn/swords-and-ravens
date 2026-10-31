@@ -1459,6 +1459,27 @@ function whyHtml(): string {
   return `${tl}${notes.length ? `<p class="react-notes">${notes.join(" ")}</p>` : ""}<ul class="why" aria-label="Por que cada faixa">${items}</ul>`;
 }
 
+/**
+ * Tela cheia na batalha (31/out). Tenta a tela cheia de verdade do navegador; no iPhone (o Safari não deixa) ou
+ * dentro de uma moldura que bloqueia, usa a "tela cheia" do próprio jogo: o campo ocupa a tela toda por cima.
+ */
+function setFullscreen(on: boolean): void {
+  document.body.classList.toggle("fs", on);
+  const doc = document as Document & { webkitExitFullscreen?: () => void; webkitFullscreenElement?: Element };
+  const el = document.documentElement as HTMLElement & { webkitRequestFullscreen?: () => void };
+  try {
+    if (on) {
+      if (el.requestFullscreen) void el.requestFullscreen().catch(() => undefined);
+      else el.webkitRequestFullscreen?.();
+    } else if (document.fullscreenElement || doc.webkitFullscreenElement) {
+      if (document.exitFullscreen) void document.exitFullscreen().catch(() => undefined);
+      else doc.webkitExitFullscreen?.();
+    }
+  } catch {
+    // sem tela cheia do navegador: fica a do jogo
+  }
+}
+
 function renderBattlePanel(): void {
   setPhase("battle");
   $("panel").innerHTML = `
@@ -1469,8 +1490,10 @@ function renderBattlePanel(): void {
       <button type="button" class="btn${speed == 2 ? " on" : ""}" data-speed="2">2×</button>
       <button type="button" class="btn" id="skip">Pular</button>
       <button type="button" class="btn${goreOn ? " on" : ""}" id="gore" aria-pressed="${goreOn}">Sangue: ${goreOn ? "sim" : "não"}</button>
+      <button type="button" class="btn" id="fs" aria-label="Ver a batalha em tela cheia">⛶ Tela cheia</button>
     </div>
     ${whyHtml()}`;
+  $("fs").addEventListener("click", () => setFullscreen(true));
   $("panel")
     .querySelectorAll<HTMLButtonElement>("[data-speed]")
     .forEach((b) =>
@@ -1584,6 +1607,8 @@ function factorText(f: LaneFactor): string | null {
 }
 
 function showResult(): void {
+  // fim da luta: sai da tela cheia para mostrar o resultado
+  if (document.body.classList.contains("fs")) setFullscreen(false);
   setPhase("result");
   const res = lastResult as TacticalBattleResult;
   const lanesT = FIELD_LANES[config.field];
@@ -1678,6 +1703,11 @@ function closeTutorial(): void {
 
 // ---------------------------------------------------------------- início
 function init(): void {
+  $("fs-exit").addEventListener("click", () => setFullscreen(false));
+  // saiu da tela cheia pelo navegador (Esc, gesto): sai da do jogo também
+  document.addEventListener("fullscreenchange", () => {
+    if (!document.fullscreenElement) document.body.classList.remove("fs");
+  });
   goreOn = store("tactical-gore") != "0";
   setGore(goreOn);
   // textura do chão: quando chegar, o campo é repintado (o tutorial aberto também)
