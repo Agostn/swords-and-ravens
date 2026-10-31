@@ -71,8 +71,8 @@ export const TERRAIN_HINT: Record<Terrain, string> = {
   pantano: "Cavalos e máquinas atolam. Quem ataca −10%, quem defende +10%.",
   calcada: "Estrada sobre o brejo: quem ataca −10%.",
   areia: "Calor de Dorne: armadura pesada sofre, batedores +20%.",
-  muralha: "Quem defende +30%. Uma catapulta do atacante aqui derruba a muralha.",
-  portao: "Quem defende +10%. A catapulta também derruba.",
+  muralha: "Quem defende +10%; cavalaria rende menos. Uma catapulta do atacante aqui derruba a muralha.",
+  portao: "A entrada do castelo (sem bônus de defesa). A catapulta derruba o portão.",
   bloqueado: "Montanha fechada: ninguém passa.",
   mar: "Batalha de navios."
 };

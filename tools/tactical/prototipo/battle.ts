@@ -1778,7 +1778,7 @@ export function laneReasons(res: TacticalBattleResult, lane: number): { text: st
   };
   for (const f of L.factors) {
     if (f.kind == "counter" && f.role && f.vs) add(`${ROLE_NAMES[f.role]} ${ROLE_NAMES[f.role].endsWith("s") ? "vencem" : "vence"} ${ROLE_NAMES[f.vs].toLowerCase()}`, f.side);
-    else if (f.kind == "wall") add("muralha: defesa +30%", f.side);
+    else if (f.kind == "wall") add("muralha: defesa +10%", f.side);
     else if (f.kind == "wall-breach") add("catapulta derruba a muralha", f.side);
     else if (f.kind == "flank") add("ajuda pelo lado", f.side);
     else if (f.kind == "far-flank") add("ajuda de longe (15%)", f.side);

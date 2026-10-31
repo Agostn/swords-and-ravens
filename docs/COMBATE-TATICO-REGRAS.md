@@ -426,3 +426,27 @@ o outro vai fazer, mas o que mais conta é escolher a ordem que combina com as S
   espalhado na área toda e chão queimado.
 - **Golpe no chão em área:** onda de choque em volta das patas (72 × 32), anel de poeira, rachaduras no chão e
   tremida mais forte; acerta todo mundo dentro da área.
+
+## A Mesa decide a batalha (31/out, opção 1 escolhida pelo Agostinho)
+- **Antes da Mesa** soma-se a força de cada lado no tabuleiro, como no jogo original: tropas + apoio + carta de
+  Casa + ordem (+ guarnição, Lâmina e efeitos das cartas, no jogo completo). Uma faixa no topo mostra
+  "Stark 9 × Lannister 7 → Stark começa com +X% em todas as faixas".
+- **Na Mesa** os esquadrões passam a somar essa força (a carta e o apoio reforçam quem está no campo), com um
+  ajuste para a estratégia pesar nas batalhas apertadas: valor × (total / tropas) × (total / média dos dois) ^ −0,6
+  (`EDGE_EXP`). A ordem e a força da carta não contam de novo.
+- **Quem vencer mais faixas vence a batalha.** Não existe mais "bônus da batalha" nem a conta separada do
+  tabuleiro: um resultado só, sem perder na Mesa e ganhar no tabuleiro. Empate total → duelo de campeões (vence
+  quem tem a Lâmina de Aço Valiriano).
+- **Quem morre:** espadas ⚔ da carta de quem venceu − torres ▲ da carta de quem perdeu (peças inteiras); máquina
+  de cerco de quem perde é destruída; quem perde recua.
+- **Balanço (`tools/tactical/vantagem.ts`, 140 batalhas sorteadas com cartas, ordens e apoio, jogando bem):**
+  | Diferença de força | Quem tem mais força vence |
+  |---|---|
+  | 0 | 53% |
+  | 1 | 70% |
+  | 2 | 77% |
+  | 3 | 87% |
+  | 4 ou mais | 97% |
+  Sem o ajuste (expoente 0), +1 de força já vencia 86% e +2 93% (a estratégia quase não pesava).
+- **Muralha:** com +30% o defensor vencia 94% das batalhas de força igual no castelo (no jogo original o empate é
+  da Lâmina). Muralha agora +10% (cavalaria continua rendendo menos nela) e portão sem bônus (é a entrada).

@@ -4,7 +4,7 @@
  * Gerar a página: node tools/tactical/prototipo/build.js
  */
 import { boardStrength, hasFormation, tacticBonus, resolveTacticalBattle, Squad, Lane, Side, TacticalBattleResult, LaneFactor } from "../../../agot-bg-game-server/src/common/tactical-battle/tacticalBattle";
-import { DRAGON_AIR_SHARE, DRAGON_AIR_FAR_SHARE, ARMY_MAX, SQUAD_MAX, SUPPORT_MAX, slotMaxFor, ATTACK_TACTICS, DEFENSE_TACTICS, TACTIC_BEATS, TACTIC_NAMES, TACTIC_WIN_BONUS, Tactic, BASE_VALUE, FAR_FLANK_SHARE, FIELD_LANES, FieldType, ROW_FACTOR, Role, Row, SUPPORT_FACTOR, SquadKind, TERRAIN, UNOPPOSED_FLANK_SHARE, rolesFor } from "../../../agot-bg-game-server/src/common/tactical-battle/tacticalBattleData";
+import { EDGE_EXP, DRAGON_AIR_SHARE, DRAGON_AIR_FAR_SHARE, ARMY_MAX, SQUAD_MAX, SUPPORT_MAX, slotMaxFor, ATTACK_TACTICS, DEFENSE_TACTICS, TACTIC_BEATS, TACTIC_NAMES, TACTIC_WIN_BONUS, Tactic, BASE_VALUE, FAR_FLANK_SHARE, FIELD_LANES, FieldType, ROW_FACTOR, Role, Row, SUPPORT_FACTOR, SquadKind, TERRAIN, UNOPPOSED_FLANK_SHARE, rolesFor } from "../../../agot-bg-game-server/src/common/tactical-battle/tacticalBattleData";
 import { bestReply, computerStrategy, Piece, Scenario, rng } from "../solver";
 import {
   EMPTY_SIDE,
@@ -150,6 +150,39 @@ function supportStrength(side: Side): number {
   const c = config[side];
   return (isSea() ? 0 : (c.supportFootmen ?? 0) + 2 * (c.supportKnights ?? 0)) + (c.supportShips ?? 0);
 }
+/**
+ * Força TOTAL no tabuleiro (31/out: a Mesa decide a batalha): tropas + apoio + carta + ordem (+ guarnição, que é
+ * uma peça). É calculada antes da Mesa e reforça as tropas no campo; quem vencer mais faixas vence a batalha.
+ */
+function boardTotalOf(side: Side): number {
+  const all = units[side].length ? units[side] : buildUnits(side);
+  const tropas = all.reduce((a, u) => a + boardStrength({ ...toSquadAny(u) }, side, config.field), 0);
+  return Math.max(0, tropas + (config[side].card?.strength ?? 0) + (config[side].order ?? 0) + supportStrength(side));
+}
+function toSquadAny(u: Unit): Squad {
+  return { id: u.id, kind: u.kind, role: u.role, lane: (u.lane ?? 1) as Lane, row: u.row, strength: u.strength, support: u.support, share: u.share, piece: u.piece };
+}
+/** quanto a força do tabuleiro reforça cada lado na Mesa (para mostrar antes de posicionar) */
+function edgePct(side: Side): number {
+  const a = boardTotalOf(side);
+  const b = boardTotalOf(other(side));
+  if (a <= 0 || b <= 0) return 0;
+  return Math.round((Math.pow(a / b, 1 + EDGE_EXP) - 1) * 100);
+}
+
+/** Faixa no topo: força de cada lado no tabuleiro e quem começa na frente (31/out). */
+function edgeHtml(): string {
+  const A = boardTotalOf("attacker");
+  const D = boardTotalOf("defender");
+  const ha = houseOf("attacker");
+  const hd = houseOf("defender");
+  const lead: Side | null = A > D ? "attacker" : D > A ? "defender" : null;
+  const tail = lead
+    ? `<b style="color:${houseOf(lead).color}">${houseOf(lead).name}</b> começa com <b>+${edgePct(lead)}%</b> em todas as faixas`
+    : "força igual: decide a estratégia (empate total: Lâmina)";
+  return `<p class="edge-line" title="Força no tabuleiro: tropas + apoio + carta + ordem. Quem vencer mais faixas vence a batalha.">⚖ <b style="color:${ha.color}">${ha.name} ${A}</b> × <b style="color:${hd.color}">${hd.name} ${D}</b> → ${tail}</p>`;
+}
+
 /** ordem + apoio: o bônus pronto que entra na luta das faixas */
 function orderOf(side: Side): number {
   return (config[side].order ?? 0) + supportPoints(side);
@@ -216,7 +249,9 @@ function scenario(): Scenario {
     attackerCard: config.attacker.card,
     defenderCard: config.defender.card,
     attackerOrder: orderOf("attacker"),
-    defenderOrder: orderOf("defender")
+    defenderOrder: orderOf("defender"),
+    attackerTotal: boardTotalOf("attacker"),
+    defenderTotal: boardTotalOf("defender")
   };
 }
 
@@ -805,6 +840,7 @@ function renderPanel(): void {
         <button type="button" class="help-btn" id="help-play" aria-label="Como funciona o combate">?</button>
       </div>
     </div>
+    ${edgeHtml()}
     ${
       reacting
         ? reactInfoHtml()
@@ -1249,8 +1285,8 @@ function finishReaction(): void {
 function resultNow(): TacticalBattleResult {
   return resolveTacticalBattle({
     field: config.field,
-    attacker: { squads: toSquads(units.attacker), card: config.attacker.card, orderBonus: orderOf("attacker"), tactic: tactics.attacker },
-    defender: { squads: toSquads(units.defender), card: config.defender.card, orderBonus: orderOf("defender"), tactic: tactics.defender },
+    attacker: { squads: toSquads(units.attacker), card: config.attacker.card, orderBonus: orderOf("attacker"), tactic: tactics.attacker, boardTotal: boardTotalOf("attacker") },
+    defender: { squads: toSquads(units.defender), card: config.defender.card, orderBonus: orderOf("defender"), tactic: tactics.defender, boardTotal: boardTotalOf("defender") },
     bladeHolder: bladeHolder()
   });
 }
@@ -1276,14 +1312,14 @@ function bestChangeHtml(me: Side): string {
   const n = units[me].findIndex((u) => u.id == ch.id) + 1;
   const res = resolveTacticalBattle({
     field: config.field,
-    attacker: { squads: me == "attacker" ? best : base.attacker, card: config.attacker.card, orderBonus: orderOf("attacker"), tactic: tactics.attacker },
-    defender: { squads: me == "defender" ? best : base.defender, card: config.defender.card, orderBonus: orderOf("defender"), tactic: tactics.defender },
+    attacker: { squads: me == "attacker" ? best : base.attacker, card: config.attacker.card, orderBonus: orderOf("attacker"), tactic: tactics.attacker, boardTotal: boardTotalOf("attacker") },
+    defender: { squads: me == "defender" ? best : base.defender, card: config.defender.card, orderBonus: orderOf("defender"), tactic: tactics.defender, boardTotal: boardTotalOf("defender") },
     bladeHolder: bladeHolder()
   });
   const now = resolveTacticalBattle({
     field: config.field,
-    attacker: { squads: base.attacker, card: config.attacker.card, orderBonus: orderOf("attacker"), tactic: tactics.attacker },
-    defender: { squads: base.defender, card: config.defender.card, orderBonus: orderOf("defender"), tactic: tactics.defender },
+    attacker: { squads: base.attacker, card: config.attacker.card, orderBonus: orderOf("attacker"), tactic: tactics.attacker, boardTotal: boardTotalOf("attacker") },
+    defender: { squads: base.defender, card: config.defender.card, orderBonus: orderOf("defender"), tactic: tactics.defender, boardTotal: boardTotalOf("defender") },
     bladeHolder: bladeHolder()
   });
   if (now.winner == res.winner && now.bonus == res.bonus) return `<p class="react-tip">💡 Dica: nenhuma troca muda o resultado. Pode manter.</p>`;
@@ -1326,16 +1362,16 @@ interface BoardBattle {
 
 function boardBattle(res: TacticalBattleResult, seed: number): BoardBattle {
   const tot = (side: Side): BoardBattle["totals"][Side] => {
-    const tropas = toSquads(units[side]).reduce((a, q) => a + boardStrength(q, side, config.field), 0);
+    const tropas = units[side].reduce((a, u) => a + boardStrength(toSquadAny(u), side, config.field), 0);
     const carta = config[side].card?.strength ?? 0;
     const ordem = config[side].order ?? 0;
     const apoio = supportStrength(side);
-    const mini = res.winner == side ? res.bonus : 0;
-    return { tropas, carta, ordem, apoio, mini, total: tropas + carta + ordem + apoio + mini };
+    return { tropas, carta, ordem, apoio, mini: 0, total: tropas + carta + ordem + apoio };
   };
   const totals = { attacker: tot("attacker"), defender: tot("defender") };
-  const tie = totals.attacker.total == totals.defender.total;
-  const winner: Side = tie ? bladeHolder() : totals.attacker.total > totals.defender.total ? "attacker" : "defender";
+  // 31/out: quem vence a Mesa vence a batalha (a força do tabuleiro já entrou nela); empate total = Lâmina
+  const tie = !!res.duel || !res.winner;
+  const winner: Side = res.winner ?? bladeHolder();
   const loser = other(winner);
   const swords = config[winner].card?.swords ?? 0;
   const towers = config[loser].card?.towers ?? 0;
@@ -1398,9 +1434,9 @@ function boardHtml(b: BoardBattle): string {
         : `Ninguém morre: a carta de ${W} tem ${b.swords} ${b.swords == 1 ? "espada ⚔" : "espadas ⚔"}, mas a de ${Lz} tem ${b.towers} ${b.towers == 1 ? "torre ▲ que protege" : "torres ▲ que protegem"}. ${Lz} recua.`
       : `<b>${killed.length == 1 ? "Morre 1 peça" : `Morrem ${killed.length} peças`}</b> de ${Lz}: ${names.join(" e ")} (espadas ⚔ da carta de ${W}${b.towers ? ` menos as torres ▲ da carta de ${Lz}` : ""}). O resto recua.`;
   return `<div class="board-res">
-    <h3>2. Batalha no tabuleiro (regra do jogo original)</h3>
+    <h3>2. Força no tabuleiro (reforçou as tropas na Mesa) e quem morre</h3>
     <ul>${row("attacker")}${row("defender")}</ul>
-    <p><b style="color:${houseOf(b.winner).color}">${houseOf(b.winner).name} vence</b>${b.tie ? " (empate: quem tem a Lâmina de Aço Valiriano, o mais alto nos Feudos, vence — regra do jogo original)" : ""}. ${deaths}${siege}</p>
+    <p>${deaths}${siege}</p>
   </div>`;
 }
 
@@ -1409,8 +1445,8 @@ function runBattle(): void {
   phase = "battle";
   lastResult = resolveTacticalBattle({
     field: config.field,
-    attacker: { squads: toSquads(units.attacker), card: config.attacker.card, orderBonus: orderOf("attacker"), tactic: tactics.attacker },
-    defender: { squads: toSquads(units.defender), card: config.defender.card, orderBonus: orderOf("defender"), tactic: tactics.defender },
+    attacker: { squads: toSquads(units.attacker), card: config.attacker.card, orderBonus: orderOf("attacker"), tactic: tactics.attacker, boardTotal: boardTotalOf("attacker") },
+    defender: { squads: toSquads(units.defender), card: config.defender.card, orderBonus: orderOf("defender"), tactic: tactics.defender, boardTotal: boardTotalOf("defender") },
     bladeHolder: bladeHolder()
   });
   simSeed = Math.floor(Math.random() * 1e9);
@@ -1615,12 +1651,13 @@ function showResult(): void {
   const res = lastResult as TacticalBattleResult;
   const lanesT = FIELD_LANES[config.field];
   const human = config.mode == "cpu" ? config.humanSide : null;
-  // o título é o resultado de VERDADE (a batalha do tabuleiro); a Mesa só dá o bônus
+  // 31/out: a Mesa decide a batalha
   const bw = lastBoard?.winner ?? res.winner;
   const verdict = bw ? (human ? (bw == human ? "Você venceu a batalha!" : "Você perdeu a batalha") : `${houseOf(bw).name} venceu a batalha`) : "Empate";
+  const fought = res.lanes.filter((l) => l.winner != null).length;
   const bonus = res.winner
-    ? `<b>1. A luta nas faixas:</b> ${houseOf(res.winner).name} ${res.duel ? "venceu o duelo de campeões" : res.metInCenter ? "venceu a luta no centro" : wonAll(res) ? "venceu todas as faixas" : "venceu mais faixas"} → ganha <span class="bonus" style="background:${houseOf(res.winner).color};color:${houseOf(res.winner).ink}">+${res.bonus}</span> de bônus da batalha.`
-    : "<b>1. A luta nas faixas:</b> empate, ninguém ganha bônus da batalha.";
+    ? `<b>1. A batalha:</b> ${houseOf(res.winner).name} ${res.duel ? "venceu o duelo de campeões (empate nas faixas)" : res.metInCenter ? "venceu a luta no centro" : `venceu ${res.lanesWon[res.winner]} de ${fought} ${fought == 1 ? "faixa" : "faixas"}`} → <b>vence a batalha</b>.`
+    : "<b>1. A batalha:</b> empate.";
   const lanesHtml = res.lanes
     .map((L, i) => {
       const facts = [...new Set(L.factors.map(factorText).filter((x): x is string => !!x))].slice(0, 3);

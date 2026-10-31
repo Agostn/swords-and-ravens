@@ -145,16 +145,20 @@ export function enumerate(pieces: Piece[], field: FieldType): Strategy[] {
 }
 
 let ORDERS: [number, number] = [0, 0];
+/** força total do tabuleiro de cada lado (modo decisivo: a Mesa decide a batalha); null = modo antigo (bônus) */
+let TOTALS: [number, number] | null = null;
 export function setOrders(a: number, d: number): void {
   ORDERS = [a, d];
 }
 export function payoff(field: FieldType, a: Strategy, d: Strategy, ac: CardInfo | null, dc: CardInfo | null): number {
   const r = resolveTacticalBattle({
     field,
-    attacker: { squads: a, card: ac, orderBonus: ORDERS[0] },
-    defender: { squads: d, card: dc, orderBonus: ORDERS[1] }
+    attacker: { squads: a, card: ac, orderBonus: ORDERS[0], boardTotal: TOTALS ? TOTALS[0] : undefined },
+    defender: { squads: d, card: dc, orderBonus: ORDERS[1], boardTotal: TOTALS ? TOTALS[1] : undefined }
   });
   if (!r.winner) return 0;
+  // modo decisivo: vale ganhar ou perder a batalha (±1)
+  if (TOTALS) return r.winner == "attacker" ? 1 : -1;
   return r.winner == "attacker" ? r.bonus : -r.bonus;
 }
 
@@ -199,6 +203,9 @@ export interface Scenario {
   defenderCard?: CardInfo | null;
   attackerOrder?: number;
   defenderOrder?: number;
+  /** força total no tabuleiro (modo decisivo) */
+  attackerTotal?: number;
+  defenderTotal?: number;
 }
 
 export interface ScenarioResult {
@@ -221,6 +228,7 @@ export function solveScenarioMix(sc: Scenario): { A: Strategy[]; x: number[]; D:
 
 function doubleOracle(sc: Scenario): { A: Strategy[]; D: Strategy[]; SA: number[]; SD: number[]; sol: { x: number[]; y: number[]; v: number } } {
   ORDERS = [sc.attackerOrder ?? 0, sc.defenderOrder ?? 0];
+  TOTALS = sc.attackerTotal != null && sc.defenderTotal != null ? [sc.attackerTotal, sc.defenderTotal] : null;
   const A = enumerate(sc.attacker, sc.field);
   const D = enumerate(sc.defender, sc.field);
   const ac = sc.attackerCard ?? null;
@@ -345,6 +353,7 @@ function sample<T>(arr: T[], max: number, rand: () => number): T[] {
 export function computerStrategy(sc: Scenario, side: "attacker" | "defender", seed: number, maxStrategies = 1200): Strategy {
   const rand = rng(seed);
   ORDERS = [sc.attackerOrder ?? 0, sc.defenderOrder ?? 0];
+  TOTALS = sc.attackerTotal != null && sc.defenderTotal != null ? [sc.attackerTotal, sc.defenderTotal] : null;
   const A = sample(strategiesFor(sc.attacker, sc.field, maxStrategies, rand), maxStrategies, rand);
   const D = sample(strategiesFor(sc.defender, sc.field, maxStrategies, rand), maxStrategies, rand);
   const ac = sc.attackerCard ?? null;
@@ -429,8 +438,8 @@ function evalPair(sc: Scenario, a: Strategy, d: Strategy): number {
   return scoreOf(
     resolveTacticalBattle({
       field: sc.field,
-      attacker: { squads: a, card: sc.attackerCard ?? null, orderBonus: sc.attackerOrder ?? 0 },
-      defender: { squads: d, card: sc.defenderCard ?? null, orderBonus: sc.defenderOrder ?? 0 }
+      attacker: { squads: a, card: sc.attackerCard ?? null, orderBonus: sc.attackerOrder ?? 0, boardTotal: sc.attackerTotal },
+      defender: { squads: d, card: sc.defenderCard ?? null, orderBonus: sc.defenderOrder ?? 0, boardTotal: sc.defenderTotal }
     })
   );
 }

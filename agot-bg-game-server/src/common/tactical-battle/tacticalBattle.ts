@@ -44,7 +44,8 @@ import {
   TACTIC_MAX,
   TACTIC_STEP,
   TACTIC_WIN_BONUS,
-  SIZE_EQUALIZE
+  SIZE_EQUALIZE,
+  EDGE_EXP
 } from "./tacticalBattleData";
 
 export type Side = "attacker" | "defender";
@@ -89,6 +90,13 @@ export interface TacticalSideInput {
   orderBonus?: number;
   /** ordem de batalha (tática) escolhida; sem ela, nenhuma */
   tactic?: Tactic | null;
+  /**
+   * Força TOTAL na batalha do tabuleiro (31/out: a Mesa decide a batalha): tropas + apoio + carta + ordem +
+   * guarnição + Lâmina, já com os efeitos das cartas. Quando os dois lados mandam, a Mesa vira a batalha:
+   * os esquadrões são escalados para somar essa força (a carta e o apoio "reforçam" as tropas no campo) e quem
+   * vencer mais faixas vence a batalha. A ordem e a carta não contam de novo (já estão no total).
+   */
+  boardTotal?: number;
 }
 
 export interface TacticInfo {
@@ -159,6 +167,10 @@ export interface TacticalBattleResult {
   duel?: boolean;
   /** ordem de batalha de cada lado */
   tactics?: Record<Side, TacticInfo>;
+  /** a Mesa decidiu a batalha (os dois lados mandaram boardTotal): o vencedor é o da batalha inteira */
+  decisive?: boolean;
+  /** força total de cada lado usada (modo decisivo) */
+  boardTotals?: Record<Side, number>;
 }
 
 /** Força da peça nesta batalha, como no jogo original. */
@@ -338,12 +350,27 @@ function resolveOnce(input: TacticalBattleInput): TacticalBattleResult {
   };
   // a tática vencida continua valendo (anular era forte demais); quem vence ganha um pouco a mais
   const tf = (side: Side): number => 1 + tactics[side].bonus + (tactics[side].beats ? TACTIC_WIN_BONUS : 0);
-  const atkCard = cardFactor(input.attacker.card, input.defender.card, input.attacker.orderBonus ?? 0) * tf("attacker");
-  const defCard = cardFactor(input.defender.card, input.attacker.card, input.defender.orderBonus ?? 0) * tf("defender");
+  const decisive = input.attacker.boardTotal != null && input.defender.boardTotal != null;
+  // modo decisivo: a ordem e a carta já estão no total (não contam de novo)
+  const atkCard = (decisive ? 1 : cardFactor(input.attacker.card, input.defender.card, input.attacker.orderBonus ?? 0)) * tf("attacker");
+  const defCard = (decisive ? 1 : cardFactor(input.defender.card, input.attacker.card, input.defender.orderBonus ?? 0)) * tf("defender");
   const prepared: Record<Side, Squad[]> = {
     attacker: prepare(input.attacker.squads, "attacker", input.field),
     defender: prepare(input.defender.squads, "defender", input.field)
   };
+  if (decisive) {
+    // os esquadrões passam a somar a força total do tabuleiro (carta, apoio, ordem e guarnição reforçam quem está
+    // no campo), e a vantagem ganha um peso a mais (EDGE_EXP) para uma batalha bem desigual não virar fácil
+    const troops = (side: Side): number => prepared[side].reduce((a, q) => a + boardStrength(q, side, input.field), 0);
+    const T: Record<Side, number> = { attacker: Math.max(0, input.attacker.boardTotal ?? 0), defender: Math.max(0, input.defender.boardTotal ?? 0) };
+    const avg = (T.attacker + T.defender) / 2 || 1;
+    (["attacker", "defender"] as Side[]).forEach((side) => {
+      const tr = troops(side);
+      if (tr <= 0) return;
+      const k = (T[side] / tr) * Math.pow(Math.max(0.05, T[side]) / avg, EDGE_EXP);
+      prepared[side] = prepared[side].map((q) => ({ ...q, value: (q.value ?? 0) * k }));
+    });
+  }
   // aproxima o tamanho dos dois exércitos (o tamanho já conta no tabuleiro)
   const total = (side: Side): number => prepared[side].reduce((a, s) => a + (s.value ?? 0), 0);
   const tA = total("attacker");
@@ -443,6 +470,7 @@ function resolveOnce(input: TacticalBattleInput): TacticalBattleResult {
     if (l.winner == "attacker" || l.winner == "defender") lanesWon[l.winner]++;
   });
   const fights = ([0, 1, 2] as Lane[]).filter(contested).length;
+  const decisiveInfo = decisive ? { decisive: true, boardTotals: { attacker: input.attacker.boardTotal ?? 0, defender: input.defender.boardTotal ?? 0 } } : {};
   // bônus cresce com o tamanho da batalha (força do menor exército no tabuleiro)
   const boardTotal = (side: Side): number => prepared[side].reduce((a, q) => a + boardStrength(q, side, input.field), 0);
   const base = BONUS_MAJORITY + Math.floor(Math.min(boardTotal("attacker"), boardTotal("defender")) / BONUS_STRENGTH_STEP);
@@ -466,8 +494,8 @@ function resolveOnce(input: TacticalBattleInput): TacticalBattleResult {
   }
   // empate de verdade: duelo de campeões; vence quem tem a Lâmina de Aço Valiriano (+1)
   if (!winner && fights > 0 && input.bladeHolder) {
-    return { lanes, lanesWon, winner: input.bladeHolder, bonus: base, duel: true, tactics };
+    return { lanes, lanesWon, winner: input.bladeHolder, bonus: base, duel: true, tactics, ...decisiveInfo };
   }
 
-  return { lanes, lanesWon, winner, bonus, tactics };
+  return { lanes, lanesWon, winner, bonus, tactics, ...decisiveInfo };
 }

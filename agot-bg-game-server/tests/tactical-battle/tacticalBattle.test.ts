@@ -238,4 +238,20 @@ describe("combate tático", () => {
     expect(r.lanes[1].factors.some((f) => f.kind == "air" && f.side == "attacker")).toBe(true);
     expect(r.lanes[2].factors.some((f) => f.kind == "air-far" && f.side == "attacker")).toBe(true);
   });
+
+  it("modo decisivo: a Mesa decide a batalha e a força total (carta, apoio) reforça as tropas", () => {
+    const A: Squad[] = [sq("a0", "footman", "lanceiro", 1), sq("a1", "footman", "escudeiro", 1)];
+    const D: Squad[] = [sq("d0", "footman", "lanceiro", 1), sq("d1", "footman", "escudeiro", 1)];
+    // mesmas tropas; o atacante tem carta 4 + apoio 2 (total 8 contra 2)
+    const r = resolveTacticalBattle({ field: "planicie", attacker: { squads: A, boardTotal: 8 }, defender: { squads: D, boardTotal: 2 } });
+    expect(r.decisive).toBe(true);
+    expect(r.winner).toBe("attacker");
+    expect(r.boardTotals).toEqual({ attacker: 8, defender: 2 });
+    // ao contrário, o defensor vence
+    const r2 = resolveTacticalBattle({ field: "planicie", attacker: { squads: A, boardTotal: 2 }, defender: { squads: D, boardTotal: 8 } });
+    expect(r2.winner).toBe("defender");
+    // sem boardTotal: modo antigo (não decisivo)
+    const r3 = resolveTacticalBattle({ field: "planicie", attacker: { squads: A }, defender: { squads: D } });
+    expect(r3.decisive).toBeUndefined();
+  });
 });

@@ -158,7 +158,7 @@ export const SLIDES: Slide[] = [
       const crops: [Parameters<typeof terrainImage>[0], number, string, string][] = [
         ["floresta", 0, "Mata", "flechas e cavalos −"],
         ["rio", 0, "Rio", "quem ataca −20%"],
-        ["fortaleza", 0, "Muralha", "quem defende +30%"]
+        ["fortaleza", 0, "Muralha", "quem defende +10%"]
       ];
       crops.forEach(([field, lane, name, fx], i) => {
         const img = terrainImage(field);
@@ -232,8 +232,8 @@ export const SLIDES: Slide[] = [
     }
   },
   {
-    title: "7. O resultado: +1 ou +2",
-    text: "Quem vencer mais faixas ganha o bônus da batalha no tabuleiro (a de verdade, com tropas, carta e ordem): +1, e mais +1 a cada 4 de força do menor exército (assim não fica pequeno no fim do jogo). Vencendo todas as faixas, +1 a mais. As cartas de Casa contam só no tabuleiro. Se ninguém se encontrar nas faixas, os exércitos marcham e lutam no centro. Depois a batalha segue igual ao jogo original: Espada de Aço Valiriano, baixas e retirada.",
+    title: "7. A força do tabuleiro e o resultado",
+    text: "Antes da luta, soma-se a força de cada lado no tabuleiro: tropas, apoio, carta de Casa e ordem. Essa força reforça suas tropas em todas as faixas (a faixa no topo mostra quem começa na frente). Quem vencer mais faixas VENCE A BATALHA. Vantagem grande quase nunca vira; numa batalha apertada, a estratégia decide. Empate total: duelo de campeões (vence quem tem a Lâmina de Aço Valiriano). Depois, as espadas ⚔ da carta de quem venceu menos as torres ▲ da carta de quem perdeu dizem quantas peças morrem, e quem perde recua.",
     draw: (ctx) => {
       ctx.fillStyle = "#2a2119";
       ctx.fillRect(0, 0, CW, CH);
@@ -252,9 +252,10 @@ export const SLIDES: Slide[] = [
         ctx.font = "700 17px 'Alegreya Sans', sans-serif";
         ctx.fillText(sub, x, y + 42);
       };
-      badge(170, 160, "+1", "venceu mais faixas", A);
-      badge(430, 160, "+2", "venceu todas", HOUSES.baratheon);
-      label(ctx, "soma na batalha do tabuleiro", CW / 2, 300, "rgba(18,14,10,.9)", "#e0b354", 17);
+      badge(170, 160, "9", "tropas + apoio + carta + ordem", A);
+      badge(430, 160, "7", "tropas + apoio + carta + ordem", HOUSES.baratheon);
+      label(ctx, "quem tem mais força começa na frente nas faixas", CW / 2, 280, "rgba(18,14,10,.9)", "#e0b354", 17);
+      label(ctx, "quem vencer mais faixas vence a batalha", CW / 2, 318, "rgba(18,14,10,.9)", "#f2cf7e", 17);
     }
   }
 ];

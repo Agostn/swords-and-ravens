@@ -188,6 +188,15 @@ export interface TerrainRules {
   wall?: boolean;
 }
 
+/**
+ * Muralha e portão protegem quem defende. 31/out (a Mesa decide a batalha): com +30% o defensor vencia 94% das
+ * batalhas de força IGUAL no castelo (no jogo original o empate é da Lâmina, não do defensor). Medido com
+ * tools/tactical/vantagem.ts (FIELDS=castelo) e baixado.
+ */
+const WG = globalThis as { __WALL__?: number; __GATE__?: number };
+export const WALL_DEF: number = WG.__WALL__ ?? 1.1; // antes 1,3 (com 1,08 o empate de força no castelo fica ~65%, como no campo aberto)
+export const GATE_DEF: number = WG.__GATE__ ?? 1.0; // antes 1,1
+
 export const TERRAIN: Record<Terrain, TerrainRules> = {
   aberto: { role: { cavalaria: 1.25, batedores: 1.15 } },
   mata: { role: { arqueiro: 0.6, cavalaria: 0.7, batedores: 0.8, lanceiro: 1.1, escudeiro: 1.1, catapulta: 0.6 } },
@@ -199,8 +208,8 @@ export const TERRAIN: Record<Terrain, TerrainRules> = {
   calcada: { role: { cavalaria: 0.9, batedores: 0.9 }, attacker: 0.9 },
   // Dorne: armadura pesada sofre no calor; cavalaria leve e lanças dornesas brilham
   areia: { role: { cavalaria: 0.8, escudeiro: 0.9, batedores: 1.2, lanceiro: 1.05 }, attacker: 0.9 },
-  muralha: { defender: 1.3, role: { cavalaria: 0.7, batedores: 0.7 }, wall: true },
-  portao: { defender: 1.1, wall: true },
+  muralha: { defender: WALL_DEF, role: { cavalaria: 0.7, batedores: 0.7 }, wall: true },
+  portao: { defender: GATE_DEF, wall: true },
   bloqueado: {},
   mar: {}
 };
@@ -324,6 +333,15 @@ export const NO_CONTACT_RULE: "center" | "defender" | "draw" = (globalThis as { 
  * (o valor dela era "diluído"), então fica 0.
  */
 export const SIZE_EQUALIZE: number = (globalThis as { __SIZE_EQ__?: number }).__SIZE_EQ__ ?? 0;
+
+/**
+ * Modo decisivo (a Mesa decide a batalha, 31/out): peso a mais da vantagem de força do tabuleiro.
+ * Valor do esquadrão × (total do lado / média dos dois totais) ^ EDGE_EXP. 0 = só a força conta;
+ * negativo = a diferença pesa menos (a estratégia vira batalhas apertadas). Balanceado com tools/tactical/vantagem.ts.
+ */
+// medido (140 batalhas, jogando bem): 0 → quem tem +1 de força vence 86%, +2 93%; −0,6 → +1 68%, +2 74%,
+// +3 86%, +4 ou mais 97% (a estratégia pesa nas batalhas apertadas; as desiguais quase não viram)
+export const EDGE_EXP: number = (globalThis as { __EDGE__?: number }).__EDGE__ ?? -0.6;
 
 /** Bônus na batalha do tabuleiro para quem vence o mini-mapa (exército pequeno). */
 export const BONUS_ALL_LANES = 2;

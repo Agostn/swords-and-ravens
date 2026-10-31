@@ -4,7 +4,7 @@
  * na cor de quem defende, portão de madeira em arco. Dentro da muralha o chão é pátio de pedra.
  * Tudo é pintado em 1× (1 px = 1 pixel da arte) e ampliado sem suavizar, como o resto.
  */
-import { FIELD_LANES, FieldType, Terrain } from "../../../agot-bg-game-server/src/common/tactical-battle/tacticalBattleData";
+import { FIELD_LANES, FieldType, Terrain, GATE_DEF, WALL_DEF } from "../../../agot-bg-game-server/src/common/tactical-battle/tacticalBattleData";
 import { rng } from "../solver";
 
 export const W = 600;
@@ -331,7 +331,9 @@ export function paintCastleGround(ctx: CanvasRenderingContext2D, field: FieldTyp
 export function drawWallBadges(ctx: CanvasRenderingContext2D, field: FieldType): void {
   FIELD_LANES[field].forEach((t, i) => {
     if (!isWall(t)) return;
-    const text = t == "muralha" ? "defesa +30%" : "defesa +10%";
+    const pct = Math.round(((t == "muralha" ? WALL_DEF : GATE_DEF) - 1) * 100);
+    if (pct <= 0) return; // portão: é a entrada, sem bônus de defesa
+    const text = `defesa +${pct}%`;
     const cx = i * LW + LW / 2 + (t == "portao" ? 0 : 0);
     const y = WALL_Y + 34;
     ctx.font = "800 13px 'Alegreya Sans', 'Trebuchet MS', sans-serif";

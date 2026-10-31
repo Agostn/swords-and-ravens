@@ -7,3 +7,6 @@ if (process.env.DAIR != null) globalThis.__DAIR__ = Number(process.env.DAIR);
 if (process.env.DAIRF != null) globalThis.__DAIRF__ = Number(process.env.DAIRF);
 if (process.env.DOUT != null) globalThis.__DOUT__ = Number(process.env.DOUT);
 if (process.env.DIN != null) globalThis.__DIN__ = Number(process.env.DIN);
+if (process.env.EDGE != null) globalThis.__EDGE__ = Number(process.env.EDGE);
+if (process.env.WALL != null) globalThis.__WALL__ = Number(process.env.WALL);
+if (process.env.GATE != null) globalThis.__GATE__ = Number(process.env.GATE);
