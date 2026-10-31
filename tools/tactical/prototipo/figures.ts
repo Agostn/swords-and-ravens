@@ -35,6 +35,8 @@ export interface Pose {
   release?: boolean;
   /** está andando (balança o corpo) */
   moving?: boolean;
+  /** em combate (fica em guarda entre os golpes) */
+  guard?: boolean;
 }
 
 export function kindOf(k: SquadKind): Kind {
@@ -952,25 +954,86 @@ function spriteOf(p: Pose, dir: number): [Sprite, string] | null {
   return null;
 }
 
-/** Qual das 4 poses de golpe mostrar. */
+/*
+ * Golpe em 4 tempos, como nos jogos de pixel art:
+ *   preparação curta (recua) → rastro (1 quadro rápido) → golpe esticado SEGURANDO um pouco → volta,
+ *   e no fim um "passinho" de 1 px para trás. Entre os golpes, fica em guarda.
+ * Tempos do golpe (q de 0 a 1, o golpe todo leva 0,4 s; o acerto é em q = 0,4):
+ */
+const Q_PREP = 0.15;
+const Q_SMEAR = 0.3;
+const Q_HOLD = 0.68;
+const Q_BACK = 0.88;
+
+/** Qual das 4 poses mostrar. */
 function footFrame(p: Pose): 0 | 1 | 2 | 3 {
   const ranged = p.role == "arqueiro" || p.role == "flechas";
   if (ranged) {
     if (p.release) return 3;
     return p.atk < 0.3 ? 0 : p.atk < 0.7 ? 1 : 2;
   }
+  const lance = p.role == "lanceiro" || p.role == "abordagem";
+  // guarda: lança deitada apontada para o inimigo; espada pronta, erguida
+  const guard: 0 | 1 | 2 = p.guard ? (lance ? 2 : 1) : 0;
   const q = p.atkPhase;
-  if (q == null || q < 0 || q >= 1) return 0;
-  return q < 0.18 ? 1 : q < 0.36 ? 2 : q < 0.62 ? 3 : q < 0.85 ? 2 : 0;
+  if (q == null || q < 0 || q >= 1) return guard;
+  if (lance) return q < Q_PREP ? 2 : q < Q_HOLD ? 3 : 2;
+  return q < Q_PREP ? 1 : q < Q_SMEAR ? 2 : q < Q_HOLD ? 3 : 1;
 }
 
-/** Inclinação do corpo: balança andando, vai para a frente no golpe, joga para trás quando apanha. */
-function leanOf(p: Pose): number {
-  let a = p.moving ? Math.sin(p.walk) * 0.06 : Math.sin((p.time ?? 0) * 2.2) * 0.015;
+/** Deslocamento do corpo para a frente (px): recua na preparação, passo no golpe, 1 px para trás no fim. */
+function shiftOf(p: Pose): number {
+  if (p.kind != "foot") return 0;
+  if (p.release) return -1.5; // arqueiro: coice do arco
   const q = p.atkPhase;
-  if (q != null && q >= 0 && q < 1) a += q < 0.2 ? -0.08 * (q / 0.2) : q < 0.6 ? 0.16 : 0.16 * (1 - (q - 0.6) / 0.4);
+  if (q == null || q < 0 || q >= 1) return 0;
+  if (q < Q_PREP) return -2;
+  if (q < Q_SMEAR) return 1;
+  if (q < Q_HOLD) return 3.5;
+  if (q < Q_BACK) return 1;
+  return -1;
+}
+
+/** Inclinação: balança andando; no golpe só um pouco (a cabeça fica no nível); joga para trás quando apanha. */
+function leanOf(p: Pose): number {
+  let a = p.moving ? Math.sin(p.walk) * 0.06 : Math.sin((p.time ?? 0) * 2.2) * 0.012;
+  const q = p.atkPhase;
+  if (q != null && q >= 0 && q < 1) a += q < Q_PREP ? -0.05 : q < Q_HOLD ? 0.06 : 0;
   if (p.flash) a -= p.flash * 0.22;
   return p.kind == "horse" ? a * 0.4 : a;
+}
+
+/** Rastro do golpe (1–2 quadros): meia-lua da espada ou riscos da estocada da lança. */
+function drawSmear(ctx: CanvasRenderingContext2D, x: number, y: number, s: number, p: Pose, faceRight: boolean): void {
+  const q = p.atkPhase;
+  if (q == null || q < Q_PREP || q >= Q_SMEAR + 0.08) return;
+  const k = 1 - (q - Q_PREP) / (Q_SMEAR + 0.08 - Q_PREP);
+  const d = faceRight ? 1 : -1;
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.scale(d * s, s);
+  if (p.role == "lanceiro" || p.role == "abordagem") {
+    ctx.strokeStyle = `rgba(255,255,255,${0.75 * k})`;
+    ctx.lineWidth = 1.4;
+    for (const [dy, len] of [[-17, 22], [-15, 30], [-13, 18]]) {
+      ctx.beginPath();
+      ctx.moveTo(14, dy);
+      ctx.lineTo(14 + len, dy);
+      ctx.stroke();
+    }
+  } else if (p.role == "escudeiro") {
+    // meia-lua do alto para a frente
+    const g = ctx.createLinearGradient(0, -34, 26, -12);
+    g.addColorStop(0, `rgba(255,255,255,0)`);
+    g.addColorStop(1, `rgba(255,255,255,${0.85 * k})`);
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.arc(2, -16, 22, -2.0, 0.15);
+    ctx.arc(2, -16, 14, 0.15, -2.0, true);
+    ctx.closePath();
+    ctx.fill();
+  }
+  ctx.restore();
 }
 
 function blitSprite(ctx: CanvasRenderingContext2D, sp: Sprite, x: number, y: number, s: number, faceRight: boolean, rot = 0): void {
@@ -1028,13 +1091,15 @@ export function drawUnit(ctx: CanvasRenderingContext2D, x: number, y: number, s:
     const bob = p.kind == "foot" ? Math.round(Math.abs(Math.sin(p.walk)) * 1.5) : p.kind == "horse" && p.moving ? Math.round(Math.abs(Math.sin(p.walk * 2)) * 2) : 0;
     const fr = p.kind == "ship" ? false : faceRight;
     const rot = p.kind == "foot" || p.kind == "horse" ? leanOf(p) : 0;
-    blitSprite(ctx, sp, x, y - bob * s, s, fr, rot);
+    const sx = x + shiftOf(p) * s * (fr ? 1 : -1);
+    blitSprite(ctx, sp, sx, y - bob * s, s, fr, rot);
     if (p.flash && p.flash > 0.02) {
       ctx.save();
       ctx.globalAlpha *= Math.min(1, p.flash);
-      blitSprite(ctx, whiteSprite(got[1], sp), x, y - bob * s, s, fr, rot);
+      blitSprite(ctx, whiteSprite(got[1], sp), sx, y - bob * s, s, fr, rot);
       ctx.restore();
     }
+    if (p.kind == "foot") drawSmear(ctx, sx, y - bob * s, s, p, fr);
     return;
   }
   // sem as imagens ainda: desenho em vetor

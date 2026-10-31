@@ -824,7 +824,8 @@ function pose(m: Man, h: House, t: number): Pose {
     flash,
     atkPhase: q >= 0 && q < 1 ? q : undefined,
     release: ranged(m.role) && t - m.shotAt < 0.14,
-    moving
+    moving,
+    guard: m.engaged
   };
 }
 
