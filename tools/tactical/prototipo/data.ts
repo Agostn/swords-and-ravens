@@ -181,7 +181,8 @@ export const EMPTY_SIDE: SideConfig = {
   garrison: 0,
   card: { strength: 1, swords: 0, towers: 0 },
   order: 0,
-  raven: 0
+  raven: 0,
+  blade: 0
 };
 
 export const PRESETS: Preset[] = [

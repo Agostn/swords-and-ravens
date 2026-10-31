@@ -367,7 +367,8 @@ function laneOutlook(side: Side): LaneOption[][] {
   const mine = toSquads(units[side].map((u) => ({ ...u, lane: u.lane ?? (1 as Lane) })));
   const eu = units[enemy];
   const has = (k: SquadKind): boolean => eu.some((u) => u.kind == k && !u.locked);
-  const primary: SquadKind | null = has("ship") ? "ship" : has("footman") ? "footman" : has("knight") ? "knight" : null;
+  // em terra, navio é só apoio (atira do litoral): o que conta é o soldado ou o cavaleiro
+  const primary: SquadKind | null = isSea() ? (has("ship") ? "ship" : null) : has("footman") ? "footman" : has("knight") ? "knight" : null;
   const val: LaneOption[][] = ([0, 1, 2] as Lane[]).map((L) => {
     if (!primary || FIELD_LANES[config.field][L] == "bloqueado") return [];
     const knightRoles: (Role | null)[] = primary != "knight" && has("knight") ? rolesFor("knight", false) : [null];
@@ -456,8 +457,8 @@ const LIMITS: Record<string, [number, number]> = {
 };
 
 function getV(side: Side, key: string): number {
-  if (key.startsWith("card.")) return (config[side].card as unknown as Record<string, number>)[key.slice(5)];
-  return (config[side] as unknown as Record<string, number>)[key];
+  if (key.startsWith("card.")) return (config[side].card as unknown as Record<string, number>)[key.slice(5)] ?? 0;
+  return (config[side] as unknown as Record<string, number>)[key] ?? 0;
 }
 
 function setV(side: Side, key: string, v: number): void {
@@ -1063,12 +1064,44 @@ function outcomeLine(res: TacticalBattleResult, me: Side): string {
   return res.winner == me ? `<b class="ok">você ganha</b> (+${res.bonus})` : `<b class="no">${houseOf(res.winner).name} ganha</b> (+${res.bonus} para ele)`;
 }
 
+/** O que o computador faria no seu lugar (a melhor troca vendo tudo) e o que isso daria. */
+function bestChangeHtml(me: Side): string {
+  if (!reactBase) return "";
+  const base = { attacker: toSquads(reactBase.attacker), defender: toSquads(reactBase.defender) };
+  base[other(me)] = toSquads(units[other(me)]);
+  const best = bestReply(scenario(), me, base.attacker, base.defender);
+  const before = base[me];
+  const ch = best.find((q) => {
+    const b = before.find((x) => x.id == q.id);
+    return b && (b.lane != q.lane || b.row != q.row || b.role != q.role);
+  });
+  if (!ch) return `<p class="react-tip">💡 Dica: do jeito que está já é o melhor. Pode manter.</p>`;
+  const b = before.find((x) => x.id == ch.id) as Squad;
+  const n = units[me].findIndex((u) => u.id == ch.id) + 1;
+  const res = resolveTacticalBattle({
+    field: config.field,
+    attacker: { squads: me == "attacker" ? best : base.attacker, card: config.attacker.card, orderBonus: config.attacker.order },
+    defender: { squads: me == "defender" ? best : base.defender, card: config.defender.card, orderBonus: config.defender.order },
+    bladeHolder: bladeHolder()
+  });
+  const now = resolveTacticalBattle({
+    field: config.field,
+    attacker: { squads: base.attacker, card: config.attacker.card, orderBonus: config.attacker.order },
+    defender: { squads: base.defender, card: config.defender.card, orderBonus: config.defender.order },
+    bladeHolder: bladeHolder()
+  });
+  if (now.winner == res.winner && now.bonus == res.bonus) return `<p class="react-tip">💡 Dica: nenhuma troca muda o resultado. Pode manter.</p>`;
+  const what = `${b.role != ch.role ? `${ROLE_NAMES[b.role]} → ${ROLE_NAMES[ch.role]}` : ROLE_NAMES[ch.role]}${b.lane != ch.lane || b.row != ch.row ? ` (${LANE_NAMES[ch.lane].toLowerCase()}, ${ch.row == "frente" ? "frente" : "trás"})` : ""}`;
+  return `<p class="react-tip">💡 Dica: mudar o esquadrão <b>${n}</b>: ${what} → ${outcomeLine(res, me)}</p>`;
+}
+
 function reactInfoHtml(): string {
   const me = placingSide;
   const now = resultNow();
   return `<div class="react-info">
     <p><b>✉ Corvo Mensageiro:</b> você viu o exército de ${houseOf(other(me)).name}. Pode mudar <b>1 esquadrão</b> (lugar e/ou função) ou manter.</p>
     <p class="react-now">Se a luta for assim: ${outcomeLine(now, me)}</p>
+    ${bestChangeHtml(me)}
     ${reactWarn ? `<p class="warn">${reactWarn}</p>` : ""}
   </div>`;
 }

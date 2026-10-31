@@ -222,7 +222,7 @@ function drawEnemySquads(ctx: CanvasRenderingContext2D, v: PlaceView, t: number)
     (["frente", "tras"] as Row[]).forEach((row) => {
       const s = enemySlot(v.field, lane, row);
       if (!s) return;
-      ctx.fillStyle = "rgba(15,12,8,.16)";
+      ctx.fillStyle = "rgba(15,12,8,.32)";
       roundRect(ctx, s.x, s.y, s.w, s.h, 12);
       ctx.fill();
       ctx.setLineDash([4, 6]);
@@ -417,11 +417,16 @@ export function drawPlacement(ctx: CanvasRenderingContext2D, v: PlaceView, t: nu
   ctx.imageSmoothingEnabled = true;
   const lanesT = FIELD_LANES[v.field];
   if (v.field == "mar") drawSeaWaves(ctx, t, W);
-  if (v.enemySquads) drawEnemySquads(ctx, v, t);
-  else drawFog(ctx, t, v.enemy, v.enemyCount, v.enemyForce);
-  if (v.laneForce) drawLaneForce(ctx, v);
-  // a muralha é do terreno (todo mundo sabe onde ela está): fica por cima da névoa
-  drawWalls(ctx, v.field, [false, false, false], v.wallFlag ?? v.enemy.color);
+  if (v.enemySquads) {
+    // Corvo: o exército inimigo aparece POR CIMA da muralha (senão a pedra esconde quem está atrás)
+    drawWalls(ctx, v.field, [false, false, false], v.wallFlag ?? v.enemy.color);
+    drawEnemySquads(ctx, v, t);
+  } else {
+    drawFog(ctx, t, v.enemy, v.enemyCount, v.enemyForce);
+    if (v.laneForce) drawLaneForce(ctx, v);
+    // a muralha é do terreno (todo mundo sabe onde ela está): fica por cima da névoa
+    drawWalls(ctx, v.field, [false, false, false], v.wallFlag ?? v.enemy.color);
+  }
   drawWallBadges(ctx, v.field);
   // nome do terreno de cada faixa (na linha do meio)
   lanesT.forEach((tt, i) => {
