@@ -845,11 +845,33 @@ export function stepSim(sim: Sim, dt: number): void {
         continue;
       }
     }
+    // inimigo colado em mim e o meu alvo longe? luto com quem está perto (não fico rodando)
+    if (Math.hypot(m.foe.x - m.x, m.foe.y - m.y) > m.reach + 30) {
+      let close: Man | null = null;
+      let cd = Infinity;
+      for (const o of sim.men) {
+        if (o.side == m.side || o.dead || isStatic(o) || o.kind == "dragon" || o.kind == "ship") continue;
+        const dx = Math.abs(o.x - m.x);
+        const dy = Math.abs(o.y - m.y);
+        if (dx <= m.reach + 10 && dy <= 20 && dx + dy < cd) {
+          cd = dx + dy;
+          close = o;
+        }
+      }
+      if (close) {
+        m.foe = close;
+        m.spot = false;
+        m.sdir = m.x <= close.x ? -1 : 1;
+        m.yoff = 0;
+      }
+    }
     const foe = m.foe;
     // lado escolhido; se a luta empurrou um para o outro lado, ele passa a lutar dali (não dá a volta)
     if (m.sdir != null && Math.abs(m.x - foe.x) > 10 && Math.sign(m.x - foe.x) != m.sdir) m.sdir = -m.sdir;
     const s = m.sdir ?? (m.side == "attacker" ? -1 : 1);
-    const dd = duelDist(m, foe);
+    // distância de luta: dupla corpo a corpo = média dos alcances; contra arqueiro (ou quem está
+    // lutando com outro) vai até a SUA arma alcançar (antes ficava a 128 px de um arqueiro, rodando)
+    const dd = foe.foe === m && melee(foe) ? duelDist(m, foe) : m.kind == "ship" ? 66 : Math.max(18, m.reach - 4);
     const near = Math.hypot(foe.x - m.x, foe.y - m.y) < dd + 26;
     // golpe: prepara (0,15 s), acerta, volta (0,25 s)
     const p = (t - m.atkStart) / 0.4;
@@ -890,7 +912,7 @@ export function stepSim(sim: Sim, dt: number): void {
       const gapX = Math.abs(foe.x - m.x);
       const gapY = Math.abs(foe.y - m.y);
       // só começa o golpe se, dando o passo, a arma alcança (nada de bater de longe)
-      if (t >= m.nextHit && t > T_FIGHT - 0.8 && t < T_ROUT && gapX <= m.reach + 18 && gapY <= 18) {
+      if (t >= m.nextHit && t > T_FIGHT - 0.8 && t < T_ROUT && gapX <= m.reach + 18 && gapY <= 26) {
         m.atkStart = t;
         m.nextHit = t + (m.kind == "horse" ? 1.1 : 0.75) + r() * 0.45;
       }
@@ -898,11 +920,11 @@ export function stepSim(sim: Sim, dt: number): void {
       if (p >= 0 && p < 0.4) {
         const want = Math.max(0, gapX - (m.reach - 3));
         if (want > 0) m.x += Math.sign(foe.x - m.x) * Math.min(want, 140 * dt);
-        if (gapY > 6) m.y += Math.sign(foe.y - m.y) * Math.min(gapY - 6, 60 * dt);
+        if (gapY > 6) m.y += Math.sign(foe.y - m.y) * Math.min(gapY - 6, 90 * dt);
       }
       // o golpe acerta no meio do movimento, se a arma encostar mesmo
       const prev = (t - dt - m.atkStart) / 0.4;
-      if (prev < 0.4 && p >= 0.4 && t < T_ROUT && Math.abs(foe.x - m.x) <= m.reach + 6 && Math.abs(foe.y - m.y) <= 14) {
+      if (prev < 0.4 && p >= 0.4 && t < T_ROUT && Math.abs(foe.x - m.x) <= m.reach + 6 && Math.abs(foe.y - m.y) <= 16) {
         const blocked = foe.role == "escudeiro" && r() < 0.4;
         hit(sim, m, foe, m.kind == "horse" ? 1.5 : 1, blocked);
         if (!blocked && r() < 0.35) sim.sparks.push({ x: (m.x + foe.x) / 2, y: (m.y + foe.y) / 2 - 14 * FIG, t0: t });
@@ -1375,6 +1397,34 @@ export function drawSim(ctx: CanvasRenderingContext2D, sim: Sim): void {
   tag(`${sim.houses.defender.name} defende`, W / 2, 52, sim.houses.defender.color, sim.houses.defender.ink);
   tag(`${sim.houses.attacker.name} ataca`, W / 2, H - 22, sim.houses.attacker.color, sim.houses.attacker.ink);
   drawLaneHud(ctx, sim);
+  // ordem de batalha de cada lado (no começo da luta)
+  const ti = sim.res.tactics;
+  if (ti && t > 0.2 && t < 4.2) {
+    const a = Math.min(1, (t - 0.2) / 0.3) * Math.min(1, (4.2 - t) / 0.5);
+    const NAMES = { parede: "Parede de escudos", cercar: "Cercar", carga: "Carga" } as const;
+    const ICON = { parede: "🛡", cercar: "⇆", carga: "🐎" } as const;
+    (["defender", "attacker"] as Side[]).forEach((side) => {
+      const x = ti[side];
+      if (!x.tactic) return;
+      const txt = `${ICON[x.tactic]} ${NAMES[x.tactic]} ${x.bonus == 0 ? "(0%)" : x.countered ? "anulada!" : `+${Math.round(x.bonus * 100)}%`}`;
+      ctx.save();
+      ctx.globalAlpha = a;
+      ctx.font = "800 20px 'Alegreya Sans', 'Trebuchet MS', sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      const tw = ctx.measureText(txt).width + 26;
+      const y = side == "defender" ? H * 0.2 : H * 0.8;
+      ctx.fillStyle = x.countered || x.bonus == 0 ? "rgba(90,30,24,.92)" : "rgba(12,9,6,.9)";
+      roundRect(ctx, W / 2 - tw / 2, y - 17, tw, 34, 17);
+      ctx.fill();
+      ctx.strokeStyle = sim.houses[side].color;
+      ctx.lineWidth = 3;
+      ctx.stroke();
+      ctx.fillStyle = "#fff3dc";
+      ctx.fillText(txt, W / 2, y + 1, W - 30);
+      ctx.restore();
+    });
+  }
   if (sim.duel && sim.duel.a && t >= T_DUEL - 0.2) {
     const d = sim.duel;
     const a = Math.min(1, (t - T_DUEL + 0.2) / 0.4);

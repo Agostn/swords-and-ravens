@@ -35,6 +35,10 @@ import {
   UNOPPOSED_FLANK_SHARE,
   FAR_FLANK_SHARE,
   NO_CONTACT_RULE,
+  Tactic,
+  TACTIC_BEATS,
+  TACTIC_MAX,
+  TACTIC_STEP,
   SIZE_EQUALIZE
 } from "./tacticalBattleData";
 
@@ -71,6 +75,25 @@ export interface TacticalSideInput {
   card?: CardInfo | null;
   /** ordem da área: Marcha −1/0/+1 (atacante) ou Defesa +1/+2 (defensor) */
   orderBonus?: number;
+  /** ordem de batalha (tática) escolhida; sem ela, nenhuma */
+  tactic?: Tactic | null;
+}
+
+export interface TacticInfo {
+  tactic: Tactic | null;
+  /** bônus que a tática daria com essas tropas (0 se não pode usar) */
+  bonus: number;
+  /** a tática do outro venceu a sua: bônus anulado */
+  countered: boolean;
+}
+
+/** Quanto a tática rende com estas tropas (0 = não dá para usar). */
+export function tacticBonus(t: Tactic | null | undefined, squads: Squad[]): number {
+  if (!t) return 0;
+  const n = (r: Role): number => squads.filter((s) => s.role == r).length;
+  const lanes = new Set(squads.filter((s) => s.kind != "garrison").map((s) => s.lane)).size;
+  const count = t == "parede" ? n("escudeiro") : t == "carga" ? n("cavalaria") : lanes >= 2 ? n("lanceiro") + n("batedores") : 0;
+  return Math.min(TACTIC_MAX, count * TACTIC_STEP[t]);
 }
 
 export interface TacticalBattleInput {
@@ -117,6 +140,8 @@ export interface TacticalBattleResult {
   metInCenter?: boolean;
   /** empatou e foi decidido no duelo de campeões (vence quem tem a Lâmina de Aço Valiriano) */
   duel?: boolean;
+  /** ordem de batalha de cada lado */
+  tactics?: Record<Side, TacticInfo>;
 }
 
 /** Força da peça nesta batalha, como no jogo original. */
@@ -280,8 +305,21 @@ export function resolveTacticalBattle(input: TacticalBattleInput): TacticalBattl
 
 function resolveOnce(input: TacticalBattleInput): TacticalBattleResult {
   const terrains = FIELD_LANES[input.field];
-  const atkCard = cardFactor(input.attacker.card, input.defender.card, input.attacker.orderBonus ?? 0);
-  const defCard = cardFactor(input.defender.card, input.attacker.card, input.defender.orderBonus ?? 0);
+  // ordem de batalha: bônus pelas tropas; anulado se a do outro vence a sua
+  const tacA = input.attacker.tactic ?? null;
+  const tacD = input.defender.tactic ?? null;
+  const tinfo = (mine: Tactic | null, theirs: Tactic | null, squads: Squad[]): TacticInfo => {
+    const bonus = tacticBonus(mine, squads);
+    const countered = !!mine && !!theirs && TACTIC_BEATS[theirs] == mine;
+    return { tactic: mine, bonus, countered };
+  };
+  const tactics: Record<Side, TacticInfo> = {
+    attacker: tinfo(tacA, tacD, input.attacker.squads),
+    defender: tinfo(tacD, tacA, input.defender.squads)
+  };
+  const tf = (side: Side): number => 1 + (tactics[side].countered ? 0 : tactics[side].bonus);
+  const atkCard = cardFactor(input.attacker.card, input.defender.card, input.attacker.orderBonus ?? 0) * tf("attacker");
+  const defCard = cardFactor(input.defender.card, input.attacker.card, input.defender.orderBonus ?? 0) * tf("defender");
   const prepared: Record<Side, Squad[]> = {
     attacker: prepare(input.attacker.squads, "attacker", input.field),
     defender: prepare(input.defender.squads, "defender", input.field)
@@ -387,8 +425,8 @@ function resolveOnce(input: TacticalBattleInput): TacticalBattleResult {
   }
   // empate de verdade: duelo de campeões; vence quem tem a Lâmina de Aço Valiriano (+1)
   if (!winner && fights > 0 && input.bladeHolder) {
-    return { lanes, lanesWon, winner: input.bladeHolder, bonus: BONUS_MAJORITY, duel: true };
+    return { lanes, lanesWon, winner: input.bladeHolder, bonus: BONUS_MAJORITY, duel: true, tactics };
   }
 
-  return { lanes, lanesWon, winner, bonus };
+  return { lanes, lanesWon, winner, bonus, tactics };
 }

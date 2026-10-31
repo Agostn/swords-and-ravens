@@ -192,6 +192,17 @@
   .role-say .rng { color: var(--gold); }
   .btn .sub { display: block; font-size: 11.5px; font-weight: 600; opacity: .8; line-height: 1.1; }
   .piece { position: relative; }
+  .tac-list { display: grid; gap: 8px; }
+  .tac-card { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; text-align: left; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--line); background: var(--panel); color: var(--parch); font: inherit; cursor: pointer; }
+  .tac-card b { font-size: 17px; }
+  .tac-card em { font-style: normal; color: #9bd786; margin-left: 4px; }
+  .tac-card span { font-size: 13.5px; color: #cdbd98; }
+  .tac-card i { font-style: normal; }
+  .tac-card .ok { color: #9bd786; }
+  .tac-card .no { color: #ee8f80; }
+  .tac-card.off { opacity: .5; cursor: default; }
+  .tac-card:not(.off):hover { border-color: var(--gold); }
+  .tac-line { margin: 4px 0; font-size: 13.5px; color: #f2cf7e; }
   .board-res { background: rgba(0,0,0,.18); border: 1px solid var(--line); border-radius: var(--r); padding: 10px 12px; margin: 8px 0; font-size: 14px; line-height: 1.4; }
   .lanes-title { margin: 10px 0 4px; font-size: 15px; }
   .board-res h3 { margin: 0 0 4px; font-size: 15px; }
@@ -283,6 +294,7 @@
     #panel > .actions .btn { flex: 1 1 auto; }
     #panel > .actions #auto { flex: 0 0 auto; }
     #panel > .muted, .speed, .result, .warn { order: 5; }
+    .tac-line { order: 4; font-size: 12px; margin: 0; padding: 0 4px; }
     .react-info { order: 3; padding: 6px 8px; font-size: 12px; line-height: 1.3; }
     .react-info p { margin: 0 0 2px; }
     .react-info .warn { padding: 4px 6px; font-size: 11.5px; }
@@ -384,6 +396,10 @@
     <p id="handoff-text"></p>
     <button type="button" class="btn primary" id="handoff-go">Sou eu, mostrar o campo</button>
   </div>
+</div>
+
+<div id="tactic" class="modal" hidden>
+  <div class="modal-box" id="tactic-box" role="dialog" aria-label="Ordem de batalha"></div>
 </div>
 
 <div id="tutorial" class="modal" hidden>

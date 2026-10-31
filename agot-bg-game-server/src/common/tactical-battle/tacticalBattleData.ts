@@ -288,3 +288,24 @@ export const SIZE_EQUALIZE: number = (globalThis as { __SIZE_EQ__?: number }).__
 /** Bônus na batalha do tabuleiro para quem vence o mini-mapa. */
 export const BONUS_ALL_LANES = 2;
 export const BONUS_MAJORITY = 1;
+
+/**
+ * ORDEM DE BATALHA (tática do comandante), escolhida escondida junto com o posicionamento.
+ * Inspirada nas táticas de Crusader Kings II (a tática depende das tropas que você tem e cada uma tem
+ * contra-táticas), nas formações de Total War (parede de escudos aguenta carga, mas tem flanco fraco)
+ * e nas cartas de batalha de Hannibal: Rome vs Carthage (cercar, ataque frontal…).
+ *  - Parede de escudos: precisa de escudeiros; cada esquadrão de escudeiros dá +6% (até +18%).
+ *    Segura a CARGA (anula a Carga do outro). Perde para CERCAR (flanco fraco: a sua é anulada).
+ *  - Cercar (pinça): precisa de tropas em pelo menos 2 faixas e de lanceiros/batedores;
+ *    cada esquadrão deles dá +6% (até +18%). Vence a PAREDE. Perde para a CARGA (linha fina se rompe).
+ *  - Carga: precisa de cavalaria; cada esquadrão de cavalaria dá +8% (até +18%). Vence o CERCAR.
+ *    Perde para a PAREDE.
+ *  - Nenhuma: sem bônus e sem risco.
+ * Ser vencido só ANULA o seu bônus (não tira mais nada): errar a tática custa pouco, acertar rende.
+ */
+export type Tactic = "parede" | "cercar" | "carga";
+export const TACTIC_BEATS: Record<Tactic, Tactic> = { parede: "carga", cercar: "parede", carga: "cercar" };
+export const TACTIC_STEP: Record<Tactic, number> = { parede: 0.06, cercar: 0.06, carga: 0.08 };
+export const TACTIC_MAX = 0.18;
+export const TACTIC_NAMES: Record<Tactic, string> = { parede: "Parede de escudos", cercar: "Cercar", carga: "Carga" };
+

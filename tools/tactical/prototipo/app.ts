@@ -3,8 +3,8 @@
  * Usa a MESMA conta do jogo (src/common/tactical-battle) e o mesmo "computador" do teste de equilíbrio.
  * Gerar a página: node tools/tactical/prototipo/build.js
  */
-import { boardStrength, hasFormation, resolveTacticalBattle, Squad, Lane, Side, TacticalBattleResult, LaneFactor } from "../../../agot-bg-game-server/src/common/tactical-battle/tacticalBattle";
-import { BASE_VALUE, FAR_FLANK_SHARE, FIELD_LANES, FieldType, ROW_FACTOR, Role, Row, SUPPORT_FACTOR, SquadKind, TERRAIN, UNOPPOSED_FLANK_SHARE, rolesFor } from "../../../agot-bg-game-server/src/common/tactical-battle/tacticalBattleData";
+import { boardStrength, hasFormation, tacticBonus, resolveTacticalBattle, Squad, Lane, Side, TacticalBattleResult, LaneFactor } from "../../../agot-bg-game-server/src/common/tactical-battle/tacticalBattle";
+import { TACTIC_BEATS, TACTIC_NAMES, Tactic, BASE_VALUE, FAR_FLANK_SHARE, FIELD_LANES, FieldType, ROW_FACTOR, Role, Row, SUPPORT_FACTOR, SquadKind, TERRAIN, UNOPPOSED_FLANK_SHARE, rolesFor } from "../../../agot-bg-game-server/src/common/tactical-battle/tacticalBattleData";
 import { bestReply, computerStrategy, Piece, Scenario, rng } from "../solver";
 import {
   EMPTY_SIDE,
@@ -81,6 +81,9 @@ let sim: Sim | null = null;
 let simSeed = 1;
 let lastResult: TacticalBattleResult | null = null;
 let lastBoard: BoardBattle | null = null;
+/** ordem de batalha de cada lado (escolhida quando aperta Pronto) */
+let tactics: Record<Side, Tactic | null> = { attacker: null, defender: null };
+let tacticChosen: Record<Side, boolean> = { attacker: false, defender: false };
 let speed = 1;
 let goreOn = true;
 let raf: number | null = null;
@@ -527,6 +530,8 @@ function startPlacement(): void {
   }
   placingSide = config.mode == "cpu" ? config.humanSide : "attacker";
   phase = "place";
+  tactics = { attacker: null, defender: null };
+  tacticChosen = { attacker: false, defender: false };
   beginTurn();
   if (!store("tactical-tutorial-seen")) openTutorial(0);
 }
@@ -866,6 +871,11 @@ function canvasDown(e: PointerEvent): void {
 // ----- fim do turno
 function finishTurn(): void {
   if (phase != "place") return;
+  // antes de ficar pronto: escolher a ordem de batalha (se o tempo acabou, vai sem)
+  if (!tacticChosen[placingSide] && timeLeft > 0) {
+    openTacticPicker(placingSide);
+    return;
+  }
   stopTimer();
   units[placingSide]
     .filter((u) => u.lane == null)
@@ -881,6 +891,7 @@ function finishTurn(): void {
     const side = other(placingSide);
     void (enemyPlan ?? thinkAsync(side)).then((strat) => {
       applyStrategy(side, strat);
+      tactics[side] = cpuTactic(side);
       startReaction();
     });
     return;
@@ -892,6 +903,69 @@ function finishTurn(): void {
     return;
   }
   startReaction();
+}
+
+// ---------------------------------------------------------------- ordem de batalha
+const TACTIC_LIST: Tactic[] = ["parede", "cercar", "carga"];
+const TACTIC_ICON: Record<Tactic, string> = { parede: "🛡", cercar: "⇆", carga: "🐎" };
+const TACTIC_NEED: Record<Tactic, string> = {
+  parede: "precisa de escudeiros (+6% por esquadrão)",
+  cercar: "precisa de lanceiros ou batedores e tropas em 2 faixas (+6% por esquadrão)",
+  carga: "precisa de cavalaria (+8% por esquadrão)"
+};
+const beatenBy = (t: Tactic): Tactic => TACTIC_LIST.find((x) => TACTIC_BEATS[x] == t) as Tactic;
+
+/** O computador escolhe como no Crusader Kings: sorteia entre as que pode usar, mais peso para a que rende mais. */
+function cpuTactic(side: Side): Tactic | null {
+  const sq = toSquads(units[side]);
+  const opts = TACTIC_LIST.map((t) => ({ t, w: tacticBonus(t, sq) })).filter((o) => o.w > 0);
+  if (!opts.length) return null;
+  const total = opts.reduce((a, o) => a + o.w, 0) + 0.04;
+  let r = Math.random() * total;
+  for (const o of opts) if ((r -= o.w) <= 0) return o.t;
+  return null;
+}
+
+function openTacticPicker(side: Side): void {
+  units[side].filter((u) => u.lane == null).forEach((u) => (u.lane = 1));
+  const sq = toSquads(units[side]);
+  const card = (t: Tactic | null): string => {
+    if (!t) return `<button type="button" class="tac-card" data-tac="none"><b>✋ Nenhuma</b><span>sem bônus e sem risco</span></button>`;
+    const b = tacticBonus(t, sq);
+    return `<button type="button" class="tac-card${b > 0 ? "" : " off"}" data-tac="${t}" ${b > 0 ? "" : "disabled"}>
+      <b>${TACTIC_ICON[t]} ${TACTIC_NAMES[t]} ${b > 0 ? `<em>+${Math.round(b * 100)}%</em>` : ""}</b>
+      <span>${b > 0 ? `<i class="ok">✓ vence ${TACTIC_NAMES[TACTIC_BEATS[t]]}</i> · <i class="no">✗ perde p/ ${TACTIC_NAMES[beatenBy(t)]}</i>` : TACTIC_NEED[t]}</span>
+    </button>`;
+  };
+  $("tactic-box").innerHTML = `
+    <h2>Ordem de batalha</h2>
+    <p class="muted">Como o seu comandante vai lutar. O bônus depende das suas tropas. Se a ordem do inimigo vencer a sua, você perde só o bônus.</p>
+    <div class="tac-list">${TACTIC_LIST.map(card).join("")}${card(null)}</div>`;
+  $("tactic").hidden = false;
+  $("tactic-box")
+    .querySelectorAll<HTMLButtonElement>("[data-tac]")
+    .forEach((b) =>
+      b.addEventListener("click", () => {
+        tactics[side] = b.dataset.tac == "none" ? null : (b.dataset.tac as Tactic);
+        tacticChosen[side] = true;
+        $("tactic").hidden = true;
+        finishTurn();
+      })
+    );
+}
+
+/** Texto: as duas ordens de batalha e quem venceu quem. */
+function tacticsLine(res: TacticalBattleResult): string {
+  const ti = res.tactics;
+  if (!ti || (!ti.attacker.tactic && !ti.defender.tactic)) return "";
+  const one = (side: Side): string => {
+    const x = ti[side];
+    const name = houseOf(side).name;
+    if (!x.tactic) return `${name}: nenhuma`;
+    if (x.bonus == 0) return `${name}: ${TACTIC_NAMES[x.tactic]} (sem as tropas certas, 0%)`;
+    return `${name}: ${TACTIC_NAMES[x.tactic]} ${x.countered ? `<s>+${Math.round(x.bonus * 100)}%</s> anulada` : `<b>+${Math.round(x.bonus * 100)}%</b>`}`;
+  };
+  return `<p class="tac-line">⚔ Ordem de batalha — ${one("attacker")} · ${one("defender")}</p>`;
 }
 
 // ---------------------------------------------------------------- reação
@@ -1002,8 +1076,8 @@ function finishReaction(): void {
 function resultNow(): TacticalBattleResult {
   return resolveTacticalBattle({
     field: config.field,
-    attacker: { squads: toSquads(units.attacker), card: config.attacker.card, orderBonus: config.attacker.order },
-    defender: { squads: toSquads(units.defender), card: config.defender.card, orderBonus: config.defender.order },
+    attacker: { squads: toSquads(units.attacker), card: config.attacker.card, orderBonus: config.attacker.order, tactic: tactics.attacker },
+    defender: { squads: toSquads(units.defender), card: config.defender.card, orderBonus: config.defender.order, tactic: tactics.defender },
     bladeHolder: bladeHolder()
   });
 }
@@ -1029,14 +1103,14 @@ function bestChangeHtml(me: Side): string {
   const n = units[me].findIndex((u) => u.id == ch.id) + 1;
   const res = resolveTacticalBattle({
     field: config.field,
-    attacker: { squads: me == "attacker" ? best : base.attacker, card: config.attacker.card, orderBonus: config.attacker.order },
-    defender: { squads: me == "defender" ? best : base.defender, card: config.defender.card, orderBonus: config.defender.order },
+    attacker: { squads: me == "attacker" ? best : base.attacker, card: config.attacker.card, orderBonus: config.attacker.order, tactic: tactics.attacker },
+    defender: { squads: me == "defender" ? best : base.defender, card: config.defender.card, orderBonus: config.defender.order, tactic: tactics.defender },
     bladeHolder: bladeHolder()
   });
   const now = resolveTacticalBattle({
     field: config.field,
-    attacker: { squads: base.attacker, card: config.attacker.card, orderBonus: config.attacker.order },
-    defender: { squads: base.defender, card: config.defender.card, orderBonus: config.defender.order },
+    attacker: { squads: base.attacker, card: config.attacker.card, orderBonus: config.attacker.order, tactic: tactics.attacker },
+    defender: { squads: base.defender, card: config.defender.card, orderBonus: config.defender.order, tactic: tactics.defender },
     bladeHolder: bladeHolder()
   });
   if (now.winner == res.winner && now.bonus == res.bonus) return `<p class="react-tip">💡 Dica: nenhuma troca muda o resultado. Pode manter.</p>`;
@@ -1129,8 +1203,8 @@ function runBattle(): void {
   phase = "battle";
   lastResult = resolveTacticalBattle({
     field: config.field,
-    attacker: { squads: toSquads(units.attacker), card: config.attacker.card, orderBonus: config.attacker.order },
-    defender: { squads: toSquads(units.defender), card: config.defender.card, orderBonus: config.defender.order },
+    attacker: { squads: toSquads(units.attacker), card: config.attacker.card, orderBonus: config.attacker.order, tactic: tactics.attacker },
+    defender: { squads: toSquads(units.defender), card: config.defender.card, orderBonus: config.defender.order, tactic: tactics.defender },
     bladeHolder: bladeHolder()
   });
   simSeed = Math.floor(Math.random() * 1e9);
@@ -1177,7 +1251,8 @@ function whyHtml(): string {
     })
     .join("");
   const notes = [reactNote.defender, reactNote.attacker].filter(Boolean);
-  return `${notes.length ? `<p class="react-notes">${notes.join(" ")}</p>` : ""}<ul class="why" aria-label="Por que cada faixa">${items}</ul>`;
+  const tl = tacticsLine(res);
+  return `${tl}${notes.length ? `<p class="react-notes">${notes.join(" ")}</p>` : ""}<ul class="why" aria-label="Por que cada faixa">${items}</ul>`;
 }
 
 function renderBattlePanel(): void {
@@ -1330,6 +1405,7 @@ function showResult(): void {
     <div class="result">
       <h2 class="verdict">${verdict}</h2>
       <p class="bonus-line">${bonus}</p>
+      ${tacticsLine(res)}
       ${res.metInCenter ? `<p class="note">Ninguém se encontrou nas faixas escolhidas, então os exércitos marcharam e lutaram no centro.</p>` : ""}
       ${res.duel && res.winner ? `<p class="note">🗡 <b>Empate nas faixas → duelo de campeões.</b> Os dois campeões lutaram no meio do campo e venceu o de ${houseOf(res.winner).name}, que tem a Lâmina de Aço Valiriano (o mais alto nos Feudos desempata, como no jogo original).</p>` : ""}
       ${lastBoard ? boardHtml(lastBoard) : ""}

@@ -243,3 +243,20 @@ Stark + mini-mapa jogado bem pelos dois), em 6 tipos de exército × 3 campos ×
   braços de fora e machado; Tyrell verde esmaltado com pluma; Martell escamas de cobre, seda e pano no elmo, lança
   mais comprida; Arryn aço claro, capa azul-céu e asas de falcão; Targaryen armadura negra com espinhos vermelhos.
 
+## Ordem de batalha (31/out)
+Quando aperta "Pronto", cada lado escolhe escondido como o comandante vai lutar. O bônus depende das tropas
+(como as táticas do *Crusader Kings II*, que são sorteadas conforme a composição do exército e têm contra-táticas;
+as formações de *Total War*: parede de escudos segura carga mas tem flanco fraco; e as cartas de batalha de
+*Hannibal: Rome vs Carthage*: ataque frontal, cercar…).
+| Ordem | Precisa de | Bônus | Vence | Perde para |
+|---|---|---|---|---|
+| 🛡 Parede de escudos | escudeiros | +6% por esquadrão (até +18%) | Carga | Cercar |
+| ⇆ Cercar | lanceiros/batedores e tropas em 2 faixas | +6% por esquadrão (até +18%) | Parede | Carga |
+| 🐎 Carga | cavalaria | +8% por esquadrão (até +18%) | Cercar | Parede |
+| ✋ Nenhuma | — | 0 | — | — |
+Ser vencido só **anula o seu bônus** (não tira mais nada). Como as peças de cada um aparecem no tabuleiro
+(quem não tem cavaleiro não pode dar Carga), dá para deduzir o que o outro pode escolher: é leitura, não só sorte.
+O computador escolhe como no CK2: sorteia entre as que pode usar, com mais peso para a que rende mais.
+Código: `TACTIC_*` em `tacticalBattleData.ts`, `tacticBonus` e `tactics` no resultado (`tacticalBattle.ts`).
+**Para testar nas partidas:** se alguma ordem ficar boa demais, mexer no bônus por esquadrão.
+

@@ -198,4 +198,19 @@ describe("combate tático", () => {
     expect(com.bonus).toBe(1);
     expect(com.duel).toBe(true);
   });
+
+  it("ordem de batalha: parede segura a carga, cercar vence a parede, carga vence o cercar", () => {
+    const A: Squad[] = [sq("a0", "footman", "escudeiro", 1), sq("a1", "footman", "escudeiro", 0)];
+    const D: Squad[] = [{ ...sq("d0", "knight", "cavalaria", 1) }, sq("d1", "footman", "lanceiro", 0)];
+    const r = resolveTacticalBattle({ field: "planicie", attacker: { squads: A, tactic: "parede" }, defender: { squads: D, tactic: "carga" } });
+    expect(r.tactics?.attacker.bonus).toBeCloseTo(0.12);
+    expect(r.tactics?.attacker.countered).toBe(false);
+    expect(r.tactics?.defender.countered).toBe(true);
+    const r2 = resolveTacticalBattle({ field: "planicie", attacker: { squads: A, tactic: "parede" }, defender: { squads: D, tactic: "cercar" } });
+    expect(r2.tactics?.attacker.countered).toBe(true);
+    expect(r2.tactics?.defender.bonus).toBeCloseTo(0.06); // 1 lanceiro, tropas em 2 faixas
+    // sem as tropas certas, a tática não dá nada
+    const r3 = resolveTacticalBattle({ field: "planicie", attacker: { squads: A, tactic: "carga" }, defender: { squads: D } });
+    expect(r3.tactics?.attacker.bonus).toBe(0);
+  });
 });

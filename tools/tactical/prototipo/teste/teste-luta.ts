@@ -18,6 +18,8 @@ const out: string[] = [];
 let idleCases = 0;
 let crossings = 0; // alguém atravessou o próprio inimigo (deu a volta nele) para lutar do outro lado
 let crossBattles = 0;
+let closeIdle = 0; // perto do inimigo (arma alcança) e sem golpear por mais de 1,5 s
+const closeDbg: string[] = [];
 const dbg: string[] = [];
 for (let n = 0; n < 400; n++) {
   const field = pick(fields);
@@ -36,11 +38,12 @@ for (let n = 0; n < 400; n++) {
   // olha de 4,2 s a 6,2 s: quem fica parado o tempo todo nesse intervalo
   const still = new Map<number, number>();
   const lastSide = new Map<number, number>();
+  const closeT = new Map<number, number>();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const lastFoe = new Map<number, any>();
   let crossedHere = 0;
   const where = new Map<number, string>();
-  while (sim.t < 6.2) {
+  while (sim.t < 9.6) {
     stepSim(sim, 0.02);
     men.forEach((m, i) => {
       if (m.dead || !m.foe || m.foe.dead || m.kind == "dragon" || m.kind == "ship") return;
@@ -56,7 +59,21 @@ for (let n = 0; n < 400; n++) {
       lastSide.set(i, sd);
       lastFoe.set(i, m.foe);
     });
-    if (sim.t < 4.2) continue;
+    men.forEach((m, i) => {
+      if (m.dead || m.kind == "dragon" || m.kind == "ship" || m.kind == "tower" || m.kind == "siege" || m.role == "arqueiro" || m.role == "flechas") return;
+      if (sim.t < 4 || sim.t > 9.5) return;
+      if (sim.duel && sim.t >= 6.4) return;
+      const near = men.some((o) => o.side != m.side && !o.dead && o.kind != "tower" && Math.abs(o.x - m.x) <= m.reach + 6 && Math.abs(o.y - m.y) <= 14);
+      const attacking = sim.t - m.atkStart < 0.8;
+      if (near && !attacking) {
+        closeT.set(i, (closeT.get(i) ?? 0) + 0.02);
+        if ((closeT.get(i) ?? 0) > 1.5 && (closeT.get(i) ?? 0) < 1.52) {
+          closeIdle++;
+          if (closeDbg.length < 8) closeDbg.push(`#${n} ${m.side[0]}${m.role} foe=${m.foe ? m.foe.role : "-"} mutual=${m.foe && m.foe.foe === m} eng=${m.engaged} gap=${m.foe ? Math.round(Math.abs(m.foe.x - m.x)) + "," + Math.round(Math.abs(m.foe.y - m.y)) : "-"}`);
+        }
+      } else closeT.set(i, 0);
+    });
+    if (sim.t < 4.2 || sim.t > 6.2) continue;
     if (sim.duel && sim.t >= 4.9) continue; // duelo de campeões: os outros param para assistir (de propósito)
     men.forEach((m, i) => {
       if (m.dead || m.kind == "tower" || m.kind == "siege" || m.kind == "dragon" || m.role == "arqueiro" || m.role == "flechas") return;
@@ -80,4 +97,4 @@ for (let n = 0; n < 400; n++) {
   }
 }
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-(window as any).__RESULT__ = `batalhas 400, com soldado parado mais de 1 s: ${idleCases}; atravessou o inimigo: ${crossings} vezes em ${crossBattles} batalhas\n` + out.join("\n") + "\n" + dbg.join("\n");
+(window as any).__RESULT__ = `batalhas 400, com soldado parado mais de 1 s: ${idleCases}; atravessou o inimigo: ${crossings} vezes em ${crossBattles} batalhas; perto sem atacar: ${closeIdle}\n` + closeDbg.join("\n") + "\n" + out.join("\n") + "\n" + dbg.join("\n");
