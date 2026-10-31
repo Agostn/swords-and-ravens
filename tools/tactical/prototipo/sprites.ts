@@ -78,7 +78,7 @@ const SHIELD_FACE = [key(93, 98, 110), key(81, 86, 99), key(71, 78, 90), key(70,
 const SWORD = [key(167, 168, 169), key(131, 132, 133)];
 
 const OUTLINE: RGB = [26, 18, 12];
-const PAD = 14;
+const PAD = 42;
 
 function newCanvas(w: number, h: number): [HTMLCanvasElement, CanvasRenderingContext2D] {
   const c = document.createElement("canvas");
@@ -183,9 +183,15 @@ function cellCanvas(cell: keyof typeof CELL, h: House, opts: { dropSword?: boole
 }
 
 /** Soldado a pé: lanceiro, escudeiro ou arqueiro (atk 0 = parado, 1 = golpe/tiro). */
-export function soldierSprite(h: House, role: Role, atk: 0 | 1): Sprite | null {
+/**
+ * Soldado a pé: lanceiro, escudeiro ou arqueiro, em 4 poses de golpe (0 = parado … 3 = golpe esticado):
+ * - lanceiro: lança em pé → inclinando → deitada → estocada (lança empurrada para a frente)
+ * - escudeiro: espada para baixo → erguida → descendo → estocada passando o escudo
+ * - arqueiro: arco parado → puxando → corda toda puxada (flecha armada) → corda solta
+ */
+export function soldierSprite(h: House, role: Role, frame: 0 | 1 | 2 | 3): Sprite | null {
   if (!soldiersImage()) return null;
-  const id = `s|${h.name}|${role}|${atk}`;
+  const id = `s|${h.name}|${role}|${frame}`;
   const hit = cache.get(id);
   if (hit) return hit;
   let c: HTMLCanvasElement;
@@ -195,21 +201,34 @@ export function soldierSprite(h: House, role: Role, atk: 0 | 1): Sprite | null {
   const woodD = "#40280f";
   const steel = "#d7dce0";
   const steelD = "#8a9298";
+  const blade = (x0: number, y0: number, x1: number, y1: number): void => {
+    // lâmina com fio claro e sombra
+    line(ctx, x0, y0, x1, y1, "#e9edf0");
+    line(ctx, x0, y0 + 1, x1, y1 + 1, "#8a9298");
+  };
   if (role == "escudeiro") {
     // a arte original segura escudo e espada do lado direito: no fim espelhamos, para ele
-    // olhar para o mesmo lado dos outros soldados (escudo e estocada virados para o inimigo)
-    if (atk == 0) [c, ctx] = cellCanvas("escudo", h, { shieldTeam: true });
+    // olhar para o mesmo lado dos outros soldados (escudo e golpe virados para o inimigo)
+    if (frame == 0) [c, ctx] = cellCanvas("escudo", h, { shieldTeam: true });
     else {
-      // estocada: a espada sai reta para a frente, passando o escudo, até encostar no inimigo
       [c, ctx] = cellCanvas("escudo", h, { shieldTeam: true, dropSword: true });
-      const y = PAD + 18;
-      px(ctx, PAD + 5, y - 2, "#b08d3c", 1, 5); // guarda
-      for (let x = PAD + 6; x <= PAD + 27; x++) {
-        px(ctx, x, y, "#e9edf0");
-        px(ctx, x, y + 1, "#8a9298");
+      const hx = PAD + 4;
+      const hy = PAD + 18;
+      if (frame == 1) {
+        // erguida para trás, pronta para descer
+        blade(hx, hy - 2, hx - 7, hy - 17);
+        px(ctx, hx - 2, hy - 3, "#b08d3c", 4, 1);
+      } else if (frame == 2) {
+        // descendo na diagonal, para a frente
+        blade(hx + 2, hy - 1, hx + 18, hy - 9);
+        px(ctx, hx + 1, hy - 3, "#b08d3c", 1, 4);
+      } else {
+        // estocada: reta para a frente, passando o escudo
+        px(ctx, hx + 1, hy - 2, "#b08d3c", 1, 5);
+        blade(hx + 2, hy, hx + 24, hy);
+        px(ctx, hx + 25, hy, "#e9edf0");
       }
-      px(ctx, PAD + 28, y, "#e9edf0");
-      px(ctx, PAD + 3, y, "#5a3d24", 2, 2); // punho
+      px(ctx, hx - 1, hy - 1, "#5a3d24", 2, 2); // mão/punho
     }
     ay = PAD + 34;
   } else if (role == "arqueiro" || role == "flechas") {
@@ -219,44 +238,51 @@ export function soldierSprite(h: House, role: Role, atk: 0 | 1): Sprite | null {
     px(ctx, PAD + 11, PAD + 3, "#efe6d0");
     px(ctx, PAD + 12, PAD + 2, "#efe6d0");
     px(ctx, PAD + 12, PAD + 4, "#c9483a");
-    // arco na mão da frente (à esquerda)
+    // arco na mão da frente (à esquerda); puxado, ele enverga mais
     const bx = PAD - 2;
-    const top = PAD + 6;
-    const bot = PAD + 24;
-    const pull = atk ? 6 : 0;
+    const pull = [0, 3, 6, 0][frame];
+    const top = PAD + 6 + (frame == 2 ? 1 : 0);
+    const bot = PAD + 24 - (frame == 2 ? 1 : 0);
+    const bendMax = frame == 2 ? 4 : frame == 1 ? 3.5 : 3;
     for (let y = top; y <= bot; y++) {
       const t = (y - top) / (bot - top);
-      const bend = Math.round(Math.sin(t * Math.PI) * 3);
+      const bend = Math.round(Math.sin(t * Math.PI) * bendMax);
       px(ctx, bx - bend, y, y == top || y == bot ? woodD : wood);
     }
-    const mid = (top + bot) / 2;
-    line(ctx, bx, top, bx + 1 + pull, mid, "#f2ead6");
-    line(ctx, bx + 1 + pull, mid, bx, bot, "#f2ead6");
-    if (atk) {
+    const mid = Math.round((top + bot) / 2);
+    if (frame == 3) {
+      // corda solta: reta e vibrando para a frente
+      line(ctx, bx - 1, top, bx - 2, mid, "#f2ead6");
+      line(ctx, bx - 2, mid, bx - 1, bot, "#f2ead6");
+    } else {
+      line(ctx, bx, top, bx + 1 + pull, mid, "#f2ead6");
+      line(ctx, bx + 1 + pull, mid, bx, bot, "#f2ead6");
+    }
+    if (frame == 1 || frame == 2) {
       line(ctx, bx - 5, mid, bx + pull, mid, "#e8dcc0");
       px(ctx, bx - 6, mid, steel);
       px(ctx, bx + pull, mid - 1, "#c9483a");
     }
     ay = PAD + 32;
   } else {
-    // lanceiro: lança comprida no lugar da espada
+    // lanceiro: a lança gira em volta da mão, de pé até deitada, e na estocada vai para a frente
     [c, ctx] = cellCanvas("lanca", h, { dropSword: true });
-    if (atk == 0) {
-      const x = PAD + 1;
-      line(ctx, x, PAD - 12, x, PAD + 29, woodD);
-      line(ctx, x + 1, PAD - 9, x + 1, PAD + 29, wood);
-      px(ctx, x, PAD - 16, steel, 2, 4);
-      px(ctx, x - 1, PAD - 13, steelD, 1, 2);
-      px(ctx, x + 2, PAD - 13, steelD, 1, 2);
-      px(ctx, x, PAD - 17, steel);
-    } else {
-      // abaixada para a frente
-      line(ctx, PAD + 16, PAD + 13, PAD - 12, PAD + 17, woodD);
-      line(ctx, PAD + 16, PAD + 12, PAD - 10, PAD + 16, wood);
-      px(ctx, PAD - 16, PAD + 16, steel, 4, 2);
-      px(ctx, PAD - 17, PAD + 17, steel);
-      px(ctx, PAD - 13, PAD + 15, steelD);
-    }
+    const ang = [0, 0.75, 1.45, 1.5][frame]; // radianos a partir de "em pé", inclinando para a frente (esquerda)
+    const push = frame == 3 ? 7 : 0;
+    const hx = PAD + 2;
+    const hy = PAD + 16;
+    const fx = -Math.sin(ang);
+    const fy = -Math.cos(ang);
+    const tipX = hx + fx * 28 - push * Math.sin(ang);
+    const tipY = hy + fy * 28;
+    const buttX = hx - fx * 13 - push * Math.sin(ang);
+    const buttY = hy - fy * 13;
+    line(ctx, Math.round(buttX), Math.round(buttY), Math.round(tipX), Math.round(tipY), woodD);
+    line(ctx, Math.round(buttX + (frame == 0 ? 1 : 0)), Math.round(buttY + (frame == 0 ? 0 : -1)), Math.round(tipX + (frame == 0 ? 1 : 0)), Math.round(tipY + (frame == 0 ? 0 : -1)), wood);
+    // ponta de ferro (losango na direção da lança)
+    for (let k = 0; k < 4; k++) px(ctx, Math.round(tipX + fx * k), Math.round(tipY + fy * k), steel, 2, 2);
+    px(ctx, Math.round(tipX + fx * 4), Math.round(tipY + fy * 4), steel);
+    px(ctx, Math.round(tipX - fy * 1.5), Math.round(tipY + fx * 1.5), steelD);
     ay = PAD + 32;
   }
   addOutline(c);

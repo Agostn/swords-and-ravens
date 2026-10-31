@@ -15,8 +15,8 @@
 import { Lane, Side, Squad, TacticalBattleResult } from "../../../agot-bg-game-server/src/common/tactical-battle/tacticalBattle";
 import { FIELD_LANES, FieldType, Role, Row, SquadKind } from "../../../agot-bg-game-server/src/common/tactical-battle/tacticalBattleData";
 import { rng } from "../solver";
-import { House, TERRAIN_NAMES } from "./data";
-import { Kind, Pose, drawFallen, drawUnit, kindOf } from "./figures";
+import { House, ROLE_NAMES, TERRAIN_NAMES } from "./data";
+import { DRAGON_SCALE, Kind, Pose, drawFallen, drawUnit, kindOf } from "./figures";
 import { H, LW, W, drawWall, ease, roundRect, terrainImage } from "./render";
 
 export const T_END = 10;
@@ -97,6 +97,8 @@ interface Man {
   fight: boolean;
   seed: number;
   engaged: boolean;
+  /** dragão caído já bateu no chão */
+  crashed?: boolean;
 }
 
 interface Shot {
@@ -276,9 +278,21 @@ export function createSim(field: FieldType, res: TacticalBattleResult, squads: R
       if (L.winner == side) return Math.min(0.5, 0.12 + 0.45 * (Math.min(a, d) / Math.max(a, d)));
       return 0.75;
     };
+    const count = (side: Side): number => men.filter((m) => m.lane == lane && m.side == side && !isStatic(m)).length;
+    const kills: Record<Side, number> = {
+      attacker: Math.round(count("attacker") * loss("attacker")),
+      defender: Math.round(count("defender") * loss("defender"))
+    };
+    // quem perde a faixa termina SEMPRE com menos gente de pé do que quem ganha (senão não dá para entender a fuga)
+    if (L.winner == "attacker" || L.winner == "defender") {
+      const w = L.winner;
+      const l: Side = w == "attacker" ? "defender" : "attacker";
+      const leftW = count(w) - kills[w];
+      if (count(l) - kills[l] >= leftW) kills[l] = Math.min(count(l), count(l) - leftW + 1);
+    }
     (["attacker", "defender"] as Side[]).forEach((side) => {
       const mine = men.filter((m) => m.lane == lane && m.side == side && !isStatic(m));
-      const k = Math.round(mine.length * loss(side));
+      const k = kills[side];
       const order = [...mine].sort(() => rand() - 0.5).sort((p, q) => Number(ranged(p.role)) - Number(ranged(q.role)));
       order.slice(0, k).forEach((m, i) => (m.dieAt = T_FIGHT + 0.5 + (i / Math.max(1, k)) * 3.2 + rand() * 0.3));
     });
@@ -406,6 +420,17 @@ function stain(sim: Sim, x: number, y: number, size: number, dark: boolean): voi
   const ctx = sim.floor.getContext("2d") as CanvasRenderingContext2D;
   ctx.fillStyle = dark ? "#4a0807" : "#8e1410";
   ctx.fillRect(Math.round(x), Math.round(y), size, size);
+}
+
+function scorch(sim: Sim, x: number, y: number): void {
+  if (!sim.floor) {
+    sim.floor = document.createElement("canvas");
+    sim.floor.width = W;
+    sim.floor.height = H;
+  }
+  const ctx = sim.floor.getContext("2d") as CanvasRenderingContext2D;
+  ctx.fillStyle = sim.rand() < 0.5 ? "rgba(30,20,12,.8)" : "rgba(60,38,20,.7)";
+  ctx.fillRect(Math.round(x), Math.round(y), 2, 1);
 }
 
 function puff(sim: Sim, x: number, y: number, n: number, sp: number, r0: number): void {
@@ -552,6 +577,7 @@ export function stepSim(sim: Sim, dt: number): void {
           const d = m.flip ? -1 : 1;
           sim.shots.push({ x0: m.x + 9 * d * FIG, y0: m.y - 15 * FIG, to: tg, tx: 0, ty: 0, t0: t, dur: Math.max(0.3, dist / 380), kind: "arrow", from: m });
           m.nextShot = t + 0.9 + r() * 0.6;
+          m.shotAt = t;
         }
       }
       continue;
@@ -636,8 +662,15 @@ export function stepSim(sim: Sim, dt: number): void {
       b.hit = true;
       sim.shake = Math.max(sim.shake, 3);
       sim.men.forEach((o) => {
-        if (!o.dead && o.side != b.from.side && Math.hypot(o.x - b.to.x, o.y - b.to.y) < 30) hit(sim, b.from, o, 2);
+        if (!o.dead && o.side != b.from.side && Math.hypot(o.x - b.to.x, o.y - b.to.y) < 36) hit(sim, b.from, o, 2);
       });
+      // chão queimado
+      for (let i = 0; i < 40; i++) {
+        const a = r() * Math.PI * 2;
+        const d = Math.sqrt(r()) * 20;
+        scorch(sim, b.to.x + Math.cos(a) * d * 1.3, b.to.y + Math.sin(a) * d * 0.55);
+      }
+      puff(sim, b.to.x, b.to.y, 8, 50, 5);
     }
   }
   sim.breaths = sim.breaths.filter((b) => t - b.t0 < b.dur);
@@ -670,6 +703,21 @@ export function stepSim(sim: Sim, dt: number): void {
     }
   for (const m of sim.men) {
     if (isStatic(m)) continue;
+    if (m.dead && m.kind == "dragon") {
+      m.vx = 0;
+      m.vy = 0;
+      if (!m.crashed && t - m.deadAt >= 0.9) {
+        m.crashed = true;
+        const gy = m.y + 46 * FIG;
+        sim.shake = Math.max(sim.shake, 7);
+        sim.stop = Math.max(sim.stop, 0.08);
+        puff(sim, m.x, gy, 22, 110, 6);
+        pool(sim, m.x, gy, 70);
+        bleed(sim, m.x, gy, 1, 0, 25);
+        bleed(sim, m.x, gy, -1, 0, 25);
+      }
+      continue;
+    }
     if (m.dead) {
       // corpo escorrega e para, deixando rastro
       const k = Math.exp(-dt * 7);
@@ -744,23 +792,40 @@ function stepDragon(sim: Sim, m: Man, dt: number): void {
   m.flip = tg.x < m.x;
   const there = Math.hypot(hx - m.x, hy - m.y) < 18;
   if (there && t > m.nextShot && t > T_FIGHT - 0.8 && t < T_ROUT) {
-    sim.breaths.push({ from: m, to: tg, t0: t, dur: 0.8, hit: false });
+    sim.breaths.push({ from: m, to: tg, t0: t, dur: 1.0, hit: false });
     m.shotAt = t;
     m.nextShot = t + 1.4 + sim.rand() * 0.4;
   }
-  if (t - m.shotAt < 0.8) m.atk = 1 - (t - m.shotAt) / 0.8;
+  if (t - m.shotAt < 1.0) m.atk = 1 - (t - m.shotAt) / 1.0;
 }
 
 /** Ponto da boca do dragão (o sprite olha para a direita; FIG × 0,95 é a escala dele). */
 export function dragonMouth(x: number, y: number, flip: boolean, s: number): [number, number] {
-  const k = s * 0.95;
+  const k = s * DRAGON_SCALE;
   return [x + 48 * (flip ? -1 : 1) * k, y - 3 * k];
 }
 
 // ---------------------------------------------------------------- desenho
 function pose(m: Man, h: House, t: number): Pose {
   const flash = t - m.hitT < 0.14 ? 1 - (t - m.hitT) / 0.14 : 0;
-  return { role: m.role, kind: m.kind, house: h, back: false, flip: m.flip, walk: m.walk, atk: m.atk, fight: m.fight, seed: m.seed, time: t + m.phase, flash };
+  const q = (t - m.atkStart) / 0.4;
+  const moving = Math.hypot(m.vx, m.vy) > 10;
+  return {
+    role: m.role,
+    kind: m.kind,
+    house: h,
+    back: false,
+    flip: m.flip,
+    walk: m.walk,
+    atk: m.atk,
+    fight: m.fight,
+    seed: m.seed,
+    time: t + m.phase,
+    flash,
+    atkPhase: q >= 0 && q < 1 ? q : undefined,
+    release: ranged(m.role) && t - m.shotAt < 0.14,
+    moving
+  };
 }
 
 function drawBreath(ctx: CanvasRenderingContext2D, b: Breath, t: number): void {
@@ -770,12 +835,12 @@ function drawBreath(ctx: CanvasRenderingContext2D, b: Breath, t: number): void {
   const y1 = b.to.y - 12 * FIG;
   const reach = Math.min(1, p / 0.3);
   const fade = p > 0.7 ? 1 - (p - 0.7) / 0.3 : 1;
-  const n = 18;
+  const n = 26;
   for (let i = n; i >= 0; i--) {
     const q = (i / n) * reach;
     const x = x0 + (x1 - x0) * q + Math.sin(t * 40 + i) * 2 * q;
     const y = y0 + (y1 - y0) * q + Math.cos(t * 37 + i * 1.7) * 2 * q;
-    const rad = (2.5 + q * 10) * (0.85 + 0.3 * Math.sin(t * 50 + i));
+    const rad = (3 + q * 15) * (0.85 + 0.3 * Math.sin(t * 50 + i));
     const g = ctx.createRadialGradient(x, y, 0, x, y, rad);
     g.addColorStop(0, `rgba(255,248,200,${0.95 * fade})`);
     g.addColorStop(0.45, `rgba(255,160,40,${0.8 * fade})`);
@@ -786,7 +851,7 @@ function drawBreath(ctx: CanvasRenderingContext2D, b: Breath, t: number): void {
     ctx.fill();
   }
   if (reach >= 1) {
-    const rad = 20 + Math.sin(t * 30) * 3;
+    const rad = 30 + Math.sin(t * 30) * 4;
     const g = ctx.createRadialGradient(x1, y1, 0, x1, y1, rad);
     g.addColorStop(0, `rgba(255,240,180,${0.9 * fade})`);
     g.addColorStop(0.5, `rgba(255,120,20,${0.65 * fade})`);
@@ -796,6 +861,100 @@ function drawBreath(ctx: CanvasRenderingContext2D, b: Breath, t: number): void {
     ctx.arc(x1, y1, rad, 0, Math.PI * 2);
     ctx.fill();
   }
+}
+
+/** Por que cada lado está melhor nesta faixa (para mostrar na tela). */
+export function laneReasons(res: TacticalBattleResult, lane: number): { text: string; side: Side }[] {
+  const L = res.lanes[lane];
+  const out: { text: string; side: Side }[] = [];
+  const seen = new Set<string>();
+  const add = (text: string, side: Side): void => {
+    if (seen.has(text)) return;
+    seen.add(text);
+    out.push({ text, side });
+  };
+  for (const f of L.factors) {
+    if (f.kind == "counter" && f.role && f.vs) add(`${ROLE_NAMES[f.role]} vence ${ROLE_NAMES[f.vs].toLowerCase()}`, f.side);
+    else if (f.kind == "wall") add("muralha: defesa +30%", f.side);
+    else if (f.kind == "wall-breach") add("catapulta derruba a muralha", f.side);
+    else if (f.kind == "flank") add("ajuda pelo lado", f.side);
+    else if (f.kind == "far-flank") add("ajuda de longe (15%)", f.side);
+    else if (f.kind == "screen") add("a frente segura a cavalaria", f.side);
+  }
+  return out.slice(0, 3);
+}
+
+/** Placar de cada faixa: no começo diz quem tem vantagem e por quê; durante a luta, a barra vai enchendo. */
+function drawLaneHud(ctx: CanvasRenderingContext2D, sim: Sim): void {
+  const t = sim.t;
+  sim.res.lanes.forEach((L, i) => {
+    const cx = i * LW + LW / 2;
+    if (L.winner == null) return;
+    const A = L.attackerScore;
+    const D = L.defenderScore;
+    const share = A / (A + D || 1);
+    const hA = sim.houses.attacker;
+    const hD = sim.houses.defender;
+    // barra (de cima): a parte de cada Casa cresce até o resultado da conta
+    const prog = ease((t - T_FIGHT + 0.3) / (T_ROUT - T_FIGHT));
+    const shown = 0.5 + (share - 0.5) * prog;
+    const bw = LW - 26;
+    const bx = cx - bw / 2;
+    const by = 72;
+    ctx.fillStyle = "rgba(10,8,6,.75)";
+    roundRect(ctx, bx - 3, by - 3, bw + 6, 16, 8);
+    ctx.fill();
+    ctx.save();
+    roundRect(ctx, bx, by, bw, 10, 5);
+    ctx.clip();
+    ctx.fillStyle = hD.color;
+    ctx.fillRect(bx, by, bw, 10);
+    ctx.fillStyle = hA.color;
+    ctx.fillRect(bx, by, bw * shown, 10);
+    ctx.fillStyle = "rgba(0,0,0,.5)";
+    ctx.fillRect(bx + bw / 2 - 1, by, 2, 10);
+    ctx.restore();
+    // cartão do começo: quem tem vantagem e por quê
+    const a = t < 2.4 ? ease(t / 0.4) : 1 - ease((t - 2.4) / 0.5);
+    if (a <= 0.01) return;
+    const reasons = laneReasons(sim.res, i);
+    const diff = Math.abs(A - D) / Math.max(A, D);
+    const lead: Side | null = diff < 0.06 ? null : A > D ? "attacker" : "defender";
+    const title = lead ? `VANTAGEM ${sim.houses[lead].name.toUpperCase()}` : "PAREJO";
+    ctx.save();
+    ctx.globalAlpha = a;
+    const w = LW - 12;
+    const h = 40 + reasons.length * 21;
+    const x = cx - w / 2;
+    const y = H * 0.5 - h / 2;
+    ctx.fillStyle = "rgba(14,11,8,.86)";
+    roundRect(ctx, x, y, w, h, 10);
+    ctx.fill();
+    ctx.strokeStyle = lead ? sim.houses[lead].color : "#bba98a";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillStyle = lead ? sim.houses[lead].color : "#f1e6cb";
+    ctx.font = "800 15px 'Alegreya Sans', 'Trebuchet MS', sans-serif";
+    ctx.fillText(title, cx, y + 17, w - 12);
+    ctx.font = "700 13.5px 'Alegreya Sans', 'Trebuchet MS', sans-serif";
+    reasons.forEach((r, k) => {
+      ctx.fillStyle = sim.houses[r.side].color;
+      ctx.beginPath();
+      ctx.arc(x + 12, y + 40 + k * 21, 4, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#f1e6cb";
+      ctx.textAlign = "left";
+      ctx.fillText(r.text, x + 21, y + 40.5 + k * 21, w - 28);
+      ctx.textAlign = "center";
+    });
+    if (!reasons.length) {
+      ctx.fillStyle = "#bba98a";
+      ctx.fillText(lead ? "mais força nesta faixa" : "forças iguais", cx, y + 38, w - 12);
+    }
+    ctx.restore();
+  });
 }
 
 export function drawSim(ctx: CanvasRenderingContext2D, sim: Sim): void {
@@ -909,6 +1068,7 @@ export function drawSim(ctx: CanvasRenderingContext2D, sim: Sim): void {
   lanesT.forEach((tt, i) => tag(TERRAIN_NAMES[tt], i * LW + LW / 2, 20, "rgba(18,14,10,.75)", "#efe3c6"));
   tag(`${sim.houses.defender.name} defende`, W / 2, 52, sim.houses.defender.color, sim.houses.defender.ink);
   tag(`${sim.houses.attacker.name} ataca`, W / 2, H - 22, sim.houses.attacker.color, sim.houses.attacker.ink);
+  drawLaneHud(ctx, sim);
   if (t > T_ROUT + 0.2) {
     sim.res.lanes.forEach((L, i) => {
       if (L.winner == null) return;

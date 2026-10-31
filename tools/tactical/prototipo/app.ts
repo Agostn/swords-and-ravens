@@ -22,7 +22,7 @@ import {
   TERRAIN_NAMES
 } from "./data";
 import { H, PlacedToken, W, drawPlacement, slots } from "./render";
-import { REACH_LABEL, Sim, T_END, createSim, drawSim, setGore, stepSim } from "./battle";
+import { REACH_LABEL, Sim, T_END, createSim, drawSim, laneReasons, setGore, stepSim } from "./battle";
 import { SLIDES, drawSlide } from "./tutorial";
 import { drawSquad, drawUnit, kindOf } from "./figures";
 import { loadAssets } from "./assets";
@@ -819,6 +819,30 @@ function newSim(): void {
   }
 }
 
+/** Por que cada faixa vai para quem (texto embaixo do campo durante a luta). */
+function whyHtml(): string {
+  const res = lastResult;
+  if (!res) return "";
+  const lanesT = FIELD_LANES[config.field];
+  const items = res.lanes
+    .map((L, i) => {
+      if (L.blocked) return "";
+      const head = `<b>${LANE_NAMES[i]}</b> <span class="t">${TERRAIN_NAMES[lanesT[i]]}</span>`;
+      if (L.winner == null) return `<li>${head} — sem luta: quem estava aqui foi ajudar onde tinha luta</li>`;
+      const A = L.attackerScore;
+      const D = L.defenderScore;
+      const diff = Math.abs(A - D) / Math.max(A, D);
+      const lead: Side | null = diff < 0.06 ? null : A > D ? "attacker" : "defender";
+      const who = lead ? `vantagem <b style="color:${houseOf(lead).color}">${houseOf(lead).name}</b>` : "parelho";
+      const rs = laneReasons(res, i)
+        .map((r) => `<span class="r" style="--c:${houseOf(r.side).color}">${r.text}</span>`)
+        .join("");
+      return `<li>${head} — ${who}${rs ? ": " + rs : ""}</li>`;
+    })
+    .join("");
+  return `<ul class="why" aria-label="Por que cada faixa">${items}</ul>`;
+}
+
 function renderBattlePanel(): void {
   setPhase("battle");
   $("panel").innerHTML = `
@@ -829,7 +853,8 @@ function renderBattlePanel(): void {
       <button type="button" class="btn${speed == 2 ? " on" : ""}" data-speed="2">2×</button>
       <button type="button" class="btn" id="skip">Pular</button>
       <button type="button" class="btn${goreOn ? " on" : ""}" id="gore" aria-pressed="${goreOn}">Sangue: ${goreOn ? "sim" : "não"}</button>
-    </div>`;
+    </div>
+    ${whyHtml()}`;
   $("panel")
     .querySelectorAll<HTMLButtonElement>("[data-speed]")
     .forEach((b) =>

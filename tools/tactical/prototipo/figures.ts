@@ -29,6 +29,12 @@ export interface Pose {
   time?: number;
   /** acabou de levar golpe: pisca branco (0..1) */
   flash?: number;
+  /** andamento do golpe corpo a corpo (0..1), ou ausente se não está golpeando */
+  atkPhase?: number;
+  /** arqueiro acabou de soltar a flecha */
+  release?: boolean;
+  /** está andando (balança o corpo) */
+  moving?: boolean;
 }
 
 export function kindOf(k: SquadKind): Kind {
@@ -887,13 +893,29 @@ function drawDragon(ctx: CanvasRenderingContext2D, p: Pose): void {
 }
 
 // ---------------------------------------------------------------- sprites (pixel art)
+let darkDragonCache: HTMLCanvasElement | null = null;
+/** Dragão caído: o quadro "pousado", mais escuro. */
+function darkDragon(img: HTMLImageElement, sx: number, sy: number, w: number, h: number): HTMLCanvasElement {
+  if (darkDragonCache) return darkDragonCache;
+  const c = document.createElement("canvas");
+  c.width = w;
+  c.height = h;
+  const ctx = c.getContext("2d") as CanvasRenderingContext2D;
+  ctx.drawImage(img, sx, sy, w, h, 0, 0, w, h);
+  ctx.globalCompositeOperation = "source-atop";
+  ctx.fillStyle = "rgba(20,10,8,.55)";
+  ctx.fillRect(0, 0, w, h);
+  darkDragonCache = c;
+  return c;
+}
+
 const Q = Math.PI / 2;
 
 /** O sprite (pixel art) de uma figura, virado para a esquerda. Nulo enquanto as imagens não carregam. */
 function spriteOf(p: Pose, dir: number): [Sprite, string] | null {
   const h = p.house;
   if (p.kind == "foot") {
-    const a: 0 | 1 = p.atk > 0.5 ? 1 : 0;
+    const a = footFrame(p);
     const sp = soldierSprite(h, p.role, a);
     return sp ? [sp, `s|${h.name}|${p.role}|${a}`] : null;
   }
@@ -901,8 +923,9 @@ function spriteOf(p: Pose, dir: number): [Sprite, string] | null {
   if (p.kind == "horse") {
     const f = ((Math.floor(p.walk / Q) % 4) + 4) % 4;
     const coat = Math.abs(p.seed ?? 0) % 5;
-    const id = `h|${h.name}|${p.role}|${f}|${p.fight ? 1 : 0}|${coat}`;
-    return [pixelSprite(id, 60, 66, 30, 60, (ctx) => drawHorse(ctx, { ...p, flip: true, walk: f * Q + 0.4, atk: 0, seed: coat, time: f })), id];
+    const a = p.atk > 0.5 ? 1 : 0; // golpe: lança empurrada / dardo inclinado
+    const id = `h|${h.name}|${p.role}|${f}|${p.fight ? 1 : 0}|${coat}|${a}`;
+    return [pixelSprite(id, 64, 66, 32, 60, (ctx) => drawHorse(ctx, { ...p, flip: true, walk: f * Q + 0.4, atk: a, seed: coat, time: f })), id];
   }
   if (p.kind == "siege") {
     const f = p.atk > 0.66 ? 2 : p.atk > 0.2 ? 1 : 0;
@@ -929,22 +952,47 @@ function spriteOf(p: Pose, dir: number): [Sprite, string] | null {
   return null;
 }
 
-function blitSprite(ctx: CanvasRenderingContext2D, sp: Sprite, x: number, y: number, s: number, faceRight: boolean): void {
+/** Qual das 4 poses de golpe mostrar. */
+function footFrame(p: Pose): 0 | 1 | 2 | 3 {
+  const ranged = p.role == "arqueiro" || p.role == "flechas";
+  if (ranged) {
+    if (p.release) return 3;
+    return p.atk < 0.3 ? 0 : p.atk < 0.7 ? 1 : 2;
+  }
+  const q = p.atkPhase;
+  if (q == null || q < 0 || q >= 1) return 0;
+  return q < 0.18 ? 1 : q < 0.36 ? 2 : q < 0.62 ? 3 : q < 0.85 ? 2 : 0;
+}
+
+/** Inclinação do corpo: balança andando, vai para a frente no golpe, joga para trás quando apanha. */
+function leanOf(p: Pose): number {
+  let a = p.moving ? Math.sin(p.walk) * 0.06 : Math.sin((p.time ?? 0) * 2.2) * 0.015;
+  const q = p.atkPhase;
+  if (q != null && q >= 0 && q < 1) a += q < 0.2 ? -0.08 * (q / 0.2) : q < 0.6 ? 0.16 : 0.16 * (1 - (q - 0.6) / 0.4);
+  if (p.flash) a -= p.flash * 0.22;
+  return p.kind == "horse" ? a * 0.4 : a;
+}
+
+function blitSprite(ctx: CanvasRenderingContext2D, sp: Sprite, x: number, y: number, s: number, faceRight: boolean, rot = 0): void {
   ctx.save();
   ctx.imageSmoothingEnabled = false;
   ctx.translate(x, y);
+  if (rot) ctx.rotate(faceRight ? rot : -rot);
   ctx.scale(faceRight ? -s : s, s);
   ctx.drawImage(sp.c, -sp.ax, -sp.ay);
   ctx.restore();
 }
 
 /** Dragão da folha de sprites (voando; cuspindo fogo quando atk > 0). */
+/** O dragão é grande (o sprite já tem ~100 px; aqui fica um pouco maior que um cavaleiro × 3). */
+export const DRAGON_SCALE = 1.15;
+
 function drawDragonSprite(ctx: CanvasRenderingContext2D, x: number, y: number, s: number, p: Pose, faceRight: boolean): boolean {
   const t = p.time ?? 0;
   // cuspindo fogo: segura as asas abertas (o fogo é desenhado pela luta, da boca até o alvo)
   const fr = p.atk > 0.05 ? dragonFrame("flight", 4) : p.fight === false && p.walk == 0 ? dragonFrame("idle", Math.floor(t * 4) % 6) : dragonFrame("flight", Math.floor(t * 9) % 6);
   if (!fr) return false;
-  const k = s * 0.95;
+  const k = s * DRAGON_SCALE;
   ctx.save();
   // sombra no chão, longe (ele voa)
   if (p.walk != 0 || p.fight !== false) {
@@ -977,13 +1025,14 @@ export function drawUnit(ctx: CanvasRenderingContext2D, x: number, y: number, s:
     if (p.kind == "ship") ell(ctx, 3, 4, 11, 24, "rgba(0,20,40,.3)");
     else groundShadow(ctx, p.kind == "horse" ? 14 : p.kind == "foot" ? 7 : 15, p.kind == "foot" ? 2.4 : 4);
     ctx.restore();
-    const bob = p.kind == "foot" ? Math.round(Math.abs(Math.sin(p.walk)) * 1.5) : 0;
+    const bob = p.kind == "foot" ? Math.round(Math.abs(Math.sin(p.walk)) * 1.5) : p.kind == "horse" && p.moving ? Math.round(Math.abs(Math.sin(p.walk * 2)) * 2) : 0;
     const fr = p.kind == "ship" ? false : faceRight;
-    blitSprite(ctx, sp, x, y - bob * s, s, fr);
+    const rot = p.kind == "foot" || p.kind == "horse" ? leanOf(p) : 0;
+    blitSprite(ctx, sp, x, y - bob * s, s, fr, rot);
     if (p.flash && p.flash > 0.02) {
       ctx.save();
       ctx.globalAlpha *= Math.min(1, p.flash);
-      blitSprite(ctx, whiteSprite(got[1], sp), x, y - bob * s, s, fr);
+      blitSprite(ctx, whiteSprite(got[1], sp), x, y - bob * s, s, fr, rot);
       ctx.restore();
     }
     return;
@@ -1016,10 +1065,32 @@ export function drawFallen(ctx: CanvasRenderingContext2D, x: number, y: number, 
     ell(ctx, p.flip ? -4 : 4, -1, (p.kind == "horse" ? 12 : 8) * r, (p.kind == "horse" ? 4 : 2.6) * r, "rgba(110,14,10,.55)");
     ctx.restore();
   }
-  if (p.kind == "dragon" || p.kind == "ship") {
+  if (p.kind == "dragon") {
+    // cai rodando do céu, bate no chão e fica caído
+    const fall = Math.min(1, age / 0.9);
+    const k = s * DRAGON_SCALE;
+    const drop = fall * fall * 46 * s;
+    const fr = fall < 1 ? dragonFrame("flight", 2) : dragonFrame("idle", 0);
+    if (!fr) return;
     ctx.save();
-    ctx.globalAlpha *= Math.max(0, 1 - age / 1.2);
-    drawUnit(ctx, x, y + age * 10, s, { ...p, atk: 0 });
+    ctx.fillStyle = `rgba(0,0,0,${0.18 + fall * 0.15})`;
+    ctx.beginPath();
+    ctx.ellipse(x, y + 46 * s, (30 - fall * 6) * s, 7 * s, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.imageSmoothingEnabled = false;
+    ctx.translate(x, y + drop);
+    ctx.rotate((p.flip ? -1 : 1) * (fall < 1 ? fall * 1.1 : 0.12));
+    ctx.scale(p.flip ? -k : k, k);
+    const img = fall < 1 ? null : darkDragon(fr.img, fr.sx, fr.sy, fr.w, fr.h);
+    if (img) ctx.drawImage(img, -fr.w / 2, -fr.h * 0.62);
+    else ctx.drawImage(fr.img, fr.sx, fr.sy, fr.w, fr.h, -fr.w / 2, -fr.h * 0.62, fr.w, fr.h);
+    ctx.restore();
+    return;
+  }
+  if (p.kind == "ship") {
+    ctx.save();
+    ctx.globalAlpha *= Math.max(0, 1 - age / 1.6);
+    drawUnit(ctx, x, y + age * 6, s, { ...p, atk: 0 });
     ctx.restore();
     return;
   }
