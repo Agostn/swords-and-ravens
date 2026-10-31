@@ -291,21 +291,26 @@ export const BONUS_MAJORITY = 1;
 
 /**
  * ORDEM DE BATALHA (tática do comandante), escolhida escondida junto com o posicionamento.
- * Inspirada nas táticas de Crusader Kings II (a tática depende das tropas que você tem e cada uma tem
- * contra-táticas), nas formações de Total War (parede de escudos aguenta carga, mas tem flanco fraco)
- * e nas cartas de batalha de Hannibal: Rome vs Carthage (cercar, ataque frontal…).
- *  - Parede de escudos: precisa de escudeiros; cada esquadrão de escudeiros dá +6% (até +18%).
- *    Segura a CARGA (anula a Carga do outro). Perde para CERCAR (flanco fraco: a sua é anulada).
- *  - Cercar (pinça): precisa de tropas em pelo menos 2 faixas e de lanceiros/batedores;
- *    cada esquadrão deles dá +6% (até +18%). Vence a PAREDE. Perde para a CARGA (linha fina se rompe).
- *  - Carga: precisa de cavalaria; cada esquadrão de cavalaria dá +8% (até +18%). Vence o CERCAR.
- *    Perde para a PAREDE.
- *  - Nenhuma: sem bônus e sem risco.
- * Ser vencido só ANULA o seu bônus (não tira mais nada): errar a tática custa pouco, acertar rende.
+ * Quem ataca escolhe uma das 3 de ATAQUE; quem defende, uma das 3 de DEFESA.
+ * Inspirada nas táticas de Crusader Kings II (dependem das tropas e têm contra-táticas), nas formações
+ * de Total War (parede de escudos para flechas, muro de lanças para cavalo, flanco fraco) e nas cartas
+ * de batalha de Hannibal: Rome vs Carthage.
+ *  Ataque:
+ *  - Carga (cavalaria, +8% cada): vence a Reserva; perde para o Muro de lanças.
+ *  - Cercar (lanceiros/batedores, tropas em 2+ faixas, +6% cada): vence a Parede; perde para a Reserva.
+ *  - Chuva de flechas (arqueiros, +6% cada): vence o Muro de lanças; perde para a Parede.
+ *  Defesa:
+ *  - Parede de escudos (escudeiros, +6% cada): vence a Chuva de flechas; perde para Cercar.
+ *  - Muro de lanças (lanceiros, +6% cada): vence a Carga; perde para a Chuva de flechas.
+ *  - Reserva (cada esquadrão atrás, +5%): vence Cercar; perde para a Carga.
+ * Bônus pelas tropas até +18%. Quem VENCE a tática do outro ganha +12% a mais e anula o bônus do outro.
  */
-export type Tactic = "parede" | "cercar" | "carga";
-export const TACTIC_BEATS: Record<Tactic, Tactic> = { parede: "carga", cercar: "parede", carga: "cercar" };
-export const TACTIC_STEP: Record<Tactic, number> = { parede: 0.06, cercar: 0.06, carga: 0.08 };
+export type Tactic = "carga" | "cercar" | "flechas" | "parede" | "lancas" | "reserva";
+export const ATTACK_TACTICS: Tactic[] = ["carga", "cercar", "flechas"];
+export const DEFENSE_TACTICS: Tactic[] = ["parede", "lancas", "reserva"];
+export const TACTIC_BEATS: Record<Tactic, Tactic> = { carga: "reserva", cercar: "parede", flechas: "lancas", parede: "flechas", lancas: "carga", reserva: "cercar" };
+export const TACTIC_STEP: Record<Tactic, number> = { carga: 0.08, cercar: 0.06, flechas: 0.06, parede: 0.06, lancas: 0.06, reserva: 0.05 };
 export const TACTIC_MAX = 0.18;
-export const TACTIC_NAMES: Record<Tactic, string> = { parede: "Parede de escudos", cercar: "Cercar", carga: "Carga" };
-
+/** bônus a mais para quem vence a tática do outro */
+export const TACTIC_WIN_BONUS = 0.12;
+export const TACTIC_NAMES: Record<Tactic, string> = { carga: "Carga", cercar: "Cercar", flechas: "Chuva de flechas", parede: "Parede de escudos", lancas: "Muro de lanças", reserva: "Reserva" };

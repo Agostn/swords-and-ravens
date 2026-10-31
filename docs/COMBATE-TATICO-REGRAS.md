@@ -243,20 +243,26 @@ Stark + mini-mapa jogado bem pelos dois), em 6 tipos de exército × 3 campos ×
   braços de fora e machado; Tyrell verde esmaltado com pluma; Martell escamas de cobre, seda e pano no elmo, lança
   mais comprida; Arryn aço claro, capa azul-céu e asas de falcão; Targaryen armadura negra com espinhos vermelhos.
 
-## Ordem de batalha (31/out)
-Quando aperta "Pronto", cada lado escolhe escondido como o comandante vai lutar. O bônus depende das tropas
-(como as táticas do *Crusader Kings II*, que são sorteadas conforme a composição do exército e têm contra-táticas;
-as formações de *Total War*: parede de escudos segura carga mas tem flanco fraco; e as cartas de batalha de
-*Hannibal: Rome vs Carthage*: ataque frontal, cercar…).
-| Ordem | Precisa de | Bônus | Vence | Perde para |
+## Ordem de batalha (31/out, versão 2: 3 de ataque × 3 de defesa)
+Quando aperta "Pronto", cada lado escolhe escondido como o comandante vai lutar: **quem ataca escolhe uma ordem
+de ataque, quem defende uma de defesa.** O bônus depende das tropas (até +18%). **Quem vence a ordem do outro ganha
++12% a mais e a do outro não vale.** Referências: táticas do *Crusader Kings II* (dependem das tropas, têm
+contra-táticas), formações de *Total War* (parede de escudos para flechas, muro de lanças para cavalo, flanco fraco)
+e cartas de batalha de *Hannibal: Rome vs Carthage*.
+| Ataque | Precisa de | Bônus | Vence | Perde para |
 |---|---|---|---|---|
-| 🛡 Parede de escudos | escudeiros | +6% por esquadrão (até +18%) | Carga | Cercar |
-| ⇆ Cercar | lanceiros/batedores e tropas em 2 faixas | +6% por esquadrão (até +18%) | Parede | Carga |
-| 🐎 Carga | cavalaria | +8% por esquadrão (até +18%) | Cercar | Parede |
-| ✋ Nenhuma | — | 0 | — | — |
-Ser vencido só **anula o seu bônus** (não tira mais nada). Como as peças de cada um aparecem no tabuleiro
-(quem não tem cavaleiro não pode dar Carga), dá para deduzir o que o outro pode escolher: é leitura, não só sorte.
-O computador escolhe como no CK2: sorteia entre as que pode usar, com mais peso para a que rende mais.
-Código: `TACTIC_*` em `tacticalBattleData.ts`, `tacticBonus` e `tactics` no resultado (`tacticalBattle.ts`).
-**Para testar nas partidas:** se alguma ordem ficar boa demais, mexer no bônus por esquadrão.
+| 🐎 Carga | cavalaria | +8% cada | Reserva | Muro de lanças |
+| ⇆ Cercar | lanceiros/batedores, tropas em 2+ faixas | +6% cada | Parede de escudos | Reserva |
+| 🏹 Chuva de flechas | arqueiros | +6% cada | Muro de lanças | Parede de escudos |
 
+| Defesa | Precisa de | Bônus | Vence | Perde para |
+|---|---|---|---|---|
+| 🛡 Parede de escudos | escudeiros | +6% cada | Chuva de flechas | Cercar |
+| 🔱 Muro de lanças | lanceiros | +6% cada | Carga | Chuva de flechas |
+| ⛨ Reserva | esquadrões na linha de trás | +5% cada | Cercar | Carga |
+**Na animação, cada exército faz o que a ordem manda:** a Carga vem correndo; o Cercar abre pelos lados e entra
+de lado; a Chuva de flechas solta uma saraivada junta e atira mais rápido; a Parede e o Muro seguram a linha e
+esperam (a parede defende mais golpes; no muro, o cavalo que carrega se joga nas lanças e leva o golpe); a Reserva
+deixa quem está atrás esperando e entra correndo depois.
+O computador escolhe como no CK2: sorteia entre as que pode usar, com mais peso para a que rende mais.
+**Para testar nas partidas:** o máximo agora é +30% (18% + 12%) — se ficar forte demais, baixar o +12%.

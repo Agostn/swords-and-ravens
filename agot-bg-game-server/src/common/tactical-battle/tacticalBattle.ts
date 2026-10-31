@@ -39,6 +39,7 @@ import {
   TACTIC_BEATS,
   TACTIC_MAX,
   TACTIC_STEP,
+  TACTIC_WIN_BONUS,
   SIZE_EQUALIZE
 } from "./tacticalBattleData";
 
@@ -85,6 +86,8 @@ export interface TacticInfo {
   bonus: number;
   /** a tática do outro venceu a sua: bônus anulado */
   countered: boolean;
+  /** a sua venceu a do outro: +12% a mais */
+  beats: boolean;
 }
 
 /** Quanto a tática rende com estas tropas (0 = não dá para usar). */
@@ -92,7 +95,9 @@ export function tacticBonus(t: Tactic | null | undefined, squads: Squad[]): numb
   if (!t) return 0;
   const n = (r: Role): number => squads.filter((s) => s.role == r).length;
   const lanes = new Set(squads.filter((s) => s.kind != "garrison").map((s) => s.lane)).size;
-  const count = t == "parede" ? n("escudeiro") : t == "carga" ? n("cavalaria") : lanes >= 2 ? n("lanceiro") + n("batedores") : 0;
+  const back = squads.filter((s) => s.row == "tras" && s.kind != "garrison").length;
+  const count =
+    t == "carga" ? n("cavalaria") : t == "cercar" ? (lanes >= 2 ? n("lanceiro") + n("batedores") : 0) : t == "flechas" ? n("arqueiro") + n("flechas") : t == "parede" ? n("escudeiro") : t == "lancas" ? n("lanceiro") : back;
   return Math.min(TACTIC_MAX, count * TACTIC_STEP[t]);
 }
 
@@ -311,13 +316,14 @@ function resolveOnce(input: TacticalBattleInput): TacticalBattleResult {
   const tinfo = (mine: Tactic | null, theirs: Tactic | null, squads: Squad[]): TacticInfo => {
     const bonus = tacticBonus(mine, squads);
     const countered = !!mine && !!theirs && TACTIC_BEATS[theirs] == mine;
-    return { tactic: mine, bonus, countered };
+    const beats = !!mine && !!theirs && TACTIC_BEATS[mine] == theirs && bonus > 0;
+    return { tactic: mine, bonus, countered, beats };
   };
   const tactics: Record<Side, TacticInfo> = {
     attacker: tinfo(tacA, tacD, input.attacker.squads),
     defender: tinfo(tacD, tacA, input.defender.squads)
   };
-  const tf = (side: Side): number => 1 + (tactics[side].countered ? 0 : tactics[side].bonus);
+  const tf = (side: Side): number => 1 + (tactics[side].countered ? 0 : tactics[side].bonus) + (tactics[side].beats ? TACTIC_WIN_BONUS : 0);
   const atkCard = cardFactor(input.attacker.card, input.defender.card, input.attacker.orderBonus ?? 0) * tf("attacker");
   const defCard = cardFactor(input.defender.card, input.attacker.card, input.defender.orderBonus ?? 0) * tf("defender");
   const prepared: Record<Side, Squad[]> = {

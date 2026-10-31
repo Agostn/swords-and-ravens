@@ -13,7 +13,7 @@
  *  7. No fim, quem perdeu a faixa foge.
  */
 import { Lane, Side, Squad, TacticalBattleResult } from "../../../agot-bg-game-server/src/common/tactical-battle/tacticalBattle";
-import { FIELD_LANES, FieldType, Role, Row, SquadKind } from "../../../agot-bg-game-server/src/common/tactical-battle/tacticalBattleData";
+import { FIELD_LANES, FieldType, Role, Row, SquadKind, TACTIC_NAMES, TACTIC_WIN_BONUS } from "../../../agot-bg-game-server/src/common/tactical-battle/tacticalBattleData";
 import { rng } from "../solver";
 import { House, ROLE_NAMES, TERRAIN_NAMES } from "./data";
 import { DRAGON_SCALE, Kind, Pose, drawFallen, drawUnit, kindOf } from "./figures";
@@ -68,6 +68,8 @@ export function setGore(on: boolean): void {
 }
 
 interface Man {
+  /** linha onde foi posto (frente/trás) */
+  row?: Row;
   /** de que lado do inimigo ele luta (−1 à esquerda, +1 à direita); escolhido uma vez, para não dar a volta nele */
   sdir?: number;
   /** id do esquadrão (peça do tabuleiro) */
@@ -248,6 +250,7 @@ export function createSim(field: FieldType, res: TacticalBattleResult, squads: R
         const jy = (rand() - 0.5) * 2.5;
         men.push({
           sid: sq.id,
+          row: sq.row,
           side,
           lane: sq.lane,
           role: sq.role,
@@ -367,6 +370,10 @@ export function createSim(field: FieldType, res: TacticalBattleResult, squads: R
       if (m.dieAt < Infinity) m.dieAt = T_FIGHT + 0.3 + Math.max(0, (m.dieAt - T_FIGHT - 0.5) / (DEATH_SPAN + 0.3)) * (T_DUEL - T_FIGHT - 0.6);
     });
   }
+  // Chuva de flechas: os arqueiros de quem atacou com ela soltam a primeira saraivada juntos
+  (["attacker", "defender"] as Side[]).forEach((side) => {
+    if (res.tactics?.[side]?.tactic == "flechas") men.filter((m) => m.side == side && ranged(m.role)).forEach((m) => (m.nextShot = 1.3 + rand() * 0.1));
+  });
   // arena do duelo: no meio das faixas onde houve luta (onde os exércitos estão)
   const fought = ([0, 1, 2] as Lane[]).filter((l) => res.lanes[l].winner != null);
   const arenaLane = fought.length ? fought.reduce((a: number, l) => a + l, 0) / fought.length : 1;
@@ -517,6 +524,11 @@ function duelStep(sim: Sim, m: Man, dt: number): boolean {
   return true;
 }
 
+/** Ordem de batalha do lado (para o jeito de lutar na animação). */
+function tacOf(sim: Sim, side: Side): string | null {
+  return sim.res.tactics?.[side]?.tactic ?? null;
+}
+
 /** Monta as duplas de uma faixa. */
 function pairUp(sim: Sim, lane: Lane): void {
   const A = sim.men.filter((m) => m.lane == lane && m.side == "attacker" && melee(m)).sort((p, q) => p.x - q.x);
@@ -552,6 +564,12 @@ function pairUp(sim: Sim, lane: Lane): void {
       d.spot = true;
       a.sdir = o;
       d.sdir = -o;
+      // defesa que segura a linha: o atacante vai direto nela (não marca encontro no meio)
+      const hold = (x: string | null): boolean => x == "parede" || x == "lancas";
+      if (hold(tacOf(sim, "defender")) || hold(tacOf(sim, "attacker"))) {
+        a.spot = false;
+        d.spot = false;
+      }
     }
     const extra = A.length > D.length ? A.slice(pairs) : D.slice(pairs);
     extra.forEach((m, i) => joinFight(sim, m, i));
@@ -831,7 +849,7 @@ export function stepSim(sim: Sim, dt: number): void {
           const d = m.flip ? -1 : 1;
           const deckY = m.kind == "ship" ? 22 : 15;
           sim.shots.push({ x0: m.x + 9 * d * FIG, y0: m.y - deckY * FIG, to: tg, tx: 0, ty: 0, t0: t, dur: Math.max(0.3, dist / 380), kind: "arrow", from: m });
-          m.nextShot = t + 0.9 + r() * 0.6;
+          m.nextShot = t + (tacOf(sim, m.side) == "flechas" ? 0.55 + r() * 0.3 : 0.9 + r() * 0.6);
           m.shotAt = t;
         }
       }
@@ -891,7 +909,23 @@ export function stepSim(sim: Sim, dt: number): void {
       tx = foe.x + s * (dd - lunge) + sway * 0.5;
       ty = foe.y + m.yoff;
     }
-    steer(m, tx, ty, m.speed * (t < 1.2 ? 0.7 : 1), dt);
+    // a ordem de batalha aparece no jeito de andar
+    const tac = tacOf(sim, m.side);
+    let spd = m.speed * (t < 1.2 ? 0.7 : 1);
+    if (!m.engaged) {
+      // Parede de escudos / Muro de lanças: segura a linha e espera o inimigo chegar
+      if ((tac == "parede" || tac == "lancas") && t < T_FIGHT + 0.5 && Math.hypot(foe.x - m.x, foe.y - m.y) > 60) spd *= 0.15;
+      // Reserva: quem está atrás espera e entra depois, correndo
+      if (tac == "reserva" && m.row == "tras") spd = t < T_FIGHT + 1.2 ? 0 : spd * 1.35;
+      // Carga: a cavalaria vem com tudo
+      if (tac == "carga" && m.kind == "horse" && t > 0.6) spd *= 1.5;
+      // Cercar: abre pelos lados e entra de lado (pinça)
+      if (tac == "cercar" && Math.hypot(foe.x - m.x, foe.y - m.y) > 70) {
+        const out = m.lane == 0 ? -1 : m.lane == 2 ? 1 : m.seed % 2 ? 1 : -1;
+        tx += out * 46;
+      }
+    }
+    steer(m, tx, ty, spd, dt);
     m.fight = m.kind == "horse" && Math.hypot(foe.x - m.x, foe.y - m.y) < 130;
     if (near) {
       m.flip = foe.x < m.x;
@@ -904,7 +938,11 @@ export function stepSim(sim: Sim, dt: number): void {
             sim.shake = Math.max(sim.shake, 6);
             puff(sim, (m.x + foe.x) / 2, (m.y + foe.y) / 2, 24, 120, 5, "235,248,255");
           }
-          hit(sim, m, foe, 2);
+          if (m.kind == "horse" && foe.role == "lanceiro" && tacOf(sim, foe.side) == "lancas") {
+            // Muro de lanças: o cavalo se joga nas lanças e é ele quem leva o golpe
+            hit(sim, foe, m, 2);
+            foe.atkStart = t - 0.16;
+          } else hit(sim, m, foe, 2);
           m.atkStart = t - 0.16;
           m.nextHit = t + 0.9;
         }
@@ -925,7 +963,7 @@ export function stepSim(sim: Sim, dt: number): void {
       // o golpe acerta no meio do movimento, se a arma encostar mesmo
       const prev = (t - dt - m.atkStart) / 0.4;
       if (prev < 0.4 && p >= 0.4 && t < T_ROUT && Math.abs(foe.x - m.x) <= m.reach + 6 && Math.abs(foe.y - m.y) <= 16) {
-        const blocked = foe.role == "escudeiro" && r() < 0.4;
+        const blocked = foe.role == "escudeiro" && r() < (tacOf(sim, foe.side) == "parede" ? 0.7 : 0.4);
         hit(sim, m, foe, m.kind == "horse" ? 1.5 : 1, blocked);
         if (!blocked && r() < 0.35) sim.sparks.push({ x: (m.x + foe.x) / 2, y: (m.y + foe.y) / 2 - 14 * FIG, t0: t });
       }
@@ -1193,65 +1231,6 @@ export function laneReasons(res: TacticalBattleResult, lane: number): { text: st
   return out.slice(0, 3);
 }
 
-/** Placar de cada faixa: no começo diz quem tem vantagem e por quê; durante a luta, a barra vai enchendo. */
-/**
- * Placar de cada faixa, no alto: o nome de quem está na frente em letra grande e a barra com as cores
- * das Casas, que enche até o resultado da conta. Os motivos ficam no texto embaixo do campo (legível no celular).
- */
-function drawLaneHud(ctx: CanvasRenderingContext2D, sim: Sim): void {
-  const t = sim.t;
-  sim.res.lanes.forEach((L, i) => {
-    const cx = i * LW + LW / 2;
-    if (L.winner == null) return;
-    const A = L.attackerScore;
-    const D = L.defenderScore;
-    const share = A / (A + D || 1);
-    const hA = sim.houses.attacker;
-    const hD = sim.houses.defender;
-    const prog = ease((t - T_FIGHT + 0.3) / (T_ROUT - T_FIGHT));
-    const shown = 0.5 + (share - 0.5) * prog;
-    // quem está na frente AGORA (pelo que a barra mostra)
-    const lead: Side | null = Math.abs(shown - 0.5) < 0.03 ? null : shown > 0.5 ? "attacker" : "defender";
-    const w = LW - 14;
-    const x = cx - w / 2;
-    const y = 70;
-    const h = 52;
-    ctx.fillStyle = "rgba(12,9,6,.86)";
-    roundRect(ctx, x, y, w, h, 10);
-    ctx.fill();
-    ctx.strokeStyle = lead ? sim.houses[lead].color : "rgba(241,230,203,.5)";
-    ctx.lineWidth = 2.5;
-    ctx.stroke();
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.font = "800 24px 'Alegreya Sans', 'Trebuchet MS', sans-serif";
-    ctx.fillStyle = lead ? sim.houses[lead].color : "#f1e6cb";
-    const name = lead ? sim.houses[lead].name.toUpperCase() : "EMPATADO";
-    // contorno escuro para ler em cima de qualquer cor
-    ctx.lineWidth = 4;
-    ctx.strokeStyle = "rgba(0,0,0,.65)";
-    ctx.strokeText(name, cx, y + 17, w - 14);
-    ctx.fillText(name, cx, y + 17, w - 14);
-    const bw = w - 18;
-    const bx = cx - bw / 2;
-    const by = y + 33;
-    ctx.save();
-    roundRect(ctx, bx, by, bw, 12, 6);
-    ctx.clip();
-    ctx.fillStyle = hD.color;
-    ctx.fillRect(bx, by, bw, 12);
-    ctx.fillStyle = hA.color;
-    ctx.fillRect(bx, by, bw * shown, 12);
-    ctx.fillStyle = "rgba(0,0,0,.55)";
-    ctx.fillRect(bx + bw / 2 - 1, by, 2, 12);
-    ctx.restore();
-    roundRect(ctx, bx, by, bw, 12, 6);
-    ctx.lineWidth = 1.5;
-    ctx.strokeStyle = "rgba(0,0,0,.6)";
-    ctx.stroke();
-  });
-}
-
 export function drawSim(ctx: CanvasRenderingContext2D, sim: Sim): void {
   const t = sim.t;
   ctx.setTransform(2, 0, 0, 2, 0, 0);
@@ -1396,17 +1375,16 @@ export function drawSim(ctx: CanvasRenderingContext2D, sim: Sim): void {
   lanesT.forEach((tt, i) => tag(TERRAIN_NAMES[tt], i * LW + LW / 2, 20, "rgba(18,14,10,.75)", "#efe3c6"));
   tag(`${sim.houses.defender.name} defende`, W / 2, 52, sim.houses.defender.color, sim.houses.defender.ink);
   tag(`${sim.houses.attacker.name} ataca`, W / 2, H - 22, sim.houses.attacker.color, sim.houses.attacker.ink);
-  drawLaneHud(ctx, sim);
   // ordem de batalha de cada lado (no começo da luta)
   const ti = sim.res.tactics;
   if (ti && t > 0.2 && t < 4.2) {
     const a = Math.min(1, (t - 0.2) / 0.3) * Math.min(1, (4.2 - t) / 0.5);
-    const NAMES = { parede: "Parede de escudos", cercar: "Cercar", carga: "Carga" } as const;
-    const ICON = { parede: "🛡", cercar: "⇆", carga: "🐎" } as const;
+    const ICON = { carga: "🐎", cercar: "⇆", flechas: "🏹", parede: "🛡", lancas: "🔱", reserva: "⛨" } as const;
     (["defender", "attacker"] as Side[]).forEach((side) => {
       const x = ti[side];
       if (!x.tactic) return;
-      const txt = `${ICON[x.tactic]} ${NAMES[x.tactic]} ${x.bonus == 0 ? "(0%)" : x.countered ? "anulada!" : `+${Math.round(x.bonus * 100)}%`}`;
+      const total = x.bonus + (x.beats ? TACTIC_WIN_BONUS : 0);
+      const txt = `${ICON[x.tactic]} ${TACTIC_NAMES[x.tactic]} ${x.bonus == 0 ? "(0%)" : x.countered ? "anulada!" : `+${Math.round(total * 100)}%${x.beats ? " venceu!" : ""}`}`;
       ctx.save();
       ctx.globalAlpha = a;
       ctx.font = "800 20px 'Alegreya Sans', 'Trebuchet MS', sans-serif";

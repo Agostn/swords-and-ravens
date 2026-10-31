@@ -199,18 +199,19 @@ describe("combate tático", () => {
     expect(com.duel).toBe(true);
   });
 
-  it("ordem de batalha: parede segura a carga, cercar vence a parede, carga vence o cercar", () => {
-    const A: Squad[] = [sq("a0", "footman", "escudeiro", 1), sq("a1", "footman", "escudeiro", 0)];
-    const D: Squad[] = [{ ...sq("d0", "knight", "cavalaria", 1) }, sq("d1", "footman", "lanceiro", 0)];
-    const r = resolveTacticalBattle({ field: "planicie", attacker: { squads: A, tactic: "parede" }, defender: { squads: D, tactic: "carga" } });
-    expect(r.tactics?.attacker.bonus).toBeCloseTo(0.12);
-    expect(r.tactics?.attacker.countered).toBe(false);
-    expect(r.tactics?.defender.countered).toBe(true);
-    const r2 = resolveTacticalBattle({ field: "planicie", attacker: { squads: A, tactic: "parede" }, defender: { squads: D, tactic: "cercar" } });
-    expect(r2.tactics?.attacker.countered).toBe(true);
-    expect(r2.tactics?.defender.bonus).toBeCloseTo(0.06); // 1 lanceiro, tropas em 2 faixas
-    // sem as tropas certas, a tática não dá nada
-    const r3 = resolveTacticalBattle({ field: "planicie", attacker: { squads: A, tactic: "carga" }, defender: { squads: D } });
+  it("ordem de batalha: muro de lanças segura a carga (+12% a mais), parede perde para cercar", () => {
+    const A: Squad[] = [sq("a0", "knight", "cavalaria", 1), sq("a1", "footman", "lanceiro", 0)];
+    const D: Squad[] = [sq("d0", "footman", "lanceiro", 1), sq("d1", "footman", "escudeiro", 0)];
+    const r = resolveTacticalBattle({ field: "planicie", attacker: { squads: A, tactic: "carga" }, defender: { squads: D, tactic: "lancas" } });
+    expect(r.tactics?.attacker.countered).toBe(true);
+    expect(r.tactics?.defender.beats).toBe(true);
+    expect(r.tactics?.defender.bonus).toBeCloseTo(0.06);
+    const r2 = resolveTacticalBattle({ field: "planicie", attacker: { squads: A, tactic: "cercar" }, defender: { squads: D, tactic: "parede" } });
+    expect(r2.tactics?.defender.countered).toBe(true);
+    expect(r2.tactics?.attacker.beats).toBe(true);
+    // sem as tropas certas, a tática não dá nada (e não "vence" ninguém)
+    const r3 = resolveTacticalBattle({ field: "planicie", attacker: { squads: A, tactic: "flechas" }, defender: { squads: D, tactic: "lancas" } });
     expect(r3.tactics?.attacker.bonus).toBe(0);
+    expect(r3.tactics?.attacker.beats).toBe(false);
   });
 });

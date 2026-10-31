@@ -4,7 +4,7 @@
  * Gerar a página: node tools/tactical/prototipo/build.js
  */
 import { boardStrength, hasFormation, tacticBonus, resolveTacticalBattle, Squad, Lane, Side, TacticalBattleResult, LaneFactor } from "../../../agot-bg-game-server/src/common/tactical-battle/tacticalBattle";
-import { TACTIC_BEATS, TACTIC_NAMES, Tactic, BASE_VALUE, FAR_FLANK_SHARE, FIELD_LANES, FieldType, ROW_FACTOR, Role, Row, SUPPORT_FACTOR, SquadKind, TERRAIN, UNOPPOSED_FLANK_SHARE, rolesFor } from "../../../agot-bg-game-server/src/common/tactical-battle/tacticalBattleData";
+import { ATTACK_TACTICS, DEFENSE_TACTICS, TACTIC_BEATS, TACTIC_NAMES, TACTIC_WIN_BONUS, Tactic, BASE_VALUE, FAR_FLANK_SHARE, FIELD_LANES, FieldType, ROW_FACTOR, Role, Row, SUPPORT_FACTOR, SquadKind, TERRAIN, UNOPPOSED_FLANK_SHARE, rolesFor } from "../../../agot-bg-game-server/src/common/tactical-battle/tacticalBattleData";
 import { bestReply, computerStrategy, Piece, Scenario, rng } from "../solver";
 import {
   EMPTY_SIDE,
@@ -906,19 +906,23 @@ function finishTurn(): void {
 }
 
 // ---------------------------------------------------------------- ordem de batalha
-const TACTIC_LIST: Tactic[] = ["parede", "cercar", "carga"];
-const TACTIC_ICON: Record<Tactic, string> = { parede: "🛡", cercar: "⇆", carga: "🐎" };
+const tacticsOf = (side: Side): Tactic[] => (side == "attacker" ? ATTACK_TACTICS : DEFENSE_TACTICS);
+const TACTIC_ICON: Record<Tactic, string> = { carga: "🐎", cercar: "⇆", flechas: "🏹", parede: "🛡", lancas: "🔱", reserva: "⛨" };
 const TACTIC_NEED: Record<Tactic, string> = {
-  parede: "precisa de escudeiros (+6% por esquadrão)",
+  carga: "precisa de cavalaria (+8% por esquadrão)",
   cercar: "precisa de lanceiros ou batedores e tropas em 2 faixas (+6% por esquadrão)",
-  carga: "precisa de cavalaria (+8% por esquadrão)"
+  flechas: "precisa de arqueiros (+6% por esquadrão)",
+  parede: "precisa de escudeiros (+6% por esquadrão)",
+  lancas: "precisa de lanceiros (+6% por esquadrão)",
+  reserva: "precisa de esquadrões na linha de trás (+5% por esquadrão)"
 };
-const beatenBy = (t: Tactic): Tactic => TACTIC_LIST.find((x) => TACTIC_BEATS[x] == t) as Tactic;
+const ALL_TACTICS: Tactic[] = [...ATTACK_TACTICS, ...DEFENSE_TACTICS];
+const beatenBy = (t: Tactic): Tactic => ALL_TACTICS.find((x) => TACTIC_BEATS[x] == t) as Tactic;
 
 /** O computador escolhe como no Crusader Kings: sorteia entre as que pode usar, mais peso para a que rende mais. */
 function cpuTactic(side: Side): Tactic | null {
   const sq = toSquads(units[side]);
-  const opts = TACTIC_LIST.map((t) => ({ t, w: tacticBonus(t, sq) })).filter((o) => o.w > 0);
+  const opts = tacticsOf(side).map((t) => ({ t, w: tacticBonus(t, sq) })).filter((o) => o.w > 0);
   if (!opts.length) return null;
   const total = opts.reduce((a, o) => a + o.w, 0) + 0.04;
   let r = Math.random() * total;
@@ -934,13 +938,13 @@ function openTacticPicker(side: Side): void {
     const b = tacticBonus(t, sq);
     return `<button type="button" class="tac-card${b > 0 ? "" : " off"}" data-tac="${t}" ${b > 0 ? "" : "disabled"}>
       <b>${TACTIC_ICON[t]} ${TACTIC_NAMES[t]} ${b > 0 ? `<em>+${Math.round(b * 100)}%</em>` : ""}</b>
-      <span>${b > 0 ? `<i class="ok">✓ vence ${TACTIC_NAMES[TACTIC_BEATS[t]]}</i> · <i class="no">✗ perde p/ ${TACTIC_NAMES[beatenBy(t)]}</i>` : TACTIC_NEED[t]}</span>
+      <span>${b > 0 ? `<i class="ok">✓ se ele usar ${TACTIC_NAMES[TACTIC_BEATS[t]]}: +${Math.round(TACTIC_WIN_BONUS * 100)}% a mais e a dele não vale</i><br><i class="no">✗ se ele usar ${TACTIC_NAMES[beatenBy(t)]}: a sua não vale</i>` : TACTIC_NEED[t]}</span>
     </button>`;
   };
   $("tactic-box").innerHTML = `
-    <h2>Ordem de batalha</h2>
-    <p class="muted">Como o seu comandante vai lutar. O bônus depende das suas tropas. Se a ordem do inimigo vencer a sua, você perde só o bônus.</p>
-    <div class="tac-list">${TACTIC_LIST.map(card).join("")}${card(null)}</div>`;
+    <h2>Ordem de ${side == "attacker" ? "ataque" : "defesa"}</h2>
+    <p class="muted">Como o seu comandante vai ${side == "attacker" ? "atacar" : "defender"}. O bônus depende das suas tropas. ${houseOf(other(side)).name} escolhe uma ordem de ${side == "attacker" ? "defesa" : "ataque"} ao mesmo tempo.</p>
+    <div class="tac-list">${tacticsOf(side).map(card).join("")}${card(null)}</div>`;
   $("tactic").hidden = false;
   $("tactic-box")
     .querySelectorAll<HTMLButtonElement>("[data-tac]")
@@ -963,7 +967,8 @@ function tacticsLine(res: TacticalBattleResult): string {
     const name = houseOf(side).name;
     if (!x.tactic) return `${name}: nenhuma`;
     if (x.bonus == 0) return `${name}: ${TACTIC_NAMES[x.tactic]} (sem as tropas certas, 0%)`;
-    return `${name}: ${TACTIC_NAMES[x.tactic]} ${x.countered ? `<s>+${Math.round(x.bonus * 100)}%</s> anulada` : `<b>+${Math.round(x.bonus * 100)}%</b>`}`;
+    const total = x.bonus + (x.beats ? TACTIC_WIN_BONUS : 0);
+    return `${name}: ${TACTIC_NAMES[x.tactic]} ${x.countered ? `<s>+${Math.round(x.bonus * 100)}%</s> anulada` : `<b>+${Math.round(total * 100)}%</b>${x.beats ? " (venceu a do outro)" : ""}`}`;
   };
   return `<p class="tac-line">⚔ Ordem de batalha — ${one("attacker")} · ${one("defender")}</p>`;
 }
