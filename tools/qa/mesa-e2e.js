@@ -152,7 +152,8 @@ function botTick() {
 
 
 async function handleMesa(p, tag, log) {
-  const fr = await p.$(".mesa-de-batalha-overlay iframe");
+  // a Mesa minimizada (aria-hidden) não atrapalha o resto da partida
+  const fr = await p.$('.mesa-de-batalha-overlay[aria-hidden="false"] iframe');
   if (!fr) return false;
   const f = await fr.contentFrame();
   if (!f) return true;
@@ -180,6 +181,20 @@ async function handleMesa(p, tag, log) {
     return true;
   }
   if (await vis("#tut-close")) { await f.click("#tut-close"); return true; }
+  // tela de espera (a Mesa fica aberta entre as etapas): na primeira vez, testa minimizar e abrir de novo
+  if (await vis(".embed-wait-box")) {
+    if (!global.__minTested) {
+      global.__minTested = true;
+      await p.screenshot({ path: `${out}/${tag}-espera.png` });
+      await p.click(".mesa-de-batalha-overlay button[aria-label^='Minimizar']");
+      await p.waitForTimeout(500);
+      const pill = await p.$(".mesa-pill");
+      await p.screenshot({ path: `${out}/${tag}-minimizada.png` });
+      log("minimizou: " + (pill ? "botão no canto apareceu" : "SEM botão no canto"));
+      if (pill) { await pill.click(); await p.waitForTimeout(500); log("abriu de novo pelo botão do canto"); }
+    }
+    return false;
+  }
   if (await vis("#ready")) {
     const enabled = await f.$eval("#ready", (b) => !b.disabled);
     await p.screenshot({ path: `${out}/${tag}-mesa.png` });

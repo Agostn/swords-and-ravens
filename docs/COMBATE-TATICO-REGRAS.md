@@ -498,3 +498,16 @@ quiser. No jogo completo, se a sala usar o relógio da partida, ele conta como e
 Na sala de espera, a opção agora fica na tela **Modo de jogo**, em destaque, como o 3º passo (1. Cenário, 2. Ritmo
 da partida, 3. Combate evoluído). Tem o selo azul **BETA** e um botão grande Ativado/Desativado. Quando está
 ativado, o topo da sala mostra "Combate evoluído BETA". As outras regras ficam embaixo, em "Mais regras e expansões".
+
+## Uma tela só, do começo ao fim da batalha (31/out)
+
+- A Mesa abre quando a batalha começa e **fica aberta até a luta acabar**: ela só passa de etapa
+  (Posicionar → esperar o outro → Corvo, se houver → esperar as baixas → Luta). No topo aparecem as etapas, com a
+  atual em dourado.
+- **Minimizar**: botão "▁ Minimizar" no canto (ou o "‹" da Mesa). A Mesa vira um botão no canto da tela
+  ("⚔ … Abrir ▲") e continua carregada; a **próxima etapa abre sozinha**.
+- Enquanto o perdedor escolhe as baixas no mapa, a Mesa fica minimizada ("Mesa decidida: a luta já vem") e abre
+  sozinha com a luta.
+- O botão **Pronto** fica sempre à vista: no celular ele já ficava fixo embaixo; no computador agora gruda no
+  rodapé do painel (antes saía da tela se a faixa de peças fosse alta).
+- No painel da partida, "Abrir a Mesa" abre a mesma tela.

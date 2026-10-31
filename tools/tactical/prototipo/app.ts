@@ -828,7 +828,7 @@ function renderPanel(): void {
   const keepScroll = oldTray ? oldTray.scrollLeft : 0;
   $("panel").innerHTML = `
     <div class="turn-head">
-      <button type="button" class="quit-btn" id="quit" aria-label="Sair para o início">‹</button>
+      <button type="button" class="quit-btn" id="quit" aria-label="${embed ? "Minimizar e voltar ao mapa" : "Sair para o início"}">‹</button>
       <h2><span class="dot" style="background:${h.color}"></span>${h.name} <small>${reacting ? "Corvo" : placingSide == "attacker" ? "ataca" : "defende"}</small></h2>
       <div class="turn-tools">
         <button type="button" class="help-btn" id="help-play" aria-label="Como funciona o combate">?</button>
@@ -1478,7 +1478,7 @@ function setFullscreen(on: boolean): void {
 function renderBattlePanel(): void {
   setPhase("battle");
   $("panel").innerHTML = `
-    <div class="turn-head"><button type="button" class="quit-btn" id="quit" aria-label="Sair para o início">‹</button><h2>A luta</h2><button type="button" class="help-btn" id="help-battle" aria-label="Como funciona o combate">?</button></div>
+    <div class="turn-head"><button type="button" class="quit-btn" id="quit" aria-label="${embed ? "Minimizar e voltar ao mapa" : "Sair para o início"}">‹</button><h2>A luta</h2><button type="button" class="help-btn" id="help-battle" aria-label="Como funciona o combate">?</button></div>
     <p class="muted">A conta já decidiu quem ganha cada faixa; a luta mostra como foi.</p>
     <div class="speed" role="group" aria-label="Velocidade">
       <button type="button" class="btn${speed == 1 ? " on" : ""}" data-speed="1">1×</button>
@@ -1830,6 +1830,11 @@ interface EmbedStart {
   swords?: number;
   towers?: number;
   text?: string;
+  /** frase menor embaixo do texto de espera */
+  sub?: string;
+  /** etapas da batalha (ex.: Posicionar, Corvo, Luta) e a atual (0, 1, 2...) */
+  steps?: string[];
+  step?: number;
 }
 let embed: EmbedStart | null = null;
 
@@ -1907,9 +1912,27 @@ function onEmbedMessage(e: MessageEvent): void {
   startEmbed(d as EmbedStart);
 }
 
+/** Etapas da batalha no topo (a tela fica aberta do começo ao fim; só passa de etapa). */
+function renderEmbedSteps(d: EmbedStart): void {
+  const el = document.getElementById("embed-steps");
+  if (!el) return;
+  if (!d.steps || !d.steps.length) {
+    el.hidden = true;
+    return;
+  }
+  const now = d.step ?? 0;
+  el.innerHTML = d.steps.map((name, i) => `<li class="${i < now ? "done" : i == now ? "now" : ""}"><b>${i < now ? "✓" : i + 1}</b>${name}</li>`).join("");
+  el.hidden = false;
+}
+
+function embedWaitHtml(text: string, sub?: string): string {
+  return `<div class="embed-wait-box"><span class="spin" aria-hidden="true"></span><p>${text}</p>${sub ? `<small>${sub}</small>` : ""}<small>Pode minimizar e voltar ao mapa: a Mesa abre sozinha na próxima etapa.</small></div>`;
+}
+
 function startEmbed(d: EmbedStart): void {
   embed = d;
   stopTimer();
+  renderEmbedSteps(d);
   config = {
     presetId: null,
     field: d.field,
@@ -1925,7 +1948,8 @@ function startEmbed(d: EmbedStart): void {
     if (raf != null) cancelAnimationFrame(raf);
     raf = null;
     setPhase("place");
-    $("panel").innerHTML = `<p class="muted embed-wait">${d.text ?? "Aguardando o outro lado…"}</p>`;
+    phase = "result"; // campo travado: só mostra
+    $("panel").innerHTML = embedWaitHtml(d.text ?? "Aguardando o outro lado…", d.sub);
     return;
   }
   if (d.mode == "place") {
@@ -1993,16 +2017,25 @@ function embedSubmit(): void {
   const squads = units[side].map((u) => ({ piece: u.piece, kind: u.kind, role: u.role, lane: u.lane, row: u.row }));
   toParent({ type: "tb-submit", side, squads, tactic: tactics[side] });
   setPhase("place");
-  $("panel").innerHTML = `<p class="muted embed-wait">Pronto! Sua Mesa foi enviada. Aguardando ${houseOf(other(side)).name}…</p>`;
-  phase = "result"; // trava o campo (sem mexer mais)
+  $("panel").innerHTML = embedWaitHtml(`Pronto! Sua Mesa foi enviada. Aguardando ${houseOf(other(side)).name}…`);
+  // tira a seleção e deixa o campo desenhar mais um quadro limpo antes de travar
+  selected = null;
+  hoverSlot = null;
+  window.setTimeout(() => {
+    if (phase == "place") phase = "result"; // trava o campo (sem mexer mais)
+  }, 80);
 }
 
 function embedReact(): void {
   const side = placingSide;
   const squads = units[side].map((u) => ({ id: u.id, role: u.role, lane: u.lane ?? 1, row: u.row }));
   toParent({ type: "tb-react", side, squads });
-  $("panel").innerHTML = `<p class="muted embed-wait">Pronto! Revelando a batalha…</p>`;
-  phase = "result";
+  $("panel").innerHTML = embedWaitHtml("Pronto! Revelando a batalha…");
+  selected = null;
+  hoverSlot = null;
+  window.setTimeout(() => {
+    if (phase == "react") phase = "result";
+  }, 80);
 }
 
 document.addEventListener("DOMContentLoaded", init);

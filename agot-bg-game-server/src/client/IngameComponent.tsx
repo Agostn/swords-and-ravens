@@ -209,7 +209,7 @@ export default class IngameComponent extends Component<IngameComponentProps> {
     return (
       <>
         {this.renderLayout()}
-        <TacticalReplayOverlay ingame={this.ingame} />
+        <TacticalReplayOverlay ingame={this.ingame} gameClient={this.gameClient} />
       </>
     );
   }
