@@ -314,7 +314,6 @@ function forceAt(u: Unit, lane: Lane, row: Row, side: Side): number {
   return baseValue(u, side) * (1 + slotBonus(u, lane, row, side).pct / 100);
 }
 
-const fmt = (x: number): string => x.toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
 
 function previewFor(u: Unit | null): { lane: Lane; row: Row; pct: number; best: boolean; force: number; base: number }[] | null {
   if (!u || u.locked) return null;
@@ -639,6 +638,11 @@ function stepNow(): number {
   return selected ? 2 : 1;
 }
 
+/** Em palavras: quanto a peça rende no lugar (sem números para não confundir com a força do tabuleiro). */
+function qualityWord(pct: number): string {
+  return pct >= 15 ? "rende muito bem" : pct > 0 ? "rende bem" : pct == 0 ? "normal" : pct <= -30 ? "rende muito mal" : "rende mal";
+}
+
 /** Dica da formação: corpo a corpo na frente + atirador atrás, na mesma faixa = +15%. */
 function formationTip(u: Unit): string {
   const shooter = u.role == "arqueiro" || u.role == "flechas" || u.role == "catapulta";
@@ -686,7 +690,7 @@ function renderPanel(): void {
   const here = sel && sel.lane != null ? slotBonus(sel, sel.lane, sel.row, placingSide) : null;
   const say = sel
     ? `<p class="role-say">${bt ? `<span class="ok">✓ vence ${listPt(bt.vence)}</span> <span class="no">✗ perde p/ ${listPt(bt.teme)}</span>` : `<b>${ROLE_NAMES[sel.role]}</b>`}<br><span class="rng">${REACH_LABEL[sel.role]}</span>${formationTip(sel)} · ${
-        here ? `<span class="here">aqui: força ${fmt(forceAt(sel, sel.lane as Lane, sel.row, placingSide))} de ${fmt(baseValue(sel, placingSide))}${here.why.length ? ` (${here.why.join(", ")})` : ""}</span>` : `<span class="here">força normal ${fmt(baseValue(sel, placingSide))}</span>`
+        here ? `<span class="here">aqui: ${qualityWord(here.pct)}${here.why.length ? ` (${here.why.join(", ")})` : ""}</span>` : `<span class="here">verde = onde rende mais</span>`
       }</p>`
     : "";
   const editor = sel
@@ -1118,7 +1122,7 @@ function boardHtml(b: BoardBattle): string {
     const t = b.totals[side];
     const parts = [`tropas ${t.tropas}`, `carta ${t.carta}`];
     if (t.ordem) parts.push(`ordem ${t.ordem > 0 ? "+" : ""}${t.ordem}`);
-    if (t.mini) parts.push(`mini-mapa +${t.mini}`);
+    if (t.mini) parts.push(`bônus da Mesa +${t.mini}`);
     return `<li><b style="color:${houseOf(side).color}">${houseOf(side).name}</b>: ${parts.join(" + ")} = <b>${t.total}</b></li>`;
   };
   const loser = other(b.winner);
@@ -1132,7 +1136,7 @@ function boardHtml(b: BoardBattle): string {
       ? `${houseOf(b.winner).name} tem ${b.swords} ${b.swords == 1 ? "espada" : "espadas"} e ${houseOf(loser).name} ${b.towers} ${b.towers == 1 ? "torre" : "torres"}: ninguém morre, ${houseOf(loser).name} recua.`
       : `${b.swords} ${b.swords == 1 ? "espada" : "espadas"} − ${b.towers} ${b.towers == 1 ? "torre" : "torres"} = <b>${b.casualties} ${b.casualties == 1 ? "baixa" : "baixas"}</b>: morre ${names.join(" e ")}; o resto de ${houseOf(loser).name} recua.`;
   return `<div class="board-res">
-    <h3>Batalha no tabuleiro</h3>
+    <h3>2. Batalha no tabuleiro (regra do jogo original)</h3>
     <ul>${row("attacker")}${row("defender")}</ul>
     <p><b style="color:${houseOf(b.winner).color}">${houseOf(b.winner).name} vence</b>${b.tie ? " (empate: quem tem a Lâmina de Aço Valiriano, o mais alto nos Feudos, vence — regra do jogo original)" : ""}. ${deaths}${siege}</p>
   </div>`;
@@ -1315,16 +1319,12 @@ function showResult(): void {
   const res = lastResult as TacticalBattleResult;
   const lanesT = FIELD_LANES[config.field];
   const human = config.mode == "cpu" ? config.humanSide : null;
-  const verdict = res.winner
-    ? human
-      ? res.winner == human
-        ? "Você venceu o mini-mapa!"
-        : "O computador venceu o mini-mapa"
-      : `${houseOf(res.winner).name} venceu o mini-mapa`
-    : "Empate no mini-mapa";
+  // o título é o resultado de VERDADE (a batalha do tabuleiro); a Mesa só dá o bônus
+  const bw = lastBoard?.winner ?? res.winner;
+  const verdict = bw ? (human ? (bw == human ? "Você venceu a batalha!" : "Você perdeu a batalha") : `${houseOf(bw).name} venceu a batalha`) : "Empate";
   const bonus = res.winner
-    ? `<span class="bonus" style="background:${houseOf(res.winner).color};color:${houseOf(res.winner).ink}">+${res.bonus}</span> para ${houseOf(res.winner).name} na batalha do tabuleiro`
-    : "Ninguém ganha bônus na batalha do tabuleiro.";
+    ? `<b>1. Mesa de Batalha (as faixas):</b> ${houseOf(res.winner).name} ${res.duel ? "venceu o duelo de campeões" : res.bonus >= 2 ? "venceu todas as faixas" : "venceu mais faixas"} → <span class="bonus" style="background:${houseOf(res.winner).color};color:${houseOf(res.winner).ink}">+${res.bonus}</span> de bônus na batalha do tabuleiro.`
+    : "<b>1. Mesa de Batalha (as faixas):</b> empate, ninguém ganha bônus.";
   const lanesHtml = res.lanes
     .map((L, i) => {
       const facts = [...new Set(L.factors.map(factorText).filter((x): x is string => !!x))].slice(0, 3);
@@ -1338,7 +1338,7 @@ function showResult(): void {
             <span style="width:${(L.attackerScore / tot) * 100}%;background:${houseOf("attacker").color}"></span>
             <span style="width:${(L.defenderScore / tot) * 100}%;background:${houseOf("defender").color}"></span>
           </div>
-          <div class="bar-nums"><span>${houseOf("attacker").name} ${L.attackerScore.toFixed(1)}</span><span>${L.defenderScore.toFixed(1)} ${houseOf("defender").name}</span></div>`
+          <div class="bar-nums"><span>${houseOf("attacker").name}</span><span>${houseOf("defender").name}</span></div>`
             : ""
         }
         ${facts.length ? `<ul class="facts">${facts.map((x) => `<li>${x}</li>`).join("")}</ul>` : ""}
@@ -1352,6 +1352,7 @@ function showResult(): void {
       ${res.metInCenter ? `<p class="note">Ninguém se encontrou nas faixas escolhidas, então os exércitos marcharam e lutaram no centro.</p>` : ""}
       ${res.duel && res.winner ? `<p class="note">🗡 <b>Empate nas faixas → duelo de campeões.</b> Os dois campeões lutaram no meio do campo e venceu o de ${houseOf(res.winner).name}, que tem a Lâmina de Aço Valiriano (o mais alto nos Feudos desempata, como no jogo original).</p>` : ""}
       ${lastBoard ? boardHtml(lastBoard) : ""}
+      <h3 class="lanes-title">3. Por que cada faixa foi para quem</h3>
       <ol class="lanes-res">${lanesHtml}</ol>
       <div class="actions">
         <button type="button" class="btn" id="home-btn">Início</button>

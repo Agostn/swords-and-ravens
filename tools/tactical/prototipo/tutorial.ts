@@ -66,7 +66,7 @@ function men(ctx: CanvasRenderingContext2D, role: Role, kind: SquadKind, cx: num
 export const SLIDES: Slide[] = [
   {
     title: "1. O campo e o seu lado",
-    text: "O campo tem 3 faixas: esquerda, centro e direita. Cada faixa tem duas casinhas do seu lado: frente e trás. Você põe suas peças ali. Ao tocar numa peça, cada casinha mostra a FORÇA dela ali — o mesmo número do tabuleiro: soldado 1, cavaleiro 2 (verde = rende mais ali). No lado do inimigo aparece, em cada faixa, o que acontece se ele vier todo para lá com cada função: ✓ você ganha, ✗ perde. O lado dele fica na névoa até os dois ficarem prontos.",
+    text: "O campo tem 3 faixas: esquerda, centro e direita. Cada faixa tem duas casinhas do seu lado: frente e trás. Você põe suas peças ali. Ao tocar numa peça, cada casinha mostra onde ela rende mais: ★ melhor, ▲ bom, normal ou ▼ fraco. No lado do inimigo aparece, em cada faixa, o que acontece se ele vier todo para lá com cada função: ✓ você ganha, ✗ perde. O lado dele fica na névoa até os dois ficarem prontos.",
     draw: (ctx) => {
       ground(ctx, "planicie", H * 0.36);
       // névoa
@@ -233,7 +233,7 @@ export const SLIDES: Slide[] = [
   },
   {
     title: "7. O resultado: +1 ou +2",
-    text: "Quem vencer mais faixas ganha o mini-mapa e soma +1 na batalha do tabuleiro. Se vencer todas as faixas com luta (pelo menos duas), soma +2. Se ninguém se encontrar nas faixas, os exércitos marcham e lutam no centro. Depois a batalha segue igual ao jogo original: Espada de Aço Valiriano, baixas e retirada.",
+    text: "Quem vencer mais faixas ganha +1 de bônus na batalha do tabuleiro (a de verdade, com tropas, carta e ordem). Se vencer todas as faixas com luta (pelo menos duas), soma +2. Se ninguém se encontrar nas faixas, os exércitos marcham e lutam no centro. Depois a batalha segue igual ao jogo original: Espada de Aço Valiriano, baixas e retirada.",
     draw: (ctx) => {
       ctx.fillStyle = "#2a2119";
       ctx.fillRect(0, 0, CW, CH);

@@ -307,7 +307,6 @@ function fogLayer(seed: number, light: [number, number, number], dark: [number, 
   return c;
 }
 
-const num = (x: number): string => x.toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
 
 /**
  * No lado do inimigo, em cada faixa: "se ele vier todo aqui com…" e as funções que ele pode
@@ -407,7 +406,8 @@ function drawFog(ctx: CanvasRenderingContext2D, t: number, enemy: House, count: 
   ctx.font = "24px 'IM Fell English SC', Georgia, serif";
   ctx.fillText(enemy.name, cx, top + 24);
   ctx.font = "800 17px 'Alegreya Sans', 'Trebuchet MS', sans-serif";
-  ctx.fillText(`${count} ${count == 1 ? "peça escondida" : "peças escondidas"}${force ? ` · força ${num(force)}` : ""}`, cx, top + 47, bw - 10);
+  void force;
+  ctx.fillText(`${count} ${count == 1 ? "peça escondida" : "peças escondidas"}`, cx, top + 47, bw - 10);
 }
 
 export function drawPlacement(ctx: CanvasRenderingContext2D, v: PlaceView, t: number): PlacedToken[] {
@@ -459,7 +459,8 @@ export function drawPlacement(ctx: CanvasRenderingContext2D, v: PlaceView, t: nu
     // quanto a peça escolhida rende aqui
     const pv = v.preview?.find((x) => x.lane == s.lane && x.row == s.row);
     if (pv) {
-      const txt = `força ${num(pv.force)}`;
+      // em palavras (sem número, para não confundir com a força do tabuleiro)
+      const txt = pv.best && pv.pct > 0 ? "★ melhor" : pv.pct > 0 ? "▲ bom" : pv.pct < 0 ? "▼ fraco" : "normal";
       ctx.font = "800 19px 'Alegreya Sans', 'Trebuchet MS', sans-serif";
       const tw = ctx.measureText(txt).width + 18;
       const bx = s.x + s.w - tw - 6;
@@ -532,7 +533,7 @@ export function drawPlacement(ctx: CanvasRenderingContext2D, v: PlaceView, t: nu
     });
   }
   if (v.preview && v.previewLabel) {
-    const txt = `${v.previewLabel}: força em cada casinha · verde = melhor`;
+    const txt = `${v.previewLabel}: onde ele rende mais (verde = melhor)`;
     ctx.font = "700 19px 'Alegreya Sans', 'Trebuchet MS', sans-serif";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
