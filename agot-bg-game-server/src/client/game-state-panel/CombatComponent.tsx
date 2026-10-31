@@ -38,6 +38,8 @@ import unitTypes from "../../common/ingame-game-state/game-data-structure/unitTy
 import SelectUnitsGameState from "../../common/ingame-game-state/select-units-game-state/SelectUnitsGameState";
 import AfterCombatHouseCardAbilitiesGameState from "../../common/ingame-game-state/action-game-state/resolve-march-order-game-state/combat-game-state/post-combat-game-state/after-combat-house-card-abilities-game-state/AfterCombatHouseCardAbilitiesGameState";
 import { t, tr } from "../i18n/i18n";
+import TacticalBattleGameState from "../../common/ingame-game-state/action-game-state/resolve-march-order-game-state/combat-game-state/tactical-battle-game-state/TacticalBattleGameState";
+import TacticalBattleComponent from "./TacticalBattleComponent";
 
 @observer
 export default class CombatComponent extends Component<
@@ -167,6 +169,7 @@ export default class CombatComponent extends Component<
           [DeclareSupportGameState, DeclareSupportComponent],
           [ChooseHouseCardGameState, ChooseHouseCardComponent],
           [UseValyrianSteelBladeGameState, UseValyrianSteelBladeComponent],
+          [TacticalBattleGameState, TacticalBattleComponent],
           [PostCombatGameState, PostCombatComponent],
           [
             ImmediatelyHouseCardAbilitiesResolutionGameState,

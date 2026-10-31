@@ -35,6 +35,10 @@ webpack(
     const js = `window.__WORKER_SRC__ = ${JSON.stringify(worker)};\n` + fs.readFileSync(path.join(__dirname, ".build", "app.js"), "utf8");
     const html = fs.readFileSync(path.join(__dirname, "template.html"), "utf8").replace("/*__APP__*/", () => js.replace(/<\/script/gi, "<\\/script"));
     fs.writeFileSync(out, html);
-    console.log("ok", out, Math.round(html.length / 1024) + " KB");
+    // a mesma página vai para dentro do jogo completo (a partida abre ela num iframe, modo #embed)
+    const inGame = path.join(GS, "src", "client", "tactical-battle", "mesa-de-batalha.mesa.html");
+    fs.mkdirSync(path.dirname(inGame), { recursive: true });
+    fs.writeFileSync(inGame, html);
+    console.log("ok", out, Math.round(html.length / 1024) + " KB (e no jogo: " + path.relative(GS, inGame) + ")");
   }
 );

@@ -1,4 +1,5 @@
 import EntireGame, { NotificationType } from "../EntireGame";
+import type { TacticalOutcome } from "./action-game-state/resolve-march-order-game-state/combat-game-state/tactical-battle-game-state/TacticalBattleGameState";
 import GameState, { AnyGameState } from "../GameState";
 import { ClientMessage } from "../../messages/ClientMessage";
 import { ServerMessage } from "../../messages/ServerMessage";
@@ -154,6 +155,8 @@ export default class IngameGameState extends GameState<
   @observable willBeAutoResumedAt: Date | null = null;
 
   @observable bannedUsers: Set<string> = new Set();
+  /** Mesa de Batalha: luta para assistir (chega quando tudo foi decidido; só no cliente) */
+  @observable tacticalReplay: TacticalOutcome | null = null;
 
   childGameStateBeforeCancellation: IngameChildGameState | null = null;
   childGameStateBeforeVassalsModification: IngameChildGameState | null = null;
@@ -2088,6 +2091,8 @@ export default class IngameGameState extends GameState<
             hasBeenReactivated: message.waitedForData.hasBeenReactivated
           }
         : null;
+    } else if (message.type == "tactical-battle-replay") {
+      this.tacticalReplay = message.replay;
     } else if (message.type == "user-banned") {
       this.bannedUsers.add(message.userId);
     } else if (message.type == "user-unbanned") {

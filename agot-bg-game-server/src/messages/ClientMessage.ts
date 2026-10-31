@@ -11,6 +11,8 @@ export type ClientMessage =
   | DeclareSupport
   | RefuseSupport
   | UseValyrianSteelBlade
+  | TacticalBattleSubmit
+  | TacticalBattleReact
   | ChooseHouseCard
   | ChooseCasualties
   | ChooseSeeTopWildlingCard
@@ -126,6 +128,21 @@ interface DeclareSupport {
 interface RefuseSupport {
   type: "refuse-support";
   from?: string;
+}
+
+/** Mesa de Batalha: onde ficou cada esquadrão e a ordem de batalha (o servidor confere tudo) */
+interface TacticalBattleSubmit {
+  type: "tactical-battle-submit";
+  houseId: string;
+  squads: { piece: string; kind: string; role: string; lane: number | null; row: string }[];
+  tactic: string | null;
+}
+
+/** Mesa de Batalha: quem tem o Corvo muda até 1 esquadrão depois de ver o outro exército */
+interface TacticalBattleReact {
+  type: "tactical-battle-react";
+  houseId: string;
+  squads: { id: string; role: string; lane: number; row: string }[];
 }
 
 interface UseValyrianSteelBlade {

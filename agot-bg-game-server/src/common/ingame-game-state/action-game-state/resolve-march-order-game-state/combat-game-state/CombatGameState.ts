@@ -50,6 +50,10 @@ import getShuffledTidesOfBattleDeck, {
   tidesOfBattleCards
 } from "../../../../../common/ingame-game-state/game-data-structure/static-data-structure/tidesOfBattleCards";
 import popRandom from "../../../../../utils/popRandom";
+import TacticalBattleGameState, {
+  SerializedTacticalBattleGameState,
+  TacticalOutcome
+} from "./tactical-battle-game-state/TacticalBattleGameState";
 
 export interface CombatStats {
   house: string;
@@ -84,6 +88,7 @@ export default class CombatGameState extends GameState<
   | ImmediatelyHouseCardAbilitiesResolutionGameState
   | BeforeCombatHouseCardAbilitiesGameState
   | UseValyrianSteelBladeGameState
+  | TacticalBattleGameState
   | PostCombatGameState
 > {
   order: Order;
@@ -99,6 +104,9 @@ export default class CombatGameState extends GameState<
 
   @observable
   stats: CombatStats[] = [];
+
+  /** Mesa de Batalha: o que ela decidiu (null = ainda não houve, ou a opção está desligada) */
+  tactical: TacticalOutcome | null = null;
 
   @observable
   houseCardModifiers: BetterMap<string, HouseCardModifier> = new BetterMap();
@@ -300,6 +308,17 @@ export default class CombatGameState extends GameState<
   }
 
   proceedResolveCombat(): void {
+    // Mesa de Batalha: a última conta antes do resultado (tudo que mexe na força já aconteceu)
+    if (this.entireGame.gameSettings.tacticalCombat && !this.tactical) {
+      this.setChildGameState(new TacticalBattleGameState(this)).firstStart();
+      return;
+    }
+    this.setChildGameState(new PostCombatGameState(this)).firstStart();
+  }
+
+  /** outcome null: a Mesa não pôde acontecer (um lado sem peça que lute) e vale a batalha original */
+  onTacticalBattleEnd(outcome: TacticalOutcome | null): void {
+    this.tactical = outcome;
     this.setChildGameState(new PostCombatGameState(this)).firstStart();
   }
 
@@ -1022,6 +1041,7 @@ export default class CombatGameState extends GameState<
           ? (this.valyrianSteelBladeUser?.id ?? null)
           : null,
       stats: this.stats,
+      tactical: this.tactical,
       childGameState: this.childGameState.serializeToClient(admin, player)
     };
   }
@@ -1083,6 +1103,7 @@ export default class CombatGameState extends GameState<
       ? resolveMarchOrderGameState.game.houses.get(data.valyrianSteelBladeUser)
       : null;
     combatGameState.stats = data.stats;
+    combatGameState.tactical = data.tactical ?? null;
     combatGameState.childGameState = combatGameState.deserializeChildGameState(
       data.childGameState
     );
@@ -1137,6 +1158,8 @@ export default class CombatGameState extends GameState<
         return UseValyrianSteelBladeGameState.deserializeFromServer(this, data);
       case "post-combat":
         return PostCombatGameState.deserializeFromServer(this, data);
+      case "tactical-battle":
+        return TacticalBattleGameState.deserializeFromServer(this, data);
       case "immediately-house-card-abilities-resolution":
         return ImmediatelyHouseCardAbilitiesResolutionGameState.deserializeFromServer(
           this,
@@ -1177,8 +1200,10 @@ export interface SerializedCombatGameState {
   houseCardModifiers: [string, HouseCardModifier][];
   valyrianSteelBladeUser: string | null;
   stats: CombatStats[];
+  tactical?: TacticalOutcome | null;
   childGameState:
     | SerializedDeclareSupportGameState
+    | SerializedTacticalBattleGameState
     | SerializedChooseHouseCardGameState
     | SerializedUseValyrianSteelBladeGameState
     | SerializedPostCombatGameState

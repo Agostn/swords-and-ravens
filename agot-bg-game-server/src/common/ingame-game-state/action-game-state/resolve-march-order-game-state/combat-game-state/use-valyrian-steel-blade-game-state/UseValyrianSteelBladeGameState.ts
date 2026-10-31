@@ -37,7 +37,9 @@ export default class UseValyrianSteelBladeGameState extends GameState<CombatGame
     if (
       !forNewTidesOfBattleCard &&
       this.canBeSkipped(house).canBeSkipped &&
-      !this.combatGameState.dontSkipVsbQuestion
+      !this.combatGameState.dontSkipVsbQuestion &&
+      // Mesa de Batalha: +1 de força sempre muda a chance na Mesa, então a pergunta nunca é pulada
+      !this.entireGame.gameSettings.tacticalCombat
     ) {
       // Using VSB would make no sense as battle is already won or VSB doesn't help to win it.
       // So we end this state with VSB not used

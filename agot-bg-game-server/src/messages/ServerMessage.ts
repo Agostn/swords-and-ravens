@@ -12,10 +12,13 @@ import { SerializedWesterosCard } from "../common/ingame-game-state/game-data-st
 import { SerializedVote } from "../common/ingame-game-state/vote-system/Vote";
 import HouseCardModifier from "../common/ingame-game-state/game-data-structure/house-card/HouseCardModifier";
 import { CombatStats } from "../common/ingame-game-state/action-game-state/resolve-march-order-game-state/combat-game-state/CombatGameState";
+import { TacticalOutcome } from "../common/ingame-game-state/action-game-state/resolve-march-order-game-state/combat-game-state/tactical-battle-game-state/TacticalBattleGameState";
 import { SerializedLoanCard } from "../common/ingame-game-state/game-data-structure/loan-card/LoanCard";
 import { SerializedWaitedForData } from "../common/ingame-game-state/Player";
 
 export type ServerMessage =
+  | TacticalBattleSubmitted
+  | TacticalBattleReplay
   | NewUser
   | HouseChosen
   | AuthenticationResponse
@@ -445,6 +448,18 @@ interface UpdateGameHouseCards {
   type: "update-game-house-cards";
   draftPool: string[];
   houseCards: [string, string[]];
+}
+
+/** Mesa de Batalha: uma casa mandou a Mesa (os outros só sabem que ela está pronta) */
+interface TacticalBattleSubmitted {
+  type: "tactical-battle-submitted";
+  houseId: string;
+}
+
+/** Mesa de Batalha: tudo decidido (vencedor e quem morreu): todos assistem à luta */
+interface TacticalBattleReplay {
+  type: "tactical-battle-replay";
+  replay: TacticalOutcome;
 }
 
 interface UpdateCombatStats {

@@ -207,6 +207,19 @@ const ptBR: { [key in keyof typeof en]: string } = {
   "settings.fogOfWar.label": "Névoa de guerra",
   "settings.fogOfWar.tooltip":
     "Você só vê as áreas que controla, as áreas vizinhas e as áreas que você ataca ou de onde é atacado.",
+  "log.tacticalBattle.result":
+    "<b>Mesa de Batalha</b>: {p0} venceu nas faixas ({p1} {p3} × {p4} {p2}).",
+  "log.tacticalBattle.duel":
+    "<b>Mesa de Batalha</b>: empate nas faixas ({p1} {p3} × {p4} {p2}); {p0} venceu no duelo (trilha dos Feudos).",
+  "tactical.title": "Mesa de Batalha",
+  "tactical.status.done": "pronto",
+  "tactical.status.placing": "posicionando as tropas…",
+  "tactical.raven": "{p0} tem o Corvo Mensageiro: está vendo onde está o outro exército e pode mudar 1 esquadrão.",
+  "tactical.open": "Abrir a Mesa",
+  "tactical.openRaven": "Abrir a Mesa (Corvo)",
+  "settings.tacticalCombat.label": "Mesa de Batalha (combate tático)",
+  "settings.tacticalCombat.tooltip":
+    "Depois das cartas, do apoio e da Lâmina, os dois lados posicionam as tropas num campo de 3 faixas. A força total da batalha reforça as tropas; quem vencer mais faixas vence a batalha. As baixas continuam vindo das espadas e torres.",
   "settings.noPrivateChats.label": "Desativar chats privados",
   "settings.noPrivateChats.tooltip":
     "Os jogadores não podem criar salas de chat privadas.",

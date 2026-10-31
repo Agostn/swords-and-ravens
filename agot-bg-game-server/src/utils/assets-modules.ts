@@ -22,3 +22,8 @@ declare module "*.ogg" {
     const value: string;
     export = value;
 }
+
+declare module "*.mesa.html" {
+    const value: string;
+    export = value;
+}

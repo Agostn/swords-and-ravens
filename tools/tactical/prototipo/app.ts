@@ -4,7 +4,7 @@
  * Gerar a página: node tools/tactical/prototipo/build.js
  */
 import { boardStrength, hasFormation, tacticBonus, resolveTacticalBattle, Squad, Lane, Side, TacticalBattleResult, LaneFactor } from "../../../agot-bg-game-server/src/common/tactical-battle/tacticalBattle";
-import { EDGE_EXP, DRAGON_AIR_SHARE, DRAGON_AIR_FAR_SHARE, ARMY_MAX, SQUAD_MAX, SUPPORT_MAX, slotMaxFor, ATTACK_TACTICS, DEFENSE_TACTICS, TACTIC_BEATS, TACTIC_NAMES, TACTIC_WIN_BONUS, Tactic, BASE_VALUE, FAR_FLANK_SHARE, FIELD_LANES, FieldType, ROW_FACTOR, Role, Row, SUPPORT_FACTOR, SquadKind, TERRAIN, UNOPPOSED_FLANK_SHARE, rolesFor } from "../../../agot-bg-game-server/src/common/tactical-battle/tacticalBattleData";
+import { BOARD_STRENGTH, EDGE_EXP, DRAGON_AIR_SHARE, DRAGON_AIR_FAR_SHARE, ARMY_MAX, SQUAD_MAX, SUPPORT_MAX, slotMaxFor, ATTACK_TACTICS, DEFENSE_TACTICS, TACTIC_BEATS, TACTIC_NAMES, TACTIC_WIN_BONUS, Tactic, BASE_VALUE, FAR_FLANK_SHARE, FIELD_LANES, FieldType, ROW_FACTOR, Role, Row, SUPPORT_FACTOR, SquadKind, TERRAIN, UNOPPOSED_FLANK_SHARE, rolesFor } from "../../../agot-bg-game-server/src/common/tactical-battle/tacticalBattleData";
 import { bestReply, computerStrategy, Piece, Scenario, rng } from "../solver";
 import {
   EMPTY_SIDE,
@@ -155,6 +155,7 @@ function supportStrength(side: Side): number {
  * uma peça). É calculada antes da Mesa e reforça as tropas no campo; quem vencer mais faixas vence a batalha.
  */
 function boardTotalOf(side: Side): number {
+  if (embed) return Math.max(0, embed.totals[side]);
   const all = units[side].length ? units[side] : buildUnits(side);
   const tropas = all.reduce((a, u) => a + boardStrength({ ...toSquadAny(u) }, side, config.field), 0);
   return Math.max(0, tropas + (config[side].card?.strength ?? 0) + (config[side].order ?? 0) + supportStrength(side));
@@ -177,7 +178,10 @@ function edgeHtml(): string {
   const ha = houseOf("attacker");
   const hd = houseOf("defender");
   const lead: Side | null = A > D ? "attacker" : D > A ? "defender" : null;
-  const tail = lead
+  const zero = lead && Math.min(A, D) <= 0;
+  const tail = zero && lead
+    ? `${houseOf(other(lead)).name} está com força 0: <b style="color:${houseOf(lead).color}">${houseOf(lead).name}</b> vence onde tiver tropas`
+    : lead
     ? `<b style="color:${houseOf(lead).color}">${houseOf(lead).name}</b> começa com <b>+${edgePct(lead)}%</b> em todas as faixas`
     : "força igual: decide a estratégia (empate total: Lâmina)";
   return `<p class="edge-line" title="Força no tabuleiro: tropas + apoio + carta + ordem. Quem vencer mais faixas vence a batalha.">⚖ <b style="color:${ha.color}">${ha.name} ${A}</b> × <b style="color:${hd.color}">${hd.name} ${D}</b> → ${tail}</p>`;
@@ -221,8 +225,10 @@ function toggleMount(side: Side, u: Unit): void {
   let n = Math.max(...list.map((x) => Number(x.id.slice(1)) || 0)) + 1;
   const make = (kind: SquadKind, parts: number, dismounted: boolean): Unit[] => {
     const roles = rolesFor(kind, false);
-    return Array.from({ length: parts }, (_, k) => ({ id: `${side[0]}${n++}`, kind, role: roles[k % roles.length], lane: null, row: "frente" as Row, piece: u.piece, share: 1 / parts, dismounted }));
+    // a força é a da PEÇA (cavaleiro = 2), dividida entre os esquadrões (antes, a pé valia como soldado: metade)
+    return Array.from({ length: parts }, (_, k) => ({ id: `${side[0]}${n++}`, kind, role: roles[k % roles.length], lane: null, row: "frente" as Row, piece: u.piece, share: 1 / parts, dismounted, strength: pieceStrength }));
   };
+  const pieceStrength = u.strength ?? BOARD_STRENGTH.knight;
   const fresh = u.kind == "knight" ? make("footman", 4, true) : make("knight", 2, false);
   // os novos ficam onde estava a peça (o resto da peça, na reserva)
   if (u.lane != null && slotRoom(side, u.lane, u.row, u.piece) > 0) {
@@ -673,6 +679,12 @@ function beginTurn(): void {
 let timeMax = 75;
 function startTimer(secs = 75): void {
   stopTimer();
+  // dentro do jogo completo não tem cronômetro (o relógio do jogo cuida de quem demora)
+  if (embed) {
+    timeMax = secs;
+    timeLeft = secs;
+    return;
+  }
   timeMax = secs;
   timeLeft = secs;
   timer = window.setInterval(() => {
@@ -915,7 +927,7 @@ function renderPanel(): void {
     });
     $("ready").addEventListener("click", finishReaction);
     $("help-play").addEventListener("click", () => openTutorial(SLIDES.length - 2));
-    $("quit").addEventListener("click", goHome);
+    $("quit").addEventListener("click", quitOrHide);
     return;
   }
   $("auto").addEventListener("click", () => {
@@ -932,7 +944,7 @@ function renderPanel(): void {
   });
   $("ready").addEventListener("click", finishTurn);
   $("help-play").addEventListener("click", () => openTutorial(0));
-  $("quit").addEventListener("click", goHome);
+  $("quit").addEventListener("click", quitOrHide);
 }
 
 function renderLaneInfo(): void {
@@ -1067,6 +1079,10 @@ function finishTurn(): void {
   }
   stopTimer();
   sendRestToCenter(placingSide);
+  if (embed) {
+    embedSubmit();
+    return;
+  }
   if (config.mode == "cpu") {
     const btn = document.getElementById("ready") as HTMLButtonElement | null;
     if (btn) {
@@ -1184,7 +1200,7 @@ function tacticsLine(res: TacticalBattleResult): string {
  * de quem tem o Corvo, como no jogo original (lá ele troca uma ordem ou espia os selvagens).
  */
 /** Lâmina de Aço Valiriano (o mais alto nos Feudos): desempata. Sem ninguém marcado, fica com quem defende. */
-const bladeHolder = (): Side => (config.attacker.blade ? "attacker" : "defender");
+const bladeHolder = (): Side => (embed ? embed.bladeSide : config.attacker.blade ? "attacker" : "defender");
 const ravenHolder = (): Side | null => (config.attacker.raven ? "attacker" : config.defender.raven ? "defender" : null);
 const isCpuSide = (side: Side): boolean => config.mode == "cpu" && side != config.humanSide;
 const where = (u: Unit): string => `${LANE_NAMES[u.lane ?? 1].toLowerCase()}, ${u.row == "frente" ? "frente" : "trás"}`;
@@ -1277,6 +1293,10 @@ function afterReaction(): void {
 function finishReaction(): void {
   if (phase != "react") return;
   stopTimer();
+  if (embed) {
+    embedReact();
+    return;
+  }
   recordReaction(reactSide);
   afterReaction();
 }
@@ -1313,6 +1333,7 @@ interface BoardBattle {
 }
 
 function boardBattle(res: TacticalBattleResult, seed: number): BoardBattle {
+  if (embed && embed.mode == "replay") return embedBoard(res);
   const tot = (side: Side): BoardBattle["totals"][Side] => {
     const tropas = units[side].reduce((a, u) => a + boardStrength(toSquadAny(u), side, config.field), 0);
     const carta = config[side].card?.strength ?? 0;
@@ -1359,7 +1380,7 @@ function boardLine(b: BoardBattle): string {
   const sg = b.siegeLost;
   const n = b.deadPieces.length - b.deadPieces.filter((pc) => units[other(b.winner)].some((u) => u.piece == pc && u.kind == "siege-engine")).length;
   const extra = sg ? ` · ${sg == 1 ? "máquina de cerco destruída" : `${sg} máquinas de cerco destruídas`}` : "";
-  return (n == 0 ? `Ninguém morre (${b.swords == 0 ? "carta sem espada ⚔" : "as torres ▲ protegem"}) · ${Lz} recua` : `${n == 1 ? "Morre 1 peça" : `Morrem ${n} peças`} de ${Lz} · o resto recua`) + extra;
+  return (n == 0 ? `Ninguém morre (${b.swords == 0 ? "carta sem espada ⚔" : embed && b.swords > b.towers ? "a carta impediu" : "as torres ▲ protegem"}) · ${Lz} recua` : `${n == 1 ? "Morre 1 peça" : `Morrem ${n} peças`} de ${Lz} · o resto recua`) + extra;
 }
 
 function boardHtml(b: BoardBattle): string {
@@ -1368,7 +1389,7 @@ function boardHtml(b: BoardBattle): string {
     const parts = [`força das tropas ${t.tropas}`, `carta ${t.carta}`];
     if (t.ordem) parts.push(`ordem ${t.ordem > 0 ? "+" : ""}${t.ordem}`);
     if (t.apoio) parts.push(`apoio +${t.apoio}`);
-    if (t.mini) parts.push(`bônus da batalha +${t.mini}`);
+    if (t.mini) parts.push(`Lâmina e outros +${t.mini}`);
     return `<li><b style="color:${houseOf(side).color}">${houseOf(side).name}</b>: ${parts.join(" + ")} = <b>${t.total}</b></li>`;
   };
   const loser = other(b.winner);
@@ -1381,7 +1402,9 @@ function boardHtml(b: BoardBattle): string {
   const Lz = houseOf(loser).name;
   const deaths =
     b.casualties == 0
-      ? b.swords == 0
+      ? embed && b.swords > b.towers
+        ? `Ninguém morre: a carta de ${Lz} impediu as baixas. ${Lz} recua.`
+        : b.swords == 0
         ? `Ninguém morre: a carta de ${W} não tem espadas ⚔ (são as espadas que matam). ${Lz} recua.`
         : `Ninguém morre: a carta de ${W} tem ${b.swords} ${b.swords == 1 ? "espada ⚔" : "espadas ⚔"}, mas a de ${Lz} tem ${b.towers} ${b.towers == 1 ? "torre ▲ que protege" : "torres ▲ que protegem"}. ${Lz} recua.`
       : `<b>${killed.length == 1 ? "Morre 1 peça" : `Morrem ${killed.length} peças`}</b> de ${Lz}: ${names.join(" e ")} (espadas ⚔ da carta de ${W}${b.towers ? ` menos as torres ▲ da carta de ${Lz}` : ""}). O resto recua.`;
@@ -1502,7 +1525,7 @@ function renderBattlePanel(): void {
     if (sim) while (sim.t < T_END) stepSim(sim, 0.05);
   });
   $("help-battle").addEventListener("click", () => openTutorial(0));
-  $("quit").addEventListener("click", goHome);
+  $("quit").addEventListener("click", quitOrHide);
 }
 
 function startLoop(): void {
@@ -1600,7 +1623,7 @@ function showResult(): void {
   setPhase("result");
   const res = lastResult as TacticalBattleResult;
   const lanesT = FIELD_LANES[config.field];
-  const human = config.mode == "cpu" ? config.humanSide : null;
+  const human = embed ? embed.side ?? null : config.mode == "cpu" ? config.humanSide : null;
   // 31/out: a Mesa decide a batalha
   const bw = lastBoard?.winner ?? res.winner;
   const verdict = bw ? (human ? (bw == human ? "Você venceu a batalha!" : "Você perdeu a batalha") : `${houseOf(bw).name} venceu a batalha`) : "Empate";
@@ -1638,18 +1661,29 @@ function showResult(): void {
       ${lastBoard ? boardHtml(lastBoard) : ""}
       <h3 class="lanes-title">3. Por que cada faixa foi para quem</h3>
       <ol class="lanes-res">${lanesHtml}</ol>
-      <div class="actions">
+      ${
+        embed
+          ? `<div class="actions">
+        <button type="button" class="btn" id="replay">Ver de novo</button>
+        <button type="button" class="btn primary" id="close-embed">Voltar ao mapa</button>
+      </div>`
+          : `<div class="actions">
         <button type="button" class="btn" id="home-btn">Início</button>
         <button type="button" class="btn" id="replay">Ver de novo</button>
         <button type="button" class="btn" id="swap">${config.mode == "cpu" ? "Trocar de lado" : "Revanche"}</button>
         <button type="button" class="btn primary" id="again">Jogar de novo</button>
-      </div>
+      </div>`
+      }
     </div>`;
   $("replay").addEventListener("click", () => {
     phase = "battle";
     newSim();
     renderBattlePanel();
   });
+  if (embed) {
+    $("close-embed").addEventListener("click", () => toParent({ type: "tb-close" }));
+    return;
+  }
   $("again").addEventListener("click", startPlacement);
   $("home-btn").addEventListener("click", goHome);
   $("swap").addEventListener("click", () => {
@@ -1767,7 +1801,226 @@ function init(): void {
   c.addEventListener("pointerleave", () => {
     if (!dragging) hoverSlot = null;
   });
+  if (isEmbed()) {
+    document.body.classList.add("embed");
+    window.addEventListener("message", onEmbedMessage);
+    show("play");
+    $("panel").innerHTML = `<p class="muted embed-wait">Abrindo a Mesa…</p>`;
+    toParent({ type: "tb-ready" });
+    return;
+  }
   show("home");
+}
+
+// ---------------------------------------------------------------- dentro do jogo completo (iframe)
+/**
+ * Modo "embutido": a página roda dentro da partida (iframe) e conversa com o jogo por postMessage.
+ *  - o jogo manda "tb-start" com o modo: "place" (posicionar o seu lado), "react" (Corvo), "replay" (assistir) ou "wait";
+ *  - a Mesa responde "tb-ready" (carregou), "tb-submit" (esquadrões + ordem), "tb-react" (troca do Corvo),
+ *    "tb-close" (fim da animação) e "tb-hide" (voltar ao mapa sem decidir ainda).
+ * O servidor confere tudo de novo (tacticalSetup.ts); aqui é só a tela.
+ */
+interface EmbedHouse {
+  id: string;
+  name: string;
+  color: string;
+}
+interface EmbedPiece {
+  piece: string;
+  kind: SquadKind;
+  strength: number;
+}
+type BoardTotals = BoardBattle["totals"][Side];
+interface EmbedStart {
+  type: "tb-start";
+  mode: "place" | "react" | "replay" | "wait";
+  side?: Side;
+  field: FieldType;
+  houses: Record<Side, EmbedHouse>;
+  pieces: Record<Side, EmbedPiece[]>;
+  totals: Record<Side, number>;
+  bladeSide: Side;
+  squads?: Partial<Record<Side, Squad[]>>;
+  result?: TacticalBattleResult;
+  killed?: string[];
+  winner?: Side;
+  board?: Record<Side, BoardTotals>;
+  swords?: number;
+  towers?: number;
+  text?: string;
+}
+let embed: EmbedStart | null = null;
+
+function isEmbed(): boolean {
+  return location.hash.indexOf("embed") >= 0;
+}
+
+function toParent(msg: Record<string, unknown>): void {
+  try {
+    window.parent.postMessage({ source: "mesa-de-batalha", ...msg }, "*");
+  } catch {
+    /* sem janela de cima: nada a fazer */
+  }
+}
+
+function quitOrHide(): void {
+  if (embed) toParent({ type: "tb-hide" });
+  else goHome();
+}
+
+function darker(hex: string, f: number): string {
+  const n = parseInt(hex.replace("#", "").slice(0, 6), 16) || 0;
+  const c = (v: number): string => Math.round(v * f).toString(16).padStart(2, "0");
+  return `#${c((n >> 16) & 255)}${c((n >> 8) & 255)}${c(n & 255)}`;
+}
+
+/** Casa do jogo → casa da Mesa (as 8 conhecidas usam o estilo próprio; outra qualquer usa a cor do jogo). */
+function embedHouse(h: EmbedHouse): string {
+  if (!HOUSES[h.id]) {
+    const n = parseInt(h.color.replace("#", "").slice(0, 6), 16) || 0;
+    const lum = 0.3 * ((n >> 16) & 255) + 0.59 * ((n >> 8) & 255) + 0.11 * (n & 255);
+    HOUSES[h.id] = { name: h.name, color: h.color, dark: darker(h.color, 0.55), ink: lum > 150 ? "#24211c" : "#f4f4f4" };
+  }
+  return h.id;
+}
+
+/** Peças do tabuleiro → esquadrões da Mesa (mesma divisão do servidor: tacticalSetup.ts). */
+function unitsFromPieces(side: Side, pieces: EmbedPiece[]): Unit[] {
+  const out: Unit[] = [];
+  let n = 0;
+  for (const p of pieces) {
+    if (p.kind == "garrison") {
+      out.push({ id: `${side[0]}${n++}`, kind: "garrison", strength: p.strength, piece: p.piece, share: 1, role: "torre", lane: 1, row: "tras", locked: true });
+      continue;
+    }
+    const parts = p.kind == "footman" || p.kind == "knight" || p.kind == "siege-engine" ? 2 : 1;
+    const roles = rolesFor(p.kind, isSea());
+    for (let k = 0; k < parts; k++)
+      out.push({ id: `${side[0]}${n++}`, kind: p.kind, strength: p.strength, piece: p.piece, share: 1 / parts, role: roles[k % roles.length], lane: null, row: p.kind == "siege-engine" ? "tras" : "frente" });
+  }
+  return out;
+}
+
+/** Esquadrões do servidor (já com lugar) → peças da tela. */
+function unitsFromSquads(side: Side, squads: Squad[]): Unit[] {
+  const kindOfPiece = new Map((embed?.pieces[side] ?? []).map((p) => [p.piece, p.kind]));
+  return squads.map((q) => ({
+    id: q.id,
+    kind: q.kind,
+    strength: q.strength,
+    piece: q.piece ?? q.id,
+    share: q.share ?? 1,
+    dismounted: q.kind == "footman" && kindOfPiece.get(q.piece ?? "") == "knight",
+    role: q.role,
+    lane: q.lane,
+    row: q.row,
+    locked: q.kind == "garrison"
+  }));
+}
+
+function onEmbedMessage(e: MessageEvent): void {
+  if (e.source !== window.parent) return;
+  const d = e.data as EmbedStart | { type?: string };
+  if (!d || d.type != "tb-start") return;
+  startEmbed(d as EmbedStart);
+}
+
+function startEmbed(d: EmbedStart): void {
+  embed = d;
+  stopTimer();
+  config = {
+    presetId: null,
+    field: d.field,
+    mode: "local",
+    humanSide: d.side ?? "attacker",
+    attacker: { ...clone(EMPTY_SIDE), house: embedHouse(d.houses.attacker) } as SideConfig,
+    defender: { ...clone(EMPTY_SIDE), house: embedHouse(d.houses.defender) } as SideConfig
+  };
+  tactics = { attacker: null, defender: null };
+  tacticChosen = { attacker: false, defender: false };
+  show("play");
+  if (d.mode == "wait") {
+    if (raf != null) cancelAnimationFrame(raf);
+    raf = null;
+    setPhase("place");
+    $("panel").innerHTML = `<p class="muted embed-wait">${d.text ?? "Aguardando o outro lado…"}</p>`;
+    return;
+  }
+  if (d.mode == "place") {
+    const side = d.side ?? "attacker";
+    units = { attacker: unitsFromPieces("attacker", d.pieces.attacker), defender: unitsFromPieces("defender", d.pieces.defender) };
+    placingSide = side;
+    phase = "place";
+    setPhase("place");
+    beginTurn();
+    if (!store("tactical-tutorial-seen")) openTutorial(0);
+    return;
+  }
+  if (d.mode == "react") {
+    const side = d.side ?? "attacker";
+    units = { attacker: unitsFromSquads("attacker", d.squads?.attacker ?? []), defender: unitsFromSquads("defender", d.squads?.defender ?? []) };
+    reactNote = { attacker: "", defender: "" };
+    reactChanged = { attacker: null, defender: null };
+    reactBase = { attacker: clone(units.attacker), defender: clone(units.defender) };
+    reactSide = side;
+    placingSide = side;
+    phase = "react";
+    setPhase("react");
+    selected = null;
+    hoverSlot = null;
+    renderPanel();
+    startLoop();
+    return;
+  }
+  // replay: assistir à luta com tudo já decidido
+  units = { attacker: unitsFromSquads("attacker", d.squads?.attacker ?? []), defender: unitsFromSquads("defender", d.squads?.defender ?? []) };
+  phase = "battle";
+  lastResult = d.result as TacticalBattleResult;
+  simSeed = Math.floor(Math.random() * 1e9);
+  lastBoard = boardBattle(lastResult, simSeed);
+  newSim();
+  renderBattlePanel();
+  startLoop();
+}
+
+/** Resultado do tabuleiro que o jogo mandou (vencedor, totais, peças mortas). */
+function embedBoard(res: TacticalBattleResult): BoardBattle {
+  const d = embed as EmbedStart;
+  const winner: Side = d.winner ?? res.winner ?? bladeHolder();
+  const loser = other(winner);
+  const deadPieces = [...new Set(d.killed ?? [])].filter((pc) => units[loser].some((u) => u.piece == pc));
+  const destroyed = units[loser].filter((u) => deadPieces.includes(u.piece)).map((u) => u.id);
+  const zero = (side: Side): BoardTotals => ({ tropas: 0, carta: 0, ordem: 0, apoio: 0, mini: 0, total: d.totals[side] });
+  const swords = d.swords ?? 0;
+  const towers = d.towers ?? 0;
+  return {
+    totals: d.board ?? { attacker: zero("attacker"), defender: zero("defender") },
+    winner,
+    tie: !!res.duel || !res.winner,
+    swords,
+    towers,
+    casualties: deadPieces.filter((pc) => !units[loser].some((u) => u.piece == pc && u.kind == "siege-engine")).length,
+    destroyed,
+    deadPieces,
+    siegeLost: deadPieces.filter((pc) => units[loser].some((u) => u.piece == pc && u.kind == "siege-engine")).length
+  };
+}
+
+function embedSubmit(): void {
+  const side = placingSide;
+  const squads = units[side].map((u) => ({ piece: u.piece, kind: u.kind, role: u.role, lane: u.lane, row: u.row }));
+  toParent({ type: "tb-submit", side, squads, tactic: tactics[side] });
+  setPhase("place");
+  $("panel").innerHTML = `<p class="muted embed-wait">Pronto! Sua Mesa foi enviada. Aguardando ${houseOf(other(side)).name}…</p>`;
+  phase = "result"; // trava o campo (sem mexer mais)
+}
+
+function embedReact(): void {
+  const side = placingSide;
+  const squads = units[side].map((u) => ({ id: u.id, role: u.role, lane: u.lane ?? 1, row: u.row }));
+  toParent({ type: "tb-react", side, squads });
+  $("panel").innerHTML = `<p class="muted embed-wait">Pronto! Revelando a batalha…</p>`;
+  phase = "result";
 }
 
 document.addEventListener("DOMContentLoaded", init);

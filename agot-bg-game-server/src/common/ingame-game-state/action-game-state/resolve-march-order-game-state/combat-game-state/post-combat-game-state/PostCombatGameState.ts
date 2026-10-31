@@ -82,8 +82,11 @@ export default class PostCombatGameState extends GameState<
       this.defender
     );
 
-    this.winner =
-      attackerTotalStrength > defenderTotalStrength
+    // Mesa de Batalha: quem venceu mais faixas vence (a força do tabuleiro já reforçou as tropas lá)
+    const tactical = this.combat.tactical;
+    this.winner = tactical
+      ? this.game.houses.get(tactical.winnerId)
+      : attackerTotalStrength > defenderTotalStrength
         ? this.attacker
         : defenderTotalStrength > attackerTotalStrength
           ? this.defender
@@ -168,6 +171,8 @@ export default class PostCombatGameState extends GameState<
       // Remove them from the house combat datas
       const hcd = this.combat.houseCombatDatas.get(house);
       hcd.army = _.without(hcd.army, ...selectedCasualties);
+      // Mesa de Batalha: a animação mata só essas peças
+      if (this.combat.tactical && house == this.loser) this.combat.tactical.killed.push(...selectedCasualties.map((u) => String(u.id)));
 
       this.entireGame.broadcastToClients({
         type: "combat-change-army",
@@ -299,6 +304,8 @@ export default class PostCombatGameState extends GameState<
         this.loserCombatData.army,
         immediatelyKilledLoserUnits
       );
+      // Mesa de Batalha: máquina de cerco (não recua) e ferido também morrem na animação
+      if (this.combat.tactical) this.combat.tactical.killed.push(...immediatelyKilledLoserUnits.map((u) => String(u.id)));
       this.entireGame.broadcastToClients({
         type: "combat-change-army",
         house: this.loser.id,
@@ -365,7 +372,20 @@ export default class PostCombatGameState extends GameState<
       }
     }
 
+    this.sendTacticalReplay();
     this.proceedRetreat();
+  }
+
+  /**
+   * Mesa de Batalha: com tudo decidido (vencedor e baixas), todos assistem à luta. As peças de quem perdeu que
+   * morreram (baixas, máquina de cerco que não recua, ferido) foram anotadas em tactical.killed.
+   */
+  sendTacticalReplay(): void {
+    const tactical = this.combat.tactical;
+    if (!tactical || tactical.replayed) return;
+    tactical.replayed = true;
+    tactical.killed = _.uniq(tactical.killed);
+    this.entireGame.broadcastToClients({ type: "tactical-battle-replay", replay: tactical });
   }
 
   proceedHouseCardHandling(): void {

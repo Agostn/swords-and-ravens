@@ -1,4 +1,5 @@
 import * as React from "react";
+import TacticalReplayOverlay from "./tactical-battle/TacticalReplayOverlay";
 import { Component, ReactNode } from "react";
 import { observer } from "mobx-react";
 import { autorun, observable } from "mobx";
@@ -205,6 +206,15 @@ export default class IngameComponent extends Component<IngameComponentProps> {
   }
 
   render(): ReactNode {
+    return (
+      <>
+        {this.renderLayout()}
+        <TacticalReplayOverlay ingame={this.ingame} />
+      </>
+    );
+  }
+
+  renderLayout(): ReactNode {
     const tracks = this.calcInfluenceTrackDetails();
     if (this.gameClient.logChatFullScreen) {
       const isOwnTurn = this.gameClient.isOwnTurn();

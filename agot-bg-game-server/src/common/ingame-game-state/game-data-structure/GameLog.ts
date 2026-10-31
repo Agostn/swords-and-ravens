@@ -38,6 +38,7 @@ export type GameLogData =
   | WesterosPhaseBegan
   | ClaimVassalsBegan
   | CombatHouseCardChosen
+  | TacticalBattleResultLog
   | CombatValyrianSwordUsed
   | ClashOfKingsBiddingDone
   | ClashOfKingsFinalOrdering
@@ -508,6 +509,18 @@ interface WesterosPhaseBegan {
 interface CombatHouseCardChosen {
   type: "combat-house-card-chosen";
   houseCards: [string, string][];
+}
+
+/** Mesa de Batalha: quem venceu as faixas (vem antes do "combat-result") */
+interface TacticalBattleResultLog {
+  type: "tactical-battle-result";
+  attacker: string;
+  defender: string;
+  winner: string;
+  /** faixas vencidas [atacante, defensor] */
+  lanesWon: [number, number];
+  /** empate nas faixas: decidiu a Lâmina (trilha dos Feudos) */
+  duel: boolean;
 }
 
 interface CombatValyrianSwordUsed {

@@ -464,3 +464,26 @@ o outro vai fazer, mas o que mais conta é escolher a ordem que combina com as S
   cobre o fogo). Antes ficava por cima de tudo.
 - **Corvo Mensageiro:** só mostra onde está o exército do outro. Não diz mais quem ganharia cada faixa nem dá dica
   (era vantagem demais).
+
+## No jogo completo (31/out): opção "Mesa de Batalha (combate tático)"
+
+- **Onde liga:** na sala de espera, em Configurações: "Mesa de Batalha (combate tático)". Começa desligada; com ela
+  desligada o jogo é exatamente o original.
+- **Quando acontece:** em toda batalha, depois de tudo que mexe na força (apoio, cartas, habilidades das cartas,
+  Maré da Batalha e a Lâmina de Aço Valiriano) e antes do resultado. É a última conta.
+- **Campo:** vem da área atacada: mar, castelo/fortaleza (nível atual) ou o terreno da lista de áreas.
+- **Quem posiciona:** os dois lados ao mesmo tempo, sem ver o outro. A Mesa abre por cima do mapa; dá para voltar ao
+  mapa e abrir de novo pelo botão "Abrir a Mesa" no painel. Quem só tem a guarnição vai sozinho.
+- **Peças:** as do exército que lutam (força > 0 nesta batalha): soldado 2 esquadrões, cavaleiro 2 a cavalo ou 4 a pé,
+  máquina de cerco 2 (só atacando castelo/fortaleza), navio e dragão 1, guarnição 1 (fixa, no centro atrás). Peça
+  ferida e máquina de cerco que vale 0 não entram. O apoio não entra no campo: já está na força total.
+- **Corvo Mensageiro:** se o dono do Corvo (topo da Corte do Rei) estiver na batalha, depois que os dois mandarem ele
+  vê onde está o exército do outro e pode mudar 1 esquadrão.
+- **Quem vence:** a força TOTAL que o jogo calcula (a mesma do painel da batalha) reforça as tropas; quem vence mais
+  faixas vence. Empate nas faixas e nos pontos: vence quem está na frente na trilha dos Feudos (como no original).
+- **Baixas e o resto:** iguais ao original (espadas do vencedor − torres do perdedor, quem perdeu escolhe; habilidades
+  depois da batalha, recuo...). A Lâmina nunca é pulada (o +1 sempre muda a chance).
+- **A luta animada:** todos assistem quando tudo já foi decidido (vencedor e quem morreu). Morrem na animação só as
+  peças que morreram no tabuleiro.
+- **Se alguém sair ou o relógio acabar:** a casa vira vassala e vai com a Mesa padrão (sem ordem de batalha).
+- **No registro da partida:** "Mesa de Batalha: X venceu nas faixas (A 2 × 1 B)".

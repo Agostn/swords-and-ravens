@@ -57,6 +57,8 @@ export class GameSettings {
   fixedClock = false;
   holdVictoryPointsUntilEndOfRound = false;
   fogOfWar = false;
+  /** Mesa de Batalha (combate tático): a batalha é decidida no campo de 3 faixas, com a força do tabuleiro */
+  tacticalCombat = false;
   dragonWar = false;
   dragonRevenge = false;
 
@@ -119,6 +121,7 @@ export class GameSettings {
     settings.holdVictoryPointsUntilEndOfRound =
       data.holdVictoryPointsUntilEndOfRound ?? false;
     settings.fogOfWar = data.fogOfWar ?? false;
+    settings.tacticalCombat = data.tacticalCombat ?? false;
     settings.dragonWar = data.dragonWar ?? false;
     settings.dragonRevenge = data.dragonRevenge ?? false;
     return settings;
@@ -184,6 +187,7 @@ export class GameSettings {
       tournamentMode: this.tournamentMode || undefined,
       fixedClock: this.fixedClock || undefined,
       fogOfWar: this.fogOfWar || undefined,
+      tacticalCombat: this.tacticalCombat || undefined,
       dragonWar: this.dragonWar || undefined,
       dragonRevenge: this.dragonRevenge || undefined,
       holdVictoryPointsUntilEndOfRound:
@@ -242,6 +246,7 @@ export class SerializedGameSettings {
   fixedClock?: boolean;
   holdVictoryPointsUntilEndOfRound?: boolean;
   fogOfWar?: boolean;
+  tacticalCombat?: boolean;
   dragonWar?: boolean;
   dragonRevenge?: boolean;
 }

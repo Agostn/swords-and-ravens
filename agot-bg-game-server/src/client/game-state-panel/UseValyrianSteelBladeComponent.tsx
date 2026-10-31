@@ -47,6 +47,8 @@ export default class UseValyrianSteelBladeComponent extends Component<
                 // change the outcome of the battle, we show a warning.
                 houseCardsAreRevealed &&
                 !this.gameState.forNewTidesOfBattleCard &&
+                // Mesa de Batalha: o +1 sempre muda a chance, então não avisa que "não muda nada"
+                !this.gameState.entireGame.gameSettings.tacticalCombat &&
                 this.gameState.canBeSkipped(this.house).canBeSkipped ? (
                   <Row className="justify-content-center">
                     <Col xs="auto">

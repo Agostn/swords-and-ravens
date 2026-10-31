@@ -1113,6 +1113,33 @@ export default class GameSettingsComponent extends Component<GameSettingsCompone
           </Col>
           <Col xs="12">
             <FormCheck
+              id="tactical-combat-setting"
+              type="switch"
+              label={
+                <OverlayTrigger
+                  overlay={
+                    <Tooltip id="tactical-combat-setting-tooltip">
+                      {tr("settings.tacticalCombat.tooltip")}
+                    </Tooltip>
+                  }
+                >
+                  <label htmlFor="tactical-combat-setting">
+                    {tr("settings.tacticalCombat.label")}
+                  </label>
+                </OverlayTrigger>
+              }
+              checked={this.gameSettings.tacticalCombat}
+              onChange={() =>
+                this.changeGameSettings(
+                  () =>
+                    (this.gameSettings.tacticalCombat =
+                      !this.gameSettings.tacticalCombat)
+                )
+              }
+            />
+          </Col>
+          <Col xs="12">
+            <FormCheck
               id="no-private-chats-setting"
               type="switch"
               label={

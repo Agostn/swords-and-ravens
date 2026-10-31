@@ -197,6 +197,19 @@ const en = {
   "settings.fogOfWar.label": "Fog of War",
   "settings.fogOfWar.tooltip":
     "Limit visibility to controlled regions, adjacent regions, and regions you attack or are attacked from.",
+  "log.tacticalBattle.result":
+    "<b>Battle Table</b>: {p0} won the lanes ({p1} {p3} × {p4} {p2}).",
+  "log.tacticalBattle.duel":
+    "<b>Battle Table</b>: lanes tied ({p1} {p3} × {p4} {p2}); {p0} won the duel (Fiefdoms track).",
+  "tactical.title": "Battle Table",
+  "tactical.status.done": "ready",
+  "tactical.status.placing": "placing troops…",
+  "tactical.raven": "{p0} holds the Messenger Raven: they see where the other army is and may change 1 squad.",
+  "tactical.open": "Open the Battle Table",
+  "tactical.openRaven": "Open the Battle Table (Raven)",
+  "settings.tacticalCombat.label": "Battle Table (tactical combat)",
+  "settings.tacticalCombat.tooltip":
+    "After cards, support and the Valyrian Steel Blade, both sides place their troops on a 3-lane battlefield. The full combat strength boosts the troops; whoever wins more lanes wins the combat. Casualties still come from swords and towers.",
   "settings.noPrivateChats.label": "Disable private chats",
   "settings.noPrivateChats.tooltip":
     "Players will not be able to create private chat rooms.",

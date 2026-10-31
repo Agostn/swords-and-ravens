@@ -70,6 +70,12 @@ module.exports = (env, argv) => {
           type: "asset/resource"
         },
         {
+          // Mesa de Batalha (combate tático): a página inteira do protótipo, aberta num iframe na partida
+          test: /\.mesa\.html$/i,
+          type: "asset/resource",
+          generator: { filename: "mesa-de-batalha-[contenthash:16][ext]" }
+        },
+        {
           test: /\.(ico)$/i,
           use: {
             loader: "file-loader",

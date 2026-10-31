@@ -973,6 +973,22 @@ export default class GameLogListComponent extends Component<GameLogListComponent
           </Row>
         );
 
+      case "tactical-battle-result": {
+        const winner = this.game.houses.get(data.winner);
+        const attacker = this.game.houses.get(data.attacker);
+        const defender = this.game.houses.get(data.defender);
+        return (
+          <p>
+            {tr(data.duel ? "log.tacticalBattle.duel" : "log.tacticalBattle.result", {
+              p0: <b>{winner.name}</b>,
+              p1: <b>{attacker.name}</b>,
+              p2: <b>{defender.name}</b>,
+              p3: data.lanesWon[0],
+              p4: data.lanesWon[1]
+            })}
+          </p>
+        );
+      }
       case "combat-valyrian-sword-used": {
         const house = this.game.houses.get(data.house);
 
