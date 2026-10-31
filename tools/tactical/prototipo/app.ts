@@ -256,11 +256,12 @@ function canvasImg(key: string, w: number, hgt: number, draw: (ctx: CanvasRender
 /** A peça como ela aparece no campo: 4 bonequinhos (ou a máquina, o dragão, a torre, o navio). */
 function squadSvg(h: House, u: { kind: SquadKind; role: Role }): string {
   const k = kindOf(u.kind);
-  const url = canvasImg(`sq|${h.name}|${u.kind}|${u.role}`, 72, 58, (ctx) => {
-    if (k == "dragon" || k == "ship") drawUnit(ctx, 36, 27, k == "dragon" ? 0.95 : 1, { role: u.role, kind: k, house: h, back: false, flip: false, walk: 0, atk: 0 });
-    else drawSquad(ctx, 36, 47, u.kind, u.role, h, { scale: 0.92, back: false });
+  // tela maior que o desenho: cavaleiro (cabeça e lança) e dragão (asas) não ficam cortados em cima (31/out)
+  const url = canvasImg(`sq|${h.name}|${u.kind}|${u.role}`, 84, 68, (ctx) => {
+    if (k == "dragon" || k == "ship") drawUnit(ctx, 42, 36, k == "dragon" ? 0.82 : 1, { role: u.role, kind: k, house: h, back: false, flip: false, walk: 0, atk: 0 });
+    else drawSquad(ctx, 42, 56, u.kind, u.role, h, { scale: k == "horse" ? 0.8 : 0.92, back: false });
   });
-  return `<img class="squad-figs" src="${url}" width="72" height="58" alt="">`;
+  return `<img class="squad-figs" src="${url}" width="74" height="60" alt="">`;
 }
 
 /** Um bonequinho de frente (cartões de função). Navio usa o símbolo, porque o navio é igual para todas. */
@@ -658,12 +659,15 @@ function renderPanel(): void {
         here ? `<span class="here">aqui: ${qualityWord(here.pct)}${here.why.length ? ` (${here.why.join(", ")})` : ""}</span>` : `<span class="here">verde = onde rende mais</span>`
       }</p>`
     : "";
+  const BACK_SVG = `<svg viewBox="0 0 20 20" width="16" height="16" aria-hidden="true"><path d="M8 4 3 9l5 5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M3.5 9H12a5 5 0 0 1 0 10h-2" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>`;
+  const canBack = !!sel && sel.lane != null && !sel.locked && !reacting;
   const editor = sel
     ? `<div class="editor">
         <div class="editor-head">
           ${squadSvg(h, sel)}
           <div class="editor-title"><b>${KIND_NAMES[sel.kind]}${sel.support ? " de apoio" : ""}${sel.strength && (sel.kind == "dragon" || sel.kind == "garrison") ? ` · força ${sel.strength}` : ""}</b>
           <small>${sel.locked ? "fica sempre atrás, no centro" : sel.lane == null ? "Toque numa casinha do campo para colocar." : reacting ? "Mude a função aqui ou toque noutra casinha." : "Toque noutra casinha para mudar de lugar."}</small></div>
+          ${canBack ? `<button type="button" class="back-btn" data-back="${sel.id}" aria-label="Tirar do campo e voltar para a reserva">${BACK_SVG}<span>Voltar p/ reserva</span></button>` : ""}
         </div>
         <div class="role-row">
           ${
@@ -678,7 +682,7 @@ function renderPanel(): void {
                   .join("")
               : ""
           }
-          ${sel.lane != null && !sel.locked && !reacting ? `<button type="button" class="role-card back-card" data-back="${sel.id}"><span class="back-ico" aria-hidden="true">↩</span><b>Tirar</b></button>` : ""}
+          ${canBack ? `<button type="button" class="back-inline" data-back="${sel.id}" aria-label="Tirar do campo e voltar para a reserva">${BACK_SVG}<b>Reserva</b></button>` : ""}
         </div>
         ${say}
       </div>`

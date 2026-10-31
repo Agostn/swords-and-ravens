@@ -182,8 +182,11 @@
   .tip { margin: 0; font-size: 13.5px; color: var(--muted); }
   .role-row { display: flex; flex-wrap: wrap; gap: 8px; }
   .role-row .role-card { flex: 1 1 96px; min-width: 0; }
-  .back-card { flex: 0 0 auto !important; min-width: 64px; }
-  .back-ico { display: grid; place-items: center; width: 40px; height: 40px; font-size: 24px; color: var(--gold); }
+  .back-btn { margin-left: auto; flex: none; display: inline-flex; align-items: center; gap: 6px; padding: 7px 12px; border-radius: 999px; border: 1px solid rgba(224,179,84,.55); background: rgba(224,179,84,.1); color: var(--gold); font: inherit; font-weight: 700; font-size: 13.5px; cursor: pointer; white-space: nowrap; }
+  .back-btn:hover { background: rgba(224,179,84,.2); }
+  .back-btn:active { transform: translateY(1px); }
+  /* no celular o topo do editor some: o mesmo botão vai para o fim da fileira de funções */
+  .back-inline { display: none; }
   .role-say { margin: 0; font-size: 14px; color: var(--muted); line-height: 1.4; }
   .role-say b { color: var(--parch); }
   .role-say .ok { color: #9bd786; font-weight: 700; }
@@ -217,7 +220,7 @@
   .react-tip { color: #f2cf7e; }
   .react-notes { margin: 0 0 6px; font-size: 13px; color: #e6d6b0; order: 4; }
   .piece-chg { position: absolute; top: 3px; right: 4px; background: #b07a12; color: #fff6e2; font-weight: 800; font-size: 10px; border-radius: 8px; padding: 0 5px; }
-  .piece-ok { position: absolute; top: 4px; right: 6px; color: #9bd786; font-weight: 800; font-size: 13px; }
+  .piece-ok { position: absolute; top: 4px; right: 5px; z-index: 1; display: grid; place-items: center; width: 17px; height: 17px; border-radius: 50%; background: #2f4a26; border: 1px solid #5c7f49; color: #d8f0cc; font-weight: 800; font-size: 10.5px; line-height: 1; }
   .piece-num { z-index: 3; position: absolute; top: 3px; left: 4px; min-width: 18px; height: 18px; border-radius: 9px; display: grid; place-items: center; background: #1d1610; border: 1px solid var(--line); color: var(--parch); font-size: 11.5px; font-weight: 800; line-height: 1; }
   .piece.sel .piece-num { background: var(--gold); color: var(--gold-ink); border-color: #6e4f16; }
   .quit-btn { flex: none; width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--line); background: var(--panel-2); color: var(--parch); font: inherit; font-size: 26px; line-height: 1; cursor: pointer; display: none; }
@@ -314,8 +317,10 @@
     .role-row .role-card { flex: 1 1 0; flex-direction: column; justify-content: center; padding: 2px 2px 3px; gap: 0; min-height: 0; height: 54px; min-width: 0; }
     .role-row .role-card b { font-size: 12px; max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .role-fig { width: 30px; height: auto; }
-    .back-card { flex: 0 0 48px !important; }
-    .back-ico { width: 28px; height: 28px; font-size: 18px; }
+    .back-inline { display: flex; flex: 0 0 64px; flex-direction: column; align-items: center; justify-content: center; gap: 3px; height: 50px; border-radius: 10px; border: 1.5px dashed rgba(224,179,84,.7); background: rgba(224,179,84,.08); color: var(--gold); font: inherit; cursor: pointer; }
+    .back-inline svg { width: 18px; height: 18px; }
+    .back-inline b { font-size: 11.5px; color: var(--gold); }
+    .back-inline:active { background: rgba(224,179,84,.2); }
     .role-say { font-size: 12px; line-height: 1.3; height: 2.6em; overflow: hidden; }
     .role-row .role-card { height: 50px !important; }
     .tray { display: flex; gap: 6px; flex-wrap: nowrap; height: 100%; }
@@ -325,7 +330,7 @@
     .piece-num { min-width: 16px; height: 16px; font-size: 10.5px; top: 2px; left: 3px; }
     .piece-where { display: none; }
     .piece-name { font-size: 11px; max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .piece-ok { top: 2px; right: 4px; }
+    .piece-ok { top: 2px; right: 3px; width: 15px; height: 15px; font-size: 9.5px; }
     .editor.empty { display: flex; align-items: center; justify-content: center; text-align: center; }
     .editor.empty { padding: 8px 10px; font-size: 13.5px; }
     #panel > .actions .btn { min-height: 46px; }
