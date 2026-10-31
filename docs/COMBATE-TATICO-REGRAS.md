@@ -372,3 +372,15 @@ o outro vai fazer, mas o que mais conta é escolher a ordem que combina com as S
   **"a cavalo · 2 | a pé · 4"** (toque para trocar; o grupo fica no mesmo lugar). Saíram os botões "A pé" e
   "Montar" do meio das funções. No celular, um quadrinho no começo da faixa mostra "6 de 12 esquadrões"; no
   computador, o topo da faixa mostra o mesmo.
+
+## Dragão voa e ajuda todas as faixas (31/out)
+- **Regra:** o dragão luta na faixa dele com 100% e, por voar, ajuda **todas as outras faixas com luta com 90%**
+  da força (`DRAGON_AIR_SHARE`; o Agostinho pediu "praticamente 100%"). Aparece "o dragão voou até aqui e
+  ajudou" nos motivos da faixa. Dragão sozinho numa faixa não entra no "ajuda pelo lado": ele já voa.
+- **Animação:** o dragão troca de alvo a cada 2 a 3 s, em qualquer faixa (prefere grupos maiores). Se o outro
+  lado também tem dragão, de vez em quando vai brigar com ele no ar (não só entre eles).
+- **Visual do dragão (nova referência):** escamas cinza-carvão com brilho marrom, ventre marrom escuro e asas
+  de membrana marrom-avermelhada (antes, bronze). Desenho nosso.
+- **Conta do tabuleiro:** "tropas 13" virou **"força das tropas 13"** (é a força, não o número de tropas).
+- **Faixa de peças no celular:** cartões com largura fixa (no iPhone eles cresciam e passavam por cima do grupo
+  vizinho) e o texto do celular não aumenta sozinho (`text-size-adjust`).

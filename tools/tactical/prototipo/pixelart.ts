@@ -263,17 +263,18 @@ function drawKnight(ctx: Ctx, h: House, role: Role, frame: number, fight: boolea
 }
 
 // ---------------------------------------------------------------- dragão
-// dragão negro (escamas negras com brilho avermelhado, ventre vermelho-escuro, asas cor de bronze), como na
-// pixel art de referência do Agostinho; o volume vem do shadeVolume
-const SC_HI = "#5a4440";
-const SC = "#2e2322";
-const SC_LO = "#151011";
-const BELLY = "#7a2c1e";
-const BELLY_LO = "#4e1a12";
-const MEMB = "#8a6a2c";
-const MEMB_HI = "#c8a24c";
-const MEMB_LO = "#4a3816";
-const BONE = "#dccaa0";
+// dragão negro (31/out, nova referência do Agostinho): escamas cinza-carvão com brilho marrom, ventre marrom
+// escuro e asas de membrana marrom-avermelhada escura (antes eram cor de bronze); chifres cor de osso velho.
+// O volume vem do shadeVolume. Desenho nosso, só o estilo e as cores da referência.
+const SC_HI = "#544640";
+const SC = "#2b2422";
+const SC_LO = "#121010";
+const BELLY = "#4e2c22";
+const BELLY_LO = "#2c1812";
+const MEMB = "#5e3024";
+const MEMB_HI = "#83493a";
+const MEMB_LO = "#2e1610";
+const BONE = "#c4b498";
 
 /** Elevação da asa (rad) em cada um dos 6 quadros do voo. */
 const WING_E = [1.2, 0.8, 0.3, -0.25, 0.1, 0.7];

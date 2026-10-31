@@ -1366,7 +1366,7 @@ function boardLine(b: BoardBattle): string {
 function boardHtml(b: BoardBattle): string {
   const row = (side: Side): string => {
     const t = b.totals[side];
-    const parts = [`tropas ${t.tropas}`, `carta ${t.carta}`];
+    const parts = [`força das tropas ${t.tropas}`, `carta ${t.carta}`];
     if (t.ordem) parts.push(`ordem ${t.ordem > 0 ? "+" : ""}${t.ordem}`);
     if (t.apoio) parts.push(`apoio +${t.apoio}`);
     if (t.mini) parts.push(`bônus da batalha +${t.mini}`);
@@ -1561,6 +1561,8 @@ function factorText(f: LaneFactor): string | null {
       return `${who}: veio ajudar da outra ponta, mas de longe rende só 15% (a vizinha renderia 30%)`;
     case "formation":
       return `${who}: formação (corpo a corpo na frente + atiradores atrás) +15%`;
+    case "air":
+      return `${who}: o dragão voou até aqui e ajudou (90% da força dele)`;
     default:
       return null;
   }

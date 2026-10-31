@@ -35,6 +35,7 @@ import {
   Terrain,
   TERRAIN,
   UNOPPOSED_FLANK_SHARE,
+  DRAGON_AIR_SHARE,
   FAR_FLANK_SHARE,
   NO_CONTACT_RULE,
   Tactic,
@@ -125,7 +126,7 @@ export interface TacticalBattleInput {
 /** Um motivo que pesou numa faixa (vira frase no resumo depois da animação). */
 export interface LaneFactor {
   side: Side;
-  kind: "counter" | "weak" | "terrain" | "wall-breach" | "wall" | "flank" | "far-flank" | "card" | "screen" | "empty" | "formation";
+  kind: "counter" | "weak" | "terrain" | "wall-breach" | "wall" | "flank" | "far-flank" | "card" | "screen" | "empty" | "formation" | "air";
   role?: Role;
   vs?: Role;
   terrain?: Terrain;
@@ -378,7 +379,8 @@ function resolveOnce(input: TacticalBattleInput): TacticalBattleResult {
   ([0, 1, 2] as Lane[]).forEach((lane) => {
     if (lanes[lane].blocked || contested(lane)) return;
     for (const side of ["attacker", "defender"] as Side[]) {
-      const mine = squadsIn(side, lane);
+      // o dragão não entra aqui: ele voa e ajuda todas as faixas (logo abaixo)
+      const mine = squadsIn(side, lane).filter((s) => s.kind != "dragon");
       if (mine.length == 0) continue;
       // ajuda a vizinha com luta; se não houver, a faixa da outra ponta (rende menos)
       let targets = NEIGHBOURS[lane].filter((n) => contested(n));
@@ -398,6 +400,21 @@ function resolveOnce(input: TacticalBattleInput): TacticalBattleResult {
       });
     }
   });
+  // Dragão voa (31/out): além da sua faixa, ajuda TODAS as outras faixas com luta com DRAGON_AIR_SHARE da força.
+  for (const side of ["attacker", "defender"] as Side[]) {
+    prepared[side]
+      .filter((s) => s.kind == "dragon")
+      .forEach((dr) => {
+        ([0, 1, 2] as Lane[]).forEach((n) => {
+          if (!contested(n) || n == dr.lane) return;
+          const t = lanes[n];
+          const dmg = laneDamage(side, [dr], squadsIn(other(side), n), t.terrain, cardOf(side), []) * DRAGON_AIR_SHARE;
+          if (side == "attacker") t.attackerScore += dmg;
+          else t.defenderScore += dmg;
+          t.factors.push({ side, kind: "air" });
+        });
+      });
+  }
   ([0, 1, 2] as Lane[]).forEach((lane) => {
     if (contested(lane)) lanes[lane].winner = compare(lanes[lane].attackerScore, lanes[lane].defenderScore);
   });

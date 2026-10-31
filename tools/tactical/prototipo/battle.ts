@@ -78,6 +78,8 @@ interface Man {
   sdir?: number;
   /** id do esquadrão (peça do tabuleiro) */
   sid: string;
+  /** dragão: quando escolhe outro alvo */
+  retarget?: number;
   /** está em cima da muralha (desenhado na frente dela) */
   onWall?: boolean;
   /** atacante parado no pé da muralha inteira (não tem como passar) */
@@ -1024,8 +1026,8 @@ export function stepSim(sim: Sim, dt: number): void {
       }
       continue;
     }
-    // dragão com dragão inimigo vivo: vai brigar com ele, esteja onde estiver
-    if (m.kind == "dragon" && sim.men.some((o) => o.kind == "dragon" && o.side != m.side && !o.dead)) {
+    // dragão voa: luta em qualquer faixa (e com o dragão inimigo, se houver)
+    if (m.kind == "dragon") {
       stepDragon(sim, m, dt);
       continue;
     }
@@ -1050,10 +1052,6 @@ export function stepSim(sim: Sim, dt: number): void {
       m.lane = e.lane;
       m.foe = e;
       m.spot = false;
-    }
-    if (m.kind == "dragon") {
-      stepDragon(sim, m, dt);
-      continue;
     }
     if (ranged(m.role)) {
       // arqueiro: fica no alcance, atira; se chegarem muito perto, recua
@@ -1360,9 +1358,30 @@ export function stepSim(sim: Sim, dt: number): void {
 function stepDragon(sim: Sim, m: Man, dt: number): void {
   const t = sim.t;
   // dragão contra dragão (31/out): se o outro lado tem dragão vivo, eles brigam no ar, rodando um em volta do outro
+  // 31/out: o dragão voa e ajuda TODAS as faixas: troca de alvo de tempos em tempos, em qualquer faixa; se o outro
+  // lado tem dragão, às vezes vai brigar com ele no ar (não só entre eles)
   const rival = sim.men.find((o) => o.kind == "dragon" && o.side != m.side && !o.dead);
-  if (rival) {
-    m.foe = rival;
+  if (t >= (m.retarget ?? 0) || !m.foe || m.foe.dead) {
+    m.retarget = t + 2.2 + sim.rand() * 1.2;
+    if (rival && sim.rand() < 0.35) m.foe = rival;
+    else {
+      let best: Man | null = null;
+      let bs = -Infinity;
+      for (const o of sim.men) {
+        if (o.side == m.side || o.dead || isStatic(o) || o.kind == "dragon") continue;
+        // grupo maior vale mais; um pouco de sorte para variar de faixa
+        const near = sim.men.filter((x) => x.side == o.side && !x.dead && Math.hypot(x.x - o.x, x.y - o.y) < 40).length;
+        const sc = near + sim.rand() * 2.5 - (m.foe && o.lane == m.foe.lane ? 1 : 0);
+        if (sc > bs) {
+          bs = sc;
+          best = o;
+        }
+      }
+      m.foe = best ?? rival ?? null;
+    }
+    if (m.foe) m.lane = m.foe.lane;
+  }
+  if (rival && m.foe === rival) {
     const mx = (m.x + rival.x) / 2;
     const my = Math.max(90, Math.min(H - 120, (m.y + rival.y) / 2));
     const a = Math.atan2(m.y - my, m.x - mx) + 1.4 * dt + 0.05;
@@ -1377,19 +1396,6 @@ function stepDragon(sim: Sim, m: Man, dt: number): void {
     }
     if (t - m.shotAt < 1.0) m.atk = 1 - (t - m.shotAt) / 1.0;
     return;
-  }
-  if (!m.foe || m.foe.dead || m.foe.lane != m.lane) {
-    let best: Man | null = null;
-    let bs = -1;
-    for (const o of sim.men) {
-      if (o.side == m.side || o.dead || o.lane != m.lane || isStatic(o) || o.kind == "dragon") continue;
-      const near = sim.men.filter((x) => x.side == o.side && !x.dead && Math.hypot(x.x - o.x, x.y - o.y) < 40).length;
-      if (near > bs) {
-        bs = near;
-        best = o;
-      }
-    }
-    m.foe = best;
   }
   const tg = m.foe;
   if (!tg) {
@@ -1531,6 +1537,7 @@ export function laneReasons(res: TacticalBattleResult, lane: number): { text: st
     else if (f.kind == "wall-breach") add("catapulta derruba a muralha", f.side);
     else if (f.kind == "flank") add("ajuda pelo lado", f.side);
     else if (f.kind == "far-flank") add("ajuda de longe (15%)", f.side);
+    else if (f.kind == "air") add("dragão voando (90%)", f.side);
     else if (f.kind == "screen") add("a frente segura a cavalaria", f.side);
     else if (f.kind == "formation") add("formação: frente + atiradores +15%", f.side);
   }
