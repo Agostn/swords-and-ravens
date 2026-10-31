@@ -303,7 +303,7 @@ export const BONUS_MAJORITY = 1;
  *  - Parede de escudos (escudeiros, +6% cada): vence a Chuva de flechas; perde para Cercar.
  *  - Muro de lanças (lanceiros, +6% cada): vence a Carga; perde para a Chuva de flechas.
  *  - Reserva (cada esquadrão atrás, +5%): vence Cercar; perde para a Carga.
- * Bônus pelas tropas até +18%. Quem VENCE a tática do outro ganha +12% a mais e anula o bônus do outro.
+ * Bônus pelas tropas até +18%. Quem VENCE a tática do outro ganha +10% a mais (a do outro continua valendo).
  */
 export type Tactic = "carga" | "cercar" | "flechas" | "parede" | "lancas" | "reserva";
 export const ATTACK_TACTICS: Tactic[] = ["carga", "cercar", "flechas"];
@@ -312,5 +312,5 @@ export const TACTIC_BEATS: Record<Tactic, Tactic> = { carga: "reserva", cercar: 
 export const TACTIC_STEP: Record<Tactic, number> = { carga: 0.08, cercar: 0.06, flechas: 0.06, parede: 0.06, lancas: 0.06, reserva: 0.05 };
 export const TACTIC_MAX = 0.18;
 /** bônus a mais para quem vence a tática do outro */
-export const TACTIC_WIN_BONUS = 0.12;
+export const TACTIC_WIN_BONUS = 0.1;
 export const TACTIC_NAMES: Record<Tactic, string> = { carga: "Carga", cercar: "Cercar", flechas: "Chuva de flechas", parede: "Parede de escudos", lancas: "Muro de lanças", reserva: "Reserva" };

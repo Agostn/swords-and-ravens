@@ -199,7 +199,7 @@ describe("combate tático", () => {
     expect(com.duel).toBe(true);
   });
 
-  it("ordem de batalha: muro de lanças segura a carga (+12% a mais), parede perde para cercar", () => {
+  it("ordem de batalha: muro de lanças vence a carga (+10% a mais), cercar vence a parede", () => {
     const A: Squad[] = [sq("a0", "knight", "cavalaria", 1), sq("a1", "footman", "lanceiro", 0)];
     const D: Squad[] = [sq("d0", "footman", "lanceiro", 1), sq("d1", "footman", "escudeiro", 0)];
     const r = resolveTacticalBattle({ field: "planicie", attacker: { squads: A, tactic: "carga" }, defender: { squads: D, tactic: "lancas" } });

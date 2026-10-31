@@ -84,9 +84,9 @@ export interface TacticInfo {
   tactic: Tactic | null;
   /** bônus que a tática daria com essas tropas (0 se não pode usar) */
   bonus: number;
-  /** a tática do outro venceu a sua: bônus anulado */
+  /** a tática do outro venceu a sua (a sua continua valendo; ele ganha +10%) */
   countered: boolean;
-  /** a sua venceu a do outro: +12% a mais */
+  /** a sua venceu a do outro: +10% a mais */
   beats: boolean;
 }
 
@@ -323,7 +323,8 @@ function resolveOnce(input: TacticalBattleInput): TacticalBattleResult {
     attacker: tinfo(tacA, tacD, input.attacker.squads),
     defender: tinfo(tacD, tacA, input.defender.squads)
   };
-  const tf = (side: Side): number => 1 + (tactics[side].countered ? 0 : tactics[side].bonus) + (tactics[side].beats ? TACTIC_WIN_BONUS : 0);
+  // a tática vencida continua valendo (anular era forte demais); quem vence ganha um pouco a mais
+  const tf = (side: Side): number => 1 + tactics[side].bonus + (tactics[side].beats ? TACTIC_WIN_BONUS : 0);
   const atkCard = cardFactor(input.attacker.card, input.defender.card, input.attacker.orderBonus ?? 0) * tf("attacker");
   const defCard = cardFactor(input.defender.card, input.attacker.card, input.defender.orderBonus ?? 0) * tf("defender");
   const prepared: Record<Side, Squad[]> = {

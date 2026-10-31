@@ -938,12 +938,12 @@ function openTacticPicker(side: Side): void {
     const b = tacticBonus(t, sq);
     return `<button type="button" class="tac-card${b > 0 ? "" : " off"}" data-tac="${t}" ${b > 0 ? "" : "disabled"}>
       <b>${TACTIC_ICON[t]} ${TACTIC_NAMES[t]} ${b > 0 ? `<em>+${Math.round(b * 100)}%</em>` : ""}</b>
-      <span>${b > 0 ? `<i class="ok">✓ se ele usar ${TACTIC_NAMES[TACTIC_BEATS[t]]}: +${Math.round(TACTIC_WIN_BONUS * 100)}% a mais e a dele não vale</i><br><i class="no">✗ se ele usar ${TACTIC_NAMES[beatenBy(t)]}: a sua não vale</i>` : TACTIC_NEED[t]}</span>
+      <span>${b > 0 ? `<i class="ok">bom contra ${TACTIC_NAMES[TACTIC_BEATS[t]]} (+${Math.round(TACTIC_WIN_BONUS * 100)}%)</i> · <i class="no">fraco contra ${TACTIC_NAMES[beatenBy(t)]}</i>` : TACTIC_NEED[t]}</span>
     </button>`;
   };
   $("tactic-box").innerHTML = `
     <h2>Ordem de ${side == "attacker" ? "ataque" : "defesa"}</h2>
-    <p class="muted">Como o seu comandante vai ${side == "attacker" ? "atacar" : "defender"}. O bônus depende das suas tropas. ${houseOf(other(side)).name} escolhe uma ordem de ${side == "attacker" ? "defesa" : "ataque"} ao mesmo tempo.</p>
+    <p class="muted">O bônus vem das suas tropas. Se acertar a ordem que vence a dele, ganha +${Math.round(TACTIC_WIN_BONUS * 100)}% a mais.</p>
     <div class="tac-list">${tacticsOf(side).map(card).join("")}${card(null)}</div>`;
   $("tactic").hidden = false;
   $("tactic-box")
@@ -968,7 +968,7 @@ function tacticsLine(res: TacticalBattleResult): string {
     if (!x.tactic) return `${name}: nenhuma`;
     if (x.bonus == 0) return `${name}: ${TACTIC_NAMES[x.tactic]} (sem as tropas certas, 0%)`;
     const total = x.bonus + (x.beats ? TACTIC_WIN_BONUS : 0);
-    return `${name}: ${TACTIC_NAMES[x.tactic]} ${x.countered ? `<s>+${Math.round(x.bonus * 100)}%</s> anulada` : `<b>+${Math.round(total * 100)}%</b>${x.beats ? " (venceu a do outro)" : ""}`}`;
+    return `${name}: ${TACTIC_NAMES[x.tactic]} <b>+${Math.round(total * 100)}%</b>${x.beats ? " (venceu a do outro)" : ""}`;
   };
   return `<p class="tac-line">⚔ Ordem de batalha — ${one("attacker")} · ${one("defender")}</p>`;
 }
@@ -1183,7 +1183,7 @@ function boardHtml(b: BoardBattle): string {
     const t = b.totals[side];
     const parts = [`tropas ${t.tropas}`, `carta ${t.carta}`];
     if (t.ordem) parts.push(`ordem ${t.ordem > 0 ? "+" : ""}${t.ordem}`);
-    if (t.mini) parts.push(`bônus da Mesa +${t.mini}`);
+    if (t.mini) parts.push(`bônus da batalha +${t.mini}`);
     return `<li><b style="color:${houseOf(side).color}">${houseOf(side).name}</b>: ${parts.join(" + ")} = <b>${t.total}</b></li>`;
   };
   const loser = other(b.winner);
@@ -1192,10 +1192,15 @@ function boardHtml(b: BoardBattle): string {
     .filter((u) => u.kind != "siege-engine")
     .map((u) => `${KIND_NAMES[u.kind].toLowerCase()} (${ROLE_NAMES[u.role].toLowerCase()})`);
   const siege = b.destroyed.some((id) => units[loser].find((x) => x.id == id)?.kind == "siege-engine") ? " A máquina de cerco de quem perde não recua: é destruída." : "";
+  // em palavras simples: quem mata são as espadas ⚔ da carta do vencedor; as torres ▲ da carta do perdedor protegem
+  const W = houseOf(b.winner).name;
+  const Lz = houseOf(loser).name;
   const deaths =
     b.casualties == 0
-      ? `${houseOf(b.winner).name} tem ${b.swords} ${b.swords == 1 ? "espada" : "espadas"} e ${houseOf(loser).name} ${b.towers} ${b.towers == 1 ? "torre" : "torres"}: ninguém morre, ${houseOf(loser).name} recua.`
-      : `${b.swords} ${b.swords == 1 ? "espada" : "espadas"} − ${b.towers} ${b.towers == 1 ? "torre" : "torres"} = <b>${b.casualties} ${b.casualties == 1 ? "baixa" : "baixas"}</b>: morre ${names.join(" e ")}; o resto de ${houseOf(loser).name} recua.`;
+      ? b.swords == 0
+        ? `Ninguém morre: a carta de ${W} não tem espadas ⚔ (são as espadas que matam). ${Lz} recua.`
+        : `Ninguém morre: a carta de ${W} tem ${b.swords} ${b.swords == 1 ? "espada ⚔" : "espadas ⚔"}, mas a de ${Lz} tem ${b.towers} ${b.towers == 1 ? "torre ▲ que protege" : "torres ▲ que protegem"}. ${Lz} recua.`
+      : `<b>${b.casualties == 1 ? "Morre 1 peça" : `Morrem ${b.casualties} peças`}</b> de ${Lz}: ${names.join(" e ")} (espadas ⚔ da carta de ${W}${b.towers ? ` menos as torres ▲ da carta de ${Lz}` : ""}). O resto recua.`;
   return `<div class="board-res">
     <h3>2. Batalha no tabuleiro (regra do jogo original)</h3>
     <ul>${row("attacker")}${row("defender")}</ul>
@@ -1384,8 +1389,8 @@ function showResult(): void {
   const bw = lastBoard?.winner ?? res.winner;
   const verdict = bw ? (human ? (bw == human ? "Você venceu a batalha!" : "Você perdeu a batalha") : `${houseOf(bw).name} venceu a batalha`) : "Empate";
   const bonus = res.winner
-    ? `<b>1. Mesa de Batalha (as faixas):</b> ${houseOf(res.winner).name} ${res.duel ? "venceu o duelo de campeões" : res.bonus >= 2 ? "venceu todas as faixas" : "venceu mais faixas"} → <span class="bonus" style="background:${houseOf(res.winner).color};color:${houseOf(res.winner).ink}">+${res.bonus}</span> de bônus na batalha do tabuleiro.`
-    : "<b>1. Mesa de Batalha (as faixas):</b> empate, ninguém ganha bônus.";
+    ? `<b>1. A luta nas faixas:</b> ${houseOf(res.winner).name} ${res.duel ? "venceu o duelo de campeões" : res.bonus >= 2 ? "venceu todas as faixas" : "venceu mais faixas"} → ganha <span class="bonus" style="background:${houseOf(res.winner).color};color:${houseOf(res.winner).ink}">+${res.bonus}</span> de bônus da batalha.`
+    : "<b>1. A luta nas faixas:</b> empate, ninguém ganha bônus da batalha.";
   const lanesHtml = res.lanes
     .map((L, i) => {
       const facts = [...new Set(L.factors.map(factorText).filter((x): x is string => !!x))].slice(0, 3);

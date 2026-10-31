@@ -246,7 +246,7 @@ Stark + mini-mapa jogado bem pelos dois), em 6 tipos de exército × 3 campos ×
 ## Ordem de batalha (31/out, versão 2: 3 de ataque × 3 de defesa)
 Quando aperta "Pronto", cada lado escolhe escondido como o comandante vai lutar: **quem ataca escolhe uma ordem
 de ataque, quem defende uma de defesa.** O bônus depende das tropas (até +18%). **Quem vence a ordem do outro ganha
-+12% a mais e a do outro não vale.** Referências: táticas do *Crusader Kings II* (dependem das tropas, têm
++10% a mais; a do outro continua valendo** (anular era forte demais, 31/out). Referências: táticas do *Crusader Kings II* (dependem das tropas, têm
 contra-táticas), formações de *Total War* (parede de escudos para flechas, muro de lanças para cavalo, flanco fraco)
 e cartas de batalha de *Hannibal: Rome vs Carthage*.
 | Ataque | Precisa de | Bônus | Vence | Perde para |
@@ -265,4 +265,4 @@ de lado; a Chuva de flechas solta uma saraivada junta e atira mais rápido; a Pa
 esperam (a parede defende mais golpes; no muro, o cavalo que carrega se joga nas lanças e leva o golpe); a Reserva
 deixa quem está atrás esperando e entra correndo depois.
 O computador escolhe como no CK2: sorteia entre as que pode usar, com mais peso para a que rende mais.
-**Para testar nas partidas:** o máximo agora é +30% (18% + 12%) — se ficar forte demais, baixar o +12%.
+**Para testar nas partidas:** o máximo agora é +28% (18% + 10%).

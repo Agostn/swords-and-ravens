@@ -1384,7 +1384,7 @@ export function drawSim(ctx: CanvasRenderingContext2D, sim: Sim): void {
       const x = ti[side];
       if (!x.tactic) return;
       const total = x.bonus + (x.beats ? TACTIC_WIN_BONUS : 0);
-      const txt = `${ICON[x.tactic]} ${TACTIC_NAMES[x.tactic]} ${x.bonus == 0 ? "(0%)" : x.countered ? "anulada!" : `+${Math.round(total * 100)}%${x.beats ? " venceu!" : ""}`}`;
+      const txt = `${ICON[x.tactic]} ${TACTIC_NAMES[x.tactic]} +${Math.round(total * 100)}%${x.beats ? " venceu!" : ""}`;
       ctx.save();
       ctx.globalAlpha = a;
       ctx.font = "800 20px 'Alegreya Sans', 'Trebuchet MS', sans-serif";
@@ -1392,7 +1392,7 @@ export function drawSim(ctx: CanvasRenderingContext2D, sim: Sim): void {
       ctx.textBaseline = "middle";
       const tw = ctx.measureText(txt).width + 26;
       const y = side == "defender" ? H * 0.2 : H * 0.8;
-      ctx.fillStyle = x.countered || x.bonus == 0 ? "rgba(90,30,24,.92)" : "rgba(12,9,6,.9)";
+      ctx.fillStyle = x.beats ? "rgba(36,80,30,.94)" : "rgba(12,9,6,.9)";
       roundRect(ctx, W / 2 - tw / 2, y - 17, tw, 34, 17);
       ctx.fill();
       ctx.strokeStyle = sim.houses[side].color;
