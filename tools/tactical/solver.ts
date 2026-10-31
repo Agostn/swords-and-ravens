@@ -367,38 +367,19 @@ function evalPair(sc: Scenario, a: Strategy, d: Strategy): number {
   );
 }
 
-/**
- * Melhor reação do computador. O atacante (último) escolhe a melhor resposta ao que vê.
- * O defensor (primeiro) escolhe a troca que deixa o atacante com a pior melhor resposta.
- * Em empate, prefere não mudar nada.
- */
-export function bestReaction(sc: Scenario, side: "attacker" | "defender", a: Strategy, d: Strategy): Strategy {
-  if (side == "attacker") {
-    let best = a;
-    let bv = evalPair(sc, a, d) + 1e-6;
-    for (const a2 of reactionsOf(a, sc.field)) {
-      const v = evalPair(sc, a2, d);
-      if (v > bv + 1e-9) {
-        bv = v;
-        best = a2;
-      }
-    }
-    return best;
-  }
-  const RA = reactionsOf(a, sc.field);
-  const reply = (d2: Strategy): number => {
-    let m = -Infinity;
-    for (const a2 of RA) m = Math.max(m, evalPair(sc, a2, d2));
-    return m;
-  };
-  let best = d;
-  let bv = reply(d) - 1e-6;
-  for (const d2 of reactionsOf(d, sc.field)) {
-    const v = reply(d2);
-    if (v < bv - 1e-9) {
+/** Melhor troca de 1 esquadrão para quem tem a última palavra (vê tudo): o atacante maximiza, o defensor minimiza. */
+export function bestReply(sc: Scenario, side: "attacker" | "defender", a: Strategy, d: Strategy): Strategy {
+  const mine = side == "attacker" ? a : d;
+  const sign = side == "attacker" ? 1 : -1;
+  let best = mine;
+  let bv = sign * evalPair(sc, a, d) + 1e-6; // em empate, não muda
+  for (const m2 of reactionsOf(mine, sc.field)) {
+    const v = sign * (side == "attacker" ? evalPair(sc, m2, d) : evalPair(sc, a, m2));
+    if (v > bv + 1e-9) {
       bv = v;
-      best = d2;
+      best = m2;
     }
   }
   return best;
 }
+

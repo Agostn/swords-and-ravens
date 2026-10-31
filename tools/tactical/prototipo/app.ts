@@ -5,7 +5,7 @@
  */
 import { boardStrength, resolveTacticalBattle, Squad, Lane, Side, TacticalBattleResult, LaneFactor } from "../../../agot-bg-game-server/src/common/tactical-battle/tacticalBattle";
 import { BASE_VALUE, FAR_FLANK_SHARE, FIELD_LANES, FieldType, ROW_FACTOR, Role, Row, SUPPORT_FACTOR, SquadKind, TERRAIN, UNOPPOSED_FLANK_SHARE, rolesFor } from "../../../agot-bg-game-server/src/common/tactical-battle/tacticalBattleData";
-import { bestReaction, computerStrategy, Piece, Scenario, rng } from "../solver";
+import { bestReply, computerStrategy, Piece, Scenario, rng } from "../solver";
 import {
   EMPTY_SIDE,
   FIELD_EXAMPLE,
@@ -450,7 +450,8 @@ const LIMITS: Record<string, [number, number]> = {
   garrison: [0, 4],
   "card.strength": [0, 4],
   "card.swords": [0, 3],
-  "card.towers": [0, 3]
+  "card.towers": [0, 3],
+  raven: [0, 1]
 };
 
 function getV(side: Side, key: string): number {
@@ -461,6 +462,8 @@ function getV(side: Side, key: string): number {
 function setV(side: Side, key: string, v: number): void {
   if (key.startsWith("card.")) (config[side].card as unknown as Record<string, number>)[key.slice(5)] = v;
   else (config[side] as unknown as Record<string, number>)[key] = v;
+  // só um jogador tem o Corvo Mensageiro
+  if (key == "raven" && v == 1) config[other(side)].raven = 0;
 }
 
 function renderCustom(): void {
@@ -510,6 +513,7 @@ function renderCustom(): void {
           ${step(side, "card.swords", "Carta: espadas", "<b class='ico'>⚔</b>")}
           ${step(side, "card.towers", "Carta: torres", "<b class='ico'>▲</b>")}
           ${step(side, "order", side == "attacker" ? "Ordem de Marcha" : "Ordem de Defesa", "<b class='ico'>★</b>")}
+          ${step(side, "raven", "Corvo Mensageiro", "<b class='ico'>✉</b>", "1 = tem: depois de ver o outro exército, muda 1 esquadrão")}
         </div>
       </details>
     </section>`;
@@ -700,7 +704,7 @@ function renderPanel(): void {
   $("panel").innerHTML = `
     <div class="turn-head">
       <button type="button" class="quit-btn" id="quit" aria-label="Sair para o início">‹</button>
-      <h2><span class="dot" style="background:${h.color}"></span>${h.name} <small>${reacting ? "reação" : placingSide == "attacker" ? "ataca" : "defende"}</small></h2>
+      <h2><span class="dot" style="background:${h.color}"></span>${h.name} <small>${reacting ? "Corvo" : placingSide == "attacker" ? "ataca" : "defende"}</small></h2>
       <div class="turn-tools">
         <span id="timer" class="timer" style="--p:${(timeLeft / timeMax) * 100}%">${timeLeft}s</span>
         <button type="button" class="help-btn" id="help-play" aria-label="Como funciona o combate">?</button>
@@ -922,10 +926,11 @@ function finishTurn(): void {
 
 // ---------------------------------------------------------------- reação
 /**
- * Depois de os dois posicionarem, os exércitos aparecem e cada lado pode mudar UM esquadrão
- * (lugar e/ou função): primeiro quem defende, depois quem ataca. Assim não é só chute:
- * quem escolheu mal conserta uma parte, e quem lê melhor o campo ganha.
+ * Corvo Mensageiro: quem está no topo da trilha da Corte do Rei (tem o Corvo) vê o exército do outro
+ * depois de os dois posicionarem e pode mudar UM esquadrão (lugar e/ou função). Só ele: é uma vantagem
+ * de quem tem o Corvo, como no jogo original (lá ele troca uma ordem ou espia os selvagens).
  */
+const ravenHolder = (): Side | null => (config.attacker.raven ? "attacker" : config.defender.raven ? "defender" : null);
 const isCpuSide = (side: Side): boolean => config.mode == "cpu" && side != config.humanSide;
 const where = (u: Unit): string => `${LANE_NAMES[u.lane ?? 1].toLowerCase()}, ${u.row == "frente" ? "frente" : "trás"}`;
 
@@ -956,11 +961,16 @@ function enforceOne(keepId: string): void {
 }
 
 function startReaction(): void {
-  phase = "react";
-  reactBase = { attacker: clone(units.attacker), defender: clone(units.defender) };
   reactNote = { attacker: "", defender: "" };
   reactChanged = { attacker: null, defender: null };
-  reactSide = "defender";
+  const holder = ravenHolder();
+  if (!holder) {
+    runBattle();
+    return;
+  }
+  phase = "react";
+  reactBase = { attacker: clone(units.attacker), defender: clone(units.defender) };
+  reactSide = holder;
   nextReaction();
 }
 
@@ -969,7 +979,7 @@ function recordReaction(side: Side): void {
   reactChanged[side] = id;
   const name = houseOf(side).name;
   if (!id || !reactBase) {
-    reactNote[side] = `${name} não mudou nada.`;
+    reactNote[side] = `Corvo Mensageiro: ${name} viu tudo e não mudou nada.`;
     return;
   }
   const b = reactBase[side].find((x) => x.id == id) as Unit;
@@ -977,14 +987,14 @@ function recordReaction(side: Side): void {
   const n = units[side].indexOf(u) + 1;
   const roleTxt = b.role != u.role ? `${ROLE_NAMES[b.role]} → ${ROLE_NAMES[u.role]}` : ROLE_NAMES[u.role];
   const placeTxt = b.lane != u.lane || b.row != u.row ? ` (${where(b)} → ${where(u)})` : ` (${where(u)})`;
-  reactNote[side] = `${name} mudou o esquadrão ${n}: ${roleTxt}${placeTxt}.`;
+  reactNote[side] = `Corvo Mensageiro: ${name} mudou o esquadrão ${n}: ${roleTxt}${placeTxt}.`;
 }
 
 function nextReaction(): void {
   reactWarn = "";
   if (isCpuSide(reactSide)) {
     const side = reactSide;
-    const res = bestReaction(scenario(), side, toSquads(units.attacker), toSquads(units.defender));
+    const res = bestReply(scenario(), side, toSquads(units.attacker), toSquads(units.defender));
     units[side].forEach((u) => {
       const q = res.find((x) => x.id == u.id);
       if (q) {
@@ -1006,10 +1016,7 @@ function nextReaction(): void {
 }
 
 function afterReaction(): void {
-  if (reactSide == "defender") {
-    reactSide = "attacker";
-    nextReaction();
-  } else runBattle();
+  runBattle();
 }
 
 function finishReaction(): void {
@@ -1035,26 +1042,10 @@ function outcomeLine(res: TacticalBattleResult, me: Side): string {
 
 function reactInfoHtml(): string {
   const me = placingSide;
-  const foe = other(me);
   const now = resultNow();
-  let extra = "";
-  if (me == "defender") {
-    // o atacante ainda responde: mostra o pior caso
-    const reply = bestReaction(scenario(), "attacker", toSquads(units.attacker), toSquads(units.defender));
-    const r2 = resolveTacticalBattle({
-      field: config.field,
-      attacker: { squads: reply, card: config.attacker.card, orderBonus: config.attacker.order },
-      defender: { squads: toSquads(units.defender), card: config.defender.card, orderBonus: config.defender.order }
-    });
-    extra = `<br>Se ${houseOf(foe).name} responder do melhor jeito: ${outcomeLine(r2, me)}`;
-  }
-  const lead =
-    me == "defender"
-      ? `Os exércitos apareceram. Mude <b>1 esquadrão</b> (lugar e/ou função) ou mantenha. Depois ${houseOf(foe).name} (ataca) ainda pode mudar 1.`
-      : `${reactNote.defender || ""} Agora você vê tudo e tem a <b>última palavra</b>: mude <b>1 esquadrão</b> ou mantenha.`;
   return `<div class="react-info">
-    <p>${lead}</p>
-    <p class="react-now">Se a luta fosse agora: ${outcomeLine(now, me)}${extra}</p>
+    <p><b>✉ Corvo Mensageiro:</b> você viu o exército de ${houseOf(other(me)).name}. Pode mudar <b>1 esquadrão</b> (lugar e/ou função) ou manter.</p>
+    <p class="react-now">Se a luta for assim: ${outcomeLine(now, me)}</p>
     ${reactWarn ? `<p class="warn">${reactWarn}</p>` : ""}
   </div>`;
 }
@@ -1172,7 +1163,7 @@ function whyHtml(): string {
       const D = L.defenderScore;
       const diff = Math.abs(A - D) / Math.max(A, D);
       const lead: Side | null = diff < 0.06 ? null : A > D ? "attacker" : "defender";
-      const who = lead ? `vantagem <b style="color:${houseOf(lead).color}">${houseOf(lead).name}</b>` : "parelho";
+      const who = lead ? `vantagem <b style="color:${houseOf(lead).color}">${houseOf(lead).name}</b>` : "equilibrado";
       const rs = laneReasons(res, i)
         .map((r) => `<span class="r" style="--c:${houseOf(r.side).color}">${r.text}</span>`)
         .join("");
@@ -1180,7 +1171,7 @@ function whyHtml(): string {
     })
     .join("");
   const notes = [reactNote.defender, reactNote.attacker].filter(Boolean);
-  return `${notes.length ? `<p class="react-notes">Reação: ${notes.join(" ")}</p>` : ""}<ul class="why" aria-label="Por que cada faixa">${items}</ul>`;
+  return `${notes.length ? `<p class="react-notes">${notes.join(" ")}</p>` : ""}<ul class="why" aria-label="Por que cada faixa">${items}</ul>`;
 }
 
 function renderBattlePanel(): void {

@@ -216,19 +216,19 @@ export const SLIDES: Slide[] = [
     }
   },
   {
-    title: "6. Reação: os exércitos aparecem",
-    text: "Quando os dois ficam prontos, a névoa some e cada um vê o exército do outro. Aí cada lado pode mudar UM esquadrão (de lugar e/ou de função): primeiro quem defende, depois quem ataca, que tem a última palavra. Assim não é chute: escolheu mal? Conserta uma parte. Leu melhor o campo? Ganha. O nome de cada faixa mostra quem ganharia se a luta fosse agora.",
+    title: "6. Corvo Mensageiro",
+    text: "Quem tem o Corvo Mensageiro (o primeiro da trilha da Corte do Rei) recebe um recado antes da luta: quando os dois ficam prontos, ele vê o exército do outro e pode mudar UM esquadrão, de lugar e/ou de função. Só ele. Escolheu mal? Conserta. O outro lado não sabe o que vai mudar. Sem o Corvo, ninguém muda nada depois de pronto.",
     draw: (ctx) => {
       ground(ctx, "planicie", H * 0.32);
       men(ctx, "escudeiro", "footman", LW * 0.5, 110, D, "defender", 3);
       men(ctx, "arqueiro", "footman", LW * 0.5, 250, A, "attacker", 3);
       label(ctx, "✗ arqueiro perde", LW * 0.5, 180, "rgba(140,40,32,.92)", "#fff6e2", 15);
       arrow(ctx, LW * 1.0, 180, LW * 1.9, 180, "#e0b354", 5);
-      label(ctx, "muda 1 esquadrão", LW * 1.45, 150, "rgba(18,14,10,.88)", "#e0b354", 15);
+      label(ctx, "✉ muda 1 esquadrão", LW * 1.45, 150, "rgba(18,14,10,.88)", "#e0b354", 15);
       men(ctx, "escudeiro", "footman", LW * 2.4, 110, D, "defender", 3);
       men(ctx, "lanceiro", "footman", LW * 2.4, 250, A, "attacker", 3);
       label(ctx, "✓ lanceiro vence", LW * 2.4, 180, "rgba(36,96,34,.92)", "#fff6e2", 15);
-      label(ctx, "1º quem defende · 2º quem ataca", CW / 2, 32, "rgba(18,14,10,.85)", "#efe3c6", 15);
+      label(ctx, "só quem tem o Corvo Mensageiro", CW / 2, 32, "rgba(18,14,10,.85)", "#efe3c6", 15);
     }
   },
   {

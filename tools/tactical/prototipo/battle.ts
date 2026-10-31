@@ -1002,7 +1002,7 @@ export function laneReasons(res: TacticalBattleResult, lane: number): { text: st
     out.push({ text, side });
   };
   for (const f of L.factors) {
-    if (f.kind == "counter" && f.role && f.vs) add(`${ROLE_NAMES[f.role]} vence ${ROLE_NAMES[f.vs].toLowerCase()}`, f.side);
+    if (f.kind == "counter" && f.role && f.vs) add(`${ROLE_NAMES[f.role]} ${ROLE_NAMES[f.role].endsWith("s") ? "vencem" : "vence"} ${ROLE_NAMES[f.vs].toLowerCase()}`, f.side);
     else if (f.kind == "wall") add("muralha: defesa +30%", f.side);
     else if (f.kind == "wall-breach") add("catapulta derruba a muralha", f.side);
     else if (f.kind == "flank") add("ajuda pelo lado", f.side);
@@ -1013,6 +1013,10 @@ export function laneReasons(res: TacticalBattleResult, lane: number): { text: st
 }
 
 /** Placar de cada faixa: no começo diz quem tem vantagem e por quê; durante a luta, a barra vai enchendo. */
+/**
+ * Placar de cada faixa, no alto: o nome de quem está na frente em letra grande e a barra com as cores
+ * das Casas, que enche até o resultado da conta. Os motivos ficam no texto embaixo do campo (legível no celular).
+ */
 function drawLaneHud(ctx: CanvasRenderingContext2D, sim: Sim): void {
   const t = sim.t;
   sim.res.lanes.forEach((L, i) => {
@@ -1023,65 +1027,47 @@ function drawLaneHud(ctx: CanvasRenderingContext2D, sim: Sim): void {
     const share = A / (A + D || 1);
     const hA = sim.houses.attacker;
     const hD = sim.houses.defender;
-    // barra (de cima): a parte de cada Casa cresce até o resultado da conta
     const prog = ease((t - T_FIGHT + 0.3) / (T_ROUT - T_FIGHT));
     const shown = 0.5 + (share - 0.5) * prog;
-    const bw = LW - 26;
-    const bx = cx - bw / 2;
-    const by = 72;
-    ctx.fillStyle = "rgba(10,8,6,.75)";
-    roundRect(ctx, bx - 3, by - 3, bw + 6, 16, 8);
-    ctx.fill();
-    ctx.save();
-    roundRect(ctx, bx, by, bw, 10, 5);
-    ctx.clip();
-    ctx.fillStyle = hD.color;
-    ctx.fillRect(bx, by, bw, 10);
-    ctx.fillStyle = hA.color;
-    ctx.fillRect(bx, by, bw * shown, 10);
-    ctx.fillStyle = "rgba(0,0,0,.5)";
-    ctx.fillRect(bx + bw / 2 - 1, by, 2, 10);
-    ctx.restore();
-    // cartão do começo: quem tem vantagem e por quê
-    const a = t < 2.4 ? ease(t / 0.4) : 1 - ease((t - 2.4) / 0.5);
-    if (a <= 0.01) return;
-    const reasons = laneReasons(sim.res, i);
-    const diff = Math.abs(A - D) / Math.max(A, D);
-    const lead: Side | null = diff < 0.06 ? null : A > D ? "attacker" : "defender";
-    const title = lead ? `VANTAGEM ${sim.houses[lead].name.toUpperCase()}` : "PAREJO";
-    ctx.save();
-    ctx.globalAlpha = a;
-    const w = LW - 12;
-    const h = 40 + reasons.length * 21;
+    // quem está na frente AGORA (pelo que a barra mostra)
+    const lead: Side | null = Math.abs(shown - 0.5) < 0.03 ? null : shown > 0.5 ? "attacker" : "defender";
+    const w = LW - 14;
     const x = cx - w / 2;
-    const y = H * 0.5 - h / 2;
-    ctx.fillStyle = "rgba(14,11,8,.86)";
+    const y = 70;
+    const h = 52;
+    ctx.fillStyle = "rgba(12,9,6,.86)";
     roundRect(ctx, x, y, w, h, 10);
     ctx.fill();
-    ctx.strokeStyle = lead ? sim.houses[lead].color : "#bba98a";
-    ctx.lineWidth = 2;
+    ctx.strokeStyle = lead ? sim.houses[lead].color : "rgba(241,230,203,.5)";
+    ctx.lineWidth = 2.5;
     ctx.stroke();
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
+    ctx.font = "800 24px 'Alegreya Sans', 'Trebuchet MS', sans-serif";
     ctx.fillStyle = lead ? sim.houses[lead].color : "#f1e6cb";
-    ctx.font = "800 15px 'Alegreya Sans', 'Trebuchet MS', sans-serif";
-    ctx.fillText(title, cx, y + 17, w - 12);
-    ctx.font = "700 13.5px 'Alegreya Sans', 'Trebuchet MS', sans-serif";
-    reasons.forEach((r, k) => {
-      ctx.fillStyle = sim.houses[r.side].color;
-      ctx.beginPath();
-      ctx.arc(x + 12, y + 40 + k * 21, 4, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = "#f1e6cb";
-      ctx.textAlign = "left";
-      ctx.fillText(r.text, x + 21, y + 40.5 + k * 21, w - 28);
-      ctx.textAlign = "center";
-    });
-    if (!reasons.length) {
-      ctx.fillStyle = "#bba98a";
-      ctx.fillText(lead ? "mais força nesta faixa" : "forças iguais", cx, y + 38, w - 12);
-    }
+    const name = lead ? sim.houses[lead].name.toUpperCase() : "EMPATADO";
+    // contorno escuro para ler em cima de qualquer cor
+    ctx.lineWidth = 4;
+    ctx.strokeStyle = "rgba(0,0,0,.65)";
+    ctx.strokeText(name, cx, y + 17, w - 14);
+    ctx.fillText(name, cx, y + 17, w - 14);
+    const bw = w - 18;
+    const bx = cx - bw / 2;
+    const by = y + 33;
+    ctx.save();
+    roundRect(ctx, bx, by, bw, 12, 6);
+    ctx.clip();
+    ctx.fillStyle = hD.color;
+    ctx.fillRect(bx, by, bw, 12);
+    ctx.fillStyle = hA.color;
+    ctx.fillRect(bx, by, bw * shown, 12);
+    ctx.fillStyle = "rgba(0,0,0,.55)";
+    ctx.fillRect(bx + bw / 2 - 1, by, 2, 12);
     ctx.restore();
+    roundRect(ctx, bx, by, bw, 12, 6);
+    ctx.lineWidth = 1.5;
+    ctx.strokeStyle = "rgba(0,0,0,.6)";
+    ctx.stroke();
   });
 }
 
@@ -1103,12 +1089,12 @@ export function drawSim(ctx: CanvasRenderingContext2D, sim: Sim): void {
   // quem está atrás da muralha é desenhado antes dela (a pedra cobre); o resto, depois
   const behind = (m: Man): boolean => hasWall && !m.onWall && m.kind != "dragon" && m.y < WALL_Y + 16;
   const tag = (text: string, cx: number, y: number, bg: string, ink: string): void => {
-    ctx.font = "700 16px 'Alegreya Sans', 'Trebuchet MS', sans-serif";
+    ctx.font = "700 19px 'Alegreya Sans', 'Trebuchet MS', sans-serif";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     const tw = ctx.measureText(text).width + 22;
     ctx.fillStyle = bg;
-    roundRect(ctx, cx - tw / 2, y - 13, tw, 26, 13);
+    roundRect(ctx, cx - tw / 2, y - 15, tw, 30, 15);
     ctx.fill();
     ctx.fillStyle = ink;
     ctx.fillText(text, cx, y + 1);
@@ -1226,19 +1212,19 @@ export function drawSim(ctx: CanvasRenderingContext2D, sim: Sim): void {
       const label = L.winner == "tie" ? "EMPATE" : sim.houses[L.winner].name.toUpperCase();
       const bg = L.winner == "tie" ? "#2a2722" : sim.houses[L.winner].color;
       const ink = L.winner == "tie" ? "#f1e7d0" : sim.houses[L.winner].ink;
-      ctx.font = "700 19px 'Alegreya Sans', 'Trebuchet MS', sans-serif";
+      ctx.font = "800 24px 'Alegreya Sans', 'Trebuchet MS', sans-serif";
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
-      const tw = ctx.measureText(label).width + 30;
+      const tw = Math.min(LW - 8, ctx.measureText(label).width + 30);
       const cx = i * LW + LW / 2;
       ctx.fillStyle = "rgba(0,0,0,.35)";
-      roundRect(ctx, cx - tw / 2 + 3, H / 2 - 15, tw, 34, 6);
+      roundRect(ctx, cx - tw / 2 + 3, H / 2 - 17, tw, 40, 6);
       ctx.fill();
       ctx.fillStyle = bg;
-      roundRect(ctx, cx - tw / 2, H / 2 - 18, tw, 34, 6);
+      roundRect(ctx, cx - tw / 2, H / 2 - 20, tw, 40, 6);
       ctx.fill();
       ctx.fillStyle = ink;
-      ctx.fillText(label, cx, H / 2 - 0.5);
+      ctx.fillText(label, cx, H / 2, LW - 20);
       ctx.restore();
     });
   }

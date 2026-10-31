@@ -152,6 +152,8 @@ export interface SideConfig {
   garrison: number;
   card: CardInfo;
   order: number;
+  /** 1 = tem o Corvo Mensageiro: depois de ver o exército do outro, pode mudar 1 esquadrão */
+  raven: number;
 }
 
 export interface Preset {
@@ -176,7 +178,8 @@ export const EMPTY_SIDE: SideConfig = {
   supportShips: 0,
   garrison: 0,
   card: { strength: 1, swords: 0, towers: 0 },
-  order: 0
+  order: 0,
+  raven: 0
 };
 
 export const PRESETS: Preset[] = [
@@ -202,19 +205,19 @@ export const PRESETS: Preset[] = [
   {
     id: "sinos",
     name: "Batalha dos Sinos",
-    story: "Robert Baratheon se esconde nas ruas do Septo de Pedra, no alto do morro. Os Targaryen precisam subir.",
+    story: "Robert Baratheon se esconde nas ruas do Septo de Pedra, no alto do morro. Os Targaryen precisam subir. Robert tem o Corvo Mensageiro: verá o exército deles e mudará 1 esquadrão.",
     field: "colinas",
     place: "Septo de Pedra",
     attacker: { house: "targaryen", footmen: 2, knights: 1, card: { strength: 2, swords: 0, towers: 0 }, order: 0 },
-    defender: { house: "baratheon", footmen: 2, knights: 1, card: { strength: 4, swords: 1, towers: 0 }, order: 1 }
+    defender: { house: "baratheon", footmen: 2, knights: 1, card: { strength: 4, swords: 1, towers: 0 }, order: 1, raven: 1 }
   },
   {
     id: "gemeas",
     name: "Travessia das Gêmeas",
-    story: "Os Stark precisam atravessar o Ramo Verde. Use o vau ou ataque pela água?",
+    story: "Os Stark precisam atravessar o Ramo Verde. Use o vau ou ataque pela água? Você tem o Corvo Mensageiro: depois de ver os Lannister, muda 1 esquadrão.",
     field: "rio",
     place: "As Gêmeas",
-    attacker: { house: "stark", footmen: 2, knights: 1, card: { strength: 2, swords: 1, towers: 0 }, order: 1 },
+    attacker: { house: "stark", footmen: 2, knights: 1, card: { strength: 2, swords: 1, towers: 0 }, order: 1, raven: 1 },
     defender: { house: "lannister", footmen: 2, knights: 1, supportFootmen: 1, card: { strength: 1, swords: 0, towers: 1 }, order: 1 }
   },
   {

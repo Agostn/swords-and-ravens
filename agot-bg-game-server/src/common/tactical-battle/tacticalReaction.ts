@@ -1,18 +1,13 @@
 /**
- * Reação (depois da revelação): os dois exércitos aparecem e cada lado pode mudar
- * UM esquadrão — de lugar (faixa/linha) e/ou de função. Quem defende muda primeiro;
- * quem ataca responde por último (ele escolheu onde atacar; o defensor já tem
- * terreno, muralha e ordem de Defesa a seu favor).
- *
- * Isto tira o "chute": quem escolheu mal pode consertar uma parte, e quem lê melhor
- * o campo leva vantagem. O servidor usa isValidReaction para não aceitar trapaça.
+ * Corvo Mensageiro no combate tático: quem tem o Corvo (topo da trilha da Corte do Rei) vê o
+ * exército do outro depois de os dois posicionarem e pode mudar UM esquadrão — de lugar
+ * (faixa/linha) e/ou de função. Só ele. (Testamos os dois lados mudarem: ficou confuso.)
+ * O servidor usa isValidReaction para não aceitar trapaça.
  */
-import { Side, Squad } from "./tacticalBattle";
+import { Squad } from "./tacticalBattle";
 import { ROLES_BY_KIND, FIELD_LANES, FieldType, rolesFor } from "./tacticalBattleData";
 
-export const REACTION_ORDER: Side[] = ["defender", "attacker"];
-
-/** Quantos esquadrões cada lado pode mudar na reação. */
+/** Quantos esquadrões quem tem o Corvo pode mudar. */
 export const REACTION_CHANGES = 1;
 
 const same = (a: Squad, b: Squad): boolean => a.lane == b.lane && a.row == b.row && a.role == b.role;

@@ -9,7 +9,7 @@ O teste de equilíbrio é `tools/tactical/equilibrio.ts` (resultado em `tools/ta
 
 ## Em uma frase
 Cada peça vira um esquadrão; os dois lados escondem onde põem cada esquadrão (3 faixas × frente/trás)
-e qual função ele tem; depois os exércitos aparecem e cada lado pode mudar **1 esquadrão** (a Reação);
+e qual função ele tem; quem tem o **Corvo Mensageiro** vê o exército do outro e pode mudar **1 esquadrão**;
 o servidor compara faixa por faixa; quem vencer mais faixas com luta ganha o bônus.
 
 ## 1. Esquadrões
@@ -171,14 +171,15 @@ Quem fica sozinho numa faixa ajuda onde tem luta: a faixa vizinha recebe 30% do 
 Se não houver luta na vizinha, ele atravessa o campo e ajuda a faixa da outra ponta com 15% (metade).
 Assim nenhuma peça fica inútil, mas ficar longe da luta custa caro. (`UNOPPOSED_FLANK_SHARE` = 0,30; `FAR_FLANK_SHARE` = 0,15.)
 
-## Reação: os exércitos aparecem (versão 4, 30/out)
-Quando os dois ficam prontos, a névoa some e cada um vê o exército do outro. Cada lado pode mudar
-**1 esquadrão** (de lugar e/ou de função) ou manter: **primeiro quem defende, depois quem ataca** (última palavra).
-- Por quê: com escolha escondida e exércitos iguais, a função virava chute. Com a Reação, quem escolheu mal
-  conserta uma parte, e quem lê melhor o campo ganha. O nome de cada faixa mostra quem ganharia "se fosse agora".
-- O defensor fica com a primeira jogada, mas já tem terreno, muralha e ordem de Defesa a favor.
+## Corvo Mensageiro (versão 5, 31/out)
+Testamos os dois lados mudarem 1 esquadrão depois de revelar (versão 4): ficou confuso e pouco intuitivo.
+Agora **só quem tem o Corvo Mensageiro** (o primeiro da trilha da Corte do Rei) recebe o recado: quando os dois
+ficam prontos, ele vê o exército do outro e pode mudar **1 esquadrão** (lugar e/ou função). O outro lado não muda nada.
+- É uma vantagem ligada a uma mecânica do jogo original, como as outras do Corvo (trocar uma ordem, espiar os selvagens).
+  No futuro, heróis ou cartas também podem dar esse poder.
 - Servidor: `tacticalReaction.ts` (`isValidReaction`: mesmos esquadrões, no máximo 1 mudado, guarnição parada).
-  Computador: `bestReaction` em `tools/tactical/solver.ts` (o defensor pensa na melhor resposta do atacante).
+  Computador: `bestReply` em `tools/tactical/solver.ts` (a melhor troca vendo tudo).
+- **Para decidir:** se o Corvo deve ser usado uma vez por rodada (em uma batalha só) ou em todas as batalhas da rodada.
 
 ## Batalha no tabuleiro e baixas (versão 4, 30/out)
 O mini-mapa só dá **+1 ou +2**. A batalha continua a do jogo original:
@@ -196,14 +197,12 @@ Stark + mini-mapa jogado bem pelos dois), em 6 tipos de exército × 3 campos ×
 |---|---|---|
 | Mini-mapa muda quem vence a batalha | 13,7% | ~11% |
 | Carta de Casa muda quem vence | 15,7% | ~10% |
-| Carta 4 × 0, exércitos iguais: quem tem a carta perde o mini-mapa | 35% | 0% |
+| Carta 4 × 0, exércitos iguais: quem tem a carta perde o mini-mapa | 35% | 6% (sem Corvo) |
 | Marcha +1, exércitos iguais: quem tem a ordem perde | 30% | 0–8% |
-| Jogador bom contra novato (bônus médio, de −2 a +2) | +0,67 | **+1,3 a +1,4** |
+| Jogador bom contra novato (bônus médio, de −2 a +2) | +0,67 | +0,8 (sem Corvo); +1,3 a +1,4 (quando os dois mudavam) |
 | Exércitos iguais, tudo igual: atacante / defensor / empate | 41% / 42% / 17% | ~50% / ~15% / ~35% |
 - **Leitura:** a vantagem de fora (mais tropas, carta, ordem, apoio) agora quase sempre se confirma, e pensar
   rende o dobro. O que ainda decide entre exércitos idênticos é ler o campo na Reação.
-- **Para ficar de olho:** com tudo igual, quem ataca leva vantagem por ter a última palavra. No jogo de verdade
-  quem defende quase sempre tem ordem de Defesa (+1/+2), terreno ou muralha; se nas partidas o ataque ganhar
-  demais, dá para trocar a ordem da Reação ou dar a última palavra a quem tem a Lâmina de Aço Valiriano.
+- Com a versão 5 (só o Corvo muda), a vantagem de "última palavra" do atacante acabou: ela vai para quem tem o Corvo.
 - Arqueiro ficou um pouco menos usado no jogo ótimo (0,8 de 4 escolhas); ainda é a resposta ao lanceiro.
 

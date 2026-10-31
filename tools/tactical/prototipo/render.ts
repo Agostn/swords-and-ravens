@@ -313,39 +313,39 @@ const num = (x: number): string => x.toLocaleString("pt-BR", { minimumFractionDi
  */
 function drawLaneForce(ctx: CanvasRenderingContext2D, v: PlaceView): void {
   const lf = v.laneForce as { total: number; here: number; help: number }[];
-  lf.forEach((f, i) => {
+  lf.forEach((_f, i) => {
     if (FIELD_LANES[v.field][i] == "bloqueado") return;
     const opts = v.outlook?.[i] ?? [];
     const cx = i * LW + LW / 2;
-    const y = H * 0.24;
-    const w = LW - 14;
-    const h = 108;
-    ctx.fillStyle = "rgba(14,11,8,.84)";
-    roundRect(ctx, cx - w / 2, y - 30, w, h, 10);
+    const w = LW - 12;
+    const top = H * 0.2;
+    const h = 120;
+    ctx.fillStyle = "rgba(14,11,8,.86)";
+    roundRect(ctx, cx - w / 2, top, w, h, 12);
     ctx.fill();
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.fillStyle = "#f1e6cb";
-    ctx.font = "800 13px 'Alegreya Sans', 'Trebuchet MS', sans-serif";
-    ctx.fillText("se ele vier todo aqui com:", cx, y - 17, w - 10);
+    ctx.font = "800 21px 'Alegreya Sans', 'Trebuchet MS', sans-serif";
+    ctx.fillText("Se ele vier aqui:", cx, top + 20, w - 10);
     const n = Math.max(1, opts.length);
-    const step = (w - 12) / n;
+    const step = (w - 8) / n;
     opts.forEach((o, k) => {
-      const ox = cx - w / 2 + 6 + step * (k + 0.5);
+      const ox = cx - w / 2 + 4 + step * (k + 0.5);
       const unitKind = kindOf(o.kind);
-      drawUnit(ctx, ox, y + 22, unitKind == "ship" ? 0.62 : unitKind == "horse" ? 0.62 : 0.8, { role: o.role, kind: unitKind, house: v.enemy, back: false, flip: true, walk: 0, atk: 0, fight: false, seed: k, time: 0 });
+      drawUnit(ctx, ox, top + 70, unitKind == "ship" ? 0.7 : unitKind == "horse" ? 0.75 : 1.05, { role: o.role, kind: unitKind, house: v.enemy, back: false, flip: true, walk: 0, atk: 0, fight: false, seed: k, time: 0 });
       const mark = o.out == "win" ? "✓" : o.out == "lose" ? "✗" : "=";
-      ctx.fillStyle = o.out == "win" ? "#2f6b2a" : o.out == "lose" ? "#8a2f25" : "#4a4238";
+      ctx.fillStyle = o.out == "win" ? "#2f7a2a" : o.out == "lose" ? "#9a3226" : "#4a4238";
       ctx.beginPath();
-      ctx.arc(ox, y + 38, 10, 0, Math.PI * 2);
+      ctx.arc(ox, top + 95, 15, 0, Math.PI * 2);
       ctx.fill();
+      ctx.strokeStyle = "rgba(0,0,0,.5)";
+      ctx.lineWidth = 2;
+      ctx.stroke();
       ctx.fillStyle = "#fff6e2";
-      ctx.font = "900 14px 'Alegreya Sans', 'Trebuchet MS', sans-serif";
-      ctx.fillText(mark, ox, y + 38.5);
+      ctx.font = "900 22px 'Alegreya Sans', 'Trebuchet MS', sans-serif";
+      ctx.fillText(mark, ox, top + 96);
     });
-    ctx.fillStyle = "#bba98a";
-    ctx.font = "600 11.5px 'Alegreya Sans', 'Trebuchet MS', sans-serif";
-    ctx.fillText(f.total > 0 ? `sua força aqui ${num(f.total)}${f.help > 0.05 ? ` (${num(f.help)} de ajuda)` : ""}` : "ninguém seu perto", cx, y + 64, w - 10);
   });
 }
 
@@ -404,8 +404,8 @@ function drawFog(ctx: CanvasRenderingContext2D, t: number, enemy: House, count: 
   ctx.fillStyle = enemy.ink;
   ctx.font = "24px 'IM Fell English SC', Georgia, serif";
   ctx.fillText(enemy.name, cx, top + 24);
-  ctx.font = "800 13px 'Alegreya Sans', 'Trebuchet MS', sans-serif";
-  ctx.fillText(`${count} ${count == 1 ? "peça escondida" : "peças escondidas"}${force ? ` · força ${num(force)}` : ""}`, cx, top + 46);
+  ctx.font = "800 17px 'Alegreya Sans', 'Trebuchet MS', sans-serif";
+  ctx.fillText(`${count} ${count == 1 ? "peça escondida" : "peças escondidas"}${force ? ` · força ${num(force)}` : ""}`, cx, top + 47, bw - 10);
 }
 
 export function drawPlacement(ctx: CanvasRenderingContext2D, v: PlaceView, t: number): PlacedToken[] {
@@ -425,14 +425,16 @@ export function drawPlacement(ctx: CanvasRenderingContext2D, v: PlaceView, t: nu
   lanesT.forEach((tt, i) => {
     const oc = v.laneOutcome?.[i];
     const label = TERRAIN_NAMES[tt] + (v.laneOutcome && tt != "bloqueado" ? (oc == "win" ? " · ✓ sua" : oc == "lose" ? " · ✗ dele" : oc == "tie" ? " · empate" : " · sem luta") : "");
-    ctx.font = "700 16px 'Alegreya Sans', 'Trebuchet MS', sans-serif";
-    const tw = ctx.measureText(label).width + 20;
+    ctx.font = "700 19px 'Alegreya Sans', 'Trebuchet MS', sans-serif";
+    const tw = Math.min(LW - 8, ctx.measureText(label).width + 20);
     const cx = i * LW + LW / 2;
     ctx.fillStyle = oc == "win" ? "rgba(36,96,34,.92)" : oc == "lose" ? "rgba(140,40,32,.92)" : "rgba(18,14,10,.78)";
-    roundRect(ctx, cx - tw / 2, H * 0.49 - 14, tw, 28, 14);
+    roundRect(ctx, cx - tw / 2, H * 0.49 - 16, tw, 32, 16);
     ctx.fill();
     ctx.fillStyle = "#efe3c6";
-    ctx.fillText(label, cx, H * 0.49 + 1);
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(label, cx, H * 0.49 + 1, LW - 20);
   });
   // casinhas
   const pulse = 0.5 + 0.5 * Math.sin(t * 3);
@@ -447,7 +449,7 @@ export function drawPlacement(ctx: CanvasRenderingContext2D, v: PlaceView, t: nu
     ctx.strokeStyle = hover ? "rgba(255,214,110,.95)" : v.showHint && empty ? `rgba(255,236,190,${0.35 + pulse * 0.4})` : "rgba(255,236,190,.38)";
     ctx.stroke();
     ctx.setLineDash([]);
-    ctx.font = "700 12px 'Alegreya Sans', 'Trebuchet MS', sans-serif";
+    ctx.font = "700 15px 'Alegreya Sans', 'Trebuchet MS', sans-serif";
     ctx.textAlign = "left";
     ctx.textBaseline = "top";
     ctx.fillStyle = "rgba(255,240,205,.8)";
@@ -456,12 +458,12 @@ export function drawPlacement(ctx: CanvasRenderingContext2D, v: PlaceView, t: nu
     const pv = v.preview?.find((x) => x.lane == s.lane && x.row == s.row);
     if (pv) {
       const txt = `força ${num(pv.force)}`;
-      ctx.font = "800 15px 'Alegreya Sans', 'Trebuchet MS', sans-serif";
+      ctx.font = "800 19px 'Alegreya Sans', 'Trebuchet MS', sans-serif";
       const tw = ctx.measureText(txt).width + 18;
       const bx = s.x + s.w - tw - 6;
       const by = s.y + 6;
       ctx.fillStyle = pv.pct > 0 ? "#2f6b2a" : pv.pct < 0 ? "#8a2f25" : "rgba(30,24,18,.85)";
-      roundRect(ctx, bx, by, tw, 26, 13);
+      roundRect(ctx, bx, by, tw, 30, 15);
       ctx.fill();
       if (pv.best && pv.pct > 0) {
         ctx.strokeStyle = "#f2cf7e";
@@ -471,7 +473,7 @@ export function drawPlacement(ctx: CanvasRenderingContext2D, v: PlaceView, t: nu
       ctx.fillStyle = "#fff6e2";
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
-      ctx.fillText(txt, bx + tw / 2, by + 13.5);
+      ctx.fillText(txt, bx + tw / 2, by + 15.5);
     }
   }
   // esquadrões posicionados: cada peça vira 4 bonequinhos; cabem pelo menos 2 peças por casinha
@@ -509,16 +511,16 @@ export function drawPlacement(ctx: CanvasRenderingContext2D, v: PlaceView, t: nu
     });
   }
   if (v.preview && v.previewLabel) {
-    const txt = `${v.previewLabel}: força em cada casinha (verde = rende mais)`;
-    ctx.font = "700 14px 'Alegreya Sans', 'Trebuchet MS', sans-serif";
+    const txt = `${v.previewLabel}: força em cada casinha · verde = melhor`;
+    ctx.font = "700 19px 'Alegreya Sans', 'Trebuchet MS', sans-serif";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     const tw = Math.min(W - 16, ctx.measureText(txt).width + 24);
     ctx.fillStyle = "rgba(18,14,10,.85)";
-    roundRect(ctx, W / 2 - tw / 2, H - 34, tw, 26, 13);
+    roundRect(ctx, W / 2 - tw / 2, H - 38, tw, 30, 15);
     ctx.fill();
     ctx.fillStyle = "#f2cf7e";
-    ctx.fillText(txt, W / 2, H - 20.5, W - 30);
+    ctx.fillText(txt, W / 2, H - 22.5, W - 30);
   }
   return placed;
 }

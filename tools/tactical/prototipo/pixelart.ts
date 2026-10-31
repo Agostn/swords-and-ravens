@@ -73,16 +73,21 @@ const MAIL_LO = "#5e636b";
 const LEATHER = "#6a4322";
 const SKIN = "#e0b08a";
 
-/** Ângulos (graus) de cada perna [coxa, canela] por quadro do galope; positivo = para a frente. */
+/**
+ * Ângulos (graus) de cada perna [parte de cima, canela] por quadro do galope; positivo = para a frente.
+ * Como num cavalo de verdade: o JOELHO da frente só dobra para trás (a canela fica mais para trás que o
+ * antebraço) e o JARRETE de trás só dobra para a frente (a canela fica mais para a frente que a coxa).
+ * Sequência do galope (Muybridge, simplificada): esticado → a frente apoia → a frente empurra → recolhido.
+ */
 const GALLOP: [number, number][][] = [
   // frente perto, frente longe, trás perto, trás longe
-  [[48, 22], [36, 8], [-42, -16], [-30, -6]], // esticado
-  [[16, -6], [28, 30], [-14, 12], [-26, -22]],
-  [[-12, 48], [0, 64], [24, -30], [12, -12]], // recolhido
-  [[12, 76], [-6, 34], [-4, -44], [6, -62]]
+  [[40, 30], [26, 16], [-44, -34], [-30, -20]], // esticado no ar
+  [[10, 5], [30, 24], [-12, 18], [-26, -2]], // a frente apoia, a de trás vem
+  [[-24, -32], [-6, -10], [10, 16], [0, 10]], // a frente empurra, a de trás apoia embaixo da barriga
+  [[22, -58], [36, -36], [-20, 32], [-10, 42]] // recolhido: joelhos dobrados
 ];
 const STAND: [number, number][] = [[4, 0], [-2, 0], [-4, 2], [3, 0]];
-const BOB = [0, -1, 1, 0, 0];
+const BOB = [-1, 0, 1, -1, 0];
 
 /**
  * Cavaleiro virado para a ESQUERDA, pés em (32, 60). frame 0..3 = galope, 4 = parado.
