@@ -246,7 +246,7 @@ Stark + mini-mapa jogado bem pelos dois), em 6 tipos de exército × 3 campos ×
 ## Ordem de batalha (31/out, versão 2: 3 de ataque × 3 de defesa)
 Quando aperta "Pronto", cada lado escolhe escondido como o comandante vai lutar: **quem ataca escolhe uma ordem
 de ataque, quem defende uma de defesa.** O bônus depende das tropas (até +18%). **Quem vence a ordem do outro ganha
-+10% a mais; a do outro continua valendo** (anular era forte demais, 31/out). Referências: táticas do *Crusader Kings II* (dependem das tropas, têm
++5% a mais; a do outro continua valendo** (anular era forte demais; +10% pesava demais no chute, 31/out). Referências: táticas do *Crusader Kings II* (dependem das tropas, têm
 contra-táticas), formações de *Total War* (parede de escudos para flechas, muro de lanças para cavalo, flanco fraco)
 e cartas de batalha de *Hannibal: Rome vs Carthage*.
 | Ataque | Precisa de | Bônus | Vence | Perde para |
@@ -264,5 +264,27 @@ e cartas de batalha de *Hannibal: Rome vs Carthage*.
 de lado; a Chuva de flechas solta uma saraivada junta e atira mais rápido; a Parede e o Muro seguram a linha e
 esperam (a parede defende mais golpes; no muro, o cavalo que carrega se joga nas lanças e leva o golpe); a Reserva
 deixa quem está atrás esperando e entra correndo depois.
+**Todas as tropas seguem a ordem, não só as que dão o bônus (31/out):** na Parede, no Muro e na Reserva os
+arqueiros ficam atrás da linha e só atiram em quem chega no alcance; na Chuva de flechas a infantaria espera a
+saraivada antes de avançar; na Carga a infantaria vem mais rápido atrás dos cavalos; no Cercar os arqueiros
+também abrem para os lados.
 O computador escolhe como no CK2: sorteia entre as que pode usar, com mais peso para a que rende mais.
-**Para testar nas partidas:** o máximo agora é +28% (18% + 10%).
+**Balanço do "vencer a ordem do outro" (31/out, `tools/tactical/taticas.ts`, 1.560 batalhas sorteadas de 2 a 4
+peças, testando os 9 pares de ordem):**
+| Bônus por vencer a ordem | A ordem muda quem ganha | Nessas batalhas, quem acertou a do outro vence |
+|---|---|---|
+| 0% | 14% | 33% |
+| +3% | 16% | 40% |
+| **+5% (agora)** | **18%** | **44%** |
+| +10% (antes) | 21% | 52% |
+Acertar a ordem do outro é chute (os dois escolhem escondido), então ficou em +5%: ainda vale a pena pensar no que
+o outro vai fazer, mas o que mais conta é escolher a ordem que combina com as SUAS tropas. Máximo: +23% (18% + 5%).
+
+## Cartas fora das faixas e bônus que cresce (31/out)
+- **As cartas de Casa não entram na luta das faixas** (`CARDS_IN_TACTICAL = false`): contam só na batalha do
+  tabuleiro, como no jogo original. A Mesa de Batalha usa só tropas, posições, terreno, ordem de marcha e a ordem
+  de batalha.
+- **O bônus da batalha cresce com o tamanho dos exércitos:** +1, e mais +1 a cada 4 de força do MENOR exército
+  (`BONUS_STRENGTH_STEP = 4`). Vencendo todas as faixas, +1 a mais. Exemplos: 2 contra 2 → +1; 4 contra 5 → +2;
+  8 contra 9 → +3. Assim, no fim do jogo, com exércitos grandes, o bônus não fica pequeno demais. O Duelo de
+  campeões dá o mesmo bônus base.

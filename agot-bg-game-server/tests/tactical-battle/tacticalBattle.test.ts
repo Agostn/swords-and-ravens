@@ -199,7 +199,7 @@ describe("combate tático", () => {
     expect(com.duel).toBe(true);
   });
 
-  it("ordem de batalha: muro de lanças vence a carga (+10% a mais), cercar vence a parede", () => {
+  it("ordem de batalha: muro de lanças vence a carga (+5% a mais), cercar vence a parede", () => {
     const A: Squad[] = [sq("a0", "knight", "cavalaria", 1), sq("a1", "footman", "lanceiro", 0)];
     const D: Squad[] = [sq("d0", "footman", "lanceiro", 1), sq("d1", "footman", "escudeiro", 0)];
     const r = resolveTacticalBattle({ field: "planicie", attacker: { squads: A, tactic: "carga" }, defender: { squads: D, tactic: "lancas" } });
@@ -213,5 +213,21 @@ describe("combate tático", () => {
     const r3 = resolveTacticalBattle({ field: "planicie", attacker: { squads: A, tactic: "flechas" }, defender: { squads: D, tactic: "lancas" } });
     expect(r3.tactics?.attacker.bonus).toBe(0);
     expect(r3.tactics?.attacker.beats).toBe(false);
+  });
+
+  it("o bônus cresce com o tamanho da batalha (+1 a cada 4 de força do menor exército)", () => {
+    const mk = (side: string, n: number, role: Squad["role"]): Squad[] => Array.from({ length: n }, (_, i) => sq(side + i, "footman", role, 1));
+    const small = resolveTacticalBattle({ field: "planicie", attacker: { squads: mk("a", 2, "lanceiro") }, defender: { squads: mk("d", 2, "escudeiro") } });
+    expect(small.bonus).toBe(1);
+    const big = resolveTacticalBattle({ field: "planicie", attacker: { squads: mk("a", 9, "lanceiro") }, defender: { squads: mk("d", 8, "escudeiro") } });
+    expect(big.bonus).toBe(3);
+  });
+
+  it("as cartas de Casa não mudam a luta das faixas", () => {
+    const A = [sq("a0", "footman", "escudeiro", 1)];
+    const D = [sq("d0", "footman", "escudeiro", 1)];
+    const sem = resolveTacticalBattle({ field: "planicie", attacker: { squads: A }, defender: { squads: D } });
+    const com = resolveTacticalBattle({ field: "planicie", attacker: { squads: A, card: { strength: 4, swords: 2, towers: 0 } }, defender: { squads: D } });
+    expect(com.lanes[1].attackerScore).toBeCloseTo(sem.lanes[1].attackerScore);
   });
 });

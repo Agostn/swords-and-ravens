@@ -11,6 +11,8 @@ import {
   BASE_VALUE,
   BONUS_ALL_LANES,
   BONUS_MAJORITY,
+  BONUS_STRENGTH_STEP,
+  CARDS_IN_TACTICAL,
   CARD_STRENGTH_FACTOR,
   CARD_SWORD_FACTOR,
   CARD_TOWER_FACTOR,
@@ -185,6 +187,7 @@ function other(side: Side): Side {
 
 function cardFactor(card: CardInfo | null | undefined, enemyCard: CardInfo | null | undefined, orderBonus = 0): number {
   let f = 1 + ORDER_FACTOR * orderBonus;
+  if (!CARDS_IN_TACTICAL) return f;
   if (card) {
     f *= 1 + CARD_STRENGTH_FACTOR * card.strength + CARD_SWORD_FACTOR * card.swords;
   }
@@ -413,13 +416,17 @@ function resolveOnce(input: TacticalBattleInput): TacticalBattleResult {
     if (l.winner == "attacker" || l.winner == "defender") lanesWon[l.winner]++;
   });
   const fights = ([0, 1, 2] as Lane[]).filter(contested).length;
+  // bônus cresce com o tamanho da batalha (força do menor exército no tabuleiro)
+  const boardTotal = (side: Side): number => prepared[side].reduce((a, q) => a + boardStrength(q, side, input.field), 0);
+  const base = BONUS_MAJORITY + Math.floor(Math.min(boardTotal("attacker"), boardTotal("defender")) / BONUS_STRENGTH_STEP);
+  const allLanes = base + (BONUS_ALL_LANES - BONUS_MAJORITY);
 
   let winner: Side | null = null;
   let bonus = 0;
   if (lanesWon.attacker > lanesWon.defender) winner = "attacker";
   else if (lanesWon.defender > lanesWon.attacker) winner = "defender";
   if (winner) {
-    bonus = fights >= 2 && lanesWon[winner] == fights ? BONUS_ALL_LANES : BONUS_MAJORITY;
+    bonus = fights >= 2 && lanesWon[winner] == fights ? allLanes : base;
   } else if (fights > 0) {
     // mesmo número de faixas: desempata pela soma de todas as faixas com luta (+1)
     const sum = (side: Side): number =>
@@ -427,12 +434,12 @@ function resolveOnce(input: TacticalBattleInput): TacticalBattleResult {
     const tb = compare(sum("attacker"), sum("defender"));
     if (tb == "attacker" || tb == "defender") {
       winner = tb;
-      bonus = BONUS_MAJORITY;
+      bonus = base;
     }
   }
   // empate de verdade: duelo de campeões; vence quem tem a Lâmina de Aço Valiriano (+1)
   if (!winner && fights > 0 && input.bladeHolder) {
-    return { lanes, lanesWon, winner: input.bladeHolder, bonus: BONUS_MAJORITY, duel: true, tactics };
+    return { lanes, lanesWon, winner: input.bladeHolder, bonus: base, duel: true, tactics };
   }
 
   return { lanes, lanesWon, winner, bonus, tactics };

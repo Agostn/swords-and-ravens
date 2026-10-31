@@ -839,9 +839,15 @@ export function stepSim(sim: Sim, dt: number): void {
         continue;
       }
       const dist = Math.hypot(tg.x - m.x, tg.y - m.y);
-      if (dist > m.reach) steer(m, tg.x, tg.y, m.speed * 0.8, dt);
-      else if (dist < 55) steer(m, m.x - (tg.x - m.x), m.y - (tg.y - m.y), m.speed * 0.7, dt);
-      else steer(m, m.x, m.y, 0, dt);
+      // os arqueiros também seguem a ordem: defesa (parede, muro, reserva) = ficam atrás da linha, não avançam;
+      // carga = vão atrás da cavalaria; cercar = abrem para os lados
+      const atac = tacOf(sim, m.side);
+      const holdLine = atac == "parede" || atac == "lancas" || atac == "reserva";
+      if (dist < 55) steer(m, m.x - (tg.x - m.x), m.y - (tg.y - m.y), m.speed * 0.7, dt);
+      else if (dist > m.reach && !holdLine) {
+        const side = atac == "cercar" ? (m.lane == 0 ? -1 : m.lane == 2 ? 1 : m.seed % 2 ? 1 : -1) * 40 : 0;
+        steer(m, tg.x + side, tg.y, m.speed * (atac == "carga" ? 1 : 0.8), dt);
+      } else steer(m, m.x, m.y, 0, dt);
       if (dist <= m.reach && t < T_ROUT) {
         m.flip = tg.x < m.x;
         m.atk = Math.max(0, Math.min(1, 1 - (m.nextShot - t) / 0.55));
@@ -913,8 +919,12 @@ export function stepSim(sim: Sim, dt: number): void {
     const tac = tacOf(sim, m.side);
     let spd = m.speed * (t < 1.2 ? 0.7 : 1);
     if (!m.engaged) {
-      // Parede de escudos / Muro de lanças: segura a linha e espera o inimigo chegar
+      // Parede de escudos / Muro de lanças: TODO mundo segura a linha e espera o inimigo chegar
       if ((tac == "parede" || tac == "lancas") && t < T_FIGHT + 0.5 && Math.hypot(foe.x - m.x, foe.y - m.y) > 60) spd *= 0.15;
+      // Chuva de flechas: a infantaria espera as flechas amolecerem o inimigo antes de avançar
+      if (tac == "flechas" && t < T_FIGHT - 0.6 && Math.hypot(foe.x - m.x, foe.y - m.y) > 60) spd *= 0.2;
+      // Carga: a infantaria também vem mais rápido, atrás dos cavalos
+      if (tac == "carga" && m.kind == "foot" && t > 0.6) spd *= 1.2;
       // Reserva: quem está atrás espera e entra depois, correndo
       if (tac == "reserva" && m.row == "tras") spd = t < T_FIGHT + 1.2 ? 0 : spd * 1.35;
       // Carga: a cavalaria vem com tudo

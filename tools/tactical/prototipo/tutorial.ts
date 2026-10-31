@@ -233,7 +233,7 @@ export const SLIDES: Slide[] = [
   },
   {
     title: "7. O resultado: +1 ou +2",
-    text: "Quem vencer mais faixas ganha +1 de bônus na batalha do tabuleiro (a de verdade, com tropas, carta e ordem). Se vencer todas as faixas com luta (pelo menos duas), soma +2. Se ninguém se encontrar nas faixas, os exércitos marcham e lutam no centro. Depois a batalha segue igual ao jogo original: Espada de Aço Valiriano, baixas e retirada.",
+    text: "Quem vencer mais faixas ganha o bônus da batalha no tabuleiro (a de verdade, com tropas, carta e ordem): +1, e mais +1 a cada 4 de força do menor exército (assim não fica pequeno no fim do jogo). Vencendo todas as faixas, +1 a mais. As cartas de Casa contam só no tabuleiro. Se ninguém se encontrar nas faixas, os exércitos marcham e lutam no centro. Depois a batalha segue igual ao jogo original: Espada de Aço Valiriano, baixas e retirada.",
     draw: (ctx) => {
       ctx.fillStyle = "#2a2119";
       ctx.fillRect(0, 0, CW, CH);
