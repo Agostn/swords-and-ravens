@@ -1087,7 +1087,10 @@ function drawDragonSprite(ctx: CanvasRenderingContext2D, x: number, y: number, s
   ctx.imageSmoothingEnabled = false;
   ctx.translate(x, y);
   ctx.scale(faceRight ? k : -k, k);
-  ctx.drawImage(fr.img, fr.sx, fr.sy, fr.w, fr.h, -fr.w / 2, -fr.h * 0.62, fr.w, fr.h);
+  // pousado (peça no campo, cartão): a folha tem o dragão pousado no alto do quadro, então os pés vão para a linha
+  // y (31/out: antes ele ficava flutuando acima da base)
+  const sheetIdle = !flying && p.atk <= 0.05 && fr.h == 110;
+  ctx.drawImage(fr.img, fr.sx, fr.sy, fr.w, fr.h, -fr.w / 2, sheetIdle ? -fr.h * 0.42 : -fr.h * 0.62, fr.w, fr.h);
   ctx.restore();
   return true;
 }
@@ -1315,7 +1318,7 @@ export function drawSquad(
   const dx = (k == "horse" ? 25 : 14) * s;
   const dy = (k == "horse" ? 11 : 10) * s;
   const pos: [number, number][] = n == 4 ? [[-0.5, -0.5], [0.5, -0.5], [-0.5, 0.5], [0.5, 0.5]].map(([a, b]) => [cx + a * dx + (b > 0 ? 0 : 3 * s), cy + b * dy]) : [[cx, cy + 6 * s]];
-  const bw = (k == "horse" ? 62 : k == "foot" ? 40 : 44) * s;
+  const bw = (k == "horse" ? 62 : k == "foot" ? 40 : k == "dragon" ? 66 : 44) * s;
   const bh = (k == "horse" ? 26 : 22) * s;
   ctx.save();
   if (o.ghost) ctx.globalAlpha *= 0.45;

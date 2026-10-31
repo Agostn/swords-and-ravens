@@ -320,7 +320,9 @@ function squadSvg(h: House, u: { kind: SquadKind; role: Role }): string {
   // tela maior que o desenho: cavaleiro (cabeça e lança) e dragão (asas) não ficam cortados em cima (31/out)
   // o dragão usa a folha de sprites quando ela carrega: a chave muda para não ficar com o desenho antigo guardado
   const url = canvasImg(`sq|${h.name}|${u.kind}|${u.role}|${u.kind == "dragon" && dragonImage() ? "folha" : "codigo"}`, 84, 68, (ctx) => {
-    if (k == "dragon" || k == "ship") drawUnit(ctx, 42, 36, k == "dragon" ? 0.82 : 1, { role: u.role, kind: k, house: h, back: false, flip: false, walk: 0, atk: 0 });
+    // dragão pousado (cabe no cartão inteiro); navio no meio
+    if (k == "dragon") drawUnit(ctx, 44, 60, 0.95, { role: u.role, kind: k, house: h, back: false, flip: false, walk: 0, atk: 0, fight: false });
+    else if (k == "ship") drawUnit(ctx, 42, 36, 1, { role: u.role, kind: k, house: h, back: false, flip: false, walk: 0, atk: 0 });
     else drawSquad(ctx, 42, 56, u.kind, u.role, h, { scale: k == "horse" ? 0.8 : 0.92, back: false });
   });
   return `<img class="squad-figs" src="${url}" width="74" height="60" alt="">`;
