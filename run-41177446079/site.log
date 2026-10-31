@@ -1,0 +1,41 @@
+fail: Microsoft.EntityFrameworkCore.Database.Command[20102]
+      Failed executing DbCommand (35ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT "MigrationId", "ProductVersion"
+      FROM "__EFMigrationsHistory"
+      ORDER BY "MigrationId";
+warn: Microsoft.AspNetCore.DataProtection.KeyManagement.XmlKeyManager[35]
+      No XML encryptor configured. Key {2776a4a0-3a3d-4037-8ded-8b30a240dc0e} may be persisted to storage in unencrypted form.
+info: Microsoft.Hosting.Lifetime[14]
+      Now listening on: http://0.0.0.0:8001
+info: Microsoft.Hosting.Lifetime[14]
+      Now listening on: http://0.0.0.0:8000
+info: Microsoft.Hosting.Lifetime[0]
+      Application started. Press Ctrl+C to shut down.
+info: Microsoft.Hosting.Lifetime[0]
+      Hosting environment: Development
+info: Microsoft.Hosting.Lifetime[0]
+      Content root path: /home/runner/work/swords-and-ravens/swords-and-ravens/agot-bg-website-dotnet/agot-bg-website
+warn: Microsoft.AspNetCore.HttpsPolicy.HttpsRedirectionMiddleware[3]
+      Failed to determine the https port for redirect.
+warn: FormularioRecusado[0]
+      POST /Identity/Account/Login recusado (400). Host=localhost:8000 Origin= X-Forwarded-Host= X-Forwarded-Proto= Cookies=
+info: agot_bg_website.Areas.Identity.Pages.Account.RegisterModel[0]
+      User created a new account with password.
+warn: Microsoft.EntityFrameworkCore.Query[20504]
+      Compiling a query which loads related collections for more than one collection navigation, either via 'Include' or through projection, but no 'QuerySplittingBehavior' has been configured. By default, Entity Framework will use 'QuerySplittingBehavior.SingleQuery', which can potentially result in slow query performance. See https://go.microsoft.com/fwlink/?linkid=2134277 for more information. To identify the query that's triggering this warning call 'ConfigureWarnings(w => w.Throw(RelationalEventId.MultipleCollectionIncludeWarning))'.
+info: agot_bg_website.Areas.Identity.Pages.Account.RegisterModel[0]
+      User created a new account with password.
+info: agot_bg_website.Areas.Identity.Pages.Account.RegisterModel[0]
+      User created a new account with password.
+info: agot_bg_website.Areas.Identity.Pages.Account.LoginModel[0]
+      User logged in.
+info: agot_bg_website.Areas.Identity.Pages.Account.LoginModel[0]
+      User logged in.
+info: agot_bg_website.Areas.Identity.Pages.Account.LoginModel[0]
+      User logged in.
+info: agot_bg_website.Areas.Identity.Pages.Account.LoginModel[0]
+      User logged in.
+info: agot_bg_website.Areas.Identity.Pages.Account.LoginModel[0]
+      User logged in.
+info: agot_bg_website.Areas.Identity.Pages.Account.LoginModel[0]
+      User logged in.

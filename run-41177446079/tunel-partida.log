@@ -1,0 +1,21 @@
+jogador1 -> https://panels-rehabilitation-worlds-injured.trycloudflare.com/Games
+partida: https://panels-rehabilitation-worlds-injured.trycloudflare.com/play/4ab35353-db02-432a-8e02-7b86e61f0668
+jogador2 -> https://panels-rehabilitation-worlds-injured.trycloudflare.com/Games
+jogador3 -> https://panels-rehabilitation-worlds-injured.trycloudflare.com/Games
+0 rodada 1 PlaceOrdersGameState:ordem  |  PlaceOrdersGameState:ordem  |  PlaceOrdersGameState:ordem
+10 rodada 1 PlaceOrdersGameState:ready  |  PlaceOrdersGameState:ready  |  PlaceOrdersGameState:ready
+11 rodada 1 ReplaceOrderGameState:espera  |  ReplaceOrderGameState:pular  |  ReplaceOrderGameState:espera
+12 rodada 1 ResolveSingleMarchOrderGameState:marcha  |  ResolveSingleMarchOrderGameState:espera  |  ResolveSingleMarchOrderGameState:espera
+20 rodada 1 ResolveSingleMarchOrderGameState:aguardando  |  ResolveSingleMarchOrderGameState:aguardando  |  ResolveSingleMarchOrderGameState:aguardando
+30 rodada 1 ResolveSingleMarchOrderGameState:espera  |  ResolveSingleMarchOrderGameState:espera  |  ResolveSingleMarchOrderGameState:marcha
+40 rodada 1 ResolveSingleMarchOrderGameState:aguardando  |  ResolveSingleMarchOrderGameState:aguardando  |  ResolveSingleMarchOrderGameState:aguardando
+43 rodada 2 BiddingGameState:lance  |  BiddingGameState:lance  |  BiddingGameState:lance
+44 rodada 2 ResolveTiesGameState:desempate  |  ResolveTiesGameState:espera  |  ResolveTiesGameState:espera
+45 rodada 2 BiddingGameState:lance  |  BiddingGameState:lance  |  BiddingGameState:lance
+46 rodada 2 ResolveTiesGameState:espera  |  ResolveTiesGameState:espera  |  ResolveTiesGameState:desempate
+47 rodada 2 BiddingGameState:lance  |  BiddingGameState:lance  |  BiddingGameState:lance
+48 rodada 2 ResolveTiesGameState:espera  |  ResolveTiesGameState:espera  |  ResolveTiesGameState:desempate
+49 rodada 2 BiddingGameState:lance  |  BiddingGameState:lance  |  BiddingGameState:lance
+50 rodada 2 SimpleChoiceGameState:espera  |  SimpleChoiceGameState:espera  |  SimpleChoiceGameState:escolha
+53 rodada 2 SelectUnitsGameState:unidades  |  SelectUnitsGameState:espera  |  SelectUnitsGameState:espera
+54 rodada 2 PlaceOrdersGameState:ordem  |  PlaceOrdersGameState:ordem  |  PlaceOrdersGameState:ordem

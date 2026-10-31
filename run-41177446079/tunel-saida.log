@@ -1,0 +1,14 @@
+---> Baixando o cloudflared (só na primeira vez)
+---> Ligando o túnel
+
+==============================================================
+  PRONTO! O site está na internet. Mande este link aos amigos:
+
+  https://panels-rehabilitation-worlds-injured.trycloudflare.com
+
+  - Cada um cria a conta e entra na partida por esse link.
+  - O link vale enquanto o PC e o túnel estiverem ligados.
+  - Se ligar de novo, o link muda (mande o novo).
+  - Para desligar: bash .devcontainer/jogar-online.sh --parar
+==============================================================
+

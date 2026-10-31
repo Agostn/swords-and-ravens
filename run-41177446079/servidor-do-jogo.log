@@ -1,0 +1,17 @@
+yarn run v1.22.22
+$ ts-node -T src/server/server.ts
+Launching with live-website client
+New user connected: ::1
+Game loaded: 6e22efa4-9e17-440c-b89f-b6ba971dbcfe
+New user connected: ::1
+New user connected: ::1
+New user connected: ::1
+Game loaded: c66f9e4e-61f3-4796-a11b-b6f62ef4cfc5
+New user connected: ::1
+New user connected: ::1
+Ignoring invalid "resolve-march-order" message: {"type":"resolve-march-order","moves":[["seagard",[16,1,2]]],"startingRegionId":"riverrun","leavePowerToken":false}
+Ignoring invalid "resolve-march-order" message: {"type":"resolve-march-order","moves":[["stoney-sept",[1,2]]],"startingRegionId":"riverrun","leavePowerToken":false}
+New user connected: ::1
+Game loaded: 4ab35353-db02-432a-8e02-7b86e61f0668
+New user connected: ::1
+New user connected: ::1
