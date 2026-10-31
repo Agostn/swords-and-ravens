@@ -29,7 +29,7 @@ export const FIG = 1.35;
 /** Alcance de cada função (em pixels do campo). Corpo a corpo: distância do golpe. */
 export const REACH: Record<Role, number> = {
   lanceiro: 31,
-  escudeiro: 17,
+  escudeiro: 22,
   arqueiro: 230,
   cavalaria: 33,
   batedores: 23,
@@ -389,9 +389,9 @@ function bleed(sim: Sim, x: number, y: number, dirx: number, diry: number, amoun
   for (let i = 0; i < n; i++) {
     // a maioria voa para o lado do golpe; algumas espirram longe (jato)
     const jet = r() < 0.2;
-    const sp = jet ? 140 + r() * 120 : 35 + r() * 120;
+    const sp = jet ? 90 + r() * 80 : 25 + r() * 65;
     const a = Math.atan2(diry, dirx) + (r() - 0.5) * (jet ? 0.6 : 1.9);
-    sim.drops.push({ x, y, z: 8 + r() * 12, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp * 0.6, vz: 15 + r() * 70, size: r() < 0.15 ? 3 : r() < 0.45 ? 2 : 1, dark: r() < 0.35 });
+    sim.drops.push({ x, y, z: 14 * FIG + (r() - 0.3) * 8, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp * 0.6, vz: 10 + r() * 45, size: r() < 0.15 ? 3 : r() < 0.45 ? 2 : 1, dark: r() < 0.35 });
   }
   if (sim.drops.length > 1600) sim.drops.splice(0, sim.drops.length - 1600);
 }
@@ -446,8 +446,8 @@ function hit(sim: Sim, from: { x: number; y: number }, m: Man, power: number, bl
   }
   m.hitT = t;
   sim.slashes.push({ x: m.x - nx * 4, y: m.y - 14 * FIG, t0: t, d: nx >= 0 ? 1 : -1, big: power >= 1.5 });
-  puff(sim, m.x, m.y, power >= 2 ? 6 : 2, 30, 3);
-  bleed(sim, m.x, m.y - 12 * FIG, nx, ny, 12 + power * 10);
+  puff(sim, m.x, m.y, power >= 2 ? 5 : 1, 30, 2.5);
+  bleed(sim, m.x, m.y, nx, ny, 12 + power * 10);
   pool(sim, m.x - nx * 2, m.y, 3);
   if (power >= 2) {
     sim.shake = Math.max(sim.shake, 3.5);
@@ -467,9 +467,9 @@ function kill(sim: Sim, m: Man, nx: number, ny: number, power: number): void {
   m.vx += nx * (heavy ? 60 : 150) * Math.min(2, power);
   m.vy += ny * (heavy ? 30 : 80) * Math.min(2, power);
   m.flip = nx > 0; // cai para trás
-  bleed(sim, m.x, m.y - 10 * FIG, nx, ny, heavy ? 70 : 55);
+  bleed(sim, m.x, m.y, nx, ny, heavy ? 70 : 55);
   puff(sim, m.x, m.y, heavy ? 10 : 5, 40, 4);
-  bleed(sim, m.x, m.y - 8 * FIG, -nx, -ny, 10);
+  bleed(sim, m.x, m.y, -nx, -ny, 10);
   pool(sim, m.x, m.y, heavy ? 70 : 46);
   sim.stop = Math.max(sim.stop, power >= 2 ? 0.09 : 0.05);
   sim.shake = Math.max(sim.shake, power >= 2 ? 4 : 2);
@@ -572,7 +572,7 @@ export function stepSim(sim: Sim, dt: number): void {
     const p = (t - m.atkStart) / 0.4;
     m.atk = p >= 0 && p <= 1 ? (p < 0.4 ? p / 0.4 : 1 - (p - 0.4) / 0.6) : 0;
     // no golpe, quem tem alcance curto dá o passo para dentro
-    const lunge = p >= 0 && p < 0.6 ? Math.max(0, dd - m.reach + 4) : 0;
+    const lunge = p >= 0 && p < 0.6 ? Math.max(0, dd - m.reach + 2) : 0;
     const sway = Math.sin(t * 3 + m.phase) * 2; // fica se mexendo, não parado como estátua
     let tx: number;
     let ty: number;
@@ -838,7 +838,7 @@ export function drawSim(ctx: CanvasRenderingContext2D, sim: Sim): void {
   for (const d of sim.dust) {
     const p = (t - d.t0) / d.life;
     const rr = Math.round(d.r * (1 + p * 1.5));
-    ctx.fillStyle = `rgba(196,176,136,${0.55 * (1 - p)})`;
+    ctx.fillStyle = `rgba(196,176,136,${0.38 * (1 - p)})`;
     ctx.fillRect(Math.round(d.x - rr), Math.round(d.y - rr * 0.7 - 2), rr * 2, Math.max(2, Math.round(rr * 1.4)));
   }
   // marca do corte

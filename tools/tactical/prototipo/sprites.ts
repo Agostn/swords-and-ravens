@@ -196,23 +196,20 @@ export function soldierSprite(h: House, role: Role, atk: 0 | 1): Sprite | null {
   const steel = "#d7dce0";
   const steelD = "#8a9298";
   if (role == "escudeiro") {
+    // a arte original segura escudo e espada do lado direito: no fim espelhamos, para ele
+    // olhar para o mesmo lado dos outros soldados (escudo e estocada virados para o inimigo)
     if (atk == 0) [c, ctx] = cellCanvas("escudo", h, { shieldTeam: true });
     else {
-      // espada erguida + o escudo da outra pose (só os pixels do escudo)
-      [c, ctx] = cellCanvas("golpe", h);
-      const [sc] = cellCanvas("escudo", h, { shieldTeam: true });
-      const raw = newCanvas(26, 34);
-      raw[1].drawImage(soldiersImage() as HTMLImageElement, CELL.escudo * 26, 0, 26, 34, 0, 0, 26, 34);
-      const rd = raw[1].getImageData(0, 0, 26, 34).data;
-      const sd = (sc.getContext("2d") as CanvasRenderingContext2D).getImageData(0, 0, sc.width, sc.height).data;
-      const shield = new Set([...SHIELD_FACE, key(69, 57, 47)]);
-      for (let y = 0; y < 34; y++)
-        for (let x = 8; x < 19; x++) {
-          const i = (y * 26 + x) * 4;
-          if (rd[i + 3] == 0 || !shield.has(key(rd[i], rd[i + 1], rd[i + 2]))) continue;
-          const j = ((y + PAD) * sc.width + x + PAD) * 4;
-          px(ctx, PAD + x + 5, PAD + y, `rgb(${sd[j]},${sd[j + 1]},${sd[j + 2]})`);
-        }
+      // estocada: a espada sai reta para a frente, passando o escudo, até encostar no inimigo
+      [c, ctx] = cellCanvas("escudo", h, { shieldTeam: true, dropSword: true });
+      const y = PAD + 18;
+      px(ctx, PAD + 5, y - 2, "#b08d3c", 1, 5); // guarda
+      for (let x = PAD + 6; x <= PAD + 27; x++) {
+        px(ctx, x, y, "#e9edf0");
+        px(ctx, x, y + 1, "#8a9298");
+      }
+      px(ctx, PAD + 28, y, "#e9edf0");
+      px(ctx, PAD + 3, y, "#5a3d24", 2, 2); // punho
     }
     ay = PAD + 34;
   } else if (role == "arqueiro" || role == "flechas") {
@@ -263,9 +260,16 @@ export function soldierSprite(h: House, role: Role, atk: 0 | 1): Sprite | null {
     ay = PAD + 32;
   }
   addOutline(c);
-  const s = { c, ax: PAD + 9, ay };
-  cache.set(id, s);
-  return s;
+  let out = { c, ax: PAD + 9, ay };
+  if (role == "escudeiro") {
+    const [m, mctx] = newCanvas(c.width, c.height);
+    mctx.translate(c.width, 0);
+    mctx.scale(-1, 1);
+    mctx.drawImage(c, 0, 0);
+    out = { c: m, ax: c.width - (PAD + 9), ay };
+  }
+  cache.set(id, out);
+  return out;
 }
 
 /**
