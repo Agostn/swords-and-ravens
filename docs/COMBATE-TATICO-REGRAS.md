@@ -306,3 +306,16 @@ o outro vai fazer, mas o que mais conta é escolher a ordem que combina com as S
 - O motor ainda aceita navio de apoio como peça em terra (função "flechas"); quem decide não colocar é a tela.
   Quando ligar no jogo de verdade, fazer o mesmo: navio de apoio em terra entra como ponto de ordem.
 
+## Bandeira, limite de peças e muralha (31/out)
+- **Bandeira:** no fim da batalha, um soldado que sobrou da Casa vencedora (o campeão do duelo, se houver) anda
+  até o meio da luta e finca a bandeira com o brasão da Casa. No mar, a bandeira sobe no navio. A animação dura
+  1,5 s a mais para dar tempo.
+- **Limite de peças, como no jogo original:** a trilha de Suprimento só deixa ter exército de até **4 peças**
+  (o nível mais alto é 4, 3, 2, 2, 2). No fim do jogo a batalha típica tem um exército de 3 ou 4 peças e mais 1
+  ou 2 áreas apoiando. Então: exército até 4 peças; apoio no campo até 4; **no máximo 2 peças por casinha**.
+  6 casinhas × 2 = 12 lugares para no máximo 8 peças (na montanha, com uma faixa fechada, 4 × 2 = 8: ainda dá).
+  Tentar pôr a 3.ª peça numa casinha pisca "cheia: máx. 2" e não coloca.
+- **Muralha:** quem defende fica em pé no caminho de ronda, em cima do muro, e quem ataca fica no pé do muro.
+  Os dois golpeiam por cima das ameias (antes, ninguém conseguia acertar e os bonecos morriam sem levar golpe).
+  **No portão**, quem defende abre e sai para lutar na frente do muro (antes a luta ficava em cima da pedra e
+  parecia "dentro do muro").

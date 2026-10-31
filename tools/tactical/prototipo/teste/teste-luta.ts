@@ -5,7 +5,7 @@
  */
 import { resolveTacticalBattle, Squad } from "../../../../agot-bg-game-server/src/common/tactical-battle/tacticalBattle";
 import { FieldType, Role, SquadKind } from "../../../../agot-bg-game-server/src/common/tactical-battle/tacticalBattleData";
-import { createSim, setGore, stepSim } from "../battle";
+import { T_END, createSim, hitStats, setGore, stepSim } from "../battle";
 import { HOUSES } from "../data";
 
 setGore(false);
@@ -16,6 +16,9 @@ const R = (): number => (seed = (seed * 16807) % 2147483647) / 2147483647;
 const pick = <T>(a: T[]): T => a[Math.floor(R() * a.length)];
 const out: string[] = [];
 let idleCases = 0;
+let flagsOk = 0;
+const roleStat: Record<string, { t: number; atk: number }> = {};
+const flagFail: string[] = [];
 let crossings = 0; // alguém atravessou o próprio inimigo (deu a volta nele) para lutar do outro lado
 let crossBattles = 0;
 let closeIdle = 0; // perto do inimigo (arma alcança) e sem golpear por mais de 1,5 s
@@ -43,6 +46,7 @@ for (let n = 0; n < 400; n++) {
   const lastFoe = new Map<number, any>();
   let crossedHere = 0;
   const where = new Map<number, string>();
+  const lastAtk = new Map<number, number>();
   while (sim.t < 9.6) {
     stepSim(sim, 0.02);
     men.forEach((m, i) => {
@@ -73,6 +77,17 @@ for (let n = 0; n < 400; n++) {
         }
       } else closeT.set(i, 0);
     });
+    // golpes por papel: tempo com inimigo perto (até 80 px) e quantos golpes começou nesse tempo
+    if (sim.t > 3.4 && sim.t < 9.9 && !(sim.duel && sim.t >= 6.4))
+      men.forEach((m, i) => {
+        if (m.dead || !["lanceiro", "escudeiro", "cavalaria", "batedores"].includes(m.role)) return;
+        const near = men.some((o) => o.side != m.side && !o.dead && o.kind != "tower" && Math.hypot(o.x - m.x, o.y - m.y) <= 80);
+        if (!near) return;
+        const st = roleStat[m.role] ?? (roleStat[m.role] = { t: 0, atk: 0 });
+        st.t += 0.02;
+        if (m.atkStart > sim.t - 0.021 && lastAtk.get(i) !== m.atkStart) st.atk++;
+        lastAtk.set(i, m.atkStart);
+      });
     if (sim.t < 4.2 || sim.t > 6.2) continue;
     if (sim.duel && sim.t >= 4.9) continue; // duelo de campeões: os outros param para assistir (de propósito)
     men.forEach((m, i) => {
@@ -88,6 +103,16 @@ for (let n = 0; n < 400; n++) {
       }
     });
   }
+  // bandeira: com o resultado do tabuleiro, quem vence tem que fincar a bandeira até o fim
+  {
+    const win = res.winner && res.winner != null ? res.winner : n % 2 ? "attacker" : "defender";
+    const s2 = createSim(field, res, { attacker: A, defender: D }, { attacker: HOUSES.stark, defender: HOUSES.lannister }, n + 1, { loser: win == "attacker" ? "defender" : "attacker", destroyed: [], winner: win });
+    while (s2.t < T_END) stepSim(s2, 0.05);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const fl = (s2 as any).flag;
+    if (fl && fl.planted < T_END) flagsOk++;
+    else if (flagFail.length < 5) flagFail.push(`#${n} ${field} sem bandeira (${fl ? "não chegou" : "ninguém"})`);
+  }
   still.forEach((v) => (idleTime = Math.max(idleTime, v)));
   crossings += crossedHere;
   if (crossedHere > 0) crossBattles++;
@@ -97,4 +122,4 @@ for (let n = 0; n < 400; n++) {
   }
 }
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-(window as any).__RESULT__ = `batalhas 400, com soldado parado mais de 1 s: ${idleCases}; atravessou o inimigo: ${crossings} vezes em ${crossBattles} batalhas; perto sem atacar: ${closeIdle}\n` + closeDbg.join("\n") + "\n" + out.join("\n") + "\n" + dbg.join("\n");
+(window as any).__RESULT__ = `batalhas 400, com soldado parado mais de 1 s: ${idleCases}; atravessou o inimigo: ${crossings} vezes em ${crossBattles} batalhas; perto sem atacar: ${closeIdle}; bandeira fincada: ${flagsOk}/400\ngolpes por segundo perto do inimigo: ${Object.entries(roleStat).map(([r, v]) => `${r} ${(v.atk / v.t).toFixed(2)}`).join(", ")}\nacertos: ${Object.entries(hitStats).map(([r, v]) => `${r} ${v.land}/${v.start} (errou ${v.miss})`).join(", ")}\n` + flagFail.join("\n") + "\n" + closeDbg.join("\n") + "\n" + out.join("\n") + "\n" + dbg.join("\n");

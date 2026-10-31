@@ -4,7 +4,7 @@
  * Gerar a página: node tools/tactical/prototipo/build.js
  */
 import { boardStrength, hasFormation, tacticBonus, resolveTacticalBattle, Squad, Lane, Side, TacticalBattleResult, LaneFactor } from "../../../agot-bg-game-server/src/common/tactical-battle/tacticalBattle";
-import { ATTACK_TACTICS, DEFENSE_TACTICS, TACTIC_BEATS, TACTIC_NAMES, TACTIC_WIN_BONUS, Tactic, BASE_VALUE, FAR_FLANK_SHARE, FIELD_LANES, FieldType, ROW_FACTOR, Role, Row, SUPPORT_FACTOR, SquadKind, TERRAIN, UNOPPOSED_FLANK_SHARE, rolesFor } from "../../../agot-bg-game-server/src/common/tactical-battle/tacticalBattleData";
+import { ARMY_MAX, SLOT_MAX, SUPPORT_MAX, ATTACK_TACTICS, DEFENSE_TACTICS, TACTIC_BEATS, TACTIC_NAMES, TACTIC_WIN_BONUS, Tactic, BASE_VALUE, FAR_FLANK_SHARE, FIELD_LANES, FieldType, ROW_FACTOR, Role, Row, SUPPORT_FACTOR, SquadKind, TERRAIN, UNOPPOSED_FLANK_SHARE, rolesFor } from "../../../agot-bg-game-server/src/common/tactical-battle/tacticalBattleData";
 import { bestReply, computerStrategy, Piece, Scenario, rng } from "../solver";
 import {
   EMPTY_SIDE,
@@ -66,6 +66,7 @@ let units: Record<Side, Unit[]> = { attacker: [], defender: [] };
 let placingSide: Side = "attacker";
 let selected: string | null = null;
 let hoverSlot: { lane: Lane; row: Row } | null = null;
+let slotFull: { lane: Lane; row: Row; t: number } | null = null;
 let dragging: { id: string; ghost: HTMLElement; startX: number; startY: number; moved: boolean; fromCanvas: boolean } | null = null;
 let placedHit: PlacedToken[] = [];
 let timer: number | null = null;
@@ -407,9 +408,9 @@ const LIMITS: Record<string, [number, number]> = {
   footmen: [0, 6],
   knights: [0, 4],
   siege: [0, 2],
-  ships: [0, 5],
+  ships: [0, ARMY_MAX],
   dragon: [0, 5],
-  supportFootmen: [0, 3],
+  supportFootmen: [0, SUPPORT_MAX],
   supportShips: [0, 2],
   garrison: [0, 4],
   "card.strength": [0, 4],
@@ -418,6 +419,14 @@ const LIMITS: Record<string, [number, number]> = {
   raven: [0, 1],
   blade: [0, 1]
 };
+
+const ARMY_KEYS = ["footmen", "knights", "siege", "dragon", "ships"];
+/** peças do exército na área (sem apoio e sem guarnição) */
+function armyCount(side: Side): number {
+  const c = config[side];
+  if (isSea()) return c.ships;
+  return c.footmen + c.knights + (side == "attacker" ? c.siege : 0) + (c.dragon > 0 ? 1 : 0);
+}
 
 function getV(side: Side, key: string): number {
   if (key.startsWith("card.")) return (config[side].card as unknown as Record<string, number>)[key.slice(5)] ?? 0;
@@ -442,8 +451,11 @@ function renderCustom(): void {
     )
     .join("");
   const step = (side: Side, key: string, label: string, icon: string, hint = ""): string => {
-    const [lo, hi] = key == "order" ? (side == "attacker" ? [-1, 1] : [0, 2]) : LIMITS[key];
+    const [lo, hi0] = key == "order" ? (side == "attacker" ? [-1, 1] : [0, 2]) : LIMITS[key];
     const v = getV(side, key);
+    // exército cheio (4 peças, como no jogo original): não deixa pôr mais uma peça
+    const addsPiece = ARMY_KEYS.includes(key) && !(key == "dragon" && v > 0);
+    const hi = addsPiece && armyCount(side) >= ARMY_MAX ? v : hi0;
     return `<div class="stepper">
       <span class="st-icon" aria-hidden="true">${icon}</span>
       <span class="st-label">${label}${hint ? `<small>${hint}</small>` : ""}</span>
@@ -464,6 +476,7 @@ function renderCustom(): void {
     return `<section class="army">
       <h3><span class="dot" style="background:${h.color}"></span>${h.name} <small>${side == "attacker" ? "ataca" : "defende"}</small></h3>
       <div class="houses">${houses}</div>
+      <p class="army-count${armyCount(side) >= ARMY_MAX ? " full" : ""}">Exército: <b>${armyCount(side)} de ${ARMY_MAX}</b> peças <small>(no jogo, o maior exército tem 4)</small></p>
       <div class="steps-list">
         ${sea ? step(side, "ships", "Navios", tokenSvg(h, "abordagem", 26)) : step(side, "footmen", "Soldados", tokenSvg(h, "lanceiro", 26))}
         ${sea ? "" : step(side, "knights", "Cavaleiros", tokenSvg(h, "cavalaria", 26))}
@@ -585,6 +598,11 @@ function stopTimer(): void {
 function placeUnit(id: string, lane: Lane, row: Row): void {
   const u = units[placingSide].find((x) => x.id == id);
   if (!u || u.locked) return;
+  // no máximo SLOT_MAX peças por casinha
+  if ((u.lane != lane || u.row != row) && units[placingSide].filter((x) => x.id != id && x.lane == lane && x.row == row).length >= SLOT_MAX) {
+    slotFull = { lane, row, t: performance.now() };
+    return;
+  }
   u.lane = lane;
   u.row = row;
   if (phase == "react") {
@@ -1355,6 +1373,7 @@ function startLoop(): void {
         squads: units[placingSide],
         selected,
         hoverSlot,
+        fullSlot: slotFull ? { lane: slotFull.lane, row: slotFull.row, age: (now - slotFull.t) / 1000 } : null,
         dragging: dragging?.moved ? dragging.id : null,
         showHint: !!selected,
         preview: previewFor(units[placingSide].find((u) => u.id == selected) ?? null),

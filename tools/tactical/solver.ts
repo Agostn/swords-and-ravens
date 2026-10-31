@@ -7,6 +7,7 @@ import { resolveTacticalBattle, Squad, Lane, CardInfo, TacticalBattleResult } fr
 import {
   FIELD_LANES,
   FieldType,
+  SLOT_MAX,
   rolesFor,
   Role,
   Row,
@@ -72,7 +73,17 @@ export function enumerate(pieces: Piece[], field: FieldType): Strategy[] {
       }
     }
     idc += ps.length;
-    partial = next;
+    // no máximo SLOT_MAX peças por casinha
+    partial = next.filter((st) => {
+      const cnt = new Map<string, number>();
+      for (const q of st) {
+        const k = q.lane + q.row;
+        const c = (cnt.get(k) ?? 0) + 1;
+        if (c > SLOT_MAX) return false;
+        cnt.set(k, c);
+      }
+      return true;
+    });
   });
   return partial;
 }
@@ -339,6 +350,7 @@ export function reactionsOf(strat: Strategy, field: FieldType): Strategy[] {
     if (s.kind == "garrison") return;
     for (const o of optionsFor({ kind: s.kind }, field)) {
       if (o.lane == s.lane && o.row == s.row && o.role == s.role) continue;
+      if ((o.lane != s.lane || o.row != s.row) && strat.filter((q) => q.lane == o.lane && q.row == o.row).length >= SLOT_MAX) continue;
       const n = strat.slice();
       n[i] = { ...s, ...o };
       out.push(n);

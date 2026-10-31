@@ -200,6 +200,19 @@ export const TERRAIN: Record<Terrain, TerrainRules> = {
  */
 export const SIEGE_OPEN_FACTOR = 0.5;
 
+/**
+ * Limites de peças (31/out). No jogo original o exército maior possível tem 4 peças (trilha de Suprimento:
+ * o nível mais alto é [4, 3, 2, 2, 2], data/baseGameData.json). No fim do jogo a batalha típica tem um exército
+ * de 3 ou 4 peças mais 1 ou 2 áreas apoiando.
+ * - ARMY_MAX: peças do exército na área (ataque ou defesa);
+ * - SUPPORT_MAX: peças de apoio que entram no campo (o resto do apoio é raro e fica como bônus);
+ * - SLOT_MAX: peças por casinha. 6 casinhas × 2 = 12 lugares para no máximo 8 peças (4 + 4); na montanha (uma
+ *   faixa fechada) são 4 × 2 = 8, que ainda dá.
+ */
+export const ARMY_MAX = 4;
+export const SUPPORT_MAX = 4;
+export const SLOT_MAX = 2;
+
 /** Tipos de campo (vem da área do tabuleiro). Faixas: esquerda, centro, direita. */
 export type FieldType =
   | "planicie"

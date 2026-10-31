@@ -16,13 +16,17 @@ import { Lane, Side, Squad, TacticalBattleResult } from "../../../agot-bg-game-s
 import { FIELD_LANES, FieldType, Role, Row, SquadKind, TACTIC_NAMES, TACTIC_WIN_BONUS } from "../../../agot-bg-game-server/src/common/tactical-battle/tacticalBattleData";
 import { rng } from "../solver";
 import { House, ROLE_NAMES, TERRAIN_NAMES } from "./data";
+import { drawGlyph, styleOf } from "./houseStyle";
 import { DRAGON_SCALE, Kind, Pose, drawFallen, drawUnit, kindOf } from "./figures";
 import { H, LW, W, ease, roundRect, terrainImage } from "./render";
 import { WALL_Y, drawWalls } from "./walls";
 import { drawSeaWaves } from "./ground";
 
 // a luta ficou mais longa (31/out): mais tempo de troca de golpes antes de alguém fugir
-export const T_END = 13.5;
+/** contagem de golpes por função (para o teste automático: golpes começados x acertados) */
+export const hitStats: Record<string, { start: number; land: number; miss: number }> = {};
+const stat = (r: string): { start: number; land: number; miss: number } => hitStats[r] ?? (hitStats[r] = { start: 0, land: 0, miss: 0 });
+export const T_END = 15; // (31/out: +1,5 s para o vencedor fincar a bandeira)
 const T_FIGHT = 3.2; // começam as baixas
 const T_DUEL = 6.6; // empate: os outros param e os campeões duelam no meio (até a fuga)
 const T_ROUT = 10.4; // quem perdeu foge
@@ -176,7 +180,18 @@ interface Drop {
   dark: boolean;
 }
 
+/** bandeira da Casa vencedora: um soldado que sobrou leva e finca no chão do território (31/out) */
+interface Flag {
+  side: Side;
+  man: Man | null;
+  x: number;
+  y: number;
+  /** quando foi fincada (Infinity = ainda carregando) */
+  planted: number;
+}
+
 export interface Sim {
+  flag?: Flag | null;
   /** empate decidido no duelo de campeões: quem vence e os dois campeões (escolhidos na hora) */
   duel?: { winner: Side; a: Man | null; b: Man | null; picked: boolean; arena: { x: number; y: number } };
   /** batalha do tabuleiro (quem foge e quem morre); sem ela, cada faixa decide */
@@ -303,7 +318,8 @@ export function createSim(field: FieldType, res: TacticalBattleResult, squads: R
   });
 
   // muralha inteira: a luta é no pé do muro (defensor em cima, atacante embaixo); portão ou buraco: na frente
-  const frontY = FIELD_LANES[field].map((t) => (t == "muralha" || t == "portao" ? H * 0.47 : H * 0.5));
+  // portão/buraco: a luta é NA FRENTE do muro (31/out: antes ficava em cima da pedra e parecia "dentro do muro")
+  const frontY = FIELD_LANES[field].map((t) => (t == "muralha" || t == "portao" ? WALL_Y + 62 : H * 0.5));
 
   // baixas: vêm do resultado de cada faixa
   const breach = [false, false, false];
@@ -408,15 +424,17 @@ function wallBlock(sim: Sim, m: Man, prevY: number, dt: number): void {
   }
   const cx = lane * LW + LW / 2;
   const open = sim.breach[lane] && sim.t > T_FIGHT + 0.2;
-  const pass = t == "portao" ? (open ? 30 : 13) : open ? 28 : 0;
+  // portão: quem defende abre e sai para lutar na frente (passagem larga); quem ataca só entra apertado
+  const pass = t == "portao" ? (open ? 30 : m.side == "defender" ? 26 : 13) : open ? 28 : 0;
   if (pass == 0) {
     // muralha inteira
     if (m.side == "defender") {
-      if (m.y > WALL_Y - 4) {
-        m.y = WALL_Y - 4;
+      // em pé no caminho de ronda (em cima do muro), não no meio da pedra
+      if (m.y > WALL_Y - 20) {
+        m.y = WALL_Y - 20;
         m.vy = Math.min(0, m.vy);
       }
-      m.onWall = m.y > WALL_Y - 30;
+      m.onWall = m.y > WALL_Y - 36;
     } else {
       if (m.y < BAND_BOT + 2) {
         m.y = BAND_BOT + 2;
@@ -631,6 +649,110 @@ function nearestEnemy(sim: Sim, m: Man, prefer?: (o: Man) => boolean): Man | nul
 }
 
 /** Quer ir até (x, y): acelera e freia aos poucos (não teleporta, não para seco). */
+/** escolhe quem leva a bandeira: o campeão do duelo, senão o soldado vivo mais perto do meio da luta */
+function pickFlag(sim: Sim): Flag | null {
+  const side = sim.outcome?.winner ?? (sim.res.winner || null);
+  if (!side) return null;
+  const sea = sim.field == "mar";
+  const fought = ([0, 1, 2] as Lane[]).filter((l) => sim.res.lanes[l].winner != null);
+  const lane = fought.length ? fought.reduce((a: number, l) => a + l, 0) / fought.length : 1;
+  const x = Math.max(60, Math.min(W - 60, lane * LW + LW / 2));
+  const y = Math.max(WALL_Y + 40, Math.min(H - 70, sim.frontY[Math.round(lane)] ?? H * 0.5));
+  const alive = (m: Man): boolean => m.side == side && !m.dead && m.dieAt === Infinity;
+  const champ = sim.duel && sim.duel.winner == side ? [sim.duel.a, sim.duel.b].find((m) => m && alive(m)) : null;
+  const kinds: Kind[] = sea ? ["ship"] : ["foot", "horse"];
+  const cands = sim.men.filter((m) => alive(m) && kinds.includes(m.kind)).sort((a, b) => Math.hypot(a.x - x, a.y - y) - Math.hypot(b.x - x, b.y - y));
+  const man = champ && kinds.includes(champ.kind) ? champ : cands[0] ?? null;
+  let fx = x;
+  let fy = y;
+  if (man) {
+    man.engaged = false;
+    man.foe = null;
+    // não muito longe (dá tempo de chegar) e sem atravessar a muralha
+    const d = Math.hypot(x - man.x, y - man.y);
+    const MAX = 80;
+    if (d > MAX) {
+      fx = man.x + ((x - man.x) / d) * MAX;
+      fy = man.y + ((y - man.y) / d) * MAX;
+    }
+    const hasWall = FIELD_LANES[sim.field].some((tt) => tt == "muralha" || tt == "portao");
+    if (hasWall && (man.y < WALL_Y + 16) != (fy < WALL_Y + 16)) fy = man.y;
+  }
+  return { side, man, x: fx, y: fy, planted: man && !sea ? Infinity : T_ROUT + 0.9 };
+}
+
+/** o porta-bandeira anda até o meio da luta e finca a bandeira; true = já cuidou dele neste passo */
+function flagStep(sim: Sim, m: Man, dt: number): boolean {
+  if (sim.flag === undefined) sim.flag = pickFlag(sim);
+  const f = sim.flag;
+  if (!f || f.man !== m || m.kind == "ship") return false;
+  const d = Math.hypot(f.x - m.x, f.y - m.y);
+  // se não chegar a tempo (algo no caminho), finca onde está
+  if (d > 5 && f.planted === Infinity && sim.t < T_END - 1.4) steer(m, f.x, f.y, m.speed * 0.9, dt);
+  else {
+    steer(m, m.x, m.y, 0, dt);
+    if (f.planted === Infinity) {
+      f.planted = sim.t;
+      f.x = m.x + 8 * (m.dir || 1);
+      f.y = m.y;
+      for (let i = 0; i < 6; i++) sim.dust.push({ x: f.x + (sim.rand() - 0.5) * 14, y: f.y + 1, vx: (sim.rand() - 0.5) * 20, vy: -4, r: 3 + sim.rand() * 3, t0: sim.t, life: 0.7 });
+    }
+  }
+  return true;
+}
+
+/** a bandeira: carregada (inclinada) ou fincada (sobe e tremula) */
+function drawFlag(ctx: CanvasRenderingContext2D, sim: Sim): void {
+  const f = sim.flag;
+  if (!f) return;
+  const t = sim.t;
+  const st = styleOf(sim.houses[f.side]);
+  let bx: number, by: number, tall: number, lean: number;
+  if (f.man && (f.planted === Infinity || f.man.kind == "ship")) {
+    const m = f.man;
+    if (m.dead) return;
+    const ship = m.kind == "ship";
+    bx = m.x + (ship ? 0 : 7 * (m.dir || 1));
+    by = m.y - (ship ? 30 : m.kind == "horse" ? 18 : 10);
+    tall = ship ? 34 * Math.min(1, Math.max(0, (t - f.planted) / 0.5)) : 30;
+    lean = ship ? 0 : 0.35 * (m.dir || 1);
+    if (ship && tall <= 0) return;
+  } else {
+    if (t < f.planted) return;
+    bx = f.x;
+    by = f.y;
+    const p = ease(Math.min(1, (t - f.planted) / 0.45));
+    tall = 26 + 34 * p;
+    lean = 0.25 * (1 - p);
+  }
+  const tx = bx + Math.sin(lean) * tall;
+  const ty = by - Math.cos(lean) * tall;
+  ctx.save();
+  // sombra do mastro no chão
+  ctx.fillStyle = "rgba(0,0,0,.28)";
+  ctx.fillRect(Math.round(bx - 1), Math.round(by - 1), 10, 3);
+  ctx.strokeStyle = "#3b2a17";
+  ctx.lineWidth = 2.4;
+  ctx.beginPath();
+  ctx.moveTo(bx, by);
+  ctx.lineTo(tx, ty);
+  ctx.stroke();
+  ctx.fillStyle = "#e0b354";
+  ctx.fillRect(Math.round(tx - 2), Math.round(ty - 3), 4, 3);
+  // pano: tremula em fatias de 2 px
+  const fw = 28;
+  const fh = 20;
+  for (let i = 0; i < fw; i += 2) {
+    const wv = Math.sin(t * 7 - i * 0.35) * (i / fw) * 2.2;
+    ctx.fillStyle = st.field;
+    ctx.fillRect(Math.round(tx + 1 + i), Math.round(ty + wv), 2, fh);
+  }
+  ctx.fillStyle = st.trim;
+  ctx.fillRect(Math.round(tx + 1), Math.round(ty), fw, 1);
+  drawGlyph(ctx, st.glyph, tx + 7, ty + 3 + Math.sin(t * 7 - 5) * 0.9, st.charge, 2);
+  ctx.restore();
+}
+
 function steer(m: Man, x: number, y: number, maxSp: number, dt: number): void {
   const dx = x - m.x;
   const dy = y - m.y;
@@ -808,6 +930,7 @@ export function stepSim(sim: Sim, dt: number): void {
       continue;
     }
     if (t < 0.6) continue;
+    if (t > T_ROUT + 0.2 && flagStep(sim, m, dt)) continue;
     if (sim.duel && t >= T_DUEL && t < T_ROUT + 0.3 && duelStep(sim, m, dt)) continue;
     const L = sim.res.lanes[m.lane];
     const lost = t > T_ROUT && (sim.outcome ? m.side == sim.outcome.loser : L.winner && L.winner != "tie" && L.winner != m.side);
@@ -965,10 +1088,15 @@ export function stepSim(sim: Sim, dt: number): void {
       }
       const gapX = Math.abs(foe.x - m.x);
       const gapY = Math.abs(foe.y - m.y);
+      // muralha inteira: um em cima do muro, outro no pé; golpeiam por cima das ameias (31/out: antes ninguém batia)
+      const overWall = (m.onWall && foe.atWall) || (m.atWall && foe.onWall);
+      const yReach = overWall ? 54 : 26;
+      const yHit = overWall ? 54 : 16;
       // só começa o golpe se, dando o passo, a arma alcança (nada de bater de longe)
-      if (t >= m.nextHit && t > T_FIGHT - 0.8 && t < T_ROUT && gapX <= m.reach + 18 && gapY <= 26) {
+      if (t >= m.nextHit && t > T_FIGHT - 0.8 && t < T_ROUT && gapX <= m.reach + 18 && gapY <= yReach) {
         m.atkStart = t;
         m.nextHit = t + (m.kind == "horse" ? 1.1 : 0.75) + r() * 0.45;
+        stat(m.role).start++;
       }
       // passo para dentro durante a preparação: chega até a arma encostar
       if (p >= 0 && p < 0.4) {
@@ -978,7 +1106,9 @@ export function stepSim(sim: Sim, dt: number): void {
       }
       // o golpe acerta no meio do movimento, se a arma encostar mesmo
       const prev = (t - dt - m.atkStart) / 0.4;
-      if (prev < 0.4 && p >= 0.4 && t < T_ROUT && Math.abs(foe.x - m.x) <= m.reach + 6 && Math.abs(foe.y - m.y) <= 16) {
+      if (prev < 0.4 && p >= 0.4 && t < T_ROUT && !(Math.abs(foe.x - m.x) <= m.reach + 6 && Math.abs(foe.y - m.y) <= yHit)) stat(m.role).miss++;
+      if (prev < 0.4 && p >= 0.4 && t < T_ROUT && Math.abs(foe.x - m.x) <= m.reach + 6 && Math.abs(foe.y - m.y) <= yHit) {
+        stat(m.role).land++;
         const blocked = foe.role == "escudeiro" && r() < (tacOf(sim, foe.side) == "parede" ? 0.7 : 0.4);
         hit(sim, m, foe, m.kind == "horse" ? 1.5 : 1, blocked);
         if (!blocked && r() < 0.35) sim.sparks.push({ x: (m.x + foe.x) / 2, y: (m.y + foe.y) / 2 - 14 * FIG, t0: t });
@@ -1316,6 +1446,7 @@ export function drawSim(ctx: CanvasRenderingContext2D, sim: Sim): void {
   ctx.globalAlpha = appear;
   for (const m of order) if (!behind(m)) drawMan(m);
   ctx.restore();
+  drawFlag(ctx, sim);
   // poeira (quadradinhos, no estilo pixel)
   for (const d of sim.dust) {
     const p = (t - d.t0) / d.life;
@@ -1419,7 +1550,7 @@ export function drawSim(ctx: CanvasRenderingContext2D, sim: Sim): void {
       ctx.restore();
     });
   }
-  if (sim.duel && sim.duel.a && t >= T_DUEL - 0.2) {
+  if (sim.duel && sim.duel.a && t >= T_DUEL - 0.2 && !(t > T_ROUT + 0.2 && sim.outcome?.winner)) {
     const d = sim.duel;
     const a = Math.min(1, (t - T_DUEL + 0.2) / 0.4);
     const h = sim.houses[d.winner];
@@ -1463,7 +1594,7 @@ export function drawSim(ctx: CanvasRenderingContext2D, sim: Sim): void {
     const subW = o.line ? ctx.measureText(o.line).width : 0;
     ctx.font = "800 27px 'Alegreya Sans', 'Trebuchet MS', sans-serif";
     const tw = Math.min(W - 16, Math.max(ctx.measureText(title).width, subW) + 44);
-    const y = H / 2;
+    const y = H * 0.16;
     ctx.fillStyle = "rgba(0,0,0,.4)";
     roundRect(ctx, W / 2 - tw / 2 + 3, y - 33, tw, o.line ? 70 : 52, 10);
     ctx.fill();

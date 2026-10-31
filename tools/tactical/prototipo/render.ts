@@ -1,6 +1,6 @@
 /** Desenho do campo (posicionamento e luta) no canvas. */
 import { Lane } from "../../../agot-bg-game-server/src/common/tactical-battle/tacticalBattle";
-import { FIELD_LANES, FieldType, Role, Row, SquadKind, Terrain } from "../../../agot-bg-game-server/src/common/tactical-battle/tacticalBattleData";
+import { FIELD_LANES, FieldType, Role, Row, SLOT_MAX, SquadKind, Terrain } from "../../../agot-bg-game-server/src/common/tactical-battle/tacticalBattleData";
 import { rng } from "../solver";
 import { House, TERRAIN_NAMES } from "./data";
 import { grassImage } from "./assets";
@@ -176,6 +176,8 @@ export interface PlaceView {
   squads: { id: string; kind: SquadKind; role: Role; lane: Lane | null; row: Row; locked?: boolean }[];
   selected: string | null;
   hoverSlot: { lane: Lane; row: Row } | null;
+  /** tentou pôr numa casinha cheia: pisca em vermelho (age = segundos desde o toque) */
+  fullSlot?: { lane: Lane; row: Row; age: number } | null;
   dragging: string | null;
   showHint: boolean;
   /** quanto a peça escolhida rende em cada casinha (só pelo lugar) */
@@ -418,6 +420,30 @@ export function drawPlacement(ctx: CanvasRenderingContext2D, v: PlaceView, t: nu
     ctx.textBaseline = "top";
     ctx.fillStyle = "rgba(255,240,205,.8)";
     ctx.fillText(s.row == "frente" ? "FRENTE" : "TRÁS", s.x + 10, s.y + 8);
+    // casinha cheia (2 peças): avisa quando tem peça escolhida para pôr
+    const others = v.squads.filter((q) => q.lane == s.lane && q.row == s.row && q.id != v.selected).length;
+    const flash = v.fullSlot && v.fullSlot.lane == s.lane && v.fullSlot.row == s.row && v.fullSlot.age < 1.4 ? 1 - v.fullSlot.age / 1.4 : 0;
+    if ((v.selected && others >= SLOT_MAX && !v.squads.some((q) => q.id == v.selected && q.lane == s.lane && q.row == s.row)) || flash > 0) {
+      ctx.save();
+      if (flash > 0) {
+        ctx.strokeStyle = `rgba(230,70,50,${0.4 + 0.6 * flash})`;
+        ctx.lineWidth = 4;
+        roundRect(ctx, s.x, s.y, s.w, s.h, 12);
+        ctx.stroke();
+      }
+      const txt = flash > 0 ? `cheia: máx. ${SLOT_MAX}` : "cheia";
+      ctx.font = "800 13px 'Alegreya Sans', 'Trebuchet MS', sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      const tw = ctx.measureText(txt).width + 16;
+      ctx.fillStyle = flash > 0 ? "rgba(170,40,30,.95)" : "rgba(20,15,10,.8)";
+      const ly = s.y + s.h * 0.4;
+      roundRect(ctx, s.x + s.w / 2 - tw / 2, ly - 10, tw, 20, 10);
+      ctx.fill();
+      ctx.fillStyle = "#fff1dc";
+      ctx.fillText(txt, s.x + s.w / 2, ly + 1);
+      ctx.restore();
+    }
     // quanto a peça escolhida rende aqui
     const pv = v.preview?.find((x) => x.lane == s.lane && x.row == s.row);
     if (pv) {
