@@ -31,8 +31,10 @@ for (let n = 0; n < 400; n++) {
       const kind: SquadKind = R() < 0.3 ? "knight" : "footman";
       return { id: side + i, kind, role: pick(roles[kind]), lane: Math.floor(R() * 3) as 0 | 1 | 2, row: R() < 0.5 ? "frente" : "tras" } as Squad;
     });
-  const A = mk("a", 1 + Math.floor(R() * 4));
-  const D = mk("d", 1 + Math.floor(R() * 4));
+  // metade das batalhas é grande (31/out: peça vira 2 ou 4 esquadrões, até 12 por lado)
+  const big = n % 2 == 0;
+  const A = mk("a", big ? 4 + Math.floor(R() * 9) : 1 + Math.floor(R() * 4));
+  const D = mk("d", big ? 4 + Math.floor(R() * 9) : 1 + Math.floor(R() * 4));
   const res = resolveTacticalBattle({ field, attacker: { squads: A }, defender: { squads: D }, bladeHolder: n % 2 ? "attacker" : "defender" });
   const sim = createSim(field, res, { attacker: A, defender: D }, { attacker: HOUSES.stark, defender: HOUSES.lannister }, n + 1);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -47,6 +49,11 @@ for (let n = 0; n < 400; n++) {
   let crossedHere = 0;
   const where = new Map<number, string>();
   const lastAtk = new Map<number, number>();
+  const prevNH = new Map<number, number>();
+  const resets = new Map<number, number>();
+  const foeCh = new Map<number, number>();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const lastF = new Map<number, any>();
   while (sim.t < 9.6) {
     stepSim(sim, 0.02);
     men.forEach((m, i) => {
@@ -68,12 +75,17 @@ for (let n = 0; n < 400; n++) {
       if (sim.t < 4 || sim.t > 9.5) return;
       if (sim.duel && sim.t >= 6.4) return;
       const near = men.some((o) => o.side != m.side && !o.dead && o.kind != "tower" && Math.abs(o.x - m.x) <= m.reach + 6 && Math.abs(o.y - m.y) <= 14);
+      const pn = prevNH.get(i);
+      if (pn != null && pn != m.nextHit) resets.set(i, (resets.get(i) ?? 0) + 1);
+      prevNH.set(i, m.nextHit);
+      if (m.foe && m.foe !== lastF.get(i)) foeCh.set(i, (foeCh.get(i) ?? 0) + 1);
+      lastF.set(i, m.foe);
       const attacking = sim.t - m.atkStart < 0.8;
       if (near && !attacking) {
         closeT.set(i, (closeT.get(i) ?? 0) + 0.02);
         if ((closeT.get(i) ?? 0) > 1.5 && (closeT.get(i) ?? 0) < 1.52) {
           closeIdle++;
-          if (closeDbg.length < 8) closeDbg.push(`#${n} ${m.side[0]}${m.role} foe=${m.foe ? m.foe.role : "-"} mutual=${m.foe && m.foe.foe === m} eng=${m.engaged} gap=${m.foe ? Math.round(Math.abs(m.foe.x - m.x)) + "," + Math.round(Math.abs(m.foe.y - m.y)) : "-"}`);
+          if (closeDbg.length < 8) closeDbg.push(`#${n} ${m.side[0]}${m.role} foe=${m.foe ? m.foe.role : "-"} mutual=${m.foe && m.foe.foe === m} eng=${m.engaged} t=${sim.t.toFixed(1)} nh=${(m.nextHit - sim.t).toFixed(1)} atk=${(sim.t - m.atkStart).toFixed(1)} k=${m.kind} wall=${m.onWall ? "on" : m.atWall ? "at" : "-"} resets=${resets.get(i) ?? 0} foeCh=${foeCh.get(i) ?? 0} lane=${m.lane} foeLane=${m.foe ? m.foe.lane : "-"} contested=${res.lanes[m.lane].winner} foeDead=${m.foe ? m.foe.dead : "-"} gap=${m.foe ? Math.round(Math.abs(m.foe.x - m.x)) + "," + Math.round(Math.abs(m.foe.y - m.y)) : "-"}`);
         }
       } else closeT.set(i, 0);
     });

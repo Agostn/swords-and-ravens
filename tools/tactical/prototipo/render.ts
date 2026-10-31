@@ -1,6 +1,6 @@
 /** Desenho do campo (posicionamento e luta) no canvas. */
 import { Lane } from "../../../agot-bg-game-server/src/common/tactical-battle/tacticalBattle";
-import { FIELD_LANES, FieldType, Role, Row, SLOT_MAX, SquadKind, Terrain } from "../../../agot-bg-game-server/src/common/tactical-battle/tacticalBattleData";
+import { FIELD_LANES, FieldType, Role, Row, SquadKind, slotMaxFor, Terrain } from "../../../agot-bg-game-server/src/common/tactical-battle/tacticalBattleData";
 import { rng } from "../solver";
 import { House, TERRAIN_NAMES } from "./data";
 import { grassImage } from "./assets";
@@ -367,7 +367,7 @@ function drawFog(ctx: CanvasRenderingContext2D, t: number, enemy: House, count: 
   ctx.fillText(enemy.name, cx, top + 24);
   ctx.font = "800 17px 'Alegreya Sans', 'Trebuchet MS', sans-serif";
   void force;
-  ctx.fillText(`${count} ${count == 1 ? "peça escondida" : "peças escondidas"}`, cx, top + 47, bw - 10);
+  ctx.fillText(`${count} ${count == 1 ? "esquadrão escondido" : "esquadrões escondidos"}`, cx, top + 47, bw - 10);
 }
 
 export function drawPlacement(ctx: CanvasRenderingContext2D, v: PlaceView, t: number): PlacedToken[] {
@@ -402,6 +402,8 @@ export function drawPlacement(ctx: CanvasRenderingContext2D, v: PlaceView, t: nu
     ctx.textBaseline = "middle";
     ctx.fillText(label, cx, H * 0.49 + 1, LW - 20);
   });
+  // aviso de casinha cheia: desenhado por último, em cima das peças (31/out: ficava escondido atrás delas)
+  const fullMarks: (() => void)[] = [];
   // casinhas
   const pulse = 0.5 + 0.5 * Math.sin(t * 3);
   for (const s of slots(v.field)) {
@@ -423,7 +425,7 @@ export function drawPlacement(ctx: CanvasRenderingContext2D, v: PlaceView, t: nu
     // casinha cheia (2 peças): avisa quando tem peça escolhida para pôr
     const others = v.squads.filter((q) => q.lane == s.lane && q.row == s.row && q.id != v.selected).length;
     const flash = v.fullSlot && v.fullSlot.lane == s.lane && v.fullSlot.row == s.row && v.fullSlot.age < 1.4 ? 1 - v.fullSlot.age / 1.4 : 0;
-    if ((v.selected && others >= SLOT_MAX && !v.squads.some((q) => q.id == v.selected && q.lane == s.lane && q.row == s.row)) || flash > 0) {
+    if ((v.selected && others >= slotMaxFor(v.field) && !v.squads.some((q) => q.id == v.selected && q.lane == s.lane && q.row == s.row)) || flash > 0) fullMarks.push(() => {
       ctx.save();
       if (flash > 0) {
         ctx.strokeStyle = `rgba(230,70,50,${0.4 + 0.6 * flash})`;
@@ -431,7 +433,7 @@ export function drawPlacement(ctx: CanvasRenderingContext2D, v: PlaceView, t: nu
         roundRect(ctx, s.x, s.y, s.w, s.h, 12);
         ctx.stroke();
       }
-      const txt = flash > 0 ? `cheia: máx. ${SLOT_MAX}` : "cheia";
+      const txt = flash > 0 ? `cheia: máx. ${slotMaxFor(v.field)}` : "cheia";
       ctx.font = "800 13px 'Alegreya Sans', 'Trebuchet MS', sans-serif";
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
@@ -443,7 +445,7 @@ export function drawPlacement(ctx: CanvasRenderingContext2D, v: PlaceView, t: nu
       ctx.fillStyle = "#fff1dc";
       ctx.fillText(txt, s.x + s.w / 2, ly + 1);
       ctx.restore();
-    }
+    });
     // quanto a peça escolhida rende aqui
     const pv = v.preview?.find((x) => x.lane == s.lane && x.row == s.row);
     if (pv) {
@@ -549,6 +551,7 @@ export function drawPlacement(ctx: CanvasRenderingContext2D, v: PlaceView, t: nu
     ctx.fillStyle = "#f2cf7e";
     ctx.fillText(txt, W / 2, H - 22.5, W - 30);
   }
+  fullMarks.forEach((f) => f());
   return placed;
 }
 

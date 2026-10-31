@@ -205,13 +205,21 @@ export const SIEGE_OPEN_FACTOR = 0.5;
  * o nível mais alto é [4, 3, 2, 2, 2], data/baseGameData.json). No fim do jogo a batalha típica tem um exército
  * de 3 ou 4 peças mais 1 ou 2 áreas apoiando.
  * - ARMY_MAX: peças do exército na área (ataque ou defesa);
- * - SUPPORT_MAX: peças de apoio que entram no campo (o resto do apoio é raro e fica como bônus);
- * - SLOT_MAX: peças por casinha. 6 casinhas × 2 = 12 lugares para no máximo 8 peças (4 + 4); na montanha (uma
- *   faixa fechada) são 4 × 2 = 8, que ainda dá.
+ * - SUPPORT_MAX: peças de apoio que entram no campo (cada uma vira 2 esquadrões);
+ * - SLOT_MAX: esquadrões por casinha (na montanha 3, ver slotMaxFor).
  */
 export const ARMY_MAX = 4;
-export const SUPPORT_MAX = 4;
+export const SUPPORT_MAX = 2;
 export const SLOT_MAX = 2;
+/**
+ * Volume (31/out): cada peça vira mais de um esquadrão na Mesa (soldado 2, cavaleiro 2 a cavalo ou 4 a pé,
+ * máquina de cerco 2). Teto de esquadrões por lado = lugares do campo: 6 casinhas × 2 = 12 (na montanha, com
+ * uma faixa fechada, cabem 3 por casinha: 4 × 3 = 12). Assim nunca falta lugar.
+ */
+export const SQUAD_MAX = 12;
+export function slotMaxFor(field: FieldType): number {
+  return FIELD_LANES[field].includes("bloqueado") ? 3 : SLOT_MAX;
+}
 
 /** Tipos de campo (vem da área do tabuleiro). Faixas: esquerda, centro, direita. */
 export type FieldType =

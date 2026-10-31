@@ -7,7 +7,7 @@ import { resolveTacticalBattle, Squad, Lane, CardInfo, TacticalBattleResult } fr
 import {
   FIELD_LANES,
   FieldType,
-  SLOT_MAX,
+  slotMaxFor,
   rolesFor,
   Role,
   Row,
@@ -20,6 +20,9 @@ export type Strategy = Squad[];
 export interface Piece {
   kind: SquadKind;
   strength?: number;
+  /** parte da peça do tabuleiro (31/out: uma peça vira 2 ou 4 esquadrões) */
+  share?: number;
+  piece?: string;
   support?: boolean;
   fixed?: Option; // guarnição: posição fixa
 }
@@ -33,11 +36,63 @@ export function optionsFor(p: Piece, field: FieldType): Option[] {
 }
 
 /** Todas as jogadas de um lado (peças iguais são intercambiáveis: combinações com repetição). */
+/** Quantas jogadas teria a lista completa (para não montar uma lista gigante). */
+export function countStrategies(pieces: Piece[], field: FieldType): number {
+  const groups = new Map<string, Piece[]>();
+  pieces.forEach((p) => {
+    const k = `${p.kind}|${p.strength ?? 1}|${p.support ? 1 : 0}|${p.fixed ? 1 : 0}|${p.share ?? 1}`;
+    groups.set(k, [...(groups.get(k) ?? []), p]);
+  });
+  let total = 1;
+  groups.forEach((ps) => {
+    const n = optionsFor(ps[0], field).length;
+    let c = 1;
+    for (let i = 0; i < ps.length; i++) c = (c * (n + i)) / (i + 1);
+    total *= c;
+  });
+  return total;
+}
+
+/** Jogadas sorteadas (quando a lista completa é grande demais), respeitando o limite por casinha. */
+export function sampleStrategies(pieces: Piece[], field: FieldType, n: number, rand: () => number): Strategy[] {
+  const cap = slotMaxFor(field);
+  const out: Strategy[] = [];
+  for (let k = 0; k < n * 3 && out.length < n; k++) {
+    const cnt = new Map<string, number>();
+    // às vezes concentra numa faixa ou duas (jogadas "de verdade" costumam juntar a força)
+    const focus = rand() < 0.5 ? (([0, 1, 2] as Lane[]).filter(() => rand() < 0.6) as Lane[]) : [];
+    const st: Strategy = [];
+    let ok = true;
+    pieces.forEach((p, i) => {
+      if (!ok) return;
+      let opts = optionsFor(p, field).filter((o) => (cnt.get(o.lane + o.row) ?? 0) < cap);
+      const f = opts.filter((o) => focus.includes(o.lane));
+      if (f.length && rand() < 0.8) opts = f;
+      if (!opts.length) {
+        ok = false;
+        return;
+      }
+      const o = opts[Math.floor(rand() * opts.length)];
+      cnt.set(o.lane + o.row, (cnt.get(o.lane + o.row) ?? 0) + 1);
+      st.push({ id: `${p.kind}-${i}`, kind: p.kind, strength: p.strength, share: p.share, support: p.support, ...o });
+    });
+    if (ok) out.push(st);
+  }
+  return out;
+}
+
+/** Lista completa se for pequena; senão, sorteada. */
+export function strategiesFor(pieces: Piece[], field: FieldType, n: number, rand: () => number): Strategy[] {
+  // sorteio: menos jogadas (cada uma tem mais esquadrões e custa mais para testar)
+  return countStrategies(pieces, field) <= 20000 ? enumerate(pieces, field) : sampleStrategies(pieces, field, Math.min(n, 450), rand);
+}
+
 export function enumerate(pieces: Piece[], field: FieldType): Strategy[] {
+  const cap = slotMaxFor(field);
   // agrupa peças idênticas
   const groups = new Map<string, Piece[]>();
   pieces.forEach((p) => {
-    const k = `${p.kind}|${p.strength ?? 1}|${p.support ? 1 : 0}|${p.fixed ? 1 : 0}`;
+    const k = `${p.kind}|${p.strength ?? 1}|${p.support ? 1 : 0}|${p.fixed ? 1 : 0}|${p.share ?? 1}`;
     groups.set(k, [...(groups.get(k) ?? []), p]);
   });
   let partial: Strategy[] = [[]];
@@ -66,6 +121,7 @@ export function enumerate(pieces: Piece[], field: FieldType): Strategy[] {
             id: `${ps[j].kind}-${idc + j}`,
             kind: ps[j].kind,
             strength: ps[j].strength,
+            share: ps[j].share,
             support: ps[j].support,
             ...opts[oi]
           }))
@@ -79,7 +135,7 @@ export function enumerate(pieces: Piece[], field: FieldType): Strategy[] {
       for (const q of st) {
         const k = q.lane + q.row;
         const c = (cnt.get(k) ?? 0) + 1;
-        if (c > SLOT_MAX) return false;
+        if (c > cap) return false;
         cnt.set(k, c);
       }
       return true;
@@ -289,8 +345,8 @@ function sample<T>(arr: T[], max: number, rand: () => number): T[] {
 export function computerStrategy(sc: Scenario, side: "attacker" | "defender", seed: number, maxStrategies = 1200): Strategy {
   const rand = rng(seed);
   ORDERS = [sc.attackerOrder ?? 0, sc.defenderOrder ?? 0];
-  const A = sample(enumerate(sc.attacker, sc.field), maxStrategies, rand);
-  const D = sample(enumerate(sc.defender, sc.field), maxStrategies, rand);
+  const A = sample(strategiesFor(sc.attacker, sc.field, maxStrategies, rand), maxStrategies, rand);
+  const D = sample(strategiesFor(sc.defender, sc.field, maxStrategies, rand), maxStrategies, rand);
   const ac = sc.attackerCard ?? null;
   const dc = sc.defenderCard ?? null;
   const SA: number[] = [Math.floor(rand() * A.length)];
@@ -350,7 +406,7 @@ export function reactionsOf(strat: Strategy, field: FieldType): Strategy[] {
     if (s.kind == "garrison") return;
     for (const o of optionsFor({ kind: s.kind }, field)) {
       if (o.lane == s.lane && o.row == s.row && o.role == s.role) continue;
-      if ((o.lane != s.lane || o.row != s.row) && strat.filter((q) => q.lane == o.lane && q.row == o.row).length >= SLOT_MAX) continue;
+      if ((o.lane != s.lane || o.row != s.row) && strat.filter((q) => q.lane == o.lane && q.row == o.row).length >= slotMaxFor(field)) continue;
       const n = strat.slice();
       n[i] = { ...s, ...o };
       out.push(n);

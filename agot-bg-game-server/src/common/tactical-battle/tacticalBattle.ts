@@ -57,6 +57,13 @@ export interface Squad {
   row: Row;
   /** força da peça quando ela varia (dragão, guarnição); senão a do jogo original */
   strength?: number;
+  /**
+   * Parte da peça que este esquadrão representa (31/out: uma peça do tabuleiro vira vários esquadrões na Mesa:
+   * soldado = 2 esquadrões, cavaleiro = 2 de cavalaria ou 4 a pé, máquina de cerco = 2). Padrão 1.
+   */
+  share?: number;
+  /** peça do tabuleiro de onde o esquadrão saiu (para as baixas: a peça morre inteira) */
+  piece?: string;
   /** veio de apoio de uma área vizinha */
   support?: boolean;
   /** bônus da ordem de Apoio de quem mandou este esquadrão (+0/+1) */
@@ -95,9 +102,10 @@ export interface TacticInfo {
 /** Quanto a tática rende com estas tropas (0 = não dá para usar). */
 export function tacticBonus(t: Tactic | null | undefined, squads: Squad[]): number {
   if (!t) return 0;
-  const n = (r: Role): number => squads.filter((s) => s.role == r).length;
+  // conta por PEÇA (um soldado dividido em 2 esquadrões ainda conta 1), para o bônus não dobrar
+  const n = (r: Role): number => squads.filter((s) => s.role == r).reduce((a, s) => a + (s.share ?? 1), 0);
   const lanes = new Set(squads.filter((s) => s.kind != "garrison").map((s) => s.lane)).size;
-  const back = squads.filter((s) => s.row == "tras" && s.kind != "garrison").length;
+  const back = squads.filter((s) => s.row == "tras" && s.kind != "garrison").reduce((a, s) => a + (s.share ?? 1), 0);
   const count =
     t == "carga" ? n("cavalaria") : t == "cercar" ? (lanes >= 2 ? n("lanceiro") + n("batedores") : 0) : t == "flechas" ? n("arqueiro") + n("flechas") : t == "parede" ? n("escudeiro") : t == "lancas" ? n("lanceiro") : back;
   return Math.min(TACTIC_MAX, count * TACTIC_STEP[t]);
@@ -156,14 +164,14 @@ export function boardStrength(s: Squad, side: Side, field: FieldType): number {
   if (s.wounded) return 0;
   if (s.kind == "siege-engine") {
     // só vale quando ataca (ou apoia o ataque a) castelo/fortaleza
-    return side == "attacker" && (field == "castelo" || field == "fortaleza") ? SIEGE_STRENGTH_VS_CASTLE : 0;
+    return side == "attacker" && (field == "castelo" || field == "fortaleza") ? SIEGE_STRENGTH_VS_CASTLE * (s.share ?? 1) : 0;
   }
-  return s.strength ?? BOARD_STRENGTH[s.kind];
+  return (s.strength ?? BOARD_STRENGTH[s.kind]) * (s.share ?? 1);
 }
 
 export function squadValue(s: Squad): number {
   if (s.value != null) return s.value;
-  const strength = s.strength ?? BOARD_STRENGTH[s.kind];
+  const strength = (s.strength ?? BOARD_STRENGTH[s.kind]) * (s.share ?? 1);
   return BASE_VALUE[s.kind] * strength * (s.support ? SUPPORT_FACTOR : 1);
 }
 

@@ -24,8 +24,8 @@ webpack(
     const b = await chromium.launch();
     const p = await b.newPage();
     p.on("pageerror", (x) => console.log("pageerror", x.message));
-    await p.setContent("<html><body><script>" + fs.readFileSync(path.join(OUT, "t.js"), "utf8") + "</script></body></html>");
-    await p.waitForFunction(() => window.__RESULT__, null, { timeout: 180000 });
+    await p.setContent("<html><body><script>" + fs.readFileSync(path.join(OUT, "t.js"), "utf8") + "</script></body></html>", { timeout: 900000 });
+    await p.waitForFunction(() => window.__RESULT__, null, { timeout: 900000 });
     const r = await p.evaluate(() => window.__RESULT__);
     console.log(r);
     await b.close();

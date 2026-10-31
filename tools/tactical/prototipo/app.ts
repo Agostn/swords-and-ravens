@@ -4,7 +4,7 @@
  * Gerar a página: node tools/tactical/prototipo/build.js
  */
 import { boardStrength, hasFormation, tacticBonus, resolveTacticalBattle, Squad, Lane, Side, TacticalBattleResult, LaneFactor } from "../../../agot-bg-game-server/src/common/tactical-battle/tacticalBattle";
-import { ARMY_MAX, SLOT_MAX, SUPPORT_MAX, ATTACK_TACTICS, DEFENSE_TACTICS, TACTIC_BEATS, TACTIC_NAMES, TACTIC_WIN_BONUS, Tactic, BASE_VALUE, FAR_FLANK_SHARE, FIELD_LANES, FieldType, ROW_FACTOR, Role, Row, SUPPORT_FACTOR, SquadKind, TERRAIN, UNOPPOSED_FLANK_SHARE, rolesFor } from "../../../agot-bg-game-server/src/common/tactical-battle/tacticalBattleData";
+import { ARMY_MAX, SQUAD_MAX, SUPPORT_MAX, slotMaxFor, ATTACK_TACTICS, DEFENSE_TACTICS, TACTIC_BEATS, TACTIC_NAMES, TACTIC_WIN_BONUS, Tactic, BASE_VALUE, FAR_FLANK_SHARE, FIELD_LANES, FieldType, ROW_FACTOR, Role, Row, SUPPORT_FACTOR, SquadKind, TERRAIN, UNOPPOSED_FLANK_SHARE, rolesFor } from "../../../agot-bg-game-server/src/common/tactical-battle/tacticalBattleData";
 import { bestReply, computerStrategy, Piece, Scenario, rng } from "../solver";
 import {
   EMPTY_SIDE,
@@ -42,6 +42,12 @@ interface Unit {
   kind: SquadKind;
   strength?: number;
   support?: boolean;
+  /** peça do tabuleiro de onde veio (31/out: uma peça vira 2 ou 4 esquadrões) */
+  piece: string;
+  /** parte da peça (0,5 = metade) */
+  share: number;
+  /** soldado a pé que era cavaleiro (cavaleiro desmontado) */
+  dismounted?: boolean;
   role: Role;
   lane: Lane | null;
   row: Row;
@@ -111,18 +117,23 @@ function buildUnits(side: Side): Unit[] {
   const c = config[side];
   const out: Unit[] = [];
   let n = 0;
-  const add = (kind: SquadKind, extra: Partial<Unit> = {}): void => {
-    out.push({ id: `${side[0]}${n++}`, kind, role: rolesFor(kind, isSea())[0], lane: null, row: "frente", ...extra });
+  let pc = 0;
+  // uma peça do tabuleiro → "parts" esquadrões na Mesa (31/out: mais volume; a força da peça é dividida entre eles)
+  const add = (kind: SquadKind, extra: Partial<Unit> = {}, parts = 1): void => {
+    const piece = `${side[0]}p${pc++}`;
+    const roles = rolesFor(kind, isSea());
+    for (let k = 0; k < parts; k++)
+      out.push({ id: `${side[0]}${n++}`, kind, role: roles[k % roles.length], lane: null, row: "frente", piece, share: 1 / parts, ...extra });
   };
   if (isSea()) {
     for (let i = 0; i < c.ships; i++) add("ship");
   } else {
-    for (let i = 0; i < c.footmen; i++) add("footman");
-    for (let i = 0; i < c.knights; i++) add("knight");
+    for (let i = 0; i < c.footmen; i++) add("footman", {}, 2);
+    for (let i = 0; i < c.knights; i++) add("knight", {}, 2);
     const siegeCounts = side == "attacker" && (config.field == "castelo" || config.field == "fortaleza");
-    if (siegeCounts) for (let i = 0; i < c.siege; i++) add("siege-engine", { row: "tras" });
+    if (siegeCounts) for (let i = 0; i < c.siege; i++) add("siege-engine", { row: "tras" }, 2);
     if (c.dragon > 0) add("dragon", { strength: c.dragon });
-    for (let i = 0; i < c.supportFootmen; i++) add("footman", { support: true });
+    for (let i = 0; i < c.supportFootmen; i++) add("footman", { support: true }, 2);
     // navios de apoio NÃO entram no campo de terra (31/out: barco no meio do rio ficava estranho):
     // viram um bônus pronto, igual ao da ordem (ver shipBonus)
     if (side == "defender" && c.garrison > 0) add("garrison", { strength: c.garrison, lane: 1, row: "tras", locked: true });
@@ -140,11 +151,52 @@ function orderOf(side: Side): number {
 }
 
 function piecesOf(side: Side): Piece[] {
-  return buildUnits(side).map((u) =>
+  // as peças como estão agora (cavaleiro desmontado conta como os 4 soldados)
+  const list = units && units[side] && units[side].length ? units[side] : buildUnits(side);
+  return list.map((u) =>
     u.kind == "garrison"
       ? { kind: u.kind, strength: u.strength, fixed: { lane: 1 as Lane, row: "tras" as Row, role: "torre" as Role } }
-      : { kind: u.kind, strength: u.strength, support: u.support }
+      : { kind: u.kind, strength: u.strength, support: u.support, share: u.share }
   );
+}
+
+/** Quem ficou na reserva vai para o centro; se o centro encher, para a casinha livre mais perto. */
+function sendRestToCenter(side: Side): void {
+  const order: [Lane, Row][] = [[1, "frente"], [1, "tras"], [0, "frente"], [2, "frente"], [0, "tras"], [2, "tras"]];
+  units[side]
+    .filter((u) => u.lane == null)
+    .forEach((u) => {
+      const spot = order.find(([l, r]) => FIELD_LANES[config.field][l] != "bloqueado" && slotRoom(side, l, r) > 0);
+      const [l, r] = spot ?? [1 as Lane, "frente" as Row];
+      u.lane = l;
+      u.row = r;
+    });
+}
+
+/** Cavaleiro ↔ 4 soldados a pé (a força da peça é a mesma: 2). */
+function canDismount(side: Side, u: Unit): boolean {
+  return u.kind == "knight" && !u.support && units[side].length + 2 <= SQUAD_MAX;
+}
+function toggleMount(side: Side, u: Unit): void {
+  const list = units[side];
+  const rest = list.filter((x) => x.piece != u.piece);
+  let n = Math.max(...list.map((x) => Number(x.id.slice(1)) || 0)) + 1;
+  const make = (kind: SquadKind, parts: number, dismounted: boolean): Unit[] => {
+    const roles = rolesFor(kind, false);
+    return Array.from({ length: parts }, (_, k) => ({ id: `${side[0]}${n++}`, kind, role: roles[k % roles.length], lane: null, row: "frente" as Row, piece: u.piece, share: 1 / parts, dismounted }));
+  };
+  const fresh = u.kind == "knight" ? make("footman", 4, true) : make("knight", 2, false);
+  // os novos ficam onde estava a peça (o resto da peça, na reserva)
+  if (u.lane != null && slotRoom(side, u.lane, u.row, u.piece) > 0) {
+    fresh[0].lane = u.lane;
+    fresh[0].row = u.row;
+  }
+  units[side] = [...rest, ...fresh];
+  selected = fresh[0].id;
+}
+/** lugares livres na casinha, sem contar a própria peça */
+function slotRoom(side: Side, lane: Lane, row: Row, piece?: string): number {
+  return slotMaxFor(config.field) - units[side].filter((x) => x.lane == lane && x.row == row && x.piece != piece).length;
 }
 
 function scenario(): Scenario {
@@ -163,7 +215,7 @@ function scenario(): Scenario {
 function toSquads(list: Unit[]): Squad[] {
   return list
     .filter((u) => u.lane != null)
-    .map((u) => ({ id: u.id, kind: u.kind, role: u.role, lane: u.lane as Lane, row: u.row, strength: u.strength, support: u.support }));
+    .map((u) => ({ id: u.id, kind: u.kind, role: u.role, lane: u.lane as Lane, row: u.row, strength: u.strength, support: u.support, share: u.share, piece: u.piece }));
 }
 
 // ----- o computador pensa em segundo plano (Web Worker); sem worker, pensa aqui mesmo
@@ -204,7 +256,7 @@ let enemyPlan: Promise<Squad[]> | null = null;
 function applyStrategy(side: Side, strat: Squad[]): void {
   const pool = [...strat];
   units[side].forEach((u) => {
-    const i = pool.findIndex((s) => s.kind == u.kind && !!s.support == !!u.support && (s.strength ?? 0) == (u.strength ?? 0));
+    const i = pool.findIndex((s) => s.kind == u.kind && !!s.support == !!u.support && (s.strength ?? 0) == (u.strength ?? 0) && (s.share ?? 1) == u.share);
     const pick = i >= 0 ? pool.splice(i, 1)[0] : pool.splice(0, 1)[0];
     if (pick) {
       u.lane = pick.lane;
@@ -478,11 +530,11 @@ function renderCustom(): void {
       <div class="houses">${houses}</div>
       <p class="army-count${armyCount(side) >= ARMY_MAX ? " full" : ""}">Exército: <b>${armyCount(side)} de ${ARMY_MAX}</b> peças <small>(no jogo, o maior exército tem 4)</small></p>
       <div class="steps-list">
-        ${sea ? step(side, "ships", "Navios", tokenSvg(h, "abordagem", 26)) : step(side, "footmen", "Soldados", tokenSvg(h, "lanceiro", 26))}
-        ${sea ? "" : step(side, "knights", "Cavaleiros", tokenSvg(h, "cavalaria", 26))}
-        ${!sea && side == "attacker" ? step(side, "siege", "Máquinas de cerco", tokenSvg(h, "catapulta", 26), "só lutam contra castelo e fortaleza") : ""}
+        ${sea ? step(side, "ships", "Navios", tokenSvg(h, "abordagem", 26)) : step(side, "footmen", "Soldados", tokenSvg(h, "lanceiro", 26), "cada um vira 2 esquadrões na batalha")}
+        ${sea ? "" : step(side, "knights", "Cavaleiros", tokenSvg(h, "cavalaria", 26), "cada um vira 2 a cavalo ou 4 a pé")}
+        ${!sea && side == "attacker" ? step(side, "siege", "Máquinas de cerco", tokenSvg(h, "catapulta", 26), "peça de QUEM ATACA: catapulta que derruba muralha e portão (só vale contra castelo e fortaleza); cada uma vira 2") : ""}
         ${!sea ? step(side, "dragon", "Dragão: força", tokenSvg(h, "dragao", 26), "0 = sem dragão") : ""}
-        ${!sea && side == "defender" ? step(side, "garrison", "Guarnição", tokenSvg(h, "torre", 26)) : ""}
+        ${!sea && side == "defender" ? step(side, "garrison", "Guarnição", tokenSvg(h, "torre", 26), "defesa FIXA do castelo de quem defende (a ficha de guarnição do jogo): torre no centro, não é peça do exército") : ""}
       </div>
       <details class="more">
         <summary>Apoio, carta e ordem</summary>
@@ -598,8 +650,8 @@ function stopTimer(): void {
 function placeUnit(id: string, lane: Lane, row: Row): void {
   const u = units[placingSide].find((x) => x.id == id);
   if (!u || u.locked) return;
-  // no máximo SLOT_MAX peças por casinha
-  if ((u.lane != lane || u.row != row) && units[placingSide].filter((x) => x.id != id && x.lane == lane && x.row == row).length >= SLOT_MAX) {
+  // no máximo slotMaxFor esquadrões por casinha
+  if ((u.lane != lane || u.row != row) && units[placingSide].filter((x) => x.id != id && x.lane == lane && x.row == row).length >= slotMaxFor(config.field)) {
     slotFull = { lane, row, t: performance.now() };
     return;
   }
@@ -679,12 +731,17 @@ function renderPanel(): void {
     : "";
   const BACK_SVG = `<svg viewBox="0 0 20 20" width="16" height="16" aria-hidden="true"><path d="M8 4 3 9l5 5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M3.5 9H12a5 5 0 0 1 0 10h-2" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>`;
   const canBack = !!sel && sel.lane != null && !sel.locked && !reacting;
+  // cavaleiro pode lutar a pé: 1 cavaleiro = 2 esquadrões a cavalo OU 4 a pé (mesma força no tabuleiro)
+  const canMount = !!sel && !reacting && !sel.locked && (canDismount(placingSide, sel) || !!sel.dismounted);
+  const mountLabel = sel?.dismounted ? "Montar" : "A pé";
+  const mountHint = sel?.dismounted ? "volta a ser 2 esquadrões de cavalaria" : "o cavaleiro desce do cavalo: vira 4 esquadrões de soldados";
   const editor = sel
     ? `<div class="editor">
         <div class="editor-head">
           ${squadSvg(h, sel)}
           <div class="editor-title"><b>${KIND_NAMES[sel.kind]}${sel.support ? " de apoio" : ""}${sel.strength && (sel.kind == "dragon" || sel.kind == "garrison") ? ` · força ${sel.strength}` : ""}</b>
           <small>${sel.locked ? "fica sempre atrás, no centro" : sel.lane == null ? "Toque numa casinha do campo para colocar." : reacting ? "Mude a função aqui ou toque noutra casinha." : "Toque noutra casinha para mudar de lugar."}</small></div>
+          ${canMount ? `<button type="button" class="back-btn mount-btn" data-mount="${sel.id}" title="${mountHint}">${roleIcon(h, sel.dismounted ? "knight" : "footman", sel.dismounted ? "cavalaria" : "lanceiro")}<span>${mountLabel}</span></button>` : ""}
           ${canBack ? `<button type="button" class="back-btn" data-back="${sel.id}" aria-label="Tirar do campo e voltar para a reserva">${BACK_SVG}<span>Voltar p/ reserva</span></button>` : ""}
         </div>
         <div class="role-row">
@@ -700,6 +757,7 @@ function renderPanel(): void {
                   .join("")
               : ""
           }
+          ${canMount ? `<button type="button" class="back-inline mount-inline" data-mount="${sel.id}" title="${mountHint}">${roleIcon(h, sel.dismounted ? "knight" : "footman", sel.dismounted ? "cavalaria" : "lanceiro")}<b>${mountLabel}</b></button>` : ""}
           ${canBack ? `<button type="button" class="back-inline" data-back="${sel.id}" aria-label="Tirar do campo e voltar para a reserva">${BACK_SVG}<b>Reserva</b></button>` : ""}
         </div>
         ${say}
@@ -762,6 +820,13 @@ function renderPanel(): void {
         sel.role = b.dataset.role as Role;
         if (reacting) enforceOne(sel.id);
       }
+      renderPanel();
+    })
+  );
+  list.querySelectorAll<HTMLButtonElement>("[data-mount]").forEach((b) =>
+    b.addEventListener("click", () => {
+      const u = mine.find((x) => x.id == b.dataset.mount);
+      if (u) toggleMount(placingSide, u);
       renderPanel();
     })
   );
@@ -924,11 +989,7 @@ function finishTurn(): void {
     return;
   }
   stopTimer();
-  units[placingSide]
-    .filter((u) => u.lane == null)
-    .forEach((u) => {
-      u.lane = 1;
-    });
+  sendRestToCenter(placingSide);
   if (config.mode == "cpu") {
     const btn = document.getElementById("ready") as HTMLButtonElement | null;
     if (btn) {
@@ -978,7 +1039,7 @@ function cpuTactic(side: Side): Tactic | null {
 }
 
 function openTacticPicker(side: Side): void {
-  units[side].filter((u) => u.lane == null).forEach((u) => (u.lane = 1));
+  sendRestToCenter(side);
   const sq = toSquads(units[side]);
   const card = (t: Tactic | null): string => {
     if (!t) return `<button type="button" class="tac-card" data-tac="none"><b>✋ Nenhuma</b><span>sem bônus e sem risco</span></button>`;
@@ -991,18 +1052,37 @@ function openTacticPicker(side: Side): void {
   $("tactic-box").innerHTML = `
     <h2>Ordem de ${side == "attacker" ? "ataque" : "defesa"}</h2>
     <p class="muted">O bônus vem das suas tropas. Se acertar a ordem que vence a dele, ganha +${Math.round(TACTIC_WIN_BONUS * 100)}% a mais.</p>
-    <div class="tac-list">${tacticsOf(side).map(card).join("")}${card(null)}</div>`;
+    <div class="tac-list">${tacticsOf(side).map(card).join("")}${card(null)}</div>
+    <div class="tac-actions">
+      <button type="button" class="btn" id="tac-back">Voltar</button>
+      <button type="button" class="btn primary" id="tac-ok" disabled>Escolha uma ordem</button>
+    </div>`;
   $("tactic").hidden = false;
-  $("tactic-box")
-    .querySelectorAll<HTMLButtonElement>("[data-tac]")
-    .forEach((b) =>
-      b.addEventListener("click", () => {
-        tactics[side] = b.dataset.tac == "none" ? null : (b.dataset.tac as Tactic);
-        tacticChosen[side] = true;
-        $("tactic").hidden = true;
-        finishTurn();
-      })
-    );
+  // escolher marca a carta; só vai quando confirmar (31/out: antes ia direto no toque)
+  let pick: string | null = null;
+  const box = $("tactic-box");
+  box.querySelectorAll<HTMLButtonElement>("[data-tac]").forEach((b) =>
+    b.addEventListener("click", () => {
+      pick = b.dataset.tac as string;
+      box.querySelectorAll<HTMLButtonElement>("[data-tac]").forEach((x) => {
+        x.classList.toggle("on", x === b);
+        x.setAttribute("aria-pressed", String(x === b));
+      });
+      const ok = $<HTMLButtonElement>("tac-ok");
+      ok.disabled = false;
+      ok.textContent = `Confirmar: ${pick == "none" ? "nenhuma" : TACTIC_NAMES[pick as Tactic]}`;
+    })
+  );
+  $("tac-back").addEventListener("click", () => {
+    $("tactic").hidden = true;
+  });
+  $("tac-ok").addEventListener("click", () => {
+    if (!pick) return;
+    tactics[side] = pick == "none" ? null : (pick as Tactic);
+    tacticChosen[side] = true;
+    $("tactic").hidden = true;
+    finishTurn();
+  });
 }
 
 /** Texto: as duas ordens de batalha e quem venceu quem. */
@@ -1195,7 +1275,10 @@ interface BoardBattle {
   swords: number;
   towers: number;
   casualties: number;
+  /** esquadrões que morrem (todos os das peças mortas) */
   destroyed: string[];
+  /** peças do tabuleiro que morrem */
+  deadPieces: string[];
 }
 
 function boardBattle(res: TacticalBattleResult, seed: number): BoardBattle {
@@ -1214,22 +1297,25 @@ function boardBattle(res: TacticalBattleResult, seed: number): BoardBattle {
   const swords = config[winner].card?.swords ?? 0;
   const towers = config[loser].card?.towers ?? 0;
   const casualties = Math.max(0, swords - towers);
-  const pool = units[loser].filter((u) => u.lane != null && !u.support && u.kind != "garrison" && boardStrength(toSquads([u])[0], loser, config.field) > 0);
+  // baixas são de PEÇAS do tabuleiro: a peça morre inteira (todos os esquadrões dela)
+  const lost = units[loser].filter((u) => u.lane != null && !u.support && u.kind != "garrison" && boardStrength(toSquads([u])[0], loser, config.field) > 0);
+  const pool = [...new Set(lost.map((u) => u.piece))];
   const rand = rng(seed);
-  const destroyed: string[] = [];
+  const deadPieces: string[] = [];
   // máquina de cerco do lado que perdeu não recua: é destruída (regra do jogo original)
-  pool.filter((u) => u.kind == "siege-engine").forEach((u) => {
-    destroyed.push(u.id);
-    pool.splice(pool.indexOf(u), 1);
+  pool.filter((pc) => lost.some((u) => u.piece == pc && u.kind == "siege-engine")).forEach((pc) => {
+    deadPieces.push(pc);
+    pool.splice(pool.indexOf(pc), 1);
   });
-  for (let i = 0; i < casualties && pool.length; i++) destroyed.push(pool.splice(Math.floor(rand() * pool.length), 1)[0].id);
-  return { totals, winner, tie, swords, towers, casualties, destroyed };
+  for (let i = 0; i < casualties && pool.length; i++) deadPieces.push(pool.splice(Math.floor(rand() * pool.length), 1)[0]);
+  const destroyed = units[loser].filter((u) => deadPieces.includes(u.piece)).map((u) => u.id);
+  return { totals, winner, tie, swords, towers, casualties, destroyed, deadPieces };
 }
 
 /** frase curta do resultado final, para o fim da animação */
 function boardLine(b: BoardBattle): string {
   const Lz = houseOf(other(b.winner)).name;
-  const n = b.destroyed.length;
+  const n = b.deadPieces.length;
   return n == 0 ? `Ninguém morre (${b.swords == 0 ? "carta sem espada ⚔" : "as torres ▲ protegem"}) · ${Lz} recua` : `${n == 1 ? "Morre 1 peça" : `Morrem ${n} peças`} de ${Lz} · o resto recua`;
 }
 
@@ -1243,11 +1329,10 @@ function boardHtml(b: BoardBattle): string {
     return `<li><b style="color:${houseOf(side).color}">${houseOf(side).name}</b>: ${parts.join(" + ")} = <b>${t.total}</b></li>`;
   };
   const loser = other(b.winner);
-  const names = b.destroyed
-    .map((id) => units[loser].find((x) => x.id == id) as Unit)
-    .filter((u) => u.kind != "siege-engine")
-    .map((u) => `${KIND_NAMES[u.kind].toLowerCase()} (${ROLE_NAMES[u.role].toLowerCase()})`);
-  const siege = b.destroyed.some((id) => units[loser].find((x) => x.id == id)?.kind == "siege-engine") ? " A máquina de cerco de quem perde não recua: é destruída." : "";
+  const pieceUnit = (pc: string): Unit => units[loser].find((x) => x.piece == pc) as Unit;
+  const killed = b.deadPieces.map(pieceUnit).filter((u) => u && u.kind != "siege-engine");
+  const names = killed.map((u) => (u.dismounted ? "cavaleiro (a pé)" : KIND_NAMES[u.kind].toLowerCase()));
+  const siege = b.deadPieces.some((pc) => pieceUnit(pc)?.kind == "siege-engine") ? " A máquina de cerco de quem perde não recua: é destruída." : "";
   // em palavras simples: quem mata são as espadas ⚔ da carta do vencedor; as torres ▲ da carta do perdedor protegem
   const W = houseOf(b.winner).name;
   const Lz = houseOf(loser).name;
@@ -1256,7 +1341,7 @@ function boardHtml(b: BoardBattle): string {
       ? b.swords == 0
         ? `Ninguém morre: a carta de ${W} não tem espadas ⚔ (são as espadas que matam). ${Lz} recua.`
         : `Ninguém morre: a carta de ${W} tem ${b.swords} ${b.swords == 1 ? "espada ⚔" : "espadas ⚔"}, mas a de ${Lz} tem ${b.towers} ${b.towers == 1 ? "torre ▲ que protege" : "torres ▲ que protegem"}. ${Lz} recua.`
-      : `<b>${b.casualties == 1 ? "Morre 1 peça" : `Morrem ${b.casualties} peças`}</b> de ${Lz}: ${names.join(" e ")} (espadas ⚔ da carta de ${W}${b.towers ? ` menos as torres ▲ da carta de ${Lz}` : ""}). O resto recua.`;
+      : `<b>${killed.length == 1 ? "Morre 1 peça" : `Morrem ${killed.length} peças`}</b> de ${Lz}: ${names.join(" e ")} (espadas ⚔ da carta de ${W}${b.towers ? ` menos as torres ▲ da carta de ${Lz}` : ""}). O resto recua.`;
   return `<div class="board-res">
     <h3>2. Batalha no tabuleiro (regra do jogo original)</h3>
     <ul>${row("attacker")}${row("defender")}</ul>

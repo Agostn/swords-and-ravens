@@ -73,6 +73,26 @@ const GLYPHS: Record<Glyph, string[]> = {
   dragon: ["#.#.#..", ".###...", "..###.#", "..#####", ".####..", "#.#.#..", "..#.#.."]
 };
 
+/** As linhas do brasão (7×7, "#" = cor), para quem desenha linha por linha (bandeira tremulando). */
+export function glyphRows(g: Glyph): string[] {
+  return GLYPHS[g];
+}
+
+/**
+ * Cores do estandarte de cada Casa (31/out, estilo dos estandartes em pixel art: pano comprido pendurado numa
+ * travessa, ponta embaixo com franja). Desenho nosso; só as cores e o bicho de cada Casa.
+ */
+export const BANNERS: Record<string, { field: string; charge: string; edge: string; fringe: string }> = {
+  Stark: { field: "#ecebe6", charge: "#6f757b", edge: "#b9bec4", fringe: "#c9ccd0" },
+  Lannister: { field: "#b3222c", charge: "#f0c95a", edge: "#7d141c", fringe: "#e8c766" },
+  Baratheon: { field: "#e8b923", charge: "#1d1a17", edge: "#a37e10", fringe: "#2a2622" },
+  Greyjoy: { field: "#1f2226", charge: "#d9b13f", edge: "#0f1113", fringe: "#d9b13f" },
+  Tyrell: { field: "#3f8a3a", charge: "#f0cf4a", edge: "#285a25", fringe: "#e7e3d0" },
+  Martell: { field: "#e5801f", charge: "#b8261a", edge: "#a2540f", fringe: "#f2c14b" },
+  Arryn: { field: "#3c6db4", charge: "#f3f1e8", edge: "#244878", fringe: "#d8dde4" },
+  Targaryen: { field: "#1b1716", charge: "#cf2a20", edge: "#0b0a09", fringe: "#cf2a20" }
+};
+
 /** Desenha o brasão (7×7) em (x, y), com 1 px por ponto. */
 export function drawGlyph(ctx: CanvasRenderingContext2D, g: Glyph, x: number, y: number, color: string, scale = 1): void {
   ctx.fillStyle = color;

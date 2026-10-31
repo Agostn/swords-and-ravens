@@ -319,3 +319,28 @@ o outro vai fazer, mas o que mais conta é escolher a ordem que combina com as S
   Os dois golpeiam por cima das ameias (antes, ninguém conseguia acertar e os bonecos morriam sem levar golpe).
   **No portão**, quem defende abre e sai para lutar na frente do muro (antes a luta ficava em cima da pedra e
   parecia "dentro do muro").
+
+## Mais volume: peça vira esquadrões (31/out)
+- Cada peça do tabuleiro vira mais de um esquadrão na Mesa, e a força da peça é dividida entre eles
+  (`share` no motor): **soldado = 2 esquadrões**; **cavaleiro = 2 esquadrões a cavalo ou 4 a pé** (botão
+  "A pé" / "Montar"; a força no tabuleiro continua 2); **máquina de cerco = 2**; soldado de apoio = 2. Dragão,
+  navio e guarnição continuam 1.
+- Assim, quem tem mais cavaleiros que soldados pode desmontar e cobrir as funções de soldado (lanceiro,
+  escudeiro, arqueiro).
+- O bônus das ordens conta por PEÇA (um soldado dividido em 2 lanceiros conta 1), para não dobrar.
+- Baixas continuam por peça: se a peça morre no tabuleiro, todos os esquadrões dela morrem.
+- Limites: exército até 4 peças; apoio no campo até 2 peças; até **12 esquadrões por lado**, 2 por casinha
+  (na montanha, com uma faixa fechada, 3 por casinha). Quem sobra na reserva ao apertar "Pronto" vai para a
+  casinha livre mais perto do centro.
+- O computador: com muitos esquadrões a lista de jogadas fica gigante, então ele sorteia 450 jogadas (metade
+  concentrando a força em 1 ou 2 faixas) em vez de testar todas.
+- **Guarnição x máquina de cerco:** guarnição é a defesa fixa do castelo de quem defende (a ficha de guarnição
+  do jogo), fica no centro e não é peça do exército. Máquina de cerco é peça de quem ataca: a catapulta que
+  derruba muralha e portão, e só vale contra castelo e fortaleza. Agora cada máquina tem 2 soldados operando e
+  atira onde houver luta.
+- **Dragão contra dragão:** se os dois lados têm dragão, eles brigam no ar, rodando um em volta do outro, e o
+  fogo entre eles não queima o chão.
+- **Estandarte:** no fim, o vencedor finca um estandarte maior, no estilo dos estandartes pendurados (travessa,
+  pano comprido com o brasão, ponta com franja), nas cores de cada Casa.
+- **Ordem de batalha:** tocar numa ordem só marca; precisa apertar "Confirmar" (ou "Voltar").
+- A etiqueta "faixa: X" do fim saiu (confundia); fica só o resultado final.

@@ -187,6 +187,8 @@
   .back-btn:active { transform: translateY(1px); }
   /* no celular o topo do editor some: o mesmo botão vai para o fim da fileira de funções */
   .back-inline { display: none; }
+  .mount-btn .role-fig { width: 22px; height: auto; margin: -4px 0; }
+  .mount-inline .role-fig { width: 24px; height: auto; }
   .role-say { margin: 0; font-size: 14px; color: var(--muted); line-height: 1.4; }
   .role-say b { color: var(--parch); }
   .role-say .ok { color: #9bd786; font-weight: 700; }
@@ -205,6 +207,11 @@
   .tac-card .no { color: #ee8f80; }
   .tac-card.off { opacity: .5; cursor: default; }
   .tac-card:not(.off):hover { border-color: var(--gold); }
+  .tac-card.on { border-color: var(--gold); background: #3c2f1f; box-shadow: 0 0 0 2px rgba(224,179,84,.45); }
+  .tac-actions { display: flex; gap: 8px; margin-top: 12px; }
+  .tac-actions .btn { flex: 1 1 auto; }
+  .tac-actions #tac-back { flex: 0 0 auto; }
+  .tac-actions #tac-ok:disabled { opacity: .55; cursor: default; }
   .tac-line { margin: 4px 0; font-size: 13.5px; color: #f2cf7e; }
   .board-res { background: rgba(0,0,0,.18); border: 1px solid var(--line); border-radius: var(--r); padding: 10px 12px; margin: 8px 0; font-size: 14px; line-height: 1.4; }
   .lanes-title { margin: 10px 0 4px; font-size: 15px; }

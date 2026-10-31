@@ -16,7 +16,7 @@ import { Lane, Side, Squad, TacticalBattleResult } from "../../../agot-bg-game-s
 import { FIELD_LANES, FieldType, Role, Row, SquadKind, TACTIC_NAMES, TACTIC_WIN_BONUS } from "../../../agot-bg-game-server/src/common/tactical-battle/tacticalBattleData";
 import { rng } from "../solver";
 import { House, ROLE_NAMES, TERRAIN_NAMES } from "./data";
-import { drawGlyph, styleOf } from "./houseStyle";
+import { BANNERS, glyphRows, styleOf } from "./houseStyle";
 import { DRAGON_SCALE, Kind, Pose, drawFallen, drawUnit, kindOf } from "./figures";
 import { H, LW, W, ease, roundRect, terrainImage } from "./render";
 import { WALL_Y, drawWalls } from "./walls";
@@ -701,55 +701,101 @@ function flagStep(sim: Sim, m: Man, dt: number): boolean {
   return true;
 }
 
-/** a bandeira: carregada (inclinada) ou fincada (sobe e tremula) */
+/**
+ * O estandarte da Casa (31/out, maior e no estilo de estandarte pendurado): mastro, travessa em cima, pano
+ * comprido com o brasão, ponta embaixo e franja. Carregado = menor e inclinado; fincado = sobe e tremula.
+ */
 function drawFlag(ctx: CanvasRenderingContext2D, sim: Sim): void {
   const f = sim.flag;
   if (!f) return;
   const t = sim.t;
-  const st = styleOf(sim.houses[f.side]);
-  let bx: number, by: number, tall: number, lean: number;
+  const h = sim.houses[f.side];
+  const bn = BANNERS[h.name] ?? { field: h.color, charge: styleOf(h).charge, edge: "#000", fringe: "#e0b354" };
+  let bx: number, by: number, tall: number, lean: number, size: number;
   if (f.man && (f.planted === Infinity || f.man.kind == "ship")) {
     const m = f.man;
     if (m.dead) return;
     const ship = m.kind == "ship";
     bx = m.x + (ship ? 0 : 7 * (m.dir || 1));
     by = m.y - (ship ? 30 : m.kind == "horse" ? 18 : 10);
-    tall = ship ? 34 * Math.min(1, Math.max(0, (t - f.planted) / 0.5)) : 30;
-    lean = ship ? 0 : 0.35 * (m.dir || 1);
-    if (ship && tall <= 0) return;
+    const up = ship ? Math.min(1, Math.max(0, (t - f.planted) / 0.5)) : 1;
+    if (up <= 0) return;
+    tall = (ship ? 46 : 40) * up;
+    lean = ship ? 0 : 0.3 * (m.dir || 1);
+    size = ship ? 1.1 : 0.9;
   } else {
     if (t < f.planted) return;
     bx = f.x;
     by = f.y;
-    const p = ease(Math.min(1, (t - f.planted) / 0.45));
-    tall = 26 + 34 * p;
+    const p = ease(Math.min(1, (t - f.planted) / 0.5));
+    tall = 40 + 34 * p;
     lean = 0.25 * (1 - p);
+    size = 1.1 + 0.6 * p;
   }
   const tx = bx + Math.sin(lean) * tall;
   const ty = by - Math.cos(lean) * tall;
+  const px = (x: number, y: number, w: number, hh: number, c: string): void => {
+    ctx.fillStyle = c;
+    ctx.fillRect(Math.round(x), Math.round(y), Math.max(1, Math.round(w)), Math.max(1, Math.round(hh)));
+  };
   ctx.save();
-  // sombra do mastro no chão
-  ctx.fillStyle = "rgba(0,0,0,.28)";
-  ctx.fillRect(Math.round(bx - 1), Math.round(by - 1), 10, 3);
-  ctx.strokeStyle = "#3b2a17";
-  ctx.lineWidth = 2.4;
+  // sombra no chão
+  ctx.fillStyle = "rgba(0,0,0,.3)";
+  ctx.beginPath();
+  ctx.ellipse(bx + 3, by + 1, 7, 2.5, 0, 0, Math.PI * 2);
+  ctx.fill();
+  // mastro
+  ctx.strokeStyle = "#2e2013";
+  ctx.lineWidth = 3;
   ctx.beginPath();
   ctx.moveTo(bx, by);
   ctx.lineTo(tx, ty);
   ctx.stroke();
-  ctx.fillStyle = "#e0b354";
-  ctx.fillRect(Math.round(tx - 2), Math.round(ty - 3), 4, 3);
-  // pano: tremula em fatias de 2 px
-  const fw = 28;
-  const fh = 20;
-  for (let i = 0; i < fw; i += 2) {
-    const wv = Math.sin(t * 7 - i * 0.35) * (i / fw) * 2.2;
-    ctx.fillStyle = st.field;
-    ctx.fillRect(Math.round(tx + 1 + i), Math.round(ty + wv), 2, fh);
+  ctx.strokeStyle = "#6b4a2a";
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(bx - 0.5, by);
+  ctx.lineTo(tx - 0.5, ty);
+  ctx.stroke();
+  // pano: 13 colunas × 24 linhas de "pixels" de tamanho u, pendurado numa travessa
+  const u = size;
+  const cols = 18;
+  const rows = 28;
+  const bw = cols * u;
+  const x0 = tx - bw / 2;
+  const y0 = ty + 3 * u;
+  px(x0 - 2 * u, ty + 1 * u, bw + 4 * u, 2 * u, "#3b2a17"); // travessa
+  px(x0 - 3 * u, ty + 0.5 * u, 2 * u, 3 * u, "#e0b354");
+  px(x0 + bw + u, ty + 0.5 * u, 2 * u, 3 * u, "#e0b354");
+  px(tx - u, ty - 2 * u, 2 * u, 2 * u, "#e0b354"); // ponta do mastro
+  const g = glyphRows(styleOf(h).glyph);
+  for (let r = 0; r < rows; r++) {
+    // tremula mais embaixo
+    const wv = Math.sin(t * 5 - r * 0.32) * (r / rows) * 1.6 * u;
+    // ponta embaixo: as últimas linhas vão afinando até a ponta
+    const cut = r < rows - 6 ? 0 : (r - (rows - 6)) * 1.5;
+    const xa = x0 + wv + cut * u;
+    const wa = bw - 2 * cut * u;
+    if (wa <= 0) continue;
+    const y = y0 + r * u;
+    px(xa, y, wa, u, bn.field);
+    // borda dos lados (mais escura)
+    px(xa, y, u, u, bn.edge);
+    px(xa + wa - u, y, u, u, bn.edge);
+    // faixa de cima
+    if (r < 2) px(xa, y, wa, u, bn.edge);
+    // brasão 7×7 com cada ponto de 2u (14 × 14), centrado, das linhas 5 a 18
+    const gr = Math.floor((r - 5) / 2);
+    if (r >= 5 && gr < 7) {
+      const row = g[gr];
+      for (let i = 0; i < 7; i++) if (row[i] == "#") px(xa + (2 + i * 2) * u, y, 2 * u, u, bn.charge);
+    }
+    // franja na ponta
+    if (r >= rows - 6) {
+      px(xa - u, y + u, u, u, bn.fringe);
+      px(xa + wa, y + u, u, u, bn.fringe);
+    }
   }
-  ctx.fillStyle = st.trim;
-  ctx.fillRect(Math.round(tx + 1), Math.round(ty), fw, 1);
-  drawGlyph(ctx, st.glyph, tx + 7, ty + 3 + Math.sin(t * 7 - 5) * 0.9, st.charge, 2);
   ctx.restore();
 }
 
@@ -940,7 +986,9 @@ export function stepSim(sim: Sim, dt: number): void {
       continue;
     }
     if (isStatic(m)) {
-      if (t > m.nextShot && t < T_ROUT && contested(m.lane)) {
+      // a máquina de cerco atira onde houver luta (antes, fora da faixa com luta ela ficava parada)
+      const anyFight = m.kind == "siege" && t > T_FIGHT - 1 && sim.men.some((o) => o.side != m.side && !o.dead && o.engaged);
+      if (t > m.nextShot && t < T_ROUT && (contested(m.lane) || anyFight)) {
         if (m.kind == "siege" && sim.breach[m.lane] && t < T_FIGHT + 0.8) {
           sim.shots.push({ x0: m.x + 14, y0: m.y - 34 * FIG, to: null, tx: m.lane * LW + LW / 2 + (r() - 0.5) * 40, ty: H * 0.415, t0: t, dur: 0.9, kind: "stone", from: m });
         } else {
@@ -952,9 +1000,32 @@ export function stepSim(sim: Sim, dt: number): void {
       }
       continue;
     }
-    if (!contested(m.lane)) {
-      steer(m, m.gx, m.gy + (m.side == "attacker" ? -40 : 40), m.speed * 0.5, dt);
+    // dragão com dragão inimigo vivo: vai brigar com ele, esteja onde estiver
+    if (m.kind == "dragon" && sim.men.some((o) => o.kind == "dragon" && o.side != m.side && !o.dead)) {
+      stepDragon(sim, m, dt);
       continue;
+    }
+    if (!contested(m.lane)) {
+      // faixa sem luta, mas com inimigo colado (batalha grande, alguém escapou para cá): luta com ele
+      let e: Man | null = null;
+      if (melee(m) && t > T_FIGHT - 1) {
+        let bd = m.reach + 30;
+        for (const o of sim.men) {
+          if (o.side == m.side || o.dead || isStatic(o) || o.kind == "dragon" || o.kind == "ship") continue;
+          const d = Math.hypot(o.x - m.x, o.y - m.y);
+          if (d < bd) {
+            bd = d;
+            e = o;
+          }
+        }
+      }
+      if (!e) {
+        steer(m, m.gx, m.gy + (m.side == "attacker" ? -40 : 40), m.speed * 0.5, dt);
+        continue;
+      }
+      m.lane = e.lane;
+      m.foe = e;
+      m.spot = false;
     }
     if (m.kind == "dragon") {
       stepDragon(sim, m, dt);
@@ -999,7 +1070,7 @@ export function stepSim(sim: Sim, dt: number): void {
       }
     }
     // inimigo colado em mim e o meu alvo longe? luto com quem está perto (não fico rodando)
-    if (Math.hypot(m.foe.x - m.x, m.foe.y - m.y) > m.reach + 30) {
+    if (Math.hypot(m.foe.x - m.x, m.foe.y - m.y) > m.reach + 14) {
       let close: Man | null = null;
       let cd = Infinity;
       for (const o of sim.men) {
@@ -1137,6 +1208,12 @@ export function stepSim(sim: Sim, dt: number): void {
     if (!b.hit && p > 0.3) {
       b.hit = true;
       sim.shake = Math.max(sim.shake, 3);
+      if (b.to.kind == "dragon") {
+        // briga no ar: só o dragão leva o fogo (nada de chão queimado)
+        if (!b.to.dead) hit(sim, b.from, b.to, 1.5);
+        puff(sim, b.to.x, b.to.y - 20, 10, 60, 5, "255,170,80");
+        continue;
+      }
       sim.men.forEach((o) => {
         if (!o.dead && o.side != b.from.side && Math.hypot(o.x - b.to.x, o.y - b.to.y) < 36) hit(sim, b.from, o, 2);
       });
@@ -1258,6 +1335,25 @@ export function stepSim(sim: Sim, dt: number): void {
 /** Dragão: voa até o lado de um inimigo e cospe fogo da boca até ele. */
 function stepDragon(sim: Sim, m: Man, dt: number): void {
   const t = sim.t;
+  // dragão contra dragão (31/out): se o outro lado tem dragão vivo, eles brigam no ar, rodando um em volta do outro
+  const rival = sim.men.find((o) => o.kind == "dragon" && o.side != m.side && !o.dead);
+  if (rival) {
+    m.foe = rival;
+    const mx = (m.x + rival.x) / 2;
+    const my = Math.max(90, Math.min(H - 120, (m.y + rival.y) / 2));
+    const a = Math.atan2(m.y - my, m.x - mx) + 1.4 * dt + 0.05;
+    const R = t < T_FIGHT - 1 ? 110 : 62;
+    steer(m, Math.max(40, Math.min(W - 40, mx + Math.cos(a) * R)), my + Math.sin(a) * R * 0.55 + Math.sin(t * 2 + m.phase) * 4, m.speed, dt);
+    m.flip = rival.x < m.x;
+    const d = Math.hypot(rival.x - m.x, rival.y - m.y);
+    if (d < 170 && t > m.nextShot && t > T_FIGHT - 0.8 && t < T_ROUT) {
+      sim.breaths.push({ from: m, to: rival, t0: t, dur: 0.9, hit: false });
+      m.shotAt = t;
+      m.nextShot = t + 1.2 + sim.rand() * 0.5;
+    }
+    if (t - m.shotAt < 1.0) m.atk = 1 - (t - m.shotAt) / 1.0;
+    return;
+  }
   if (!m.foe || m.foe.dead || m.foe.lane != m.lane) {
     let best: Man | null = null;
     let bs = -1;
@@ -1297,6 +1393,36 @@ export function dragonMouth(x: number, y: number, flip: boolean, s: number): [nu
 }
 
 // ---------------------------------------------------------------- desenho
+/**
+ * Soldado que opera a máquina de cerco (31/out): fica do lado dela e puxa a alavanca quando ela atira.
+ * front = false desenha o de trás (antes da máquina), true o da frente (depois).
+ */
+function drawCrew(ctx: CanvasRenderingContext2D, m: Man, h: House, t: number, front: boolean): void {
+  const spots: [number, number][] = [[-17, -3], [15, 5]];
+  spots.forEach(([dx, dy], i) => {
+    if ((dy > 0) != front) return;
+    const x = m.x + dx * FIG;
+    const y = m.y + dy * FIG;
+    const q = (t - m.shotAt + 0.18 + i * 0.05) / 0.45;
+    const p: Pose = {
+      role: i == 0 ? "escudeiro" : "lanceiro",
+      kind: "foot",
+      house: h,
+      back: false,
+      flip: dx > 0,
+      walk: 0,
+      atk: 0,
+      seed: m.seed + i,
+      time: t + m.phase + i,
+      atkPhase: q >= 0 && q < 1 ? q : undefined,
+      moving: false,
+      guard: false
+    };
+    if (m.dead) drawFallen(ctx, x, y, FIG, p, t - m.deadAt);
+    else drawUnit(ctx, x, y, FIG, p, m.dir);
+  });
+}
+
 function pose(m: Man, h: House, t: number): Pose {
   const flash = t - m.hitT < 0.14 ? 1 - (t - m.hitT) / 0.14 : 0;
   const q = (t - m.atkStart) / 0.4;
@@ -1437,8 +1563,10 @@ export function drawSim(ctx: CanvasRenderingContext2D, sim: Sim): void {
     ctx.restore();
   }
   const drawMan = (m: Man): void => {
+    if (m.kind == "siege") drawCrew(ctx, m, sim.houses[m.side], t, false);
     if (m.dead) drawFallen(ctx, m.x, m.y, FIG, pose(m, sim.houses[m.side], t), t - m.deadAt);
     else drawUnit(ctx, m.x, m.y, FIG, pose(m, sim.houses[m.side], t), m.dir);
+    if (m.kind == "siege") drawCrew(ctx, m, sim.houses[m.side], t, true);
   };
   for (const m of order) if (behind(m)) drawMan(m);
   ctx.globalAlpha = 1;
@@ -1609,7 +1737,8 @@ export function drawSim(ctx: CanvasRenderingContext2D, sim: Sim): void {
     }
     ctx.restore();
   }
-  if (t > T_ROUT + 0.2) {
+  // vencedor de cada faixa: só sem o resultado final (com ele, a etiqueta "faixa: X" confundia, 31/out)
+  if (t > T_ROUT + 0.2 && !sim.outcome?.winner) {
     sim.res.lanes.forEach((L, i) => {
       if (L.winner == null) return;
       // com o resultado final na tela, as faixas viram etiquetas pequenas em cima
