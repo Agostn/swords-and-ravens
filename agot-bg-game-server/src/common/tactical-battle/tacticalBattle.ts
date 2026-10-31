@@ -36,6 +36,7 @@ import {
   TERRAIN,
   UNOPPOSED_FLANK_SHARE,
   DRAGON_AIR_SHARE,
+  DRAGON_AIR_FAR_SHARE,
   FAR_FLANK_SHARE,
   NO_CONTACT_RULE,
   Tactic,
@@ -126,7 +127,7 @@ export interface TacticalBattleInput {
 /** Um motivo que pesou numa faixa (vira frase no resumo depois da animação). */
 export interface LaneFactor {
   side: Side;
-  kind: "counter" | "weak" | "terrain" | "wall-breach" | "wall" | "flank" | "far-flank" | "card" | "screen" | "empty" | "formation" | "air";
+  kind: "counter" | "weak" | "terrain" | "wall-breach" | "wall" | "flank" | "far-flank" | "card" | "screen" | "empty" | "formation" | "air" | "air-far";
   role?: Role;
   vs?: Role;
   terrain?: Terrain;
@@ -400,7 +401,7 @@ function resolveOnce(input: TacticalBattleInput): TacticalBattleResult {
       });
     }
   });
-  // Dragão voa (31/out): além da sua faixa, ajuda TODAS as outras faixas com luta com DRAGON_AIR_SHARE da força.
+  // Dragão voa (31/out): além da sua faixa, ajuda as outras faixas com luta: ao lado 90%, na outra ponta 80%.
   for (const side of ["attacker", "defender"] as Side[]) {
     prepared[side]
       .filter((s) => s.kind == "dragon")
@@ -408,10 +409,11 @@ function resolveOnce(input: TacticalBattleInput): TacticalBattleResult {
         ([0, 1, 2] as Lane[]).forEach((n) => {
           if (!contested(n) || n == dr.lane) return;
           const t = lanes[n];
-          const dmg = laneDamage(side, [dr], squadsIn(other(side), n), t.terrain, cardOf(side), []) * DRAGON_AIR_SHARE;
+          const far = Math.abs(n - dr.lane) == 2;
+          const dmg = laneDamage(side, [dr], squadsIn(other(side), n), t.terrain, cardOf(side), []) * (far ? DRAGON_AIR_FAR_SHARE : DRAGON_AIR_SHARE);
           if (side == "attacker") t.attackerScore += dmg;
           else t.defenderScore += dmg;
-          t.factors.push({ side, kind: "air" });
+          t.factors.push({ side, kind: far ? "air-far" : "air" });
         });
       });
   }

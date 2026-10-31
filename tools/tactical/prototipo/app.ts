@@ -21,7 +21,7 @@ import {
   TERRAIN_HINT,
   TERRAIN_NAMES
 } from "./data";
-import { H, PlacedToken, W, drawPlacement, slots } from "./render";
+import { H, PlacedToken, W, backBtnRect, drawPlacement, slots } from "./render";
 import { REACH_LABEL, Sim, T_END, createSim, drawSim, laneReasons, setGore, stepSim } from "./battle";
 import { SLIDES, drawSlide } from "./tutorial";
 import { drawSquad, drawUnit, kindOf } from "./figures";
@@ -994,6 +994,14 @@ function canvasDown(e: PointerEvent): void {
   if (phase != "place" && phase != "react") return;
   const p = canvasPoint(e.clientX, e.clientY);
   if (!p) return;
+  // botão "Voltar p/ reserva" desenhado no canto do campo
+  const bb = backBtnRect;
+  if (bb && phase == "place" && p[0] >= bb.x && p[0] <= bb.x + bb.w && p[1] >= bb.y && p[1] <= bb.y + bb.h) {
+    const su = units[placingSide].find((u) => u.id == selected);
+    if (su && !su.locked) su.lane = null;
+    renderPanel();
+    return;
+  }
   const hit = placedHit.find((t) => p[0] >= t.x && p[0] <= t.x + t.w && p[1] >= t.y && p[1] <= t.y + t.h);
   if (hit) {
     const hu = units[placingSide].find((x) => x.id == hit.id);
@@ -1503,6 +1511,10 @@ function startLoop(): void {
         selected,
         hoverSlot,
         fullSlot: slotFull ? { lane: slotFull.lane, row: slotFull.row, age: (now - slotFull.t) / 1000 } : null,
+        canReturn: !reacting && (() => {
+          const su = units[placingSide].find((u) => u.id == selected);
+          return !!su && su.lane != null && !su.locked;
+        })(),
         dragging: dragging?.moved ? dragging.id : null,
         showHint: !!selected,
         preview: previewFor(units[placingSide].find((u) => u.id == selected) ?? null),
@@ -1562,7 +1574,9 @@ function factorText(f: LaneFactor): string | null {
     case "formation":
       return `${who}: formação (corpo a corpo na frente + atiradores atrás) +15%`;
     case "air":
-      return `${who}: o dragão voou até aqui e ajudou (90% da força dele)`;
+      return `${who}: o dragão voou da faixa ao lado e ajudou (90% da força dele)`;
+    case "air-far":
+      return `${who}: o dragão voou da outra ponta e ajudou (80% da força dele)`;
     default:
       return null;
   }

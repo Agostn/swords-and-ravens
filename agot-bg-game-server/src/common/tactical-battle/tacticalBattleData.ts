@@ -208,8 +208,12 @@ export const SIEGE_OPEN_FACTOR = 0.5;
  * - SUPPORT_MAX: peças de apoio de cada tipo (o apoio NÃO entra no campo: vira bônus pronto, como a ordem);
  * - SLOT_MAX: esquadrões por casinha (2; na montanha 3, ver slotMaxFor).
  */
-/** Dragão voa: ajuda todas as faixas com luta, além da sua, com 90% da força ("praticamente 100%", 31/out). */
+/**
+ * Dragão voa: além da sua faixa, ajuda as outras faixas com luta (31/out, pedido do Agostinho):
+ * faixa ao lado 90% da força; a da outra ponta 80% (no meio, ele alcança as duas com 90%).
+ */
 export const DRAGON_AIR_SHARE = 0.9;
+export const DRAGON_AIR_FAR_SHARE = 0.8;
 
 export const ARMY_MAX = 4;
 export const SUPPORT_MAX = 4;

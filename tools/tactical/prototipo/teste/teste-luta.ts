@@ -9,13 +9,17 @@ import { T_END, createSim, hitStats, setGore, stepSim } from "../battle";
 import { HOUSES } from "../data";
 
 setGore(false);
-const fields: FieldType[] = ["planicie", "floresta", "rio", "castelo", "colinas", "pantano"];
+const fields: FieldType[] = ["planicie", "floresta", "rio", "castelo", "colinas", "pantano", "fortaleza"];
 const roles: Record<string, Role[]> = { footman: ["lanceiro", "escudeiro", "arqueiro"], knight: ["cavalaria", "batedores"] };
 let seed = 7;
 const R = (): number => (seed = (seed * 16807) % 2147483647) / 2147483647;
 const pick = <T>(a: T[]): T => a[Math.floor(R() * a.length)];
 const out: string[] = [];
 let idleCases = 0;
+// "à toa": vivo, sem golpe/tiro e quase parado por mais de 2 s no meio da luta (31/out: muralha e dragão)
+let lazyCases = 0;
+const lazyField: Record<string, number> = {};
+const lazyDbg: string[] = [];
 let flagsOk = 0;
 const roleStat: Record<string, { t: number; atk: number }> = {};
 const flagFail: string[] = [];
@@ -35,6 +39,9 @@ for (let n = 0; n < 400; n++) {
   const big = n % 2 == 0;
   const A = mk("a", big ? 4 + Math.floor(R() * 9) : 1 + Math.floor(R() * 4));
   const D = mk("d", big ? 4 + Math.floor(R() * 9) : 1 + Math.floor(R() * 4));
+  // às vezes um dragão (de um lado ou dos dois)
+  if (n % 5 == 0) A.push({ id: "adr", kind: "dragon", role: "dragao", lane: Math.floor(R() * 3), row: "tras", strength: 3 } as Squad);
+  if (n % 10 == 0) D.push({ id: "ddr", kind: "dragon", role: "dragao", lane: Math.floor(R() * 3), row: "tras", strength: 3 } as Squad);
   const res = resolveTacticalBattle({ field, attacker: { squads: A }, defender: { squads: D }, bladeHolder: n % 2 ? "attacker" : "defender" });
   const sim = createSim(field, res, { attacker: A, defender: D }, { attacker: HOUSES.stark, defender: HOUSES.lannister }, n + 1);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -49,6 +56,7 @@ for (let n = 0; n < 400; n++) {
   let crossedHere = 0;
   const where = new Map<number, string>();
   const lastAtk = new Map<number, number>();
+  const lazyT = new Map<number, number>();
   const prevNH = new Map<number, number>();
   const resets = new Map<number, number>();
   const foeCh = new Map<number, number>();
@@ -89,6 +97,22 @@ for (let n = 0; n < 400; n++) {
         }
       } else closeT.set(i, 0);
     });
+    if (sim.t > 3.7 && sim.t < 9.9 && !(sim.duel && sim.t >= 6.4))
+      men.forEach((m, i) => {
+        if (m.dead || m.kind == "tower" || m.kind == "siege") return;
+        const busy = m.atkStart > sim.t - 0.9 || m.shotAt > sim.t - 1.6 || Math.hypot(m.vx, m.vy) > 8;
+        const v = busy ? 0 : (lazyT.get(i) ?? 0) + 0.02;
+        lazyT.set(i, v);
+        if (v > 2 && v < 2.021) {
+          lazyCases++;
+          lazyField[field] = (lazyField[field] ?? 0) + 1;
+          if (lazyDbg.length < 30 && (field == "castelo" || field == "fortaleza") && n % 3 == 0) {
+            const en = men.filter((o) => o.side != m.side && !o.dead && o.kind != "tower");
+            const nd = en.length ? Math.round(Math.min(...en.map((o) => Math.hypot(o.x - m.x, o.y - m.y)))) : -1;
+            lazyDbg.push(`#${n} ${field} ${m.side[0]}${m.role}/${m.kind} t=${sim.t.toFixed(1)} lane=${m.lane} cont=${res.lanes[m.lane].winner} wall=${m.onWall ? "on" : m.atWall ? "at" : "-"} y=${Math.round(m.y)} foe=${m.foe ? m.foe.role + "@" + Math.round(Math.hypot(m.foe.x - m.x, m.foe.y - m.y)) : "-"} inimigo+perto=${nd}`);
+          }
+        }
+      });
     // golpes por papel: tempo com inimigo perto (até 80 px) e quantos golpes começou nesse tempo
     if (sim.t > 3.4 && sim.t < 9.9 && !(sim.duel && sim.t >= 6.4))
       men.forEach((m, i) => {
@@ -134,4 +158,4 @@ for (let n = 0; n < 400; n++) {
   }
 }
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-(window as any).__RESULT__ = `batalhas 400, com soldado parado mais de 1 s: ${idleCases}; atravessou o inimigo: ${crossings} vezes em ${crossBattles} batalhas; perto sem atacar: ${closeIdle}; bandeira fincada: ${flagsOk}/400\ngolpes por segundo perto do inimigo: ${Object.entries(roleStat).map(([r, v]) => `${r} ${(v.atk / v.t).toFixed(2)}`).join(", ")}\nacertos: ${Object.entries(hitStats).map(([r, v]) => `${r} ${v.land}/${v.start} (errou ${v.miss})`).join(", ")}\n` + flagFail.join("\n") + "\n" + closeDbg.join("\n") + "\n" + out.join("\n") + "\n" + dbg.join("\n");
+(window as any).__RESULT__ = `batalhas 400, com soldado parado mais de 1 s: ${idleCases}; atravessou o inimigo: ${crossings} vezes em ${crossBattles} batalhas; perto sem atacar: ${closeIdle}; bandeira fincada: ${flagsOk}/400\nà toa > 2 s: ${lazyCases} (${Object.entries(lazyField).map(([f, v]) => f + " " + v).join(", ")})\n${lazyDbg.join("\n")}\ngolpes por segundo perto do inimigo: ${Object.entries(roleStat).map(([r, v]) => `${r} ${(v.atk / v.t).toFixed(2)}`).join(", ")}\nacertos: ${Object.entries(hitStats).map(([r, v]) => `${r} ${v.land}/${v.start} (errou ${v.miss})`).join(", ")}\n` + flagFail.join("\n") + "\n" + closeDbg.join("\n") + "\n" + out.join("\n") + "\n" + dbg.join("\n");

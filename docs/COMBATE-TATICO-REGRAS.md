@@ -374,9 +374,10 @@ o outro vai fazer, mas o que mais conta é escolher a ordem que combina com as S
   computador, o topo da faixa mostra o mesmo.
 
 ## Dragão voa e ajuda todas as faixas (31/out)
-- **Regra:** o dragão luta na faixa dele com 100% e, por voar, ajuda **todas as outras faixas com luta com 90%**
-  da força (`DRAGON_AIR_SHARE`; o Agostinho pediu "praticamente 100%"). Aparece "o dragão voou até aqui e
-  ajudou" nos motivos da faixa. Dragão sozinho numa faixa não entra no "ajuda pelo lado": ele já voa.
+- **Regra:** o dragão luta na faixa dele com 100% e, por voar, ajuda as outras faixas com luta: **faixa ao lado
+  90%**, **faixa da outra ponta 80%** (`DRAGON_AIR_SHARE`, `DRAGON_AIR_FAR_SHARE`). No meio, ele alcança as duas
+  com 90%; numa ponta, 90% na do meio e 80% na outra ponta. Aparece nos motivos da faixa. Dragão sozinho numa
+  faixa não entra no "ajuda pelo lado": ele já voa.
 - **Animação:** o dragão troca de alvo a cada 2 a 3 s, em qualquer faixa (prefere grupos maiores). Se o outro
   lado também tem dragão, de vez em quando vai brigar com ele no ar (não só entre eles).
 - **Visual do dragão (nova referência):** escamas cinza-carvão com brilho marrom, ventre marrom escuro e asas
@@ -384,3 +385,19 @@ o outro vai fazer, mas o que mais conta é escolher a ordem que combina com as S
 - **Conta do tabuleiro:** "tropas 13" virou **"força das tropas 13"** (é a força, não o número de tropas).
 - **Faixa de peças no celular:** cartões com largura fixa (no iPhone eles cresciam e passavam por cima do grupo
   vizinho) e o texto do celular não aumenta sozinho (`text-size-adjust`).
+
+## Fogo do dragão, carbonizados, muralha e botão no campo (31/out)
+- **Fogo que fica:** onde o bafo do dragão bate, o fogo fica queimando no chão por 3 a 5 s; perto da muralha,
+  pega fogo nela também (no caminho de ronda e na pedra).
+- **Carbonizados:** quem morre pelo fogo do dragão vira um esqueleto carbonizado deitado (pixel art nossa,
+  inspirada na caveira que o Agostinho mandou), com fumacinha no começo. Quem ia cair logo e leva o fogo cai na
+  hora, queimado (o fogo é o golpe final).
+- **Dragão com foco:** escolhe um alvo e fica nele uns 5 s (antes trocava a cada 2 s e parecia perdido); prefere
+  quem está lutando, grupo maior e quem vai cair.
+- **Ninguém parado:** quem fica sem inimigo na faixa vai ajudar onde ainda tem inimigo (corpo a corpo e
+  arqueiros). Na muralha, quem está de um lado e o inimigo do outro anda de lado pelo pé do muro (ou pelo alto
+  dele) e golpeia por cima; se o inimigo está lá dentro, longe do muro, quem ataca vai para o portão ou o buraco.
+  Teste novo "à toa > 2 s": de 1064 casos em 400 batalhas para 168 (quase tudo em fortaleza, muralha dos dois
+  lados).
+- **Botão "Voltar p/ reserva" no campo:** no canto de baixo, à direita, aparece só quando uma peça que já está no
+  campo está escolhida; a legenda fica curta à esquerda.

@@ -184,6 +184,8 @@ export interface PlaceView {
   preview?: { lane: Lane; row: Row; pct: number; best: boolean; force: number; base: number }[] | null;
   /** legenda dos números, ex.: "Peça 2 · Lanceiro" */
   previewLabel?: string;
+  /** peça escolhida já está no campo (e pode voltar): mostra o botão "Voltar p/ reserva" no canto */
+  canReturn?: boolean;
   /** cor da bandeira das torres (de quem defende) */
   wallFlag?: string;
   /** sua força em cada faixa se a luta for lá (quem está nela + ajuda de longe) */
@@ -370,6 +372,9 @@ function drawFog(ctx: CanvasRenderingContext2D, t: number, enemy: House, count: 
   ctx.fillText(`${count} ${count == 1 ? "esquadrão escondido" : "esquadrões escondidos"}`, cx, top + 47, bw - 10);
 }
 
+/** onde está o botão "Voltar p/ reserva" desenhado no campo (para o toque) */
+export let backBtnRect: { x: number; y: number; w: number; h: number } | null = null;
+
 export function drawPlacement(ctx: CanvasRenderingContext2D, v: PlaceView, t: number): PlacedToken[] {
   ctx.setTransform(2, 0, 0, 2, 0, 0);
   ctx.imageSmoothingEnabled = false;
@@ -539,17 +544,59 @@ export function drawPlacement(ctx: CanvasRenderingContext2D, v: PlaceView, t: nu
     ctx.textBaseline = "middle";
     ctx.fillText(String(b.n), b.x, b.y + 0.5);
   }
+  backBtnRect = null;
+  if (v.canReturn) {
+    // botão no canto de baixo, à direita (31/out): só aparece com uma peça do campo escolhida
+    const bw = 210;
+    const bh = 40;
+    const bx = W - bw - 10;
+    const by = H - bh - 8;
+    backBtnRect = { x: bx, y: by, w: bw, h: bh };
+    ctx.fillStyle = "rgba(18,14,10,.9)";
+    roundRect(ctx, bx, by, bw, bh, 20);
+    ctx.fill();
+    ctx.strokeStyle = "#e0b354";
+    ctx.lineWidth = 2;
+    ctx.setLineDash([6, 4]);
+    roundRect(ctx, bx, by, bw, bh, 20);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    // seta de voltar
+    ctx.strokeStyle = "#e0b354";
+    ctx.lineWidth = 3;
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+    const ax = bx + 22;
+    const ay = by + bh / 2;
+    ctx.beginPath();
+    ctx.moveTo(ax + 6, ay - 8);
+    ctx.lineTo(ax - 2, ay - 2);
+    ctx.lineTo(ax + 6, ay + 4);
+    ctx.moveTo(ax - 1, ay - 2);
+    ctx.lineTo(ax + 12, ay - 2);
+    ctx.quadraticCurveTo(ax + 18, ay - 2, ax + 18, ay + 5);
+    ctx.quadraticCurveTo(ax + 18, ay + 11, ax + 10, ay + 11);
+    ctx.stroke();
+    ctx.font = "800 19px 'Alegreya Sans', 'Trebuchet MS', sans-serif";
+    ctx.textAlign = "left";
+    ctx.textBaseline = "middle";
+    ctx.fillStyle = "#f2cf7e";
+    ctx.fillText("Voltar p/ reserva", bx + 48, ay + 1, bw - 56);
+  }
   if (v.preview && v.previewLabel) {
-    const txt = `${v.previewLabel}: onde ele rende mais (verde = melhor)`;
+    // com o botão no canto, a legenda fica curta e à esquerda
+    const txt = v.canReturn ? v.previewLabel : `${v.previewLabel}: onde ele rende mais (verde = melhor)`;
     ctx.font = "700 19px 'Alegreya Sans', 'Trebuchet MS', sans-serif";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    const tw = Math.min(W - 16, ctx.measureText(txt).width + 24);
+    const maxW = v.canReturn ? W - 250 : W - 16;
+    const tw = Math.min(maxW, ctx.measureText(txt).width + 24);
+    const cx = v.canReturn ? 10 + tw / 2 : W / 2;
     ctx.fillStyle = "rgba(18,14,10,.85)";
-    roundRect(ctx, W / 2 - tw / 2, H - 38, tw, 30, 15);
+    roundRect(ctx, cx - tw / 2, H - 38, tw, 30, 15);
     ctx.fill();
     ctx.fillStyle = "#f2cf7e";
-    ctx.fillText(txt, W / 2, H - 22.5, W - 30);
+    ctx.fillText(txt, cx, H - 22.5, tw - 16);
   }
   fullMarks.forEach((f) => f());
   return placed;

@@ -230,4 +230,12 @@ describe("combate tático", () => {
     const com = resolveTacticalBattle({ field: "planicie", attacker: { squads: A, card: { strength: 4, swords: 2, towers: 0 } }, defender: { squads: D } });
     expect(com.lanes[1].attackerScore).toBeCloseTo(sem.lanes[1].attackerScore);
   });
+
+  it("dragão voa: ajuda a faixa ao lado com 90% e a da outra ponta com 80%", () => {
+    const D: Squad[] = [sq("d0", "footman", "lanceiro", 0), sq("d1", "footman", "lanceiro", 1), sq("d2", "footman", "lanceiro", 2)];
+    const A: Squad[] = [sq("a0", "footman", "lanceiro", 0), sq("a1", "footman", "lanceiro", 1), sq("a2", "footman", "lanceiro", 2), { ...sq("adr", "dragon", "dragao", 0), strength: 3 }];
+    const r = resolveTacticalBattle({ field: "planicie", attacker: { squads: A }, defender: { squads: D } });
+    expect(r.lanes[1].factors.some((f) => f.kind == "air" && f.side == "attacker")).toBe(true);
+    expect(r.lanes[2].factors.some((f) => f.kind == "air-far" && f.side == "attacker")).toBe(true);
+  });
 });

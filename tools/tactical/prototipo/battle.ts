@@ -78,6 +78,10 @@ interface Man {
   sdir?: number;
   /** id do esquadrão (peça do tabuleiro) */
   sid: string;
+  /** última vez que levou fogo de dragão (quem morre logo depois vira esqueleto carbonizado) */
+  burnT?: number;
+  /** morreu queimado: desenha o esqueleto carbonizado no lugar do corpo */
+  charred?: boolean;
   /** dragão: quando escolhe outro alvo */
   retarget?: number;
   /** está em cima da muralha (desenhado na frente dela) */
@@ -204,6 +208,8 @@ export interface Sim {
   men: Man[];
   shots: Shot[];
   breaths: Breath[];
+  /** fogo que fica queimando no chão e nas muralhas depois do bafo do dragão (31/out) */
+  fires: { x: number; y: number; t0: number; life: number; r: number }[];
   sparks: Spark[];
   drops: Drop[];
   dust: Dust[];
@@ -404,7 +410,7 @@ export function createSim(field: FieldType, res: TacticalBattleResult, squads: R
   const fought = ([0, 1, 2] as Lane[]).filter((l) => res.lanes[l].winner != null);
   const arenaLane = fought.length ? fought.reduce((a: number, l) => a + l, 0) / fought.length : 1;
   const arena = { x: Math.max(70, Math.min(W - 70, arenaLane * LW + LW / 2)), y: frontY[Math.round(arenaLane)] ?? H * 0.5 };
-  const sim: Sim = { duel: res.duel && res.winner ? { winner: res.winner, a: null, b: null, picked: false, arena } : undefined, outcome, field, res, houses, men, shots: [], breaths: [], sparks: [], drops: [], dust: [], slashes: [], floor: null, t: 0, stop: 0, shake: 0, breach, rand, frontY };
+  const sim: Sim = { duel: res.duel && res.winner ? { winner: res.winner, a: null, b: null, picked: false, arena } : undefined, outcome, field, res, houses, men, shots: [], breaths: [], fires: [], sparks: [], drops: [], dust: [], slashes: [], floor: null, t: 0, stop: 0, shake: 0, breach, rand, frontY };
   ([0, 1, 2] as Lane[]).forEach((lane) => {
     if (res.lanes[lane].winner != null) pairUp(sim, lane);
   });
@@ -552,6 +558,13 @@ function duelStep(sim: Sim, m: Man, dt: number): boolean {
   return true;
 }
 
+/** Um está de um lado da muralha inteira e o outro do outro (não tem como chegar: só golpear por cima). */
+function acrossWall(sim: Sim, m: Man, foe: Man): boolean {
+  const lane = Math.max(0, Math.min(2, Math.floor(m.x / LW))) as Lane;
+  if (FIELD_LANES[sim.field][lane] != "muralha" || (sim.breach[lane] && sim.t > T_FIGHT + 0.2)) return false;
+  return (m.y < WALL_Y + 16) != (foe.y < WALL_Y + 16);
+}
+
 /** Ordem de batalha do lado (para o jeito de lutar na animação). */
 function tacOf(sim: Sim, side: Side): string | null {
   return sim.res.tactics?.[side]?.tactic ?? null;
@@ -608,7 +621,9 @@ function pairUp(sim: Sim, lane: Lane): void {
 
 /** Soldado sem dupla: entra ao lado de um companheiro (2 contra 1) ou vai em cima de quem estiver vivo. */
 function joinFight(sim: Sim, m: Man, i = 0): void {
-  const enemies = sim.men.filter((o) => o.side != m.side && o.lane == m.lane && !o.dead && !isStatic(o) && o.kind != "dragon");
+  let enemies = sim.men.filter((o) => o.side != m.side && o.lane == m.lane && !o.dead && !isStatic(o) && o.kind != "dragon");
+  // ninguém mais na faixa: vai ajudar onde ainda tem inimigo (31/out: antes ficava parado)
+  if (!enemies.length && sim.t > 1) enemies = sim.men.filter((o) => o.side != m.side && !o.dead && !isStatic(o) && o.kind != "dragon" && o.kind != "ship");
   if (!enemies.length) {
     m.foe = null;
     return;
@@ -624,6 +639,7 @@ function joinFight(sim: Sim, m: Man, i = 0): void {
     }
   }
   m.foe = best;
+  if (best.lane != m.lane) m.lane = best.lane;
   m.spot = false; // sem lugar marcado: vai direto no inimigo
   // luta do lado em que já está (não dá a volta no inimigo); se o outro lado do inimigo estiver livre e
   // o lado dele estiver cheio, vai para o outro
@@ -949,6 +965,7 @@ function kill(sim: Sim, m: Man, nx: number, ny: number, power: number): void {
   const t = sim.t;
   m.dead = true;
   m.deadAt = t;
+  if (t - (m.burnT ?? -9) < 3 && (m.kind == "foot" || m.kind == "horse")) m.charred = true;
   // máquina de cerco destruída: desmonta em madeira e fumaça (não voa nem sangra)
   if (m.kind == "siege") {
     m.vx = 0;
@@ -1055,7 +1072,19 @@ export function stepSim(sim: Sim, dt: number): void {
     }
     if (ranged(m.role)) {
       // arqueiro: fica no alcance, atira; se chegarem muito perto, recua
-      const tg = nearestEnemy(sim, m, (o) => o.engaged);
+      let tg = nearestEnemy(sim, m, (o) => o.engaged);
+      // ninguém na faixa: atira em quem estiver mais perto em qualquer faixa (31/out: antes ficava parado)
+      if (!tg) {
+        let bd = Infinity;
+        for (const o of sim.men) {
+          if (o.side == m.side || o.dead || isStatic(o) || o.kind == "dragon") continue;
+          const d = Math.hypot(o.x - m.x, o.y - m.y);
+          if (d < bd) {
+            bd = d;
+            tg = o;
+          }
+        }
+      }
       if (!tg) {
         steer(m, m.x, m.y, 0, dt);
         continue;
@@ -1099,7 +1128,9 @@ export function stepSim(sim: Sim, dt: number): void {
         if (o.side == m.side || o.dead || isStatic(o) || o.kind == "dragon" || o.kind == "ship") continue;
         const dx = Math.abs(o.x - m.x);
         const dy = Math.abs(o.y - m.y);
-        if (dx <= m.reach + 10 && dy <= 20 && dx + dy < cd) {
+        // por cima da muralha o golpe alcança mais longe na vertical (um em cima, outro no pé)
+        const ylim = acrossWall(sim, m, o) ? 54 : 20;
+        if (dx <= m.reach + 10 && dy <= ylim && dx + dy < cd) {
           cd = dx + dy;
           close = o;
         }
@@ -1118,7 +1149,9 @@ export function stepSim(sim: Sim, dt: number): void {
     // distância de luta: dupla corpo a corpo = média dos alcances; contra arqueiro (ou quem está
     // lutando com outro) vai até a SUA arma alcançar (antes ficava a 128 px de um arqueiro, rodando)
     const dd = foe.foe === m && melee(foe) ? duelDist(m, foe) : m.kind == "ship" ? 66 : Math.max(18, m.reach - 4);
-    const near = Math.hypot(foe.x - m.x, foe.y - m.y) < dd + 26;
+    // muralha inteira entre os dois (um em cima, outro no pé): perto = a arma alcança por cima das ameias
+    const wallSplit = acrossWall(sim, m, foe);
+    const near = Math.hypot(foe.x - m.x, foe.y - m.y) < dd + 26 || (wallSplit && Math.abs(foe.x - m.x) <= m.reach + 18);
     // golpe: prepara (0,15 s), acerta, volta (0,25 s)
     const p = (t - m.atkStart) / 0.4;
     m.atk = p >= 0 && p <= 1 ? (p < 0.4 ? p / 0.4 : 1 - (p - 0.4) / 0.6) : 0;
@@ -1136,6 +1169,21 @@ export function stepSim(sim: Sim, dt: number): void {
     } else {
       tx = foe.x + s * (dd - lunge) + sway * 0.5;
       ty = foe.y + m.yoff;
+    }
+    // não tenta atravessar a pedra: anda de lado pelo pé do muro (ou pelo alto dele) até ficar na frente do inimigo
+    if (wallSplit) {
+      tx = foe.x + s * Math.min(dd, 14);
+      ty = m.side == "attacker" ? BAND_BOT + 2 : WALL_Y - 20;
+      // o inimigo está lá dentro, longe do muro (ninguém alcança): quem ataca vai para o portão ou o buraco
+      if (m.side == "attacker" && foe.y < WALL_Y - 40) {
+        const open = ([0, 1, 2] as Lane[]).filter((l) => FIELD_LANES[sim.field][l] == "portao" || (sim.breach[l] && t > T_FIGHT + 0.2) || !["muralha"].includes(FIELD_LANES[sim.field][l]));
+        if (open.length) {
+          const l = open.reduce((a, b) => (Math.abs(b * LW + LW / 2 - m.x) < Math.abs(a * LW + LW / 2 - m.x) ? b : a));
+          tx = l * LW + LW / 2 + (m.seed % 3 - 1) * 10;
+          ty = BAND_BOT + 14;
+          if (Math.abs(tx - m.x) < 30) ty = foe.y; // chegou na abertura: entra
+        }
+      }
     }
     // a ordem de batalha aparece no jeito de andar
     const tac = tacOf(sim, m.side);
@@ -1182,7 +1230,7 @@ export function stepSim(sim: Sim, dt: number): void {
       const gapX = Math.abs(foe.x - m.x);
       const gapY = Math.abs(foe.y - m.y);
       // muralha inteira: um em cima do muro, outro no pé; golpeiam por cima das ameias (31/out: antes ninguém batia)
-      const overWall = (m.onWall && foe.atWall) || (m.atWall && foe.onWall);
+      const overWall = wallSplit || (m.onWall && foe.atWall) || (m.atWall && foe.onWall);
       const yReach = overWall ? 54 : 26;
       const yHit = overWall ? 54 : 16;
       // só começa o golpe se, dando o passo, a arma alcança (nada de bater de longe)
@@ -1237,8 +1285,25 @@ export function stepSim(sim: Sim, dt: number): void {
         continue;
       }
       sim.men.forEach((o) => {
-        if (!o.dead && o.side != b.from.side && Math.hypot(o.x - b.to.x, o.y - b.to.y) < 36) hit(sim, b.from, o, 2);
+        if (!o.dead && o.side != b.from.side && Math.hypot(o.x - b.to.x, o.y - b.to.y) < 36) {
+          o.burnT = t;
+          // quem ia cair logo cai agora, queimado (o fogo é o golpe final dele)
+          if (o.dieAt < t + 2.5 && (o.kind == "foot" || o.kind == "horse")) o.dieAt = t;
+          hit(sim, b.from, o, 2);
+        }
       });
+      // o fogo fica queimando no chão por uns segundos
+      for (let i = 0; i < 7; i++) {
+        const a = r() * Math.PI * 2;
+        const d = Math.sqrt(r()) * 24;
+        sim.fires.push({ x: b.to.x + Math.cos(a) * d * 1.3, y: b.to.y + Math.sin(a) * d * 0.55, t0: t + r() * 0.2, life: 3 + r() * 2.5, r: 4.5 + r() * 3.5 });
+      }
+      // perto da muralha: pega fogo nela também (no caminho de ronda e na pedra)
+      const wl = Math.max(0, Math.min(2, Math.floor(b.to.x / LW))) as Lane;
+      const wt = FIELD_LANES[sim.field][wl];
+      if ((wt == "muralha" || wt == "portao") && Math.abs(b.to.y - WALL_Y) < 70) {
+        for (let i = 0; i < 6; i++) sim.fires.push({ x: b.to.x + (r() - 0.5) * 70, y: WALL_Y - 18 + r() * 30, t0: t + r() * 0.3, life: 3 + r() * 3, r: 4.5 + r() * 3.5 });
+      }
       // chão queimado
       for (let i = 0; i < 40; i++) {
         const a = r() * Math.PI * 2;
@@ -1249,6 +1314,7 @@ export function stepSim(sim: Sim, dt: number): void {
     }
   }
   sim.breaths = sim.breaths.filter((b) => t - b.t0 < b.dur);
+  sim.fires = sim.fires.filter((f) => t - f.t0 < f.life);
   sim.sparks = sim.sparks.filter((s) => t - s.t0 < 0.35);
   sim.slashes = sim.slashes.filter((s) => t - s.t0 < 0.16);
   sim.dust = sim.dust.filter((d) => {
@@ -1361,9 +1427,11 @@ function stepDragon(sim: Sim, m: Man, dt: number): void {
   // 31/out: o dragão voa e ajuda TODAS as faixas: troca de alvo de tempos em tempos, em qualquer faixa; se o outro
   // lado tem dragão, às vezes vai brigar com ele no ar (não só entre eles)
   const rival = sim.men.find((o) => o.kind == "dragon" && o.side != m.side && !o.dead);
+  // escolhe um alvo e FICA nele (31/out: trocava toda hora e parecia perdido): só troca quando o alvo morre ou
+  // depois de uns 5 s; prefere quem está lutando, grupo maior e quem vai cair (o fogo é o golpe final)
   if (t >= (m.retarget ?? 0) || !m.foe || m.foe.dead) {
-    m.retarget = t + 2.2 + sim.rand() * 1.2;
-    if (rival && sim.rand() < 0.35) m.foe = rival;
+    m.retarget = t + 4.5 + sim.rand() * 1.5;
+    if (rival && sim.rand() < 0.3) m.foe = rival;
     else {
       let best: Man | null = null;
       let bs = -Infinity;
@@ -1371,7 +1439,7 @@ function stepDragon(sim: Sim, m: Man, dt: number): void {
         if (o.side == m.side || o.dead || isStatic(o) || o.kind == "dragon") continue;
         // grupo maior vale mais; um pouco de sorte para variar de faixa
         const near = sim.men.filter((x) => x.side == o.side && !x.dead && Math.hypot(x.x - o.x, x.y - o.y) < 40).length;
-        const sc = near + sim.rand() * 2.5 - (m.foe && o.lane == m.foe.lane ? 1 : 0);
+        const sc = near + (o.engaged ? 3 : 0) + (o.dieAt < t + 4 ? 2 : 0) + sim.rand() * 0.8 - Math.hypot(o.x - m.x, o.y - m.y) / 200;
         if (sc > bs) {
           bs = sc;
           best = o;
@@ -1423,6 +1491,83 @@ export function dragonMouth(x: number, y: number, flip: boolean, s: number): [nu
 }
 
 // ---------------------------------------------------------------- desenho
+/** Fogo queimando (pixel art): base vermelha, meio laranja, ponta amarela, tremendo. onWall = só os da muralha. */
+function drawFires(ctx: CanvasRenderingContext2D, sim: Sim, t: number, onWall: boolean): void {
+  for (const f of sim.fires) {
+    const isWall = f.y < WALL_Y + 16 && f.y > WALL_Y - 26 && FIELD_LANES[sim.field].some((x) => x == "muralha" || x == "portao");
+    if (isWall != onWall) continue;
+    const age = t - f.t0;
+    if (age < 0) continue;
+    const k = Math.min(1, age / 0.25) * Math.min(1, (f.life - age) / 0.8);
+    const h = Math.max(2, Math.round(f.r * 2.2 * k * (0.8 + 0.25 * Math.sin(t * 13 + f.x))));
+    const w = Math.max(2, Math.round(f.r * 1.4 * k));
+    const x = Math.round(f.x);
+    const y = Math.round(f.y);
+    ctx.fillStyle = `rgba(40,20,10,${0.35 * k})`;
+    ctx.fillRect(x - w, y, w * 2, 2);
+    ctx.fillStyle = "#b8261a";
+    ctx.fillRect(x - w, y - Math.round(h * 0.45), w * 2, Math.round(h * 0.45));
+    ctx.fillStyle = "#f07a1e";
+    ctx.fillRect(x - Math.round(w * 0.6), y - Math.round(h * 0.8), Math.round(w * 1.2), Math.round(h * 0.5));
+    ctx.fillStyle = "#ffd25a";
+    const fl = Math.sin(t * 17 + f.y) > 0 ? 1 : -1;
+    ctx.fillRect(x - 1 + fl, y - h, 2, Math.round(h * 0.35));
+    // faísca subindo
+    if ((t * 7 + f.x) % 1 < 0.15) {
+      ctx.fillStyle = "#ffb347";
+      ctx.fillRect(x + fl * 2, y - h - 3 - Math.round(((t * 20) % 6)), 1, 1);
+    }
+  }
+}
+
+/** Morreu no fogo do dragão: esqueleto carbonizado deitado (pixel art nossa), com fumacinha no começo. */
+function drawCharred(ctx: CanvasRenderingContext2D, x: number, y: number, s: number, age: number, flip: boolean, horse: boolean): void {
+  // "o" contorno, "#" osso queimado, "+" osso escuro; cabeça à esquerda (vira se flip)
+  const G = [
+    ".ooo..............",
+    "o###o.............",
+    "o#o#o.o.o.o.o.....",
+    "o###oo#o#o#o#oo...",
+    ".o+o.##########oo.",
+    "......o.o.o.o.o##o",
+    "...............oo.",
+  ];
+  ctx.save();
+  ctx.translate(Math.round(x), Math.round(y));
+  ctx.scale(s * (flip ? -1 : 1), s);
+  // mancha de cinza e chão queimado
+  ctx.fillStyle = "rgba(20,14,10,.55)";
+  ctx.beginPath();
+  ctx.ellipse(0, 0, horse ? 16 : 11, horse ? 4 : 3, 0, 0, Math.PI * 2);
+  ctx.fill();
+  const ox = -9;
+  const oy = -6;
+  G.forEach((row, j) => {
+    for (let i = 0; i < row.length; i++) {
+      const c = row[i];
+      if (c == ".") continue;
+      ctx.fillStyle = c == "o" ? "#17110e" : c == "#" ? "#b7ada0" : "#6e655c";
+      ctx.fillRect(ox + i, oy + j, 1, 1);
+    }
+  });
+  if (horse) {
+    // ossos do cavalo ao lado
+    ctx.fillStyle = "#17110e";
+    ctx.fillRect(ox + 2, oy + 7, 14, 3);
+    ctx.fillStyle = "#9c9286";
+    for (let i = 0; i < 6; i++) ctx.fillRect(ox + 3 + i * 2, oy + 8, 1, 1);
+  }
+  // fumaça nos primeiros segundos
+  if (age < 2.5) {
+    const a = 1 - age / 2.5;
+    ctx.fillStyle = `rgba(70,64,60,${0.5 * a})`;
+    const up = (age * 10) % 10;
+    ctx.fillRect(-2, -8 - up, 3, 3);
+    ctx.fillRect(1, -12 - up * 0.7, 2, 2);
+  }
+  ctx.restore();
+}
+
 /**
  * Soldado que opera a máquina de cerco (31/out): fica do lado dela e puxa a alavanca quando ela atira.
  * front = false desenha o de trás (antes da máquina), true o da frente (depois).
@@ -1538,6 +1683,7 @@ export function laneReasons(res: TacticalBattleResult, lane: number): { text: st
     else if (f.kind == "flank") add("ajuda pelo lado", f.side);
     else if (f.kind == "far-flank") add("ajuda de longe (15%)", f.side);
     else if (f.kind == "air") add("dragão voando (90%)", f.side);
+    else if (f.kind == "air-far") add("dragão voando de longe (80%)", f.side);
     else if (f.kind == "screen") add("a frente segura a cavalaria", f.side);
     else if (f.kind == "formation") add("formação: frente + atiradores +15%", f.side);
   }
@@ -1555,6 +1701,7 @@ export function drawSim(ctx: CanvasRenderingContext2D, sim: Sim): void {
   ctx.drawImage(terrainImage(sim.field), 0, 0, W, H);
   // sangue no chão
   if (sim.floor && gore) ctx.drawImage(sim.floor, 0, 0, W, H);
+  drawFires(ctx, sim, t, false);
   ctx.imageSmoothingEnabled = true;
   const lanesT = FIELD_LANES[sim.field];
   const hasWall = lanesT.some((x) => x == "muralha" || x == "portao");
@@ -1605,7 +1752,8 @@ export function drawSim(ctx: CanvasRenderingContext2D, sim: Sim): void {
   }
   const drawMan = (m: Man): void => {
     if (m.kind == "siege") drawCrew(ctx, sim, m, sim.houses[m.side], t, false);
-    if (m.dead) drawFallen(ctx, m.x, m.y, FIG, pose(m, sim.houses[m.side], t), t - m.deadAt);
+    if (m.dead && m.charred) drawCharred(ctx, m.x, m.y, FIG, t - m.deadAt, m.flip, m.kind == "horse");
+    else if (m.dead) drawFallen(ctx, m.x, m.y, FIG, pose(m, sim.houses[m.side], t), t - m.deadAt);
     else drawUnit(ctx, m.x, m.y, FIG, pose(m, sim.houses[m.side], t), m.dir);
     if (m.kind == "siege") drawCrew(ctx, sim, m, sim.houses[m.side], t, true);
   };
@@ -1615,6 +1763,8 @@ export function drawSim(ctx: CanvasRenderingContext2D, sim: Sim): void {
   ctx.globalAlpha = appear;
   for (const m of order) if (!behind(m)) drawMan(m);
   ctx.restore();
+  // fogo em cima da muralha fica na frente dela
+  drawFires(ctx, sim, t, true);
   drawFlag(ctx, sim);
   // poeira (quadradinhos, no estilo pixel)
   for (const d of sim.dust) {
