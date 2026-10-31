@@ -679,27 +679,10 @@ function beginTurn(): void {
 let timeMax = 75;
 function startTimer(secs = 75): void {
   stopTimer();
-  // dentro do jogo completo não tem cronômetro (o relógio do jogo cuida de quem demora)
-  if (embed) {
-    timeMax = secs;
-    timeLeft = secs;
-    return;
-  }
+  // 31/out: sem tempo limite na Mesa (o Agostinho pediu tempo ilimitado); no jogo completo, o relógio da partida
+  // (se a sala usar) é que cuida de quem demora
   timeMax = secs;
   timeLeft = secs;
-  timer = window.setInterval(() => {
-    timeLeft--;
-    const el = document.getElementById("timer");
-    if (el) {
-      el.textContent = `${timeLeft}s`;
-      el.style.setProperty("--p", `${(timeLeft / timeMax) * 100}%`);
-      el.classList.toggle("low", timeLeft <= 10);
-    }
-    if (timeLeft <= 0) {
-      if (phase == "react") finishReaction();
-      else finishTurn();
-    }
-  }, 1000);
 }
 
 function stopTimer(): void {
@@ -848,7 +831,6 @@ function renderPanel(): void {
       <button type="button" class="quit-btn" id="quit" aria-label="Sair para o início">‹</button>
       <h2><span class="dot" style="background:${h.color}"></span>${h.name} <small>${reacting ? "Corvo" : placingSide == "attacker" ? "ataca" : "defende"}</small></h2>
       <div class="turn-tools">
-        <span id="timer" class="timer" style="--p:${(timeLeft / timeMax) * 100}%">${timeLeft}s</span>
         <button type="button" class="help-btn" id="help-play" aria-label="Como funciona o combate">?</button>
       </div>
     </div>

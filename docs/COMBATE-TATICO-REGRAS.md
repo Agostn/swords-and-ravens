@@ -487,3 +487,8 @@ o outro vai fazer, mas o que mais conta é escolher a ordem que combina com as S
   peças que morreram no tabuleiro.
 - **Se alguém sair ou o relógio acabar:** a casa vira vassala e vai com a Mesa padrão (sem ordem de batalha).
 - **No registro da partida:** "Mesa de Batalha: X venceu nas faixas (A 2 × 1 B)".
+
+## Sem tempo limite (31/out)
+
+A Mesa não tem mais cronômetro (antes eram 75 s para posicionar e 45 s para o Corvo). Cada um pensa o quanto
+quiser. No jogo completo, se a sala usar o relógio da partida, ele conta como em qualquer outra decisão.
