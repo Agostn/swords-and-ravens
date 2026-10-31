@@ -344,3 +344,7 @@ o outro vai fazer, mas o que mais conta é escolher a ordem que combina com as S
   pano comprido com o brasão, ponta com franja), nas cores de cada Casa.
 - **Ordem de batalha:** tocar numa ordem só marca; precisa apertar "Confirmar" (ou "Voltar").
 - A etiqueta "faixa: X" do fim saiu (confundia); fica só o resultado final.
+- **Estandarte (versão 2, 31/out):** refeito no estilo das bandeiras que o Agostinho mandou: inicial da Casa no
+  alto, brasão grande (13 × 13 pixels, desenho nosso: lobo, leão, cervo, lula, rosa, sol, lua e falcão, dragão),
+  duas faixas embaixo e ponta com franja, nas cores de cada Casa. Não copia a imagem de referência (é arte de
+  outra pessoa); sem os lemas.

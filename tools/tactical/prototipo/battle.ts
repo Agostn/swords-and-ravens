@@ -16,7 +16,7 @@ import { Lane, Side, Squad, TacticalBattleResult } from "../../../agot-bg-game-s
 import { FIELD_LANES, FieldType, Role, Row, SquadKind, TACTIC_NAMES, TACTIC_WIN_BONUS } from "../../../agot-bg-game-server/src/common/tactical-battle/tacticalBattleData";
 import { rng } from "../solver";
 import { House, ROLE_NAMES, TERRAIN_NAMES } from "./data";
-import { BANNERS, glyphRows, styleOf } from "./houseStyle";
+import { BANNERS, bannerLetter, bannerSigil, styleOf } from "./houseStyle";
 import { DRAGON_SCALE, Kind, Pose, drawFallen, drawUnit, kindOf } from "./figures";
 import { H, LW, W, ease, roundRect, terrainImage } from "./render";
 import { WALL_Y, drawWalls } from "./walls";
@@ -722,15 +722,15 @@ function drawFlag(ctx: CanvasRenderingContext2D, sim: Sim): void {
     if (up <= 0) return;
     tall = (ship ? 46 : 40) * up;
     lean = ship ? 0 : 0.3 * (m.dir || 1);
-    size = ship ? 1.1 : 0.9;
+    size = ship ? 0.95 : 0.75;
   } else {
     if (t < f.planted) return;
     bx = f.x;
     by = f.y;
     const p = ease(Math.min(1, (t - f.planted) / 0.5));
-    tall = 40 + 34 * p;
+    tall = 46 + 40 * p;
     lean = 0.25 * (1 - p);
-    size = 1.1 + 0.6 * p;
+    size = 1.0 + 0.55 * p;
   }
   const tx = bx + Math.sin(lean) * tall;
   const ty = by - Math.cos(lean) * tall;
@@ -757,43 +757,51 @@ function drawFlag(ctx: CanvasRenderingContext2D, sim: Sim): void {
   ctx.moveTo(bx - 0.5, by);
   ctx.lineTo(tx - 0.5, ty);
   ctx.stroke();
-  // pano: 13 colunas × 24 linhas de "pixels" de tamanho u, pendurado numa travessa
+  // pano: 19 colunas × 36 linhas de "pixels" de tamanho u, pendurado numa travessa (estilo dos estandartes
+  // em pixel art: inicial no alto, brasão grande, faixas embaixo, ponta com franja)
   const u = size;
-  const cols = 18;
-  const rows = 28;
+  const cols = 19;
+  const rows = 36;
   const bw = cols * u;
   const x0 = tx - bw / 2;
   const y0 = ty + 3 * u;
   px(x0 - 2 * u, ty + 1 * u, bw + 4 * u, 2 * u, "#3b2a17"); // travessa
-  px(x0 - 3 * u, ty + 0.5 * u, 2 * u, 3 * u, "#e0b354");
-  px(x0 + bw + u, ty + 0.5 * u, 2 * u, 3 * u, "#e0b354");
+  px(x0 - 3 * u, ty, 2 * u, 3 * u, "#e0b354");
+  px(x0 + bw + u, ty, 2 * u, 3 * u, "#e0b354");
   px(tx - u, ty - 2 * u, 2 * u, 2 * u, "#e0b354"); // ponta do mastro
-  const g = glyphRows(styleOf(h).glyph);
+  const sig = bannerSigil(h.name);
+  const let7 = bannerLetter(h.name);
+  const tipStart = rows - 7;
   for (let r = 0; r < rows; r++) {
     // tremula mais embaixo
-    const wv = Math.sin(t * 5 - r * 0.32) * (r / rows) * 1.6 * u;
-    // ponta embaixo: as últimas linhas vão afinando até a ponta
-    const cut = r < rows - 6 ? 0 : (r - (rows - 6)) * 1.5;
+    const wv = Math.sin(t * 5 - r * 0.3) * (r / rows) * 1.6 * u;
+    // ponta embaixo: as últimas linhas afinam até a ponta
+    const cut = r < tipStart ? 0 : (r - tipStart + 1) * 1.35;
     const xa = x0 + wv + cut * u;
     const wa = bw - 2 * cut * u;
-    if (wa <= 0) continue;
+    if (wa <= u) continue;
     const y = y0 + r * u;
     px(xa, y, wa, u, bn.field);
-    // borda dos lados (mais escura)
+    // sombra das dobras (listras verticais bem leves)
+    ctx.fillStyle = "rgba(0,0,0,.07)";
+    for (let k = 4; k < cols - 2; k += 6) if (xa + k * u < xa + wa - u) ctx.fillRect(Math.round(xa + k * u), Math.round(y), Math.max(1, Math.round(u)), Math.max(1, Math.round(u)));
+    // borda dos lados
     px(xa, y, u, u, bn.edge);
     px(xa + wa - u, y, u, u, bn.edge);
-    // faixa de cima
     if (r < 2) px(xa, y, wa, u, bn.edge);
-    // brasão 7×7 com cada ponto de 2u (14 × 14), centrado, das linhas 5 a 18
-    const gr = Math.floor((r - 5) / 2);
-    if (r >= 5 && gr < 7) {
-      const row = g[gr];
-      for (let i = 0; i < 7; i++) if (row[i] == "#") px(xa + (2 + i * 2) * u, y, 2 * u, u, bn.charge);
-    }
+    // inicial da Casa (5 × 7), linhas 3 a 9
+    const lr = r - 3;
+    if (lr >= 0 && lr < 7) for (let i = 0; i < 5; i++) if (let7[lr][i] == "#") px(xa + (7 + i) * u, y, u, u, bn.charge);
+    // brasão 13 × 13, linhas 12 a 24
+    const sr = r - 12;
+    if (sr >= 0 && sr < 13) for (let i = 0; i < 13; i++) if (sig[sr][i] == "#") px(xa + (3 + i) * u, y, u, u, bn.charge);
+    // duas faixas embaixo (cor da borda e da franja)
+    if (r == 26 || r == 27) px(xa + u, y, wa - 2 * u, u, bn.edge);
+    if (r == 28) px(xa + u, y, wa - 2 * u, u, bn.fringe);
     // franja na ponta
-    if (r >= rows - 6) {
-      px(xa - u, y + u, u, u, bn.fringe);
-      px(xa + wa, y + u, u, u, bn.fringe);
+    if (r >= tipStart) {
+      px(xa - u, y + u, u, 2 * u, bn.fringe);
+      px(xa + wa, y + u, u, 2 * u, bn.fringe);
     }
   }
   ctx.restore();
