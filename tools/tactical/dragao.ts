@@ -7,7 +7,7 @@
  *   DAIR=0.9 DAIRF=0.8 npx ts-node -T -r ../tools/tactical/cs.js ../tools/tactical/dragao.ts
  */
 import { Piece, solveScenario } from "./solver";
-import { FieldType } from "../../agot-bg-game-server/src/common/tactical-battle/tacticalBattleData";
+import { DRAGON_AIR_FAR_SHARE, DRAGON_AIR_SHARE, DRG_OUT, FieldType } from "../../agot-bg-game-server/src/common/tactical-battle/tacticalBattleData";
 
 const F: Piece = { kind: "footman" };
 const K: Piece = { kind: "knight" };
@@ -65,4 +65,4 @@ for (const S of process.env.FULL ? [2, 3, 4, 5] : [2, 3, 4]) {
 }
 if (process.env.V) console.log(rows.join("\n"));
 const pc = (x: number): string => `${x >= 0 ? "+" : ""}${((100 * x) / n).toFixed(0)}`;
-console.log(`DOUT=${process.env.DOUT ?? 1.5} DAIR=${process.env.DAIR ?? 0.9} DAIRF=${process.env.DAIRF ?? 0.8} (${n} batalhas): vantagem do lado do dragão — jogando bem ${pc(nashD)} (sem dragão ${pc(nashB)}) · jogando no chute ${pc(rndD)} (sem dragão ${pc(rndB)})`);
+console.log(`dragão bate ×${DRG_OUT}, voo ${DRAGON_AIR_SHARE}/${DRAGON_AIR_FAR_SHARE} (${n} batalhas): vantagem do lado do dragão — jogando bem ${pc(nashD)} (sem dragão ${pc(nashB)}) · jogando no chute ${pc(rndD)} (sem dragão ${pc(rndB)})`);

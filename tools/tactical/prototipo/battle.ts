@@ -13,7 +13,7 @@
  *  7. No fim, quem perdeu a faixa foge.
  */
 import { Lane, Side, Squad, TacticalBattleResult } from "../../../agot-bg-game-server/src/common/tactical-battle/tacticalBattle";
-import { FIELD_LANES, FieldType, Role, Row, SquadKind, TACTIC_NAMES, TACTIC_WIN_BONUS } from "../../../agot-bg-game-server/src/common/tactical-battle/tacticalBattleData";
+import { DRAGON_AIR_FAR_SHARE, DRAGON_AIR_SHARE, FIELD_LANES, FieldType, Role, Row, SquadKind, TACTIC_NAMES, TACTIC_WIN_BONUS } from "../../../agot-bg-game-server/src/common/tactical-battle/tacticalBattleData";
 import { rng } from "../solver";
 import { House, ROLE_NAMES, TERRAIN_NAMES } from "./data";
 import { BANNERS, SIGIL_H, bannerLetter, bannerSigil, styleOf } from "./houseStyle";
@@ -1733,8 +1733,8 @@ export function laneReasons(res: TacticalBattleResult, lane: number): { text: st
     else if (f.kind == "wall-breach") add("catapulta derruba a muralha", f.side);
     else if (f.kind == "flank") add("ajuda pelo lado", f.side);
     else if (f.kind == "far-flank") add("ajuda de longe (15%)", f.side);
-    else if (f.kind == "air") add("dragão voando (90%)", f.side);
-    else if (f.kind == "air-far") add("dragão voando de longe (80%)", f.side);
+    else if (f.kind == "air") add(`dragão voando (${Math.round(DRAGON_AIR_SHARE * 100)}%)`, f.side);
+    else if (f.kind == "air-far") add(`dragão voando de longe (${Math.round(DRAGON_AIR_FAR_SHARE * 100)}%)`, f.side);
     else if (f.kind == "screen") add("a frente segura a cavalaria", f.side);
     else if (f.kind == "formation") add("formação: frente + atiradores +15%", f.side);
   }

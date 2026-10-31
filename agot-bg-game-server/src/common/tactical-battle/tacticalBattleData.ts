@@ -98,7 +98,8 @@ export const FIGURES: Record<SquadKind, number> = {
  * escudeiro e cavalaria pouco (por isso, na animação, contra eles o dragão desce e luta no chão).
  */
 const G = globalThis as { __DOUT__?: number; __DIN__?: number };
-export const DRG_OUT: number = G.__DOUT__ ?? 1.5;
+// 1,5 (antes): o lado do dragão vencia a Mesa quase sempre (+47 jogando bem); 1,2: −6; 1,3 com voo 75/60: +19
+export const DRG_OUT: number = G.__DOUT__ ?? 1.3;
 const DIN = G.__DIN__ ?? 1;
 export const DRG_IN = { arqueiro: 1.3 * DIN, lanceiro: 1.05 * DIN, escudeiro: 0.75 * DIN, cavalaria: 0.75 * DIN };
 
@@ -219,11 +220,11 @@ export const SIEGE_OPEN_FACTOR = 0.5;
  * - SLOT_MAX: esquadrões por casinha (2; na montanha 3, ver slotMaxFor).
  */
 /**
- * Dragão voa: além da sua faixa, ajuda as outras faixas com luta (31/out, pedido do Agostinho):
- * faixa ao lado 90% da força; a da outra ponta 80% (no meio, ele alcança as duas com 90%).
+ * Dragão voa: além da sua faixa, ajuda as outras faixas com luta: faixa ao lado 75% da força, a da outra ponta
+ * 60% (no meio, ele alcança as duas com 75%). Balanceado em 31/out com tools/tactical/dragao.ts (ver DRG_OUT).
  */
-export const DRAGON_AIR_SHARE: number = (globalThis as { __DAIR__?: number }).__DAIR__ ?? 0.9;
-export const DRAGON_AIR_FAR_SHARE: number = (globalThis as { __DAIRF__?: number }).__DAIRF__ ?? 0.8;
+export const DRAGON_AIR_SHARE: number = (globalThis as { __DAIR__?: number }).__DAIR__ ?? 0.75;
+export const DRAGON_AIR_FAR_SHARE: number = (globalThis as { __DAIRF__?: number }).__DAIRF__ ?? 0.6;
 
 export const ARMY_MAX = 4;
 export const SUPPORT_MAX = 4;

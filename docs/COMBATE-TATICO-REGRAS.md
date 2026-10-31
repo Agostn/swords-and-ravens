@@ -375,11 +375,27 @@ o outro vai fazer, mas o que mais conta é escolher a ordem que combina com as S
 
 ## Dragão voa e ajuda todas as faixas (31/out)
 - **Regra:** o dragão luta na faixa dele com 100% e, por voar, ajuda as outras faixas com luta: **faixa ao lado
-  90%**, **faixa da outra ponta 80%** (`DRAGON_AIR_SHARE`, `DRAGON_AIR_FAR_SHARE`). No meio, ele alcança as duas
-  com 90%; numa ponta, 90% na do meio e 80% na outra ponta. Aparece nos motivos da faixa. Dragão sozinho numa
-  faixa não entra no "ajuda pelo lado": ele já voa.
-- **Animação:** o dragão troca de alvo a cada 2 a 3 s, em qualquer faixa (prefere grupos maiores). Se o outro
-  lado também tem dragão, de vez em quando vai brigar com ele no ar (não só entre eles).
+  75%**, **faixa da outra ponta 60%** (`DRAGON_AIR_SHARE`, `DRAGON_AIR_FAR_SHARE`). No meio, alcança as duas com
+  75%. Aparece nos motivos da faixa. Dragão sozinho numa faixa não entra no "ajuda pelo lado": ele já voa.
+- **Balanço do dragão (31/out, `tools/tactical/dragao.ts`):** exército com dragão contra exército de MESMA força
+  no tabuleiro sem dragão, 36 batalhas (dragão 2 a 4, campo aberto, colinas, castelo, atacando e defendendo).
+  Medida: vantagem na Mesa (vence − perde) jogando bem (Nash) e jogando no chute.
+  | Dragão bate | Voo (ao lado / longe) | Jogando bem | No chute |
+  |---|---|---|---|
+  | ×1,5 (antes) | 90% / 80% | +47 | +93 |
+  | ×1,35 | 90% / 80% | +29 | +89 |
+  | ×1,3 | 90% / 80% | +23 | +88 |
+  | **×1,3 (agora)** | **75% / 60%** | **+19** | **+84** |
+  | ×1,2 | 90% / 80% | −6 | +85 |
+  Escolhido ×1,3 e voo 75/60: com os dois jogando bem, o dragão ainda é favorito (+19), mas dá para vencer
+  dele (arqueiros e lanceiros); contra quem joga no chute ele quase sempre vence, como um dragão deve.
+  Também: arqueiro bate ×1,3 no dragão e lanceiro ×1,05 (alcançam o alto); escudeiro e cavalaria ×0,75.
+- **Animação:** o dragão escolhe um alvo e fica nele uns 5 s, em qualquer faixa. Contra **arqueiro e lanceiro**
+  (que alcançam o alto) ele ataca **voando, com fogo**; contra **escudeiro e cavalaria** ele **desce, pousa e
+  esmaga** quem está em volta (poeira e tremida). Se o outro lado também tem dragão, às vezes brigam no ar.
+- **Sprite:** de volta para a folha de sprites que o Agostinho mandou (pousado, voando, cuspindo fogo), sem o
+  contorno branco que sobrou do fundo e com contorno escuro de 1 px. Autor e licença a conferir antes de
+  publicar (RISCOS H77).
 - **Visual do dragão (nova referência):** escamas cinza-carvão com brilho marrom, ventre marrom escuro e asas
   de membrana marrom-avermelhada (antes, bronze). Desenho nosso.
 - **Conta do tabuleiro:** "tropas 13" virou **"força das tropas 13"** (é a força, não o número de tropas).

@@ -4,7 +4,7 @@
  * Gerar a página: node tools/tactical/prototipo/build.js
  */
 import { boardStrength, hasFormation, tacticBonus, resolveTacticalBattle, Squad, Lane, Side, TacticalBattleResult, LaneFactor } from "../../../agot-bg-game-server/src/common/tactical-battle/tacticalBattle";
-import { ARMY_MAX, SQUAD_MAX, SUPPORT_MAX, slotMaxFor, ATTACK_TACTICS, DEFENSE_TACTICS, TACTIC_BEATS, TACTIC_NAMES, TACTIC_WIN_BONUS, Tactic, BASE_VALUE, FAR_FLANK_SHARE, FIELD_LANES, FieldType, ROW_FACTOR, Role, Row, SUPPORT_FACTOR, SquadKind, TERRAIN, UNOPPOSED_FLANK_SHARE, rolesFor } from "../../../agot-bg-game-server/src/common/tactical-battle/tacticalBattleData";
+import { DRAGON_AIR_SHARE, DRAGON_AIR_FAR_SHARE, ARMY_MAX, SQUAD_MAX, SUPPORT_MAX, slotMaxFor, ATTACK_TACTICS, DEFENSE_TACTICS, TACTIC_BEATS, TACTIC_NAMES, TACTIC_WIN_BONUS, Tactic, BASE_VALUE, FAR_FLANK_SHARE, FIELD_LANES, FieldType, ROW_FACTOR, Role, Row, SUPPORT_FACTOR, SquadKind, TERRAIN, UNOPPOSED_FLANK_SHARE, rolesFor } from "../../../agot-bg-game-server/src/common/tactical-battle/tacticalBattleData";
 import { bestReply, computerStrategy, Piece, Scenario, rng } from "../solver";
 import {
   EMPTY_SIDE,
@@ -1575,9 +1575,9 @@ function factorText(f: LaneFactor): string | null {
     case "formation":
       return `${who}: formação (corpo a corpo na frente + atiradores atrás) +15%`;
     case "air":
-      return `${who}: o dragão voou da faixa ao lado e ajudou (90% da força dele)`;
+      return `${who}: o dragão voou da faixa ao lado e ajudou (${Math.round(DRAGON_AIR_SHARE * 100)}% da força dele)`;
     case "air-far":
-      return `${who}: o dragão voou da outra ponta e ajudou (80% da força dele)`;
+      return `${who}: o dragão voou da outra ponta e ajudou (${Math.round(DRAGON_AIR_FAR_SHARE * 100)}% da força dele)`;
     default:
       return null;
   }
