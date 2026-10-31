@@ -4,7 +4,7 @@ import { FIELD_LANES, FieldType, Role, Row, SquadKind, Terrain } from "../../../
 import { rng } from "../solver";
 import { House, TERRAIN_NAMES } from "./data";
 import { grassImage } from "./assets";
-import { drawSquad, drawUnit, kindOf } from "./figures";
+import { drawSquad, kindOf } from "./figures";
 import { detailLane, drawSeaWaves } from "./ground";
 import { drawWallBadges, drawWallLane, drawWalls, paintCastleGround } from "./walls";
 
@@ -308,48 +308,6 @@ function fogLayer(seed: number, light: [number, number, number], dark: [number, 
 }
 
 
-/**
- * No lado do inimigo, em cada faixa: "se ele vier todo aqui com…" e as funções que ele pode
- * escolher, cada uma com ✓ (você ganha), ✗ (perde) ou = (empata). É a mesma conta da luta.
- */
-function drawLaneForce(ctx: CanvasRenderingContext2D, v: PlaceView): void {
-  const lf = v.laneForce as { total: number; here: number; help: number }[];
-  lf.forEach((_f, i) => {
-    if (FIELD_LANES[v.field][i] == "bloqueado") return;
-    const opts = v.outlook?.[i] ?? [];
-    const cx = i * LW + LW / 2;
-    const w = LW - 12;
-    const top = H * 0.2;
-    const h = 120;
-    ctx.fillStyle = "rgba(14,11,8,.86)";
-    roundRect(ctx, cx - w / 2, top, w, h, 12);
-    ctx.fill();
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillStyle = "#f1e6cb";
-    ctx.font = "800 21px 'Alegreya Sans', 'Trebuchet MS', sans-serif";
-    ctx.fillText("Se ele vier aqui:", cx, top + 20, w - 10);
-    const n = Math.max(1, opts.length);
-    const step = (w - 8) / n;
-    opts.forEach((o, k) => {
-      const ox = cx - w / 2 + 4 + step * (k + 0.5);
-      const unitKind = kindOf(o.kind);
-      drawUnit(ctx, ox, top + 70, unitKind == "ship" ? 0.7 : unitKind == "horse" ? 0.75 : 1.05, { role: o.role, kind: unitKind, house: v.enemy, back: false, flip: true, walk: 0, atk: 0, fight: false, seed: k, time: 0 });
-      const mark = o.out == "win" ? "✓" : o.out == "lose" ? "✗" : "=";
-      ctx.fillStyle = o.out == "win" ? "#2f7a2a" : o.out == "lose" ? "#9a3226" : "#4a4238";
-      ctx.beginPath();
-      ctx.arc(ox, top + 95, 15, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.strokeStyle = "rgba(0,0,0,.5)";
-      ctx.lineWidth = 2;
-      ctx.stroke();
-      ctx.fillStyle = "#fff6e2";
-      ctx.font = "900 22px 'Alegreya Sans', 'Trebuchet MS', sans-serif";
-      ctx.fillText(mark, ox, top + 96);
-    });
-  });
-}
-
 function drawFog(ctx: CanvasRenderingContext2D, t: number, enemy: House, count: number, force?: number): void {
   if (!fogLayers.length) {
     fogLayers.push(fogLayer(11, [150, 160, 172], [88, 98, 110], 0.75));
@@ -423,7 +381,6 @@ export function drawPlacement(ctx: CanvasRenderingContext2D, v: PlaceView, t: nu
     drawEnemySquads(ctx, v, t);
   } else {
     drawFog(ctx, t, v.enemy, v.enemyCount, v.enemyForce);
-    if (v.laneForce) drawLaneForce(ctx, v);
     // a muralha é do terreno (todo mundo sabe onde ela está): fica por cima da névoa
     drawWalls(ctx, v.field, [false, false, false], v.wallFlag ?? v.enemy.color);
   }
@@ -505,6 +462,8 @@ export function drawPlacement(ctx: CanvasRenderingContext2D, v: PlaceView, t: nu
   });
   // esquadrões posicionados: cada peça vira 4 bonequinhos; cabem pelo menos 2 peças por casinha
   const placed: PlacedToken[] = [];
+  // os números são desenhados no fim, por cima de todos os bonecos (senão um esconde o do outro)
+  const badges: { x: number; y: number; n: number; sel: boolean; r: number }[] = [];
   const SQ = 1.1;
   const widthOf = (k: SquadKind): number => (kindOf(k) == "horse" ? 70 : kindOf(k) == "foot" ? 46 : 50) * SQ * 0.92;
   for (const s of slots(v.field)) {
@@ -530,12 +489,27 @@ export function drawPlacement(ctx: CanvasRenderingContext2D, v: PlaceView, t: nu
       const scale = n > 2 ? SQ * 0.85 : SQ;
       line.forEach((q) => {
         const w = widthOf(q.kind);
-        const box = drawSquad(ctx, x + w / 2, fy, q.kind, q.role, v.house, { scale, selected: v.selected == q.id, ghost: v.dragging == q.id, time: t, num: v.squads.indexOf(q) + 1 });
+        const box = drawSquad(ctx, x + w / 2, fy, q.kind, q.role, v.house, { scale, selected: v.selected == q.id, ghost: v.dragging == q.id, time: t });
+        badges.push({ x: box.x + 2 * scale, y: fy + 2 * scale, n: v.squads.indexOf(q) + 1, sel: v.selected == q.id, r: 11 * scale });
         if (v.changed == q.id) tagAbove(ctx, box.x + box.w / 2, box.y - 2, "mudou", "#b07a12");
         placed.push({ id: q.id, ...box });
         x += w;
       });
     });
+  }
+  for (const b of badges) {
+    ctx.fillStyle = b.sel ? "#f2cf7e" : "#1d1610";
+    ctx.beginPath();
+    ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = b.sel ? "#6e4f16" : v.house.color;
+    ctx.lineWidth = 1.8;
+    ctx.stroke();
+    ctx.fillStyle = b.sel ? "#23180a" : "#fff6e2";
+    ctx.font = `800 ${Math.round(b.r * 1.35)}px 'Alegreya Sans', 'Trebuchet MS', sans-serif`;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(String(b.n), b.x, b.y + 0.5);
   }
   if (v.preview && v.previewLabel) {
     const txt = `${v.previewLabel}: onde ele rende mais (verde = melhor)`;

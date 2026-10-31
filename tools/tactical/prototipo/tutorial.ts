@@ -66,7 +66,7 @@ function men(ctx: CanvasRenderingContext2D, role: Role, kind: SquadKind, cx: num
 export const SLIDES: Slide[] = [
   {
     title: "1. O campo e o seu lado",
-    text: "O campo tem 3 faixas: esquerda, centro e direita. Cada faixa tem duas casinhas do seu lado: frente e trás. Você põe suas peças ali. Ao tocar numa peça, cada casinha mostra onde ela rende mais: ★ melhor, ▲ bom, normal ou ▼ fraco. No lado do inimigo aparece, em cada faixa, o que acontece se ele vier todo para lá com cada função: ✓ você ganha, ✗ perde. O lado dele fica na névoa até os dois ficarem prontos.",
+    text: "O campo tem 3 faixas: esquerda, centro e direita. Cada faixa tem duas casinhas do seu lado: frente e trás. Você põe suas peças ali. Ao tocar numa peça, cada casinha mostra onde ela rende mais: ★ melhor, ▲ bom, normal ou ▼ fraco. O lado do inimigo fica na névoa até os dois ficarem prontos: você sabe quantas peças ele tem, mas não onde nem com que função.",
     draw: (ctx) => {
       ground(ctx, "planicie", H * 0.36);
       // névoa

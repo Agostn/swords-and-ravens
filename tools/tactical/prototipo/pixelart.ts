@@ -263,16 +263,17 @@ function drawKnight(ctx: Ctx, h: House, role: Role, frame: number, fight: boolea
 }
 
 // ---------------------------------------------------------------- dragão
-// dragão vermelho (escamas vermelho-ferrugem, ventre cor de areia queimada, asas vinho)
-const SC_HI = "#c8603e";
-const SC = "#9a3522";
-const SC_LO = "#5a1a12";
-const BELLY = "#d49a62";
-const BELLY_LO = "#9c5d30";
-const MEMB = "#8f2a1c";
-const MEMB_HI = "#c4523a";
-const MEMB_LO = "#4e140d";
-const BONE = "#ecdcb4";
+// dragão negro (escamas negras com brilho avermelhado, ventre vermelho-escuro, asas cor de bronze), como na
+// pixel art de referência do Agostinho; o volume vem do shadeVolume
+const SC_HI = "#5a4440";
+const SC = "#2e2322";
+const SC_LO = "#151011";
+const BELLY = "#7a2c1e";
+const BELLY_LO = "#4e1a12";
+const MEMB = "#8a6a2c";
+const MEMB_HI = "#c8a24c";
+const MEMB_LO = "#4a3816";
+const BONE = "#dccaa0";
 
 /** Elevação da asa (rad) em cada um dos 6 quadros do voo. */
 const WING_E = [1.2, 0.8, 0.3, -0.25, 0.1, 0.7];
@@ -455,46 +456,49 @@ function drawDragonFly(ctx: Ctx, e: number, breath: boolean, frame: number): voi
   bigWing(false);
 }
 
+/** Pousado, agachado como um bicho grande (referência): ancas fortes, pescoço curvado e cabeça baixa, asas dobradas para cima. */
 function drawDragonIdle(ctx: Ctx, frame: number): void {
   const br = frame % 2 ? -1 : 0; // respiração
   const tail = [0, 1, 2, 1][frame % 4];
-  // asa de longe dobrada
-  wing(ctx, [4, -27 + br], [-12, -18 + br], 1.25, true, 0.62);
-  // cauda enrolada no chão
+  // asa de longe (só as pontas aparecem por cima)
+  wing(ctx, [2, -30 + br], [-14, -18 + br], 1.4, true, 0.85);
+  // cauda comprida pelo chão, enrolando na ponta
   ctx.strokeStyle = SC;
   ctx.lineCap = "round";
-  ctx.lineWidth = 6;
+  ctx.lineWidth = 7;
   ctx.beginPath();
-  ctx.moveTo(-14, -12);
-  ctx.quadraticCurveTo(-30, -2, -42, -2);
+  ctx.moveTo(-20, -10);
+  ctx.quadraticCurveTo(-36, -1, -50, -3);
   ctx.stroke();
-  ctx.lineWidth = 3;
+  ctx.lineWidth = 3.4;
   ctx.beginPath();
-  ctx.moveTo(-40, -2);
-  ctx.quadraticCurveTo(-50, -2, -52, -7 - tail);
+  ctx.moveTo(-48, -3);
+  ctx.quadraticCurveTo(-60, -4, -58, -12 - tail);
   ctx.stroke();
-  poly(ctx, [[-50, -7 - tail], [-55, -12 - tail], [-56, -6 - tail], [-52, -4 - tail]], BONE);
-  // pernas de longe
-  stroke(ctx, [[-6, -12], [-2, -5], [-6, 0]], SC_LO, 4);
-  stroke(ctx, [[12, -12], [14, -5], [17, 0]], SC_LO, 3.2);
-  // corpo (mais alto, sentado)
-  ell(ctx, 0, -17 + br, 16, 8.5, SC, -0.15);
-  ell(ctx, 0, -21 + br, 13, 3, SC_HI, -0.15);
-  ell(ctx, 3, -12 + br, 13, 3.6, BELLY, -0.15);
-  for (let x = -8; x <= 14; x += 4) rect(ctx, x, -14 + br - x * 0.12, 1, 4.5, BELLY_LO);
-  // pescoço erguido
-  poly(ctx, [[8, -22 + br], [14, -32 + br], [20, -40 + br], [26, -35 + br], [19, -26 + br], [15, -14 + br]], SC);
-  poly(ctx, [[13, -16 + br], [17, -26 + br], [22, -34 + br], [24, -32 + br], [19, -24 + br], [16, -13 + br]], BELLY);
-  spines(ctx, [[-14, -23], [-7, -25], [0, -26], [7, -25], [12, -30], [16, -36]].map(([x, y]) => [x, y + br] as Pt), 4);
-  // pernas de perto (garras no chão)
-  stroke(ctx, [[-8, -14 + br], [-3, -6], [-8, 0]], SC, 4.6);
-  poly(ctx, [[-12, 0], [-9, -2], [-5, 0]], BONE);
-  stroke(ctx, [[10, -12 + br], [13, -5], [16, 0]], SC, 3.6);
-  poly(ctx, [[14, 0], [17, -2], [20, 0]], BONE);
-  // cabeça
-  dragonHead(ctx, 24, -40 + br, false, frame);
-  // asa de perto dobrada sobre as costas
-  wing(ctx, [0, -26 + br], [-14, -17 + br], 1.15, false, 0.62);
+  poly(ctx, [[-56, -12 - tail], [-61, -18 - tail], [-60, -10 - tail]], BONE);
+  // pernas de longe (mais escuras)
+  stroke(ctx, [[-14, -14], [-8, -6], [-14, 0]], SC_LO, 5);
+  stroke(ctx, [[8, -16], [10, -7], [12, 0]], SC_LO, 4);
+  // corpo agachado
+  ell(ctx, -4, -17 + br, 20, 10, SC, -0.12);
+  ell(ctx, -4, -22 + br, 16, 3.4, SC_HI, -0.12);
+  ell(ctx, 0, -11 + br, 16, 4, BELLY, -0.12);
+  for (let x = -12; x <= 12; x += 3) rect(ctx, x, -13 + br - x * 0.1, 1, 4, BELLY_LO);
+  // anca de trás forte
+  ell(ctx, -14, -13 + br, 9, 8, SC, 0.3);
+  ell(ctx, -16, -17 + br, 5, 3, SC_HI, 0.3);
+  // pata de trás (dobrada, como um gato grande) e da frente
+  stroke(ctx, [[-12, -8], [-6, -4], [-12, 0]], SC, 5.5);
+  poly(ctx, [[-17, 0], [-13, -2], [-9, 0]], BONE);
+  stroke(ctx, [[12, -16 + br], [15, -7], [17, 0]], SC, 4.6);
+  poly(ctx, [[14, 0], [18, -2], [22, 0]], BONE);
+  // pescoço sobe e curva, cabeça baixa olhando para a frente
+  poly(ctx, [[8, -22 + br], [14, -34 + br], [22, -42 + br], [30, -40 + br], [24, -32 + br], [18, -20 + br], [14, -12 + br]], SC);
+  poly(ctx, [[14, -14 + br], [18, -24 + br], [24, -34 + br], [27, -33 + br], [21, -22 + br], [17, -12 + br]], BELLY);
+  spines(ctx, [[-18, -26], [-11, -28], [-4, -29], [3, -28], [9, -31], [14, -37], [20, -43]].map(([x, y]) => [x, y + br] as Pt), 4.2);
+  dragonHead(ctx, 27, -38 + br, false, frame);
+  // asa de perto dobrada, erguida
+  wing(ctx, [-2, -28 + br], [-16, -16 + br], 1.3, false, 0.85);
 }
 
 /** Quadro do dragão no formato que o desenho usa (virado para a DIREITA, apoio em w/2, h·0,62). */

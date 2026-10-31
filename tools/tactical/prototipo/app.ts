@@ -345,57 +345,6 @@ function laneForces(side: Side): { total: number; here: number; help: number }[]
 
 const totalForce = (side: Side): number => units[side].reduce((a, u) => a + baseValue(u, side), 0);
 
-type Outcome = "win" | "lose" | "tie";
-interface LaneOption {
-  role: Role;
-  kind: SquadKind;
-  out: Outcome;
-}
-const RANK: Record<Outcome, number> = { lose: 0, tie: 1, win: 2 };
-const isRanged = (r: Role): boolean => r == "arqueiro" || r == "flechas" || r == "catapulta";
-let outlookCache: { key: string; val: LaneOption[][] } = { key: "", val: [] };
-
-/**
- * "Se ele vier todo aqui com…": para cada faixa e cada função que o inimigo pode escolher,
- * roda a MESMA conta da luta (com as suas peças como estão) e diz se você ganha, perde ou empata.
- * Se o inimigo tem cavaleiros também, considera a melhor escolha dele para os cavaleiros (o pior caso para você).
- */
-function laneOutlook(side: Side): LaneOption[][] {
-  const enemy = other(side);
-  const key = JSON.stringify([side, config.field, units[side].map((u) => [u.lane, u.row, u.role]), units[enemy].map((u) => [u.kind, u.strength, u.support])]);
-  if (outlookCache.key == key) return outlookCache.val;
-  const mine = toSquads(units[side].map((u) => ({ ...u, lane: u.lane ?? (1 as Lane) })));
-  const eu = units[enemy];
-  const has = (k: SquadKind): boolean => eu.some((u) => u.kind == k && !u.locked);
-  // em terra, navio é só apoio (atira do litoral): o que conta é o soldado ou o cavaleiro
-  const primary: SquadKind | null = isSea() ? (has("ship") ? "ship" : null) : has("footman") ? "footman" : has("knight") ? "knight" : null;
-  const val: LaneOption[][] = ([0, 1, 2] as Lane[]).map((L) => {
-    if (!primary || FIELD_LANES[config.field][L] == "bloqueado") return [];
-    const knightRoles: (Role | null)[] = primary != "knight" && has("knight") ? rolesFor("knight", false) : [null];
-    return rolesFor(primary, isSea()).map((pr) => {
-      let worst: Outcome = "win";
-      for (const kr of knightRoles) {
-        const theirs: Squad[] = eu.map((u) => {
-          const role = u.kind == primary ? pr : u.kind == "knight" && kr ? kr : u.role;
-          return { id: u.id, kind: u.kind, role, lane: u.locked ? (u.lane as Lane) : L, row: u.locked ? u.row : isRanged(role) ? "tras" : "frente", strength: u.strength, support: u.support };
-        });
-        const atk = side == "attacker" ? mine : theirs;
-        const def = side == "attacker" ? theirs : mine;
-        const res = resolveTacticalBattle({
-          field: config.field,
-          attacker: { squads: atk, card: config.attacker.card, orderBonus: config.attacker.order },
-          defender: { squads: def, card: config.defender.card, orderBonus: config.defender.order },
-          bladeHolder: bladeHolder()
-        });
-        const out: Outcome = res.winner == side ? "win" : res.winner == enemy ? "lose" : "tie";
-        if (RANK[out] < RANK[worst]) worst = out;
-      }
-      return { role: pr, kind: primary, out: worst };
-    });
-  });
-  outlookCache = { key, val };
-  return val;
-}
 
 const listPt = (xs: Role[]): string => xs.map((x) => ROLE_NAMES[x].toLowerCase()).join(xs.length > 1 ? " e " : "");
 
@@ -1288,7 +1237,6 @@ function startLoop(): void {
         preview: previewFor(units[placingSide].find((u) => u.id == selected) ?? null),
         wallFlag: houseOf("defender").color,
         laneForce: reacting ? undefined : laneForces(placingSide),
-        outlook: reacting ? undefined : laneOutlook(placingSide),
         enemySquads: reacting ? units[other(placingSide)] : undefined,
         enemyChanged: reacting ? reactChanged[other(placingSide)] : null,
         changed: reacting ? changedId() : null,
@@ -1501,7 +1449,11 @@ function init(): void {
   c.addEventListener("pointerdown", canvasDown);
   window.addEventListener("pointermove", moveDrag, { passive: false });
   window.addEventListener("pointerup", endDrag);
-  window.addEventListener("pointercancel", (e) => endDrag(e));
+  // o navegador cancelou (por exemplo: o dedo rolou a faixa de peças): só desfaz o arraste
+  window.addEventListener("pointercancel", () => {
+    if (dragging) dragging.ghost.remove();
+    dragging = null;
+  });
   c.addEventListener("pointerleave", () => {
     if (!dragging) hoverSlot = null;
   });

@@ -94,6 +94,33 @@ const cache = new Map<string, Sprite>();
  * Pixela um desenho feito em vetor (1 unidade = 1 pixel). O desenho deve estar virado
  * para a ESQUERDA e com os pés em (ax, ay).
  */
+/**
+ * Volume (como na pixel art de jogos): a luz vem de cima à esquerda. Pixel com borda em cima/à esquerda
+ * ganha um brilho; com borda embaixo/à direita, sombra (2 px). Dá corpo às formas chapadas.
+ */
+export function shadeVolume(c: HTMLCanvasElement, light = 0.2, dark = 0.3): void {
+  const ctx = c.getContext("2d") as CanvasRenderingContext2D;
+  const img = ctx.getImageData(0, 0, c.width, c.height);
+  const d = img.data;
+  const w = c.width;
+  const h = c.height;
+  const a = (x: number, y: number): boolean => x >= 0 && y >= 0 && x < w && y < h && d[(y * w + x) * 4 + 3] > 110;
+  const out = new Uint8ClampedArray(d);
+  for (let y = 0; y < h; y++)
+    for (let x = 0; x < w; x++) {
+      const i = (y * w + x) * 4;
+      if (d[i + 3] <= 110) continue;
+      let f = 1;
+      if (!a(x, y - 1) || !a(x - 1, y)) f = 1 + light;
+      else if (!a(x, y + 1) || !a(x + 1, y)) f = 1 - dark;
+      else if (!a(x, y + 2) || !a(x + 2, y + 1)) f = 1 - dark * 0.5;
+      if (f == 1) continue;
+      for (let k = 0; k < 3; k++) out[i + k] = f > 1 ? d[i + k] + (255 - d[i + k]) * (f - 1) : d[i + k] * f;
+    }
+  img.data.set(out);
+  ctx.putImageData(img, 0, 0);
+}
+
 export function pixelSprite(id: string, w: number, h: number, ax: number, ay: number, draw: (ctx: CanvasRenderingContext2D) => void): Sprite {
   const hit = cache.get(id);
   if (hit) return hit;
@@ -102,6 +129,7 @@ export function pixelSprite(id: string, w: number, h: number, ax: number, ay: nu
   ctx.translate(ax, ay);
   draw(ctx);
   crisp(c);
+  shadeVolume(c);
   addOutline(c);
   const s = { c, ax, ay };
   cache.set(id, s);

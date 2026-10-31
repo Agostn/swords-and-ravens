@@ -235,7 +235,8 @@ function laneDamage(
 const SHOOTERS: Role[] = ["arqueiro", "flechas", "catapulta"];
 /** Tem corpo a corpo na frente e atirador atrás? */
 export function hasFormation(squads: Squad[]): boolean {
-  return squads.some((s) => s.row == "frente" && !SHOOTERS.includes(s.role) && s.role != "torre") && squads.some((s) => s.row == "tras" && SHOOTERS.includes(s.role));
+  const MELEE: Role[] = ["lanceiro", "escudeiro", "cavalaria", "batedores", "abordagem", "ariete"];
+  return squads.some((s) => s.row == "frente" && MELEE.includes(s.role)) && squads.some((s) => s.row == "tras" && SHOOTERS.includes(s.role));
 }
 
 function dominantEnemy(theirs: Squad[]): Role | undefined {

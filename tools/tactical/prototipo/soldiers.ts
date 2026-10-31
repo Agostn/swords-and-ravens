@@ -9,7 +9,7 @@
 import { Role } from "../../../agot-bg-game-server/src/common/tactical-battle/tacticalBattleData";
 import { House } from "./data";
 import { drawGlyph, styleOf } from "./houseStyle";
-import { Sprite, addOutline, line, newCanvas, px } from "./sprites";
+import { Sprite, addOutline, line, newCanvas, px, shadeVolume } from "./sprites";
 
 const PAD = 42;
 const cache = new Map<string, Sprite>();
@@ -250,6 +250,7 @@ export function soldierSprite(h: House, role: Role, frame: 0 | 1 | 2 | 3): Sprit
     if (frame < 2) px(ctx, Math.round(tipX + dx * 2) + 1, Math.round(tipY + dy * 2) + 2, h.color, 3, 2);
     R(-8, -18, 2, 2, skin);
   }
+  shadeVolume(c, 0.16, 0.26);
   addOutline(c);
   const out = { c, ax: fx, ay: fy };
   cache.set(id, out);
