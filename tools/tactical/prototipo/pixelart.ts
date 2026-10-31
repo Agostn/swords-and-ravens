@@ -220,28 +220,28 @@ function drawKnight(ctx: Ctx, h: House, role: Role, frame: number, fight: boolea
 
 // ---------------------------------------------------------------- dragão
 // dragão vermelho (escamas vermelho-ferrugem, ventre cor de areia queimada, asas vinho)
-const SC_HI = "#c0573a";
-const SC = "#923322";
-const SC_LO = "#5e1d14";
-const BELLY = "#d39256";
+const SC_HI = "#c8603e";
+const SC = "#9a3522";
+const SC_LO = "#5a1a12";
+const BELLY = "#d49a62";
 const BELLY_LO = "#9c5d30";
-const MEMB = "#7e2318";
-const MEMB_HI = "#b2402c";
-const MEMB_LO = "#4a130d";
+const MEMB = "#8f2a1c";
+const MEMB_HI = "#c4523a";
+const MEMB_LO = "#4e140d";
 const BONE = "#ecdcb4";
 
 /** Elevação da asa (rad) em cada um dos 6 quadros do voo. */
 const WING_E = [1.2, 0.8, 0.3, -0.25, 0.1, 0.7];
 
 /**
- * Dragão virado para a DIREITA, ponto de apoio em (56, 70).
+ * Dragão virado para a DIREITA, ponto de apoio em (64, 70).
  * mode "fly": quadro 0..5 do bater de asas; "breath": asas abertas e boca aberta (cuspindo fogo);
  * "idle": pousado, quadro 0..3 (respira e mexe a cauda).
- * A boca fica em (+54, −10) no voo (ver dragonMouth na luta).
+ * A boca fica em (+58, +1) no voo (ver dragonMouth na luta).
  */
 export function dragonSprite(mode: "fly" | "breath" | "idle", frame: number): Sprite {
   const id = `dr|${mode}|${frame}`;
-  return pixelSprite(id, 112, 112, 56, 70, (ctx) => (mode == "idle" ? drawDragonIdle(ctx, frame) : drawDragonFly(ctx, mode == "breath" ? 0.95 : WING_E[frame % 6], mode == "breath", frame)));
+  return pixelSprite(id, 128, 112, 64, 70, (ctx) => (mode == "idle" ? drawDragonIdle(ctx, frame) : drawDragonFly(ctx, mode == "breath" ? 0.95 : WING_E[frame % 6], mode == "breath", frame)));
 }
 
 function wing(ctx: Ctx, sh: Pt, root: Pt, e: number, far: boolean, fold = 1): void {
@@ -326,46 +326,89 @@ function spines(ctx: Ctx, pts: Pt[], size: number): void {
   });
 }
 
+/**
+ * Voo no pose da referência do Agostinho (dragão vermelho cuspindo fogo, de lado):
+ * pescoço comprido esticado para a frente e um pouco para baixo, asas enormes jogadas para trás e
+ * para cima, patas penduradas e a cauda descendo e enrolando no fim. O bater de asas gira a asa no ombro.
+ */
 function drawDragonFly(ctx: Ctx, e: number, breath: boolean, frame: number): void {
-  const sh: Pt = [2, -11];
-  const root: Pt = [-15, -5];
-  // asa de longe (atrás do corpo)
-  wing(ctx, [sh[0] + 4, sh[1] - 1], [root[0] + 4, root[1] - 1], e + 0.18, true, 1.1);
-  // cauda longa com ponta em lança
-  const sway = Math.sin((frame / 6) * Math.PI * 2) * 2;
+  // e: 1,2 (asa lá em cima) … −0,25 (asa embaixo). Vira um giro em volta do ombro.
+  const flap = (0.75 - e) * 0.55;
+  const sh: Pt = [2, -12];
+  const rot = (p: Pt, a: number, o: Pt = sh): Pt => {
+    const dx = p[0] - o[0];
+    const dy = p[1] - o[1];
+    return [o[0] + dx * Math.cos(a) - dy * Math.sin(a), o[1] + dx * Math.sin(a) + dy * Math.cos(a)];
+  };
+  // asa (pontos no pose da referência), girada pelo bater
+  const bigWing = (far: boolean): void => {
+    const a = flap * (far ? 0.8 : 1) + (far ? -0.25 : 0);
+    const o: Pt = far ? [6, -14] : sh;
+    const W = (p: Pt): Pt => rot(far ? [p[0] + 6, p[1] - 3] : p, a, o);
+    const wrist = W([-14, -40]);
+    const tips = [W([-34, -52]), W([-54, -40]), W([-62, -20]), W([-52, -2]), W([-34, 4])];
+    const root = W([-16, 0]);
+    const pts: Pt[] = [W(sh), wrist, tips[0]];
+    for (let k = 1; k < tips.length; k++) {
+      const m: Pt = [(tips[k - 1][0] + tips[k][0]) / 2, (tips[k - 1][1] + tips[k][1]) / 2];
+      pts.push([m[0] * 0.7 + wrist[0] * 0.3, m[1] * 0.7 + wrist[1] * 0.3]);
+      pts.push(tips[k]);
+    }
+    pts.push(root);
+    poly(ctx, pts, far ? MEMB_LO : MEMB);
+    if (!far) {
+      // borda da frente mais clara (pega luz) e veias escuras
+      poly(ctx, [W(sh), wrist, tips[0], tips[1], [(wrist[0] + tips[1][0]) / 2, (wrist[1] + tips[1][1]) / 2 + 3]], MEMB_HI);
+      tips.forEach((t, k) => k > 0 && stroke(ctx, [[(wrist[0] + t[0]) / 2, (wrist[1] + t[1]) / 2], [(wrist[0] + tips[k - 1][0]) / 2 + (t[0] - tips[k - 1][0]) * 0.25, (wrist[1] + tips[k - 1][1]) / 2 + (t[1] - tips[k - 1][1]) * 0.25 + 4]], MEMB_LO, 1.2));
+    }
+    const bone = far ? SC_LO : SC;
+    stroke(ctx, [W(sh), wrist], bone, far ? 3 : 4);
+    tips.forEach((t) => stroke(ctx, [wrist, t], bone, far ? 1.3 : 1.7));
+    poly(ctx, [wrist, [wrist[0] + 1, wrist[1] - 4], [wrist[0] + 3, wrist[1] - 0.5]], BONE);
+  };
+  bigWing(true);
+  // cauda: desce da garupa e enrola no fim
+  const sway = Math.sin((frame / 6) * Math.PI * 2) * 1.5;
   ctx.strokeStyle = SC;
   ctx.lineCap = "round";
   ctx.lineWidth = 6;
-  // a cauda pende para baixo e enrola na ponta
   ctx.beginPath();
-  ctx.moveTo(-14, -2);
-  ctx.quadraticCurveTo(-26, 14 + sway, -38, 18 + sway);
+  ctx.moveTo(-14, 2);
+  ctx.quadraticCurveTo(-20, 16 + sway, -32, 20 + sway);
   ctx.stroke();
-  ctx.lineWidth = 3;
+  ctx.lineWidth = 3.6;
   ctx.beginPath();
-  ctx.moveTo(-36, 18 + sway);
-  ctx.quadraticCurveTo(-50, 22 + sway, -50, 12 + sway);
+  ctx.moveTo(-31, 20 + sway);
+  ctx.quadraticCurveTo(-46, 25 + sway, -48, 15 + sway);
   ctx.stroke();
-  poly(ctx, [[-49, 13 + sway], [-54, 7 + sway], [-47, 8 + sway]], BONE);
-  // perna de trás pendurada e corpo
-  stroke(ctx, [[-8, 2], [-6, 11], [-10, 17]], SC_LO, 4);
-  poly(ctx, [[-13, 17], [-10, 15], [-7, 18]], BONE);
-  ell(ctx, 0, -3, 17, 8.5, SC, -0.08);
-  ell(ctx, 1, -7, 14, 3.2, SC_HI, -0.08); // luz nas costas
-  // ventre de placas vermelhas
-  ell(ctx, 2, 2, 14, 3.6, BELLY, -0.08);
-  for (let x = -10; x <= 14; x += 4) rect(ctx, x, 0 + (x > 0 ? -0.5 : 0.5), 1, 4.5, BELLY_LO);
-  // pescoço em S
-  poly(ctx, [[10, -9], [18, -16], [27, -21], [31, -15], [24, -11], [16, -1], [10, 2]], SC);
-  poly(ctx, [[13, -2], [20, -9], [27, -14], [29, -12], [22, -6], [16, 1]], BELLY);
-  spines(ctx, [[-18, -8], [-11, -11], [-4, -12], [3, -12], [10, -11], [16, -16], [22, -20]], 4);
-  // perna da frente (garras para a frente)
-  stroke(ctx, [[10, 1], [14, 7], [18, 7]], SC_LO, 3.2);
-  poly(ctx, [[17, 6], [21, 6.5], [18, 8.5]], BONE);
-  // cabeça: boca em (+54, −10) quando está cuspindo
-  dragonHead(ctx, 30, -20, breath, frame % 2);
-  // asa de perto (na frente), bem grande
-  wing(ctx, sh, root, e, false, 1.15);
+  ctx.lineWidth = 2.2;
+  ctx.beginPath();
+  ctx.moveTo(-48, 15 + sway);
+  ctx.quadraticCurveTo(-48, 9 + sway, -42, 11 + sway);
+  ctx.stroke();
+  poly(ctx, [[-42, 9 + sway], [-37, 10 + sway], [-41, 14 + sway]], BONE);
+  // patas de trás penduradas (a de longe primeiro)
+  stroke(ctx, [[-6, 2], [-3, 11], [-7, 18]], SC_LO, 3.6);
+  // corpo inclinado (peito na frente e mais alto, garupa atrás e mais baixa)
+  ell(ctx, -3, -3, 15, 8, SC, 0.32);
+  ell(ctx, -3, -7, 12, 3.4, SC_HI, 0.32); // luz no dorso
+  ell(ctx, -1, 1.5, 12, 3.6, BELLY, 0.32); // ventre claro
+  for (let k = -9; k <= 8; k += 3) rect(ctx, k, -1 + k * 0.33 + 2.5, 1, 3.5, BELLY_LO);
+  // escamas (pontinhos escuros)
+  for (let k = 0; k < 14; k++) rect(ctx, -14 + k * 1.9, -8 + ((k * 7) % 5) + k * 0.6, 1, 1, SC_LO);
+  stroke(ctx, [[-12, 3], [-10, 12], [-14, 19]], SC, 4.2);
+  poly(ctx, [[-17, 19], [-14, 17], [-11, 20]], BONE);
+  // pescoço comprido para a frente, descendo um pouco até a cabeça
+  poly(ctx, [[6, -12], [16, -15], [26, -14], [34, -10], [33, -4], [25, -7], [15, -6], [8, -1]], SC);
+  poly(ctx, [[9, -3], [16, -7], [25, -8], [32, -6], [31, -4], [24, -5], [15, -4], [10, 0]], BELLY);
+  spines(ctx, [[-14, -10], [-8, -13], [-2, -15], [4, -15], [10, -15], [17, -17], [24, -16]], 3.6);
+  // patinha da frente encolhida
+  stroke(ctx, [[8, -1], [11, 4], [15, 4]], SC_LO, 3);
+  poly(ctx, [[14, 3], [18, 4], [15, 6]], BONE);
+  // cabeça (boca em +58, +1 quando cospe fogo)
+  dragonHead(ctx, 34, -8, breath, frame % 2);
+  // asa de perto, na frente de tudo
+  bigWing(false);
 }
 
 function drawDragonIdle(ctx: Ctx, frame: number): void {

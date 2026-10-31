@@ -23,6 +23,7 @@ import { drawSeaWaves } from "./ground";
 
 export const T_END = 10;
 const T_FIGHT = 3.2; // começam as baixas
+const T_DUEL = 5.0; // empate: os outros recuam e os campeões duelam no meio
 const T_ROUT = 7.4; // quem perdeu foge
 
 /** Tamanho dos bonequinhos na luta. */
@@ -169,6 +170,8 @@ interface Drop {
 }
 
 export interface Sim {
+  /** empate decidido no duelo de campeões: quem vence e os dois campeões (escolhidos na hora) */
+  duel?: { winner: Side; a: Man | null; b: Man | null; picked: boolean };
   /** batalha do tabuleiro (quem foge e quem morre); sem ela, cada faixa decide */
   outcome?: BoardOutcome;
   field: FieldType;
@@ -347,7 +350,13 @@ export function createSim(field: FieldType, res: TacticalBattleResult, squads: R
   FIELD_LANES[field].forEach((t, i) => {
     if (t == "muralha" && !breach[i]) frontY[i] = WALL_Y + 10;
   });
-  const sim: Sim = { outcome, field, res, houses, men, shots: [], breaths: [], sparks: [], drops: [], dust: [], slashes: [], floor: null, t: 0, stop: 0, shake: 0, breach, rand, frontY };
+  if (res.duel && res.winner) {
+    // as baixas acontecem antes do duelo (depois todo mundo para e assiste)
+    men.forEach((m) => {
+      if (m.dieAt < Infinity) m.dieAt = T_FIGHT + 0.3 + Math.max(0, (m.dieAt - T_FIGHT - 0.5) / 3.5) * (T_DUEL - T_FIGHT - 0.6);
+    });
+  }
+  const sim: Sim = { duel: res.duel && res.winner ? { winner: res.winner, a: null, b: null, picked: false } : undefined, outcome, field, res, houses, men, shots: [], breaths: [], sparks: [], drops: [], dust: [], slashes: [], floor: null, t: 0, stop: 0, shake: 0, breach, rand, frontY };
   ([0, 1, 2] as Lane[]).forEach((lane) => {
     if (res.lanes[lane].winner != null) pairUp(sim, lane);
   });
@@ -398,6 +407,79 @@ function wallBlock(sim: Sim, m: Man, prevY: number, dt: number): void {
     m.x += Math.sign(dx) * Math.min(Math.abs(dx) - pass, 70 * dt);
     if (prevY > BAND_TOP && prevY < BAND_BOT) m.x = Math.max(cx - pass, Math.min(cx + pass, m.x));
   }
+}
+
+/** Campeão: o lutador corpo a corpo vivo mais perto do meio do campo (se não houver, qualquer um). */
+function pickChampion(sim: Sim, side: Side): Man | null {
+  const alive = sim.men.filter((m) => m.side == side && !m.dead && !isStatic(m) && m.kind != "dragon" && m.kind != "ship" && m.dieAt == Infinity);
+  const pool = alive.filter(melee).length ? alive.filter(melee) : alive;
+  let best: Man | null = null;
+  let bd = Infinity;
+  for (const m of pool) {
+    const d = Math.hypot(m.x - W / 2, m.y - H * 0.5);
+    if (d < bd) {
+      bd = d;
+      best = m;
+    }
+  }
+  return best;
+}
+
+/**
+ * Duelo de campeões (empate no mini-mapa): os outros param e recuam para a sua linha; os dois
+ * campeões vão para o meio e trocam golpes; no fim o da Lâmina de Aço Valiriano dá o golpe final.
+ * Devolve true quando cuidou deste boneco.
+ */
+function duelStep(sim: Sim, m: Man, dt: number): boolean {
+  const d = sim.duel as NonNullable<Sim["duel"]>;
+  const t = sim.t;
+  if (!d.picked) {
+    d.picked = true;
+    d.a = pickChampion(sim, d.winner);
+    d.b = pickChampion(sim, d.winner == "attacker" ? "defender" : "attacker");
+    if (!d.a || !d.b) {
+      d.a = null;
+      d.b = null;
+    }
+    [d.a, d.b].forEach((c) => {
+      if (c) {
+        c.foe = c === d.a ? d.b : d.a;
+        c.engaged = false;
+        c.nextHit = T_DUEL + 1.1 + (c === d.a ? 0 : 0.35);
+      }
+    });
+  }
+  if (!d.a || !d.b) return false;
+  if (m !== d.a && m !== d.b) {
+    if (t >= T_ROUT) return false; // depois do duelo, cada um segue (quem perdeu foge)
+    // assiste: volta um pouco para a sua linha
+    const home = m.side == "attacker" ? Math.max(m.y, H * 0.7) : Math.min(m.y, H * 0.3);
+    steer(m, m.x, home, m.speed * 0.6, dt);
+    m.engaged = false;
+    m.flip = m.side == "defender";
+    return true;
+  }
+  const foe = (m === d.a ? d.b : d.a) as Man;
+  if (t >= T_ROUT) return m === d.b; // o perdedor fica caído/empurrado um instante
+  const left = m.side == "attacker";
+  const sx = W / 2 + (left ? -20 : 20);
+  const sy = H * 0.5;
+  steer(m, sx, sy, m.speed, dt);
+  m.flip = foe.x < m.x;
+  const near = Math.hypot(foe.x - m.x, foe.y - m.y) < 60;
+  if (near && t >= m.nextHit) {
+    m.atkStart = t;
+    const final = m === d.a && t > T_ROUT - 0.9;
+    m.nextHit = t + 0.7 + sim.rand() * 0.25;
+    if (final) {
+      hit(sim, m, foe, 2); // golpe final do campeão da Lâmina
+      foe.nextHit = T_ROUT + 5;
+      m.nextHit = T_ROUT + 5;
+    } else hit(sim, m, foe, 0.6, sim.rand() < 0.45); // golpes e defesas (faísca)
+  }
+  const p = (t - m.atkStart) / 0.4;
+  m.atk = p >= 0 && p <= 1 ? (p < 0.4 ? p / 0.4 : 1 - (p - 0.4) / 0.6) : 0;
+  return true;
 }
 
 /** Monta as duplas de uma faixa. */
@@ -638,6 +720,7 @@ export function stepSim(sim: Sim, dt: number): void {
       continue;
     }
     if (t < 0.6) continue;
+    if (sim.duel && t >= T_DUEL && t < T_ROUT + 0.3 && duelStep(sim, m, dt)) continue;
     const L = sim.res.lanes[m.lane];
     const lost = t > T_ROUT && (sim.outcome ? m.side == sim.outcome.loser : L.winner && L.winner != "tie" && L.winner != m.side);
     if (lost && !isStatic(m)) {
@@ -929,7 +1012,7 @@ function stepDragon(sim: Sim, m: Man, dt: number): void {
 /** Ponto da boca do dragão (o sprite olha para a direita; FIG × 0,95 é a escala dele). */
 export function dragonMouth(x: number, y: number, flip: boolean, s: number): [number, number] {
   const k = s * DRAGON_SCALE;
-  return [x + 54 * (flip ? -1 : 1) * k, y - 10 * k];
+  return [x + 58 * (flip ? -1 : 1) * k, y + 1 * k];
 }
 
 // ---------------------------------------------------------------- desenho
@@ -1008,6 +1091,7 @@ export function laneReasons(res: TacticalBattleResult, lane: number): { text: st
     else if (f.kind == "flank") add("ajuda pelo lado", f.side);
     else if (f.kind == "far-flank") add("ajuda de longe (15%)", f.side);
     else if (f.kind == "screen") add("a frente segura a cavalaria", f.side);
+    else if (f.kind == "formation") add("formação: frente + atiradores +15%", f.side);
   }
   return out.slice(0, 3);
 }
@@ -1117,6 +1201,19 @@ export function drawSim(ctx: CanvasRenderingContext2D, sim: Sim): void {
   const order = [...sim.men].sort((a, b) => Number(b.dead) - Number(a.dead) || (a.kind == "dragon" ? 1 : 0) - (b.kind == "dragon" ? 1 : 0) || a.y - b.y);
   ctx.save();
   ctx.globalAlpha = appear;
+  // duelo: círculo dourado no chão marcando a arena dos campeões
+  if (sim.duel && sim.duel.a && sim.duel.b && t >= T_DUEL && t < T_ROUT + 0.4) {
+    const k = Math.min(1, (t - T_DUEL) / 0.5);
+    ctx.save();
+    ctx.globalAlpha = 0.8 * k;
+    ctx.strokeStyle = "#e0b354";
+    ctx.lineWidth = 3;
+    ctx.setLineDash([8, 6]);
+    ctx.beginPath();
+    ctx.ellipse(W / 2, H * 0.5 + 4, 70, 26, 0, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+  }
   const drawMan = (m: Man): void => {
     if (m.dead) drawFallen(ctx, m.x, m.y, FIG, pose(m, sim.houses[m.side], t), t - m.deadAt);
     else drawUnit(ctx, m.x, m.y, FIG, pose(m, sim.houses[m.side], t), m.dir);
@@ -1203,6 +1300,36 @@ export function drawSim(ctx: CanvasRenderingContext2D, sim: Sim): void {
   tag(`${sim.houses.defender.name} defende`, W / 2, 52, sim.houses.defender.color, sim.houses.defender.ink);
   tag(`${sim.houses.attacker.name} ataca`, W / 2, H - 22, sim.houses.attacker.color, sim.houses.attacker.ink);
   drawLaneHud(ctx, sim);
+  if (sim.duel && sim.duel.a && t >= T_DUEL - 0.2) {
+    const d = sim.duel;
+    const a = Math.min(1, (t - T_DUEL + 0.2) / 0.4);
+    const h = sim.houses[d.winner];
+    ctx.save();
+    ctx.globalAlpha = a;
+    const done = t >= T_ROUT - 0.6;
+    const title = done ? `${h.name.toUpperCase()} VENCE O DUELO` : "DUELO DE CAMPEÕES";
+    const sub = "Empate! Desempata a Lâmina de Aço Valiriano";
+    ctx.font = "800 26px 'Alegreya Sans', 'Trebuchet MS', sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    const tw = Math.min(W - 20, Math.max(ctx.measureText(title).width, 380) + 40);
+    const y = H * 0.2;
+    ctx.fillStyle = "rgba(12,9,6,.88)";
+    roundRect(ctx, W / 2 - tw / 2, y - 34, tw, 66, 12);
+    ctx.fill();
+    ctx.strokeStyle = done ? h.color : "#e0b354";
+    ctx.lineWidth = 3;
+    ctx.stroke();
+    ctx.fillStyle = done ? h.color : "#f2cf7e";
+    ctx.lineWidth = 4;
+    ctx.strokeStyle = "rgba(0,0,0,.6)";
+    ctx.strokeText(title, W / 2, y - 10, tw - 20);
+    ctx.fillText(title, W / 2, y - 10, tw - 20);
+    ctx.font = "700 18px 'Alegreya Sans', 'Trebuchet MS', sans-serif";
+    ctx.fillStyle = "#efe3c6";
+    ctx.fillText(`${sub} (${h.name})`, W / 2, y + 17, tw - 20);
+    ctx.restore();
+  }
   if (t > T_ROUT + 0.2) {
     sim.res.lanes.forEach((L, i) => {
       if (L.winner == null) return;

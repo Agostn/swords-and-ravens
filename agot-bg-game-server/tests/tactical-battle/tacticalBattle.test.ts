@@ -179,4 +179,23 @@ describe("combate tático", () => {
     expect(isValidReaction(base, [base[0], base[1], { ...base[2], lane: 0 }], "planicie")).toBe(false);
     expect(isValidReaction(base, [{ ...base[0], role: "cavalaria" }, base[1], base[2]], "planicie")).toBe(false);
   });
+
+  it("formação: corpo a corpo na frente + arqueiro atrás rende mais que tudo na frente", () => {
+    const def = [sq("d0", "footman", "lanceiro", 1), sq("d1", "footman", "lanceiro", 1)];
+    const misto = resolveTacticalBattle({ field: "planicie", attacker: { squads: [sq("a0", "footman", "escudeiro", 1), sq("a1", "footman", "arqueiro", 1, "tras")] }, defender: { squads: def } });
+    expect(misto.lanes[1].factors.some((f) => f.side == "attacker" && f.kind == "formation")).toBe(true);
+    const so = resolveTacticalBattle({ field: "planicie", attacker: { squads: [sq("a0", "footman", "escudeiro", 1), sq("a1", "footman", "escudeiro", 1)] }, defender: { squads: def } });
+    expect(so.lanes[1].factors.some((f) => f.kind == "formation")).toBe(false);
+  });
+
+  it("empate: duelo de campeões, vence quem tem a Lâmina de Aço Valiriano (+1)", () => {
+    const A = [sq("a0", "footman", "escudeiro", 1)];
+    const D = [sq("d0", "footman", "escudeiro", 1)];
+    const sem = resolveTacticalBattle({ field: "planicie", attacker: { squads: A }, defender: { squads: D } });
+    expect(sem.winner).toBeNull();
+    const com = resolveTacticalBattle({ field: "planicie", attacker: { squads: A }, defender: { squads: D }, bladeHolder: "attacker" });
+    expect(com.winner).toBe("attacker");
+    expect(com.bonus).toBe(1);
+    expect(com.duel).toBe(true);
+  });
 });

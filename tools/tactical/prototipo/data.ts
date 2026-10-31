@@ -154,6 +154,8 @@ export interface SideConfig {
   order: number;
   /** 1 = tem o Corvo Mensageiro: depois de ver o exército do outro, pode mudar 1 esquadrão */
   raven: number;
+  /** 1 = tem a Lâmina de Aço Valiriano (mais alto nos Feudos): vence o duelo de campeões no empate */
+  blade?: number;
 }
 
 export interface Preset {

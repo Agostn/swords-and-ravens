@@ -17,6 +17,7 @@ import {
   FIELD_LANES,
   FieldType,
   FLANK_BONUS,
+  FORMATION_BONUS,
   LANE_TIE_MARGIN,
   Role,
   ROLES_BY_KIND,
@@ -76,12 +77,17 @@ export interface TacticalBattleInput {
   field: FieldType;
   attacker: TacticalSideInput;
   defender: TacticalSideInput;
+  /**
+   * Quem tem a Lâmina de Aço Valiriano (o mais alto na trilha dos Feudos, que no jogo original
+   * desempata as batalhas). Se o mini-mapa empatar, os campeões duelam e ele vence: +1.
+   */
+  bladeHolder?: Side;
 }
 
 /** Um motivo que pesou numa faixa (vira frase no resumo depois da animação). */
 export interface LaneFactor {
   side: Side;
-  kind: "counter" | "weak" | "terrain" | "wall-breach" | "wall" | "flank" | "far-flank" | "card" | "screen" | "empty";
+  kind: "counter" | "weak" | "terrain" | "wall-breach" | "wall" | "flank" | "far-flank" | "card" | "screen" | "empty" | "formation";
   role?: Role;
   vs?: Role;
   terrain?: Terrain;
@@ -109,6 +115,8 @@ export interface TacticalBattleResult {
    * a linha e a função) e a conta é feita de novo lá.
    */
   metInCenter?: boolean;
+  /** empatou e foi decidido no duelo de campeões (vence quem tem a Lâmina de Aço Valiriano) */
+  duel?: boolean;
 }
 
 /** Força da peça nesta batalha, como no jogo original. */
@@ -211,11 +219,23 @@ function laneDamage(
     else if (adv <= 1 - 0.2 * COUNTER_SCALE) factors.push({ side, kind: "weak", role: s.role, vs: dominantEnemy(theirs) });
   }
 
+  // formação: corpo a corpo na frente + atirador atrás, na mesma faixa
+  if (FORMATION_BONUS > 0 && hasFormation(mine)) {
+    total *= 1 + FORMATION_BONUS;
+    factors.push({ side, kind: "formation" });
+  }
+
   if (breached) factors.push({ side, kind: "wall-breach", terrain });
   if (rules.wall && side == "defender" && !enemyBreached && rules.defender) factors.push({ side, kind: "wall", terrain });
   if (screened && mine.some((s) => s.role == "cavalaria" || s.role == "batedores")) factors.push({ side: other(side), kind: "screen" });
 
   return total * card;
+}
+
+const SHOOTERS: Role[] = ["arqueiro", "flechas", "catapulta"];
+/** Tem corpo a corpo na frente e atirador atrás? */
+export function hasFormation(squads: Squad[]): boolean {
+  return squads.some((s) => s.row == "frente" && !SHOOTERS.includes(s.role) && s.role != "torre") && squads.some((s) => s.row == "tras" && SHOOTERS.includes(s.role));
 }
 
 function dominantEnemy(theirs: Squad[]): Role | undefined {
@@ -363,6 +383,10 @@ function resolveOnce(input: TacticalBattleInput): TacticalBattleResult {
       winner = tb;
       bonus = BONUS_MAJORITY;
     }
+  }
+  // empate de verdade: duelo de campeões; vence quem tem a Lâmina de Aço Valiriano (+1)
+  if (!winner && fights > 0 && input.bladeHolder) {
+    return { lanes, lanesWon, winner: input.bladeHolder, bonus: BONUS_MAJORITY, duel: true };
   }
 
   return { lanes, lanesWon, winner, bonus };

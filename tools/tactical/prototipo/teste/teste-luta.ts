@@ -25,7 +25,7 @@ for (let n = 0; n < 400; n++) {
     });
   const A = mk("a", 1 + Math.floor(R() * 4));
   const D = mk("d", 1 + Math.floor(R() * 4));
-  const res = resolveTacticalBattle({ field, attacker: { squads: A }, defender: { squads: D } });
+  const res = resolveTacticalBattle({ field, attacker: { squads: A }, defender: { squads: D }, bladeHolder: n % 2 ? "attacker" : "defender" });
   const sim = createSim(field, res, { attacker: A, defender: D }, { attacker: HOUSES.stark, defender: HOUSES.lannister }, n + 1);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const men = sim.men as any[];
@@ -36,6 +36,7 @@ for (let n = 0; n < 400; n++) {
   while (sim.t < 6.2) {
     stepSim(sim, 0.02);
     if (sim.t < 4.2) continue;
+    if (sim.duel && sim.t >= 4.9) continue; // duelo de campeões: os outros param para assistir (de propósito)
     men.forEach((m, i) => {
       if (m.dead || m.kind == "tower" || m.kind == "siege" || m.kind == "dragon" || m.role == "arqueiro" || m.role == "flechas") return;
       if (res.lanes[m.lane].winner == null) return;

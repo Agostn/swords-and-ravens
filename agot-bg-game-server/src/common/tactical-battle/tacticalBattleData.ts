@@ -241,6 +241,13 @@ export const ORDER_FACTOR = 0.06;
 /** Esquadrão de apoio (vizinho): chega depois, rende um pouco menos. */
 export const SUPPORT_FACTOR = 0.8;
 
+/**
+ * Formação (armas combinadas, como em Total War e na maioria dos jogos de estratégia): numa faixa,
+ * quem tem corpo a corpo NA FRENTE e atirador ATRÁS rende mais. Misturar funções protege contra o
+ * "chute errado" da pedra-papel-tesoura; ir tudo numa função só vira aposta.
+ */
+export const FORMATION_BONUS: number = (globalThis as { __FORMATION__?: number }).__FORMATION__ ?? 0.15;
+
 /** Flanco: quem vence uma faixa ganha este bônus nas faixas vizinhas. */
 export const FLANK_BONUS = 0.2;
 

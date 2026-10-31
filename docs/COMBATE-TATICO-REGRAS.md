@@ -1,4 +1,4 @@
-# Combate tático — regras e números (versão 4, 30/out, para aprovar)
+# Combate tático — regras e números (versão 6, 31/out, para aprovar)
 
 Regra opcional (liga/desliga na sala de espera). O tabuleiro e a batalha do jogo original não mudam:
 o mini-mapa só soma **+1 ou +2** para quem lutar melhor. Plano das etapas: `docs/PLANO-COMBATE-TATICO.md`.
@@ -179,7 +179,7 @@ ficam prontos, ele vê o exército do outro e pode mudar **1 esquadrão** (lugar
   No futuro, heróis ou cartas também podem dar esse poder.
 - Servidor: `tacticalReaction.ts` (`isValidReaction`: mesmos esquadrões, no máximo 1 mudado, guarnição parada).
   Computador: `bestReply` em `tools/tactical/solver.ts` (a melhor troca vendo tudo).
-- **Para decidir:** se o Corvo deve ser usado uma vez por rodada (em uma batalha só) ou em todas as batalhas da rodada.
+- **Decidido (31/out):** o Corvo vale em **1 batalha por rodada** (como no jogo original, o Corvo é usado uma vez por rodada). Quem tem o Corvo escolhe em qual batalha usar.
 
 ## Batalha no tabuleiro e baixas (versão 4, 30/out)
 O mini-mapa só dá **+1 ou +2**. A batalha continua a do jogo original:
@@ -205,4 +205,31 @@ Stark + mini-mapa jogado bem pelos dois), em 6 tipos de exército × 3 campos ×
   rende o dobro. O que ainda decide entre exércitos idênticos é ler o campo na Reação.
 - Com a versão 5 (só o Corvo muda), a vantagem de "última palavra" do atacante acabou: ela vai para quem tem o Corvo.
 - Arqueiro ficou um pouco menos usado no jogo ótimo (0,8 de 4 escolhas); ainda é a resposta ao lanceiro.
+
+## Formação e duelo de campeões (versão 6, 31/out)
+**Pesquisa (como outros jogos tiram a sorte do "adivinhar"):**
+- *Dune* (1979/2019): na batalha os dois montam o plano escondido, mas os Atreides podem obrigar o outro a
+  revelar uma parte do plano; vantagem ligada a um poder, não a todo mundo.
+- *Battle for Rokugan*: fichas de combate viradas para baixo, mas o Batedor espia uma ficha e o Shugenja revela
+  e descarta uma; **empate fica com quem defende**; tudo é conta fixa, sem dado.
+- *A Guerra dos Tronos* original: a carta de Casa usada só volta quando todas forem usadas (dá para deduzir o
+  que o outro ainda tem), e quem está mais alto nos Feudos desempata.
+- Game design (Sirlin, Gamasutra): pedra-papel-tesoura "dura" com escolha às cegas é sorte; o que dá habilidade
+  é contra suave, informação sobre o outro e escolhas "seguras" que valem menos mas arriscam menos.
+**O que entrou:**
+1. **Formação +15%** (`FORMATION_BONUS`): numa faixa, corpo a corpo **na frente** + atirador **atrás** rende +15%.
+   Misturar é a escolha segura; ir tudo numa função só vira aposta. Testado com 0, 15% e 25%:
+   | | sem formação | **15%** | 25% |
+   |---|---|---|---|
+   | Carta 2 × 0: quem tem a carta perde o mini-mapa | 38% | **15%** | 0% |
+   | Carta 4 × 0: perde | 6% | **0%** | 0% |
+   | Marcha +1: perde | 29% | **10%** | 10% |
+   | Jogador bom × novato | +0,77 | **+0,92** | +0,96 |
+   | Exércitos iguais | 29/33/38 | **36/37/27** | 100% empate (sem graça) |
+   Com 25% todo mundo jogava igual e sempre empatava; 15% é o meio. O arqueiro voltou a ser bem usado.
+2. **Empate → duelo de campeões:** se as faixas empatarem, os outros param e assistem; os dois campeões lutam no
+   meio do campo e **vence quem tem a Lâmina de Aço Valiriano** (o mais alto nos Feudos — no jogo original é ele
+   quem desempata): **+1**. No protótipo, sem ninguém marcado, a Lâmina fica com quem defende.
+   O empate da batalha do tabuleiro segue a mesma regra. (`bladeHolder` na entrada da conta; `duel` no resultado.)
+3. **Corvo Mensageiro:** 1 batalha por rodada.
 

@@ -384,7 +384,8 @@ function laneOutlook(side: Side): LaneOption[][] {
         const res = resolveTacticalBattle({
           field: config.field,
           attacker: { squads: atk, card: config.attacker.card, orderBonus: config.attacker.order },
-          defender: { squads: def, card: config.defender.card, orderBonus: config.defender.order }
+          defender: { squads: def, card: config.defender.card, orderBonus: config.defender.order },
+          bladeHolder: bladeHolder()
         });
         const out: Outcome = res.winner == side ? "win" : res.winner == enemy ? "lose" : "tie";
         if (RANK[out] < RANK[worst]) worst = out;
@@ -451,7 +452,8 @@ const LIMITS: Record<string, [number, number]> = {
   "card.strength": [0, 4],
   "card.swords": [0, 3],
   "card.towers": [0, 3],
-  raven: [0, 1]
+  raven: [0, 1],
+  blade: [0, 1]
 };
 
 function getV(side: Side, key: string): number {
@@ -464,6 +466,8 @@ function setV(side: Side, key: string, v: number): void {
   else (config[side] as unknown as Record<string, number>)[key] = v;
   // só um jogador tem o Corvo Mensageiro
   if (key == "raven" && v == 1) config[other(side)].raven = 0;
+  // e só um tem a Lâmina de Aço Valiriano (sem ninguém marcado, fica com quem defende)
+  if (key == "blade" && v == 1) config[other(side)].blade = 0;
 }
 
 function renderCustom(): void {
@@ -514,6 +518,7 @@ function renderCustom(): void {
           ${step(side, "card.towers", "Carta: torres", "<b class='ico'>▲</b>")}
           ${step(side, "order", side == "attacker" ? "Ordem de Marcha" : "Ordem de Defesa", "<b class='ico'>★</b>")}
           ${step(side, "raven", "Corvo Mensageiro", "<b class='ico'>✉</b>", "1 = tem: depois de ver o outro exército, muda 1 esquadrão")}
+          ${step(side, "blade", "Lâmina de Aço Valiriano", "<b class='ico'>🗡</b>", "1 = tem (mais alto nos Feudos): vence o duelo de campeões no empate. Sem ninguém marcado, fica com quem defende")}
         </div>
       </details>
     </section>`;
@@ -930,6 +935,8 @@ function finishTurn(): void {
  * depois de os dois posicionarem e pode mudar UM esquadrão (lugar e/ou função). Só ele: é uma vantagem
  * de quem tem o Corvo, como no jogo original (lá ele troca uma ordem ou espia os selvagens).
  */
+/** Lâmina de Aço Valiriano (o mais alto nos Feudos): desempata. Sem ninguém marcado, fica com quem defende. */
+const bladeHolder = (): Side => (config.attacker.blade ? "attacker" : "defender");
 const ravenHolder = (): Side | null => (config.attacker.raven ? "attacker" : config.defender.raven ? "defender" : null);
 const isCpuSide = (side: Side): boolean => config.mode == "cpu" && side != config.humanSide;
 const where = (u: Unit): string => `${LANE_NAMES[u.lane ?? 1].toLowerCase()}, ${u.row == "frente" ? "frente" : "trás"}`;
@@ -1031,7 +1038,8 @@ function resultNow(): TacticalBattleResult {
   return resolveTacticalBattle({
     field: config.field,
     attacker: { squads: toSquads(units.attacker), card: config.attacker.card, orderBonus: config.attacker.order },
-    defender: { squads: toSquads(units.defender), card: config.defender.card, orderBonus: config.defender.order }
+    defender: { squads: toSquads(units.defender), card: config.defender.card, orderBonus: config.defender.order },
+    bladeHolder: bladeHolder()
   });
 }
 
@@ -1077,7 +1085,7 @@ function boardBattle(res: TacticalBattleResult, seed: number): BoardBattle {
   };
   const totals = { attacker: tot("attacker"), defender: tot("defender") };
   const tie = totals.attacker.total == totals.defender.total;
-  const winner: Side = totals.attacker.total > totals.defender.total ? "attacker" : "defender";
+  const winner: Side = tie ? bladeHolder() : totals.attacker.total > totals.defender.total ? "attacker" : "defender";
   const loser = other(winner);
   const swords = config[winner].card?.swords ?? 0;
   const towers = config[loser].card?.towers ?? 0;
@@ -1115,7 +1123,7 @@ function boardHtml(b: BoardBattle): string {
   return `<div class="board-res">
     <h3>Batalha no tabuleiro</h3>
     <ul>${row("attacker")}${row("defender")}</ul>
-    <p><b style="color:${houseOf(b.winner).color}">${houseOf(b.winner).name} vence</b>${b.tie ? " (empate: aqui quem defende segura; no jogo decide a Lâmina de Aço Valiriano)" : ""}. ${deaths}${siege}</p>
+    <p><b style="color:${houseOf(b.winner).color}">${houseOf(b.winner).name} vence</b>${b.tie ? " (empate: quem tem a Lâmina de Aço Valiriano, o mais alto nos Feudos, vence — regra do jogo original)" : ""}. ${deaths}${siege}</p>
   </div>`;
 }
 
@@ -1125,7 +1133,8 @@ function runBattle(): void {
   lastResult = resolveTacticalBattle({
     field: config.field,
     attacker: { squads: toSquads(units.attacker), card: config.attacker.card, orderBonus: config.attacker.order },
-    defender: { squads: toSquads(units.defender), card: config.defender.card, orderBonus: config.defender.order }
+    defender: { squads: toSquads(units.defender), card: config.defender.card, orderBonus: config.defender.order },
+    bladeHolder: bladeHolder()
   });
   simSeed = Math.floor(Math.random() * 1e9);
   lastBoard = boardBattle(lastResult, simSeed);
@@ -1282,6 +1291,8 @@ function factorText(f: LaneFactor): string | null {
       return `${who}: ficou sozinho nesta faixa e foi ajudar onde tinha luta`;
     case "far-flank":
       return `${who}: veio ajudar da outra ponta, mas de longe rende só 15% (a vizinha renderia 30%)`;
+    case "formation":
+      return `${who}: formação (corpo a corpo na frente + atiradores atrás) +15%`;
     default:
       return null;
   }
@@ -1327,6 +1338,7 @@ function showResult(): void {
       <h2 class="verdict">${verdict}</h2>
       <p class="bonus-line">${bonus}</p>
       ${res.metInCenter ? `<p class="note">Ninguém se encontrou nas faixas escolhidas, então os exércitos marcharam e lutaram no centro.</p>` : ""}
+      ${res.duel && res.winner ? `<p class="note">🗡 <b>Empate nas faixas → duelo de campeões.</b> Os dois campeões lutaram no meio do campo e venceu o de ${houseOf(res.winner).name}, que tem a Lâmina de Aço Valiriano (o mais alto nos Feudos desempata, como no jogo original).</p>` : ""}
       ${lastBoard ? boardHtml(lastBoard) : ""}
       <ol class="lanes-res">${lanesHtml}</ol>
       <div class="actions">
