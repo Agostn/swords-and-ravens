@@ -1281,59 +1281,11 @@ function finishReaction(): void {
   afterReaction();
 }
 
-/** "Se a luta fosse agora": quem ganha cada faixa com tudo como está. */
-function resultNow(): TacticalBattleResult {
-  return resolveTacticalBattle({
-    field: config.field,
-    attacker: { squads: toSquads(units.attacker), card: config.attacker.card, orderBonus: orderOf("attacker"), tactic: tactics.attacker, boardTotal: boardTotalOf("attacker") },
-    defender: { squads: toSquads(units.defender), card: config.defender.card, orderBonus: orderOf("defender"), tactic: tactics.defender, boardTotal: boardTotalOf("defender") },
-    bladeHolder: bladeHolder()
-  });
-}
-
-function outcomeLine(res: TacticalBattleResult, me: Side): string {
-  if (!res.winner) return `<b class="tie">empate</b> (ninguém ganha bônus)`;
-  return res.winner == me ? `<b class="ok">você ganha</b> (+${res.bonus})` : `<b class="no">${houseOf(res.winner).name} ganha</b> (+${res.bonus} para ele)`;
-}
-
-/** O que o computador faria no seu lugar (a melhor troca vendo tudo) e o que isso daria. */
-function bestChangeHtml(me: Side): string {
-  if (!reactBase) return "";
-  const base = { attacker: toSquads(reactBase.attacker), defender: toSquads(reactBase.defender) };
-  base[other(me)] = toSquads(units[other(me)]);
-  const best = bestReply(scenario(), me, base.attacker, base.defender);
-  const before = base[me];
-  const ch = best.find((q) => {
-    const b = before.find((x) => x.id == q.id);
-    return b && (b.lane != q.lane || b.row != q.row || b.role != q.role);
-  });
-  if (!ch) return `<p class="react-tip">💡 Dica: do jeito que está já é o melhor. Pode manter.</p>`;
-  const b = before.find((x) => x.id == ch.id) as Squad;
-  const n = units[me].findIndex((u) => u.id == ch.id) + 1;
-  const res = resolveTacticalBattle({
-    field: config.field,
-    attacker: { squads: me == "attacker" ? best : base.attacker, card: config.attacker.card, orderBonus: orderOf("attacker"), tactic: tactics.attacker, boardTotal: boardTotalOf("attacker") },
-    defender: { squads: me == "defender" ? best : base.defender, card: config.defender.card, orderBonus: orderOf("defender"), tactic: tactics.defender, boardTotal: boardTotalOf("defender") },
-    bladeHolder: bladeHolder()
-  });
-  const now = resolveTacticalBattle({
-    field: config.field,
-    attacker: { squads: base.attacker, card: config.attacker.card, orderBonus: orderOf("attacker"), tactic: tactics.attacker, boardTotal: boardTotalOf("attacker") },
-    defender: { squads: base.defender, card: config.defender.card, orderBonus: orderOf("defender"), tactic: tactics.defender, boardTotal: boardTotalOf("defender") },
-    bladeHolder: bladeHolder()
-  });
-  if (now.winner == res.winner && now.bonus == res.bonus) return `<p class="react-tip">💡 Dica: nenhuma troca muda o resultado. Pode manter.</p>`;
-  const what = `${b.role != ch.role ? `${ROLE_NAMES[b.role]} → ${ROLE_NAMES[ch.role]}` : ROLE_NAMES[ch.role]}${b.lane != ch.lane || b.row != ch.row ? ` (${LANE_NAMES[ch.lane].toLowerCase()}, ${ch.row == "frente" ? "frente" : "trás"})` : ""}`;
-  return `<p class="react-tip">💡 Dica: mudar o esquadrão <b>${n}</b>: ${what} → ${outcomeLine(res, me)}</p>`;
-}
-
 function reactInfoHtml(): string {
   const me = placingSide;
-  const now = resultNow();
+  // 31/out: só mostra onde está o exército do outro (antes dizia quem ganharia cada faixa: era roubado)
   return `<div class="react-info">
-    <p><b>✉ Corvo Mensageiro:</b> você viu o exército de ${houseOf(other(me)).name}. Pode mudar <b>1 esquadrão</b> (lugar e/ou função) ou manter.</p>
-    <p class="react-now">Se a luta for assim: ${outcomeLine(now, me)}</p>
-    ${bestChangeHtml(me)}
+    <p><b>✉ Corvo Mensageiro:</b> você vê onde está o exército de ${houseOf(other(me)).name}. Pode mudar <b>1 esquadrão</b> (lugar e/ou função) ou manter.</p>
     ${reactWarn ? `<p class="warn">${reactWarn}</p>` : ""}
   </div>`;
 }
@@ -1563,7 +1515,6 @@ function startLoop(): void {
     lastFrame = now;
     if (phase == "place" || phase == "react") {
       const reacting = phase == "react";
-      const nowRes = reacting ? resultNow() : null;
       const view = {
         field: config.field,
         house: houseOf(placingSide),
@@ -1586,7 +1537,6 @@ function startLoop(): void {
         enemyChanged: reacting ? reactChanged[other(placingSide)] : null,
         changed: reacting ? changedId() : null,
         formation: ([0, 1, 2] as Lane[]).map((L) => hasFormation(toSquads(units[placingSide]).filter((q) => q.lane == L))),
-        laneOutcome: nowRes ? nowRes.lanes.map((l) => (l.blocked || l.winner == null ? null : l.winner == "tie" ? "tie" : l.winner == placingSide ? "win" : "lose")) : undefined,
         enemyForce: totalForce(other(placingSide)),
         previewLabel: (() => {
           const i = units[placingSide].findIndex((u) => u.id == selected);

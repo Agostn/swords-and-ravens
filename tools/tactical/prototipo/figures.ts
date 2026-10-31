@@ -53,7 +53,7 @@ export function kindOf(k: SquadKind): Kind {
 }
 
 /** Quantos bonequinhos cada peça vira no mini-mapa. */
-export const MEN: Record<Kind, number> = { foot: 4, horse: 4, siege: 1, dragon: 1, tower: 1, ship: 1 };
+export const MEN: Record<Kind, number> = { foot: 4, horse: 4, siege: 1, dragon: 1, tower: 1, ship: 3 };
 
 const STEEL = "#c9ced3";
 const STEEL_D = "#7d858c";
@@ -953,8 +953,8 @@ function spriteOf(p: Pose, dir: number): [Sprite, string] | null {
   return null;
 }
 
-/** Navio é desenhado menor que a escala dos bonecos (senão não cabe na faixa). */
-export const SHIP_SCALE = 0.72;
+/** Navio é desenhado menor que a escala dos bonecos (31/out: 3 navios por peça, então menores que antes, 0,72). */
+export const SHIP_SCALE = 0.42;
 
 /*
  * Golpe em 4 tempos, como nos jogos de pixel art:
@@ -1224,31 +1224,57 @@ export function drawFallen(ctx: CanvasRenderingContext2D, x: number, y: number, 
     // afunda: inclina e desce; o que fica abaixo da linha da água some; depois só destroços boiando
     const got = spriteOf(p, 0);
     if (!got) return;
-    const sink = Math.min(1, age / 2.6);
+    // 31/out: o navio parte ao meio — as duas metades se afastam, inclinam para o buraco e afundam até a metade,
+    // ficando a proa e a popa para fora d'água; em volta, tábuas boiando
+    const sink = Math.min(1, age / 2.2);
+    const e = 1 - (1 - sink) * (1 - sink);
     const tt = p.time ?? 0;
-    if (sink < 1) {
+    const sc = s * SHIP_SCALE;
+    const sp = got[0];
+    const faceRight = !p.flip;
+    // tábuas boiando (atrás das metades)
+    for (let i = 0; i < 8; i++) {
+      const dx = Math.sin(i * 1.7) * (14 + 26 * e) * s;
+      const dy = Math.cos(i * 2.1) * 6 * s + Math.sin(tt * 2 + i) * 1.2;
+      ctx.fillStyle = i % 2 ? "#6a4020" : "#8c5a2c";
+      ctx.fillRect(Math.round(x + dx), Math.round(y + dy), Math.round((4 + (i % 3) * 2) * s), Math.max(1, Math.round(1.5 * s)));
+    }
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(x - 400, y - 400, 800, 400 + 1.5 * s); // só o que está acima da linha da água
+    ctx.clip();
+    const gap = 3 + e * 9;
+    const ang = 0.12 + e * 0.42;
+    const down = e * 30;
+    for (const half of [-1, 1]) {
       ctx.save();
+      ctx.translate(x, y);
+      ctx.scale(faceRight ? -sc : sc, sc);
+      ctx.translate(half * gap, down);
+      ctx.rotate(-half * ang); // a ponta de fora sobe, a do buraco desce
       ctx.beginPath();
-      ctx.rect(x - 300, y - 400, 600, 400 + 2 * s);
+      ctx.rect(half < 0 ? -sp.ax - 2 : 0, -sp.ay - 2, half < 0 ? sp.ax + 2 : sp.c.width - sp.ax + 2, sp.c.height + 4);
       ctx.clip();
-      blitSprite(ctx, got[0], x, y + sink * sink * 62 * s, s * SHIP_SCALE, !p.flip, (p.flip ? -1 : 1) * sink * 0.55);
+      ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(sp.c, -sp.ax, -sp.ay);
+      // lascas na quebra
+      ctx.fillStyle = "#3b2412";
+      for (let k2 = 0; k2 < 7; k2++) ctx.fillRect(half < 0 ? -3 - (k2 % 2) * 2 : 0, -3 - k2 * 5, 3 + (k2 % 2) * 2, 3);
+      ctx.fillStyle = "#c79a62";
+      for (let k2 = 0; k2 < 4; k2++) ctx.fillRect(half < 0 ? -2 : 1, -6 - k2 * 9, 1, 2);
       ctx.restore();
-      // espuma e bolhas
+    }
+    ctx.restore();
+    // espuma e bolhas enquanto afunda
+    if (sink < 1) {
       ctx.fillStyle = `rgba(235,248,255,${0.6 * (1 - sink)})`;
       for (let i = 0; i < 6; i++) {
-        const bx = x + Math.sin(i * 2.3 + tt * 3) * 26 * s;
-        const by = y - ((tt * 20 + i * 9) % 18) * s;
+        const bx = x + Math.sin(i * 2.3 + tt * 3) * 18 * s;
+        const by = y - ((tt * 20 + i * 9) % 14) * s;
         ctx.fillRect(Math.round(bx), Math.round(by), 2, 2);
       }
-      ell(ctx, x, y + 1 * s, 40 * s * SHIP_SCALE, 4 * s * SHIP_SCALE, `rgba(235,248,255,${0.4 * (1 - sink)})`);
-    } else {
-      for (let i = 0; i < 7; i++) {
-        const dx = Math.sin(i * 1.7) * 30 * s;
-        const dy = Math.cos(i * 2.1) * 8 * s + Math.sin(tt * 2 + i) * 1.5;
-        ctx.fillStyle = i % 2 ? "#6a4020" : "#8c5a2c";
-        ctx.fillRect(Math.round(x + dx), Math.round(y + dy), 6 + (i % 3) * 2, 2);
-      }
     }
+    ell(ctx, x, y + 1 * s, 46 * sc, 5 * sc, `rgba(235,248,255,${0.25 + 0.25 * (1 - sink)})`);
     return;
   }
   const got = spriteOf({ ...p, atk: 0, walk: 0, fight: true }, 0);
@@ -1317,7 +1343,14 @@ export function drawSquad(
   const n = MEN[k];
   const dx = (k == "horse" ? 25 : 14) * s;
   const dy = (k == "horse" ? 11 : 10) * s;
-  const pos: [number, number][] = n == 4 ? [[-0.5, -0.5], [0.5, -0.5], [-0.5, 0.5], [0.5, 0.5]].map(([a, b]) => [cx + a * dx + (b > 0 ? 0 : 3 * s), cy + b * dy]) : [[cx, cy + 6 * s]];
+  const pos: [number, number][] =
+    n == 4
+      ? [[-0.5, -0.5], [0.5, -0.5], [-0.5, 0.5], [0.5, 0.5]].map(([a, b]) => [cx + a * dx + (b > 0 ? 0 : 3 * s), cy + b * dy])
+      : n == 3
+        ? // 3 navios: dois atrás, um na frente
+          [[-0.62, -0.25], [0.62, -0.25], [0, 0.55]].map(([a, b]) => [cx + a * 17 * s, cy + 2 * s + b * 12 * s])
+        : [[cx, cy + 6 * s]];
+  const us = n == 3 ? s * 0.8 : s;
   const bw = (k == "horse" ? 62 : k == "foot" ? 40 : k == "dragon" ? 66 : 44) * s;
   const bh = (k == "horse" ? 26 : 22) * s;
   ctx.save();
@@ -1336,7 +1369,7 @@ export function drawSquad(
   ctx.strokeStyle = o.selected ? "rgba(255,214,110,.98)" : house.color;
   ctx.lineWidth = o.selected ? 3 : 1.4;
   ctx.stroke();
-  pos.forEach(([x, y], i) => drawUnit(ctx, x, y, s, { role, kind: k, house, back, flip: !!o.flip, walk: 0, atk: 0, fight: false, seed: i * 3 + role.length, time: o.time }));
+  pos.forEach(([x, y], i) => drawUnit(ctx, x, y, us, { role, kind: k, house, back, flip: !!o.flip, walk: 0, atk: 0, fight: false, seed: i * 3 + role.length, time: n == 3 ? (o.time ?? 0) + i * 0.7 : o.time }));
   if (o.num) {
     // número da peça (o mesmo da faixa de peças embaixo)
     const bx = cx - bw / 2 + 1 * s;

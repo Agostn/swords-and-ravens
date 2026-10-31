@@ -9,8 +9,8 @@ import { T_END, createSim, hitStats, setGore, stepSim } from "../battle";
 import { HOUSES } from "../data";
 
 setGore(false);
-const fields: FieldType[] = ["planicie", "floresta", "rio", "castelo", "colinas", "pantano", "fortaleza"];
-const roles: Record<string, Role[]> = { footman: ["lanceiro", "escudeiro", "arqueiro"], knight: ["cavalaria", "batedores"] };
+const fields: FieldType[] = ["planicie", "floresta", "rio", "castelo", "colinas", "pantano", "fortaleza", "mar"];
+const roles: Record<string, Role[]> = { footman: ["lanceiro", "escudeiro", "arqueiro"], knight: ["cavalaria", "batedores"], ship: ["abordagem", "ariete", "flechas"] };
 let seed = 7;
 const R = (): number => (seed = (seed * 16807) % 2147483647) / 2147483647;
 const pick = <T>(a: T[]): T => a[Math.floor(R() * a.length)];
@@ -32,16 +32,17 @@ for (let n = 0; n < 400; n++) {
   const field = pick(fields);
   const mk = (side: string, count: number): Squad[] =>
     Array.from({ length: count }, (_, i) => {
-      const kind: SquadKind = R() < 0.3 ? "knight" : "footman";
+      const kind: SquadKind = field == "mar" ? "ship" : R() < 0.3 ? "knight" : "footman";
       return { id: side + i, kind, role: pick(roles[kind]), lane: Math.floor(R() * 3) as 0 | 1 | 2, row: R() < 0.5 ? "frente" : "tras" } as Squad;
     });
   // metade das batalhas é grande (31/out: peça vira 2 ou 4 esquadrões, até 12 por lado)
   const big = n % 2 == 0;
-  const A = mk("a", big ? 4 + Math.floor(R() * 9) : 1 + Math.floor(R() * 4));
-  const D = mk("d", big ? 4 + Math.floor(R() * 9) : 1 + Math.floor(R() * 4));
+  // no mar: até 4 navios por lado (cada um vira 3 na animação)
+  const A = mk("a", field == "mar" ? 1 + Math.floor(R() * 4) : big ? 4 + Math.floor(R() * 9) : 1 + Math.floor(R() * 4));
+  const D = mk("d", field == "mar" ? 1 + Math.floor(R() * 4) : big ? 4 + Math.floor(R() * 9) : 1 + Math.floor(R() * 4));
   // às vezes um dragão (de um lado ou dos dois)
-  if (n % 5 == 0) A.push({ id: "adr", kind: "dragon", role: "dragao", lane: Math.floor(R() * 3), row: "tras", strength: 3 } as Squad);
-  if (n % 10 == 0) D.push({ id: "ddr", kind: "dragon", role: "dragao", lane: Math.floor(R() * 3), row: "tras", strength: 3 } as Squad);
+  if (n % 5 == 0 && field != "mar") A.push({ id: "adr", kind: "dragon", role: "dragao", lane: Math.floor(R() * 3), row: "tras", strength: 3 } as Squad);
+  if (n % 10 == 0 && field != "mar") D.push({ id: "ddr", kind: "dragon", role: "dragao", lane: Math.floor(R() * 3), row: "tras", strength: 3 } as Squad);
   const res = resolveTacticalBattle({ field, attacker: { squads: A }, defender: { squads: D }, bladeHolder: n % 2 ? "attacker" : "defender" });
   const sim = createSim(field, res, { attacker: A, defender: D }, { attacker: HOUSES.stark, defender: HOUSES.lannister }, n + 1);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

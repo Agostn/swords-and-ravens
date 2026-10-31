@@ -450,3 +450,17 @@ o outro vai fazer, mas o que mais conta é escolher a ordem que combina com as S
   Sem o ajuste (expoente 0), +1 de força já vencia 86% e +2 93% (a estratégia quase não pesava).
 - **Muralha:** com +30% o defensor vencia 94% das batalhas de força igual no castelo (no jogo original o empate é
   da Lâmina). Muralha agora +10% (cavalaria continua rendendo menos nela) e portão sem bônus (é a entrada).
+
+## Navios em trio, fogo no chão e Corvo sem previsão (31/out)
+
+- **Navios:** cada navio do tabuleiro aparece como **3 navios** na luta (como os bonequinhos das tropas). Quem perde
+  fica com 1 navio por peça (afundam 2, 1 foge); a peça que morre no tabuleiro (espadas da carta) afunda os 3.
+- **Cada tipo faz o seu papel:** aríete toma distância, vem com tudo e bate no casco do inimigo (recua e vem de novo);
+  abordagem encosta casco com casco, joga as cordas e os homens pulam para o outro convés; flechas atiram de longe.
+  A ordem de batalha também vale no mar (reserva espera, parede/muro segura a linha, carga acelera o aríete).
+- **Efeitos:** navio atingido solta fumaça (mais escura quanto mais apanhou) e lascas de madeira; o afundado parte ao
+  meio, as duas metades ficam com a proa e a popa para fora d'água, com tábuas boiando.
+- **Fogo do dragão:** fica no chão e é desenhado na ordem da profundidade, junto com os bonecos (quem está na frente
+  cobre o fogo). Antes ficava por cima de tudo.
+- **Corvo Mensageiro:** só mostra onde está o exército do outro. Não diz mais quem ganharia cada faixa nem dá dica
+  (era vantagem demais).
