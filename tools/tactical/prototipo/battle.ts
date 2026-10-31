@@ -123,6 +123,26 @@ interface Spark {
   t0: number;
 }
 
+/** Poeira (passos de cavalo, choque, pedra). */
+interface Dust {
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  t0: number;
+  life: number;
+  r: number;
+}
+
+/** Marca do corte (meia-lua branca) no golpe. */
+interface Slash {
+  x: number;
+  y: number;
+  t0: number;
+  d: number;
+  big: boolean;
+}
+
 /** Gota de sangue voando; quando cai, vira mancha no chão. */
 interface Drop {
   x: number;
@@ -144,6 +164,8 @@ export interface Sim {
   breaths: Breath[];
   sparks: Spark[];
   drops: Drop[];
+  dust: Dust[];
+  slashes: Slash[];
   /** manchas no chão (pintadas uma vez) */
   floor: HTMLCanvasElement | null;
   t: number;
@@ -229,7 +251,9 @@ export function createSim(field: FieldType, res: TacticalBattleResult, squads: R
   // flanco: quem ficou sozinho numa faixa vai ajudar a vizinha com luta
   ([0, 1, 2] as Lane[]).forEach((lane) => {
     if (res.lanes[lane].winner != null) return;
-    const targets = ([0, 1, 2] as Lane[]).filter((n) => Math.abs(n - lane) == 1 && res.lanes[n].winner != null);
+    // vizinha com luta; se não houver, a outra ponta (atravessa o campo)
+    let targets = ([0, 1, 2] as Lane[]).filter((n) => Math.abs(n - lane) == 1 && res.lanes[n].winner != null);
+    if (!targets.length) targets = ([0, 1, 2] as Lane[]).filter((n) => Math.abs(n - lane) == 2 && res.lanes[n].winner != null);
     if (!targets.length) return;
     men.filter((m) => m.lane == lane && !isStatic(m)).forEach((m, i) => (m.lane = targets[i % targets.length]));
   });
@@ -257,7 +281,7 @@ export function createSim(field: FieldType, res: TacticalBattleResult, squads: R
     });
   });
 
-  const sim: Sim = { field, res, houses, men, shots: [], breaths: [], sparks: [], drops: [], floor: null, t: 0, stop: 0, shake: 0, breach, rand, frontY };
+  const sim: Sim = { field, res, houses, men, shots: [], breaths: [], sparks: [], drops: [], dust: [], slashes: [], floor: null, t: 0, stop: 0, shake: 0, breach, rand, frontY };
   ([0, 1, 2] as Lane[]).forEach((lane) => {
     if (res.lanes[lane].winner != null) pairUp(sim, lane);
   });
@@ -357,11 +381,13 @@ function bleed(sim: Sim, x: number, y: number, dirx: number, diry: number, amoun
   const r = sim.rand;
   const n = Math.round(amount);
   for (let i = 0; i < n; i++) {
-    const sp = 40 + r() * 110;
-    const a = Math.atan2(diry, dirx) + (r() - 0.5) * 1.6;
-    sim.drops.push({ x, y, z: 10 + r() * 10, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp * 0.6, vz: 20 + r() * 60, size: r() < 0.25 ? 2 : 1, dark: r() < 0.35 });
+    // a maioria voa para o lado do golpe; algumas espirram longe (jato)
+    const jet = r() < 0.2;
+    const sp = jet ? 140 + r() * 120 : 35 + r() * 120;
+    const a = Math.atan2(diry, dirx) + (r() - 0.5) * (jet ? 0.6 : 1.9);
+    sim.drops.push({ x, y, z: 8 + r() * 12, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp * 0.6, vz: 15 + r() * 70, size: r() < 0.15 ? 3 : r() < 0.45 ? 2 : 1, dark: r() < 0.35 });
   }
-  if (sim.drops.length > 900) sim.drops.splice(0, sim.drops.length - 900);
+  if (sim.drops.length > 1600) sim.drops.splice(0, sim.drops.length - 1600);
 }
 
 /** Mancha no chão (fica até o fim). Pintada em 1×, com "pixel" do mesmo tamanho dos bonecos. */
@@ -374,6 +400,16 @@ function stain(sim: Sim, x: number, y: number, size: number, dark: boolean): voi
   const ctx = sim.floor.getContext("2d") as CanvasRenderingContext2D;
   ctx.fillStyle = dark ? "#4a0807" : "#8e1410";
   ctx.fillRect(Math.round(x), Math.round(y), size, size);
+}
+
+function puff(sim: Sim, x: number, y: number, n: number, sp: number, r0: number): void {
+  const r = sim.rand;
+  for (let i = 0; i < n; i++) {
+    const a = r() * Math.PI * 2;
+    const v = sp * (0.4 + r() * 0.6);
+    sim.dust.push({ x: x + (r() - 0.5) * 6, y: y + (r() - 0.5) * 3, vx: Math.cos(a) * v, vy: Math.sin(a) * v * 0.5 - 6, t0: sim.t, life: 0.45 + r() * 0.4, r: r0 * (0.6 + r() * 0.8) });
+  }
+  if (sim.dust.length > 500) sim.dust.splice(0, sim.dust.length - 500);
 }
 
 function pool(sim: Sim, x: number, y: number, big: number): void {
@@ -403,7 +439,9 @@ function hit(sim: Sim, from: { x: number; y: number }, m: Man, power: number, bl
     return;
   }
   m.hitT = t;
-  bleed(sim, m.x, m.y - 12 * FIG, nx, ny, 8 + power * 7);
+  sim.slashes.push({ x: m.x - nx * 4, y: m.y - 14 * FIG, t0: t, d: nx >= 0 ? 1 : -1, big: power >= 1.5 });
+  puff(sim, m.x, m.y, power >= 2 ? 6 : 2, 30, 3);
+  bleed(sim, m.x, m.y - 12 * FIG, nx, ny, 12 + power * 10);
   pool(sim, m.x - nx * 2, m.y, 3);
   if (power >= 2) {
     sim.shake = Math.max(sim.shake, 3.5);
@@ -423,7 +461,8 @@ function kill(sim: Sim, m: Man, nx: number, ny: number, power: number): void {
   m.vx += nx * (heavy ? 60 : 150) * Math.min(2, power);
   m.vy += ny * (heavy ? 30 : 80) * Math.min(2, power);
   m.flip = nx > 0; // cai para trás
-  bleed(sim, m.x, m.y - 10 * FIG, nx, ny, heavy ? 50 : 38);
+  bleed(sim, m.x, m.y - 10 * FIG, nx, ny, heavy ? 70 : 55);
+  puff(sim, m.x, m.y, heavy ? 10 : 5, 40, 4);
   bleed(sim, m.x, m.y - 8 * FIG, -nx, -ny, 10);
   pool(sim, m.x, m.y, heavy ? 70 : 46);
   sim.stop = Math.max(sim.stop, power >= 2 ? 0.09 : 0.05);
@@ -575,6 +614,7 @@ export function stepSim(sim: Sim, dt: number): void {
       const ty = s.to ? s.to.y : s.ty;
       sim.shake = Math.max(sim.shake, 3);
       sim.sparks.push({ x: tx, y: ty - 4, t0: t });
+      puff(sim, tx, ty, 14, 70, 5);
       sim.men.forEach((o) => {
         if (!o.dead && o.side != s.from.side && Math.hypot(o.x - tx, o.y - ty) < 26) hit(sim, { x: tx, y: ty }, o, 2);
       });
@@ -594,6 +634,14 @@ export function stepSim(sim: Sim, dt: number): void {
   }
   sim.breaths = sim.breaths.filter((b) => t - b.t0 < b.dur);
   sim.sparks = sim.sparks.filter((s) => t - s.t0 < 0.35);
+  sim.slashes = sim.slashes.filter((s) => t - s.t0 < 0.16);
+  sim.dust = sim.dust.filter((d) => {
+    d.x += d.vx * dt;
+    d.y += d.vy * dt;
+    d.vx *= Math.exp(-dt * 3);
+    d.vy *= Math.exp(-dt * 3);
+    return t - d.t0 < d.life;
+  });
   // física: anda, empurra os companheiros para não amontoar, mortos escorregam e param
   const alive = sim.men.filter((m) => !m.dead && m.kind != "dragon" && !isStatic(m));
   for (let i = 0; i < alive.length; i++)
@@ -620,6 +668,16 @@ export function stepSim(sim: Sim, dt: number): void {
       m.vx *= k;
       m.vy *= k;
       if (gore && Math.hypot(m.vx, m.vy) > 25 && r() < 0.6) stain(sim, m.x + (r() - 0.5) * 4, m.y - 1, 1, r() < 0.5);
+      // a poça cresce devagar nos primeiros segundos
+      const age = t - m.deadAt;
+      if (gore && age < 2.5 && r() < 0.5) {
+        const a = r() * Math.PI * 2;
+        const d = Math.sqrt(age / 2.5) * (m.kind == "horse" ? 16 : 11) * Math.sqrt(r());
+        stain(sim, m.x + Math.cos(a) * d * 1.4, m.y + Math.sin(a) * d * 0.55, r() < 0.4 ? 2 : 1, r() < 0.55);
+      }
+    } else if (Math.hypot(m.vx, m.vy) > (m.kind == "horse" ? 40 : 70) && r() < (m.kind == "horse" ? 0.35 : 0.08)) {
+      // poeira dos passos (cavalo correndo levanta muita)
+      puff(sim, m.x - m.vx * 0.05, m.y, 1, 10, m.kind == "horse" ? 4 : 2.5);
     }
     m.x += m.vx * dt;
     m.y += m.vy * dt;
@@ -768,11 +826,33 @@ export function drawSim(ctx: CanvasRenderingContext2D, sim: Sim): void {
     else drawUnit(ctx, m.x, m.y, FIG, pose(m, sim.houses[m.side], t), m.dir);
   }
   ctx.restore();
+  // poeira (quadradinhos, no estilo pixel)
+  for (const d of sim.dust) {
+    const p = (t - d.t0) / d.life;
+    const rr = Math.round(d.r * (1 + p * 1.5));
+    ctx.fillStyle = `rgba(196,176,136,${0.55 * (1 - p)})`;
+    ctx.fillRect(Math.round(d.x - rr), Math.round(d.y - rr * 0.7 - 2), rr * 2, Math.max(2, Math.round(rr * 1.4)));
+  }
+  // marca do corte
+  for (const sl of sim.slashes) {
+    const p = (t - sl.t0) / 0.16;
+    const R = sl.big ? 16 : 11;
+    ctx.save();
+    ctx.translate(sl.x, sl.y);
+    ctx.scale(sl.d, 1);
+    ctx.strokeStyle = `rgba(255,255,255,${0.95 * (1 - p)})`;
+    ctx.lineWidth = sl.big ? 3.5 : 2.5;
+    ctx.lineCap = "round";
+    ctx.beginPath();
+    ctx.arc(-4, 0, R, -1.2 + p * 0.6, 0.9 + p * 0.6);
+    ctx.stroke();
+    ctx.restore();
+  }
   // gotas voando
   if (gore) {
     for (const d of sim.drops) {
-      ctx.fillStyle = d.dark ? "#5e0a08" : "#b3170f";
-      const sz = (d.size + 1) * 1;
+      ctx.fillStyle = d.dark ? "#5e0a08" : "#c01a10";
+      const sz = d.size + 1;
       ctx.fillRect(Math.round(d.x), Math.round(d.y - d.z), sz, sz);
     }
   }

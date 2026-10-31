@@ -548,9 +548,10 @@ function renderPanel(): void {
   const placed = mine.filter((u) => u.lane != null).length;
   const st = stepNow();
   const sel = mine.find((u) => u.id == selected) ?? null;
-  const chip = (u: Unit): string => {
+  const chip = (u: Unit, i: number): string => {
     const where = u.lane == null ? "reserva" : `${LANE_NAMES[u.lane].toLowerCase()} · ${u.row == "frente" ? "frente" : "trás"}`;
     return `<button type="button" class="piece${selected == u.id ? " sel" : ""}${u.lane == null ? " in-reserve" : " on-field"}" data-grab="${u.id}" aria-pressed="${selected == u.id}" aria-label="${KIND_NAMES[u.kind]} ${ROLE_NAMES[u.role]}, ${where}">
+      <span class="piece-num">${i + 1}</span>
       ${squadSvg(h, u)}
       <span class="piece-name">${ROLE_NAMES[u.role]}</span>
       <span class="piece-where">${u.lane == null ? "na reserva" : where}</span>
@@ -562,7 +563,7 @@ function renderPanel(): void {
   const here = sel && sel.lane != null ? slotBonus(sel, sel.lane, sel.row, placingSide) : null;
   const say = sel
     ? `<p class="role-say">${bt ? `<span class="ok">✓ vence ${listPt(bt.vence)}</span> <span class="no">✗ perde p/ ${listPt(bt.teme)}</span>` : `<b>${ROLE_NAMES[sel.role]}</b>`}<br><span class="rng">${REACH_LABEL[sel.role]}</span> · ${
-        here ? `<span class="here">aqui: ${here.why.length ? here.why.join(", ") : "normal"}</span>` : `<span class="here">veja o % de cada casinha</span>`
+        here ? `<span class="here">aqui: força ${here.pct == 0 ? "normal" : `${here.pct > 0 ? "+" : "−"}${Math.abs(here.pct)}%`}${here.why.length ? ` (${here.why.join(", ")})` : ""}</span>` : `<span class="here">% = força ali</span>`
       }</p>`
     : "";
   const editor = sel
@@ -610,7 +611,7 @@ function renderPanel(): void {
     ${editor}
     <div class="tray-wrap">
       <div class="tray-head"><b>Suas peças</b><span>${placed} de ${mine.length} no campo</span></div>
-      <div class="tray">${mine.map(chip).join("")}</div>
+      <div class="tray">${mine.map((u, i) => chip(u, i)).join("")}</div>
     </div>
     <div class="actions">
       <button type="button" class="btn" id="auto">Automático</button>
@@ -869,7 +870,11 @@ function startLoop(): void {
         hoverSlot,
         dragging: dragging?.moved ? dragging.id : null,
         showHint: !!selected,
-        preview: previewFor(units[placingSide].find((u) => u.id == selected) ?? null)
+        preview: previewFor(units[placingSide].find((u) => u.id == selected) ?? null),
+        previewLabel: (() => {
+          const i = units[placingSide].findIndex((u) => u.id == selected);
+          return i >= 0 ? `Peça ${i + 1} · ${ROLE_NAMES[units[placingSide][i].role]}` : undefined;
+        })()
       };
       placedHit = drawPlacement(ctx, view, (now - t0) / 1000);
     } else if (sim) {
@@ -908,7 +913,9 @@ function factorText(f: LaneFactor): string | null {
     case "screen":
       return `${who}: a linha da frente segurou a cavalaria inimiga`;
     case "empty":
-      return `${who}: ficou sozinho nesta faixa e foi ajudar ao lado`;
+      return `${who}: ficou sozinho nesta faixa e foi ajudar onde tinha luta`;
+    case "far-flank":
+      return `${who}: veio ajudar da outra ponta, mas de longe rende só 15% (a vizinha renderia 30%)`;
     default:
       return null;
   }

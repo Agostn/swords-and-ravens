@@ -162,3 +162,8 @@ apoio (inclusive de navio), ordens, mar e cartas. Resultado completo: `tools/tac
 - **Empates:** raros agora (cerca de 6% jogando no chute), porque os exércitos sempre se encontram.
 
 Próximo passo: o protótipo jogável (etapa 4) — feito, link no chat e em `tools/tactical/prototipo`.
+
+## Ajuda de longe (30/out)
+Quem fica sozinho numa faixa ajuda onde tem luta: a faixa vizinha recebe 30% do que ele causaria lá.
+Se não houver luta na vizinha, ele atravessa o campo e ajuda a faixa da outra ponta com 15% (metade).
+Assim nenhuma peça fica inútil, mas ficar longe da luta custa caro. (`UNOPPOSED_FLANK_SHARE` = 0,30; `FAR_FLANK_SHARE` = 0,15.)

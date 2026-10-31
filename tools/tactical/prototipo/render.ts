@@ -355,6 +355,8 @@ export interface PlaceView {
   showHint: boolean;
   /** quanto a peça escolhida rende em cada casinha (só pelo lugar) */
   preview?: { lane: Lane; row: Row; pct: number; best: boolean }[] | null;
+  /** legenda dos números, ex.: "Peça 2 · Lanceiro" */
+  previewLabel?: string;
 }
 
 // ---------------------------------------------------------------- névoa (pixel art)
@@ -511,8 +513,8 @@ export function drawPlacement(ctx: CanvasRenderingContext2D, v: PlaceView, t: nu
     // quanto a peça escolhida rende aqui
     const pv = v.preview?.find((x) => x.lane == s.lane && x.row == s.row);
     if (pv) {
-      const txt = pv.pct == 0 ? "normal" : `${pv.pct > 0 ? "+" : "−"}${Math.abs(pv.pct)}%`;
-      ctx.font = "800 17px 'Alegreya Sans', 'Trebuchet MS', sans-serif";
+      const txt = pv.pct == 0 ? "força normal" : `força ${pv.pct > 0 ? "+" : "−"}${Math.abs(pv.pct)}%`;
+      ctx.font = "800 15px 'Alegreya Sans', 'Trebuchet MS', sans-serif";
       const tw = ctx.measureText(txt).width + 18;
       const bx = s.x + s.w - tw - 6;
       const by = s.y + 6;
@@ -557,11 +559,23 @@ export function drawPlacement(ctx: CanvasRenderingContext2D, v: PlaceView, t: nu
       const scale = n > 2 ? SQ * 0.85 : SQ;
       line.forEach((q) => {
         const w = widthOf(q.kind);
-        const box = drawSquad(ctx, x + w / 2, fy, q.kind, q.role, v.house, { scale, selected: v.selected == q.id, ghost: v.dragging == q.id, time: t });
+        const box = drawSquad(ctx, x + w / 2, fy, q.kind, q.role, v.house, { scale, selected: v.selected == q.id, ghost: v.dragging == q.id, time: t, num: v.squads.indexOf(q) + 1 });
         placed.push({ id: q.id, ...box });
         x += w;
       });
     });
+  }
+  if (v.preview && v.previewLabel) {
+    const txt = `${v.previewLabel}: força em cada casinha (verde = rende mais)`;
+    ctx.font = "700 14px 'Alegreya Sans', 'Trebuchet MS', sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    const tw = Math.min(W - 16, ctx.measureText(txt).width + 24);
+    ctx.fillStyle = "rgba(18,14,10,.85)";
+    roundRect(ctx, W / 2 - tw / 2, H - 34, tw, 26, 13);
+    ctx.fill();
+    ctx.fillStyle = "#f2cf7e";
+    ctx.fillText(txt, W / 2, H - 20.5, W - 30);
   }
   return placed;
 }

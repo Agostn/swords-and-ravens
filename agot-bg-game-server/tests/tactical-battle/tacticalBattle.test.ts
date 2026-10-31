@@ -37,6 +37,19 @@ describe("combate tático", () => {
     expect(r2.winner).toBe("attacker");
   });
 
+  it("quem fica na outra ponta ajuda menos, mas ajuda (15% em vez de 30%)", () => {
+    const base = {
+      field: "planicie" as const,
+      defender: { squads: [sq("d1", "footman", "lanceiro", 0)] }
+    };
+    const alone = resolveTacticalBattle({ ...base, attacker: { squads: [sq("a1", "footman", "lanceiro", 0)] } });
+    const far = resolveTacticalBattle({ ...base, attacker: { squads: [sq("a1", "footman", "lanceiro", 0), sq("a2", "footman", "lanceiro", 2)] } });
+    const near = resolveTacticalBattle({ ...base, attacker: { squads: [sq("a1", "footman", "lanceiro", 0), sq("a2", "footman", "lanceiro", 1)] } });
+    expect(far.lanes[0].attackerScore).toBeGreaterThan(alone.lanes[0].attackerScore);
+    expect(near.lanes[0].attackerScore).toBeGreaterThan(far.lanes[0].attackerScore);
+    expect(far.lanes[0].factors.some((f) => f.kind == "far-flank")).toBe(true);
+  });
+
   it("faixa sem inimigo não conta como vitória", () => {
     const r = resolveTacticalBattle({
       field: "planicie",

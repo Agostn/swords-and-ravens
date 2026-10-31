@@ -1081,7 +1081,7 @@ export function drawSquad(
   kind: SquadKind,
   role: Role,
   house: House,
-  o: { back?: boolean; scale?: number; selected?: boolean; ghost?: boolean; time?: number } = {}
+  o: { back?: boolean; scale?: number; selected?: boolean; ghost?: boolean; time?: number; num?: number } = {}
 ): { x: number; y: number; w: number; h: number } {
   const k = kindOf(kind);
   const s = o.scale ?? 1;
@@ -1109,6 +1109,24 @@ export function drawSquad(
   ctx.lineWidth = o.selected ? 3 : 1.4;
   ctx.stroke();
   pos.forEach(([x, y], i) => drawUnit(ctx, x, y, s, { role, kind: k, house, back, flip: false, walk: 0, atk: 0, fight: false, seed: i * 3 + role.length, time: o.time }));
+  if (o.num) {
+    // número da peça (o mesmo da faixa de peças embaixo)
+    const bx = cx - bw / 2 + 1 * s;
+    const by = cy + 2 * s;
+    const R = 11 * s;
+    ctx.fillStyle = o.selected ? "#f2cf7e" : "#1d1610";
+    ctx.beginPath();
+    ctx.arc(bx, by, R, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = o.selected ? "#6e4f16" : house.color;
+    ctx.lineWidth = 1.6;
+    ctx.stroke();
+    ctx.fillStyle = o.selected ? "#23180a" : "#fff6e2";
+    ctx.font = `800 ${Math.round(15 * s)}px 'Alegreya Sans', 'Trebuchet MS', sans-serif`;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(String(o.num), bx, by + 0.5);
+  }
   ctx.restore();
   const top = k == "foot" ? 50 : k == "horse" ? 44 : k == "tower" ? 52 : 30;
   return { x: cx - bw / 2, y: cy - top * s, w: bw, h: top * s + bh / 2 + 4 * s };

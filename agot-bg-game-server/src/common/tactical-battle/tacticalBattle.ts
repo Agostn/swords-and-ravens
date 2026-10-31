@@ -31,6 +31,7 @@ import {
   Terrain,
   TERRAIN,
   UNOPPOSED_FLANK_SHARE,
+  FAR_FLANK_SHARE,
   NO_CONTACT_RULE,
   SIZE_EQUALIZE
 } from "./tacticalBattleData";
@@ -79,7 +80,7 @@ export interface TacticalBattleInput {
 /** Um motivo que pesou numa faixa (vira frase no resumo depois da animação). */
 export interface LaneFactor {
   side: Side;
-  kind: "counter" | "weak" | "terrain" | "wall-breach" | "wall" | "flank" | "card" | "screen" | "empty";
+  kind: "counter" | "weak" | "terrain" | "wall-breach" | "wall" | "flank" | "far-flank" | "card" | "screen" | "empty";
   role?: Role;
   vs?: Role;
   terrain?: Terrain;
@@ -301,15 +302,21 @@ function resolveOnce(input: TacticalBattleInput): TacticalBattleResult {
     for (const side of ["attacker", "defender"] as Side[]) {
       const mine = squadsIn(side, lane);
       if (mine.length == 0) continue;
-      const targets = NEIGHBOURS[lane].filter((n) => contested(n));
+      // ajuda a vizinha com luta; se não houver, a faixa da outra ponta (rende menos)
+      let targets = NEIGHBOURS[lane].filter((n) => contested(n));
+      let share = UNOPPOSED_FLANK_SHARE;
+      let far = false;
+      if (targets.length == 0) {
+        targets = ([0, 1, 2] as Lane[]).filter((n) => Math.abs(n - lane) == 2 && contested(n));
+        share = FAR_FLANK_SHARE;
+        far = true;
+      }
       targets.forEach((n) => {
         const t = lanes[n];
-        const dmg =
-          laneDamage(side, mine, squadsIn(other(side), n), t.terrain, cardOf(side), []) *
-          (UNOPPOSED_FLANK_SHARE / targets.length);
+        const dmg = laneDamage(side, mine, squadsIn(other(side), n), t.terrain, cardOf(side), []) * (share / targets.length);
         if (side == "attacker") t.attackerScore += dmg;
         else t.defenderScore += dmg;
-        t.factors.push({ side, kind: "flank" });
+        t.factors.push({ side, kind: far ? "far-flank" : "flank" });
       });
     }
   });

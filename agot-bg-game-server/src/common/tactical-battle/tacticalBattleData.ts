@@ -230,6 +230,12 @@ export const FLANK_BONUS = 0.2;
  */
 export const UNOPPOSED_FLANK_SHARE = 0.3;
 
+/**
+ * Se não houver luta na faixa vizinha, quem está sozinho ainda ajuda a faixa da outra ponta,
+ * mas rende menos (tem que atravessar o campo): metade da ajuda à vizinha.
+ */
+export const FAR_FLANK_SHARE = 0.15;
+
 /** Diferença mínima para uma faixa não ser empate (5%). */
 export const LANE_TIE_MARGIN = 0.05;
 
