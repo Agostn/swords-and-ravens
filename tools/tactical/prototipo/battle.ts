@@ -33,11 +33,12 @@ export const FIG = 1.35;
 
 /** Alcance de cada função (em pixels do campo). Corpo a corpo: distância do golpe. */
 export const REACH: Record<Role, number> = {
-  lanceiro: 31,
-  escudeiro: 22,
+  // alcance = até onde a arma DESENHADA chega (pés a pés), para o golpe só acertar quando encosta
+  lanceiro: 44,
+  escudeiro: 26,
   arqueiro: 230,
-  cavalaria: 33,
-  batedores: 23,
+  cavalaria: 40,
+  batedores: 26,
   catapulta: 340,
   dragao: 100,
   torre: 270,
@@ -214,7 +215,7 @@ function formation(kind: Kind, cx: number, cy: number, side: Side): [number, num
 /** Distância entre os dois de uma dupla, parados (a média dos alcances). */
 function duelDist(a: Man, b: Man): number {
   if (a.kind == "ship" || b.kind == "ship") return 66; // navios encostam um no outro
-  return Math.max(20, (a.reach + b.reach) / 2 + 4);
+  return Math.max(20, (a.reach + b.reach) / 2);
 }
 
 /**
@@ -585,7 +586,7 @@ function joinFight(sim: Sim, m: Man, i = 0): void {
   if (busySide(sd) > busySide(-sd) + 1) sd = -sd;
   m.sdir = sd;
   const crowd = sim.men.filter((x) => x.foe === best && x !== m && !x.dead && x.side == m.side).length;
-  const gap = m.kind == "ship" ? 52 : 14;
+  const gap = m.kind == "ship" ? 52 : 9;
   m.yoff = crowd == 0 ? 0 : (crowd % 2 ? gap : -gap) * Math.ceil(crowd / 2) + (i % 2 ? 1 : -1);
   if (!best.foe || best.foe.dead) best.foe = m;
 }
@@ -638,7 +639,23 @@ function bleed(sim: Sim, x: number, y: number, dirx: number, diry: number, amoun
     const a = Math.atan2(diry, dirx) + (r() - 0.5) * (jet ? 0.6 : 1.9);
     sim.drops.push({ x, y, z: 14 * FIG + (r() - 0.3) * 8, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp * 0.6, vz: 10 + r() * 45, size: r() < 0.15 ? 3 : r() < 0.45 ? 2 : 1, dark: r() < 0.35 });
   }
-  if (sim.drops.length > 1600) sim.drops.splice(0, sim.drops.length - 1600);
+  if (sim.drops.length > 3200) sim.drops.splice(0, sim.drops.length - 3200);
+}
+
+/** Jato de sangue: um esguicho fino e rápido saindo do corte, na direção do golpe (em todo golpe que acerta). */
+function jet(sim: Sim, x: number, y: number, dirx: number, diry: number, power: number): void {
+  if (!gore || sim.field == "mar") return;
+  const r = sim.rand;
+  const a0 = Math.atan2(diry, dirx) + (r() - 0.5) * 0.5;
+  const n = Math.round(14 + power * 10);
+  const z0 = 13 * FIG + (r() - 0.5) * 6;
+  for (let i = 0; i < n; i++) {
+    const k = i / n; // o começo do jato sai mais rápido
+    const sp = (150 + r() * 70) * (1 - k * 0.55);
+    const a = a0 + (r() - 0.5) * 0.18;
+    sim.drops.push({ x, y, z: z0, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp * 0.6, vz: 40 + r() * 50 - k * 20, size: r() < 0.3 ? 2 : 1, dark: r() < 0.25 });
+  }
+  if (sim.drops.length > 3200) sim.drops.splice(0, sim.drops.length - 3200);
 }
 
 /** Mancha no chão (fica até o fim). Pintada em 1×, com "pixel" do mesmo tamanho dos bonecos. */
@@ -706,8 +723,9 @@ function hit(sim: Sim, from: { x: number; y: number }, m: Man, power: number, bl
   if (m.kind == "ship") puff(sim, m.x + (sim.rand() - 0.5) * 30, m.y, 6, 60, 3, "235,248,255");
   sim.slashes.push({ x: m.x - nx * 4, y: m.y - 14 * FIG, t0: t, d: nx >= 0 ? 1 : -1, big: power >= 1.5 });
   puff(sim, m.x, m.y, power >= 2 ? 5 : 1, 30, 2.5);
-  bleed(sim, m.x, m.y, nx, ny, 12 + power * 10);
-  pool(sim, m.x - nx * 2, m.y, 3);
+  bleed(sim, m.x, m.y, nx, ny, 22 + power * 16);
+  jet(sim, m.x, m.y, nx, ny, power);
+  pool(sim, m.x - nx * 2, m.y, 5);
   if (power >= 2) {
     sim.shake = Math.max(sim.shake, 3.5);
     sim.stop = Math.max(sim.stop, 0.06);
@@ -726,7 +744,8 @@ function kill(sim: Sim, m: Man, nx: number, ny: number, power: number): void {
   m.vx += nx * (heavy ? 60 : 150) * Math.min(2, power);
   m.vy += ny * (heavy ? 30 : 80) * Math.min(2, power);
   m.flip = nx > 0; // cai para trás
-  bleed(sim, m.x, m.y, nx, ny, heavy ? 70 : 55);
+  bleed(sim, m.x, m.y, nx, ny, heavy ? 110 : 90);
+  jet(sim, m.x, m.y, nx, ny, 2.5);
   puff(sim, m.x, m.y, heavy ? 10 : 5, 40, 4);
   bleed(sim, m.x, m.y, -nx, -ny, 10);
   pool(sim, m.x, m.y, heavy ? 70 : 46);
@@ -858,7 +877,7 @@ export function stepSim(sim: Sim, dt: number): void {
         m.engaged = true;
         m.nextHit = t + 0.1 + r() * 0.5;
         // carga de cavalaria: chega com tudo
-        if (((m.kind == "horse" && Math.hypot(m.vx, m.vy) > 45) || (m.kind == "ship" && m.role == "ariete")) && t > T_FIGHT - 1) {
+        if (((m.kind == "horse" && Math.hypot(m.vx, m.vy) > 45) || (m.kind == "ship" && m.role == "ariete")) && t > T_FIGHT - 1 && Math.hypot(foe.x - m.x, foe.y - m.y) <= m.reach + 12) {
           if (m.kind == "ship") {
             sim.shake = Math.max(sim.shake, 6);
             puff(sim, (m.x + foe.x) / 2, (m.y + foe.y) / 2, 24, 120, 5, "235,248,255");
@@ -868,13 +887,22 @@ export function stepSim(sim: Sim, dt: number): void {
           m.nextHit = t + 0.9;
         }
       }
-      if (t >= m.nextHit && t > T_FIGHT - 0.8 && t < T_ROUT) {
+      const gapX = Math.abs(foe.x - m.x);
+      const gapY = Math.abs(foe.y - m.y);
+      // só começa o golpe se, dando o passo, a arma alcança (nada de bater de longe)
+      if (t >= m.nextHit && t > T_FIGHT - 0.8 && t < T_ROUT && gapX <= m.reach + 18 && gapY <= 18) {
         m.atkStart = t;
         m.nextHit = t + (m.kind == "horse" ? 1.1 : 0.75) + r() * 0.45;
       }
-      // o golpe acerta no meio do movimento
+      // passo para dentro durante a preparação: chega até a arma encostar
+      if (p >= 0 && p < 0.4) {
+        const want = Math.max(0, gapX - (m.reach - 3));
+        if (want > 0) m.x += Math.sign(foe.x - m.x) * Math.min(want, 140 * dt);
+        if (gapY > 6) m.y += Math.sign(foe.y - m.y) * Math.min(gapY - 6, 60 * dt);
+      }
+      // o golpe acerta no meio do movimento, se a arma encostar mesmo
       const prev = (t - dt - m.atkStart) / 0.4;
-      if (prev < 0.4 && p >= 0.4 && t < T_ROUT) {
+      if (prev < 0.4 && p >= 0.4 && t < T_ROUT && Math.abs(foe.x - m.x) <= m.reach + 6 && Math.abs(foe.y - m.y) <= 14) {
         const blocked = foe.role == "escudeiro" && r() < 0.4;
         hit(sim, m, foe, m.kind == "horse" ? 1.5 : 1, blocked);
         if (!blocked && r() < 0.35) sim.sparks.push({ x: (m.x + foe.x) / 2, y: (m.y + foe.y) / 2 - 14 * FIG, t0: t });
