@@ -10,6 +10,7 @@
 import { Role } from "../../../agot-bg-game-server/src/common/tactical-battle/tacticalBattleData";
 import { House } from "./data";
 import { Sprite, pixelSprite } from "./sprites";
+import { drawGlyph, styleOf } from "./houseStyle";
 
 type Ctx = CanvasRenderingContext2D;
 type Pt = [number, number];
@@ -67,9 +68,6 @@ const COATS: Coat[] = [
   { hi: "#4a413d", mid: "#332c29", lo: "#211c1a", mane: "#110d0c" }, // negro
   { hi: "#d8ad6a", mid: "#b98c4c", lo: "#8a6434", mane: "#3e2a18" } // baio-claro
 ];
-const MAIL_HI = "#b4b9c0";
-const MAIL = "#8b9098";
-const MAIL_LO = "#5e636b";
 const LEATHER = "#6a4322";
 const SKIN = "#e0b08a";
 
@@ -100,6 +98,7 @@ export function knightSprite(h: House, role: Role, frame: number, fight: boolean
 
 function drawKnight(ctx: Ctx, h: House, role: Role, frame: number, fight: boolean, coat: Coat, atk: 0 | 1): void {
   const heavy = role == "cavalaria";
+  const trimCol = styleOf(h).trim;
   const legs = frame >= 4 ? STAND : GALLOP[frame];
   const by = BOB[frame] ?? 0;
   const L1 = 8;
@@ -149,16 +148,18 @@ function drawKnight(ctx: Ctx, h: House, role: Role, frame: number, fight: boolea
     poly(ctx, [[-15, -29 + by], [14, -30 + by], [16, -17 + by], [-15, -17 + by]], h.dark);
     poly(ctx, [[-14, -30 + by], [13, -31 + by], [14, -19 + by], [-14, -19 + by]], h.color);
     for (let x = -14; x < 14; x += 4) ell(ctx, x + 2, -18.5 + by, 2, 1.6, h.color);
-    rect(ctx, -14, -24 + by, 27, 1.6, h.ink);
+    rect(ctx, -14, -24 + by, 27, 1.6, trimCol);
     rect(ctx, -14, -29.5 + by, 27, 1, "rgba(255,255,255,.25)");
   } else {
     poly(ctx, [[-6, -31 + by], [7, -31 + by], [8, -23 + by], [-6, -23 + by]], h.color);
-    rect(ctx, -6, -24.5 + by, 14, 1.2, h.ink);
+    rect(ctx, -6, -24.5 + by, 14, 1.2, trimCol);
   }
   // sela
   poly(ctx, [[-6, -31 + by], [6, -31 + by], [8, -35 + by], [5, -33 + by], [-4, -33 + by], [-6, -34 + by]], LEATHER);
 
-  // ---------- cavaleiro sentado
+  // ---------- cavaleiro sentado (armadura, elmo e escudo de cada Casa)
+  const st = styleOf(h);
+  const [MAIL_HI, MAIL, MAIL_LO] = st.metal;
   const ry = -31 + by;
   // arma do braço de longe (atrás do corpo)
   if (heavy) {
@@ -183,19 +184,62 @@ function drawKnight(ctx: Ctx, h: House, role: Role, frame: number, fight: boolea
   poly(ctx, [[-3, ry - 9], [3.5, ry - 9], [5, ry + 3], [-4.5, ry + 3]], h.color);
   rect(ctx, -3, ry - 9, 6.5, 1, "rgba(255,255,255,.2)");
   rect(ctx, -4, ry - 1, 8.5, 1.2, LEATHER); // cinto
-  // cabeça: rosto, elmo cônico com nasal
+  // cabeça: rosto e elmo da Casa
   ell(ctx, -1, ry - 15, 2.8, 3, MAIL_LO); // capuz de malha
-  rect(ctx, -3.6, ry - 16, 2, 2.6, SKIN);
-  poly(ctx, [[-3.8, ry - 16.5], [2.2, ry - 16.5], [0.4, ry - 22], [-1.2, ry - 22.4]], MAIL_HI);
-  rect(ctx, -3.8, ry - 17, 6, 1.2, MAIL_LO);
-  rect(ctx, -4.2, ry - 16.5, 1, 3, MAIL_LO); // nasal
+  rect(ctx, -3.6, ry - 16, 2, 2.6, h.name == "Martell" ? "#b47c50" : SKIN);
+  if (st.knightHelm == "wrap") {
+    // Dorne: elmo cônico com pano enrolado
+    ell(ctx, -0.8, ry - 18.5, 3.4, 2.6, st.silk ?? "#e8d2a2");
+    poly(ctx, [[-1.6, ry - 20.5], [0, ry - 24], [0.6, ry - 20.5]], MAIL);
+    poly(ctx, [[1.5, ry - 18], [5, ry - 13], [3, ry - 13]], st.silk ?? "#e8d2a2");
+  } else {
+    poly(ctx, [[-3.8, ry - 16.5], [2.2, ry - 16.5], [1.6, ry - 21], [-3, ry - 21.4]], MAIL);
+    poly(ctx, [[-3, ry - 21], [1.4, ry - 21], [0.4, ry - 22.6], [-2, ry - 22.8]], MAIL_HI);
+    rect(ctx, -3.8, ry - 17, 6, 1.2, MAIL_LO);
+    rect(ctx, -4.2, ry - 16.5, 1, 3, MAIL_LO); // nasal
+  }
+  // crista do elmo
+  switch (st.knightHelm) {
+    case "lion": // juba de leão dourada
+      poly(ctx, [[-2.5, ry - 22], [3, ry - 24.5], [5.5, ry - 21], [3, ry - 19.5], [1, ry - 21]], st.trim);
+      rect(ctx, 1, ry - 23.5, 2, 1, MAIL_LO);
+      break;
+    case "antler": // galhadas de veado (como o elmo do rei Robert)
+      stroke(ctx, [[-2.4, ry - 22], [-4.5, ry - 27], [-7, ry - 29]], "#2a2422", 1.2);
+      stroke(ctx, [[-4.5, ry - 27], [-3.5, ry - 30]], "#2a2422", 1);
+      stroke(ctx, [[0.6, ry - 22], [2.5, ry - 27], [5, ry - 29]], "#2a2422", 1.2);
+      stroke(ctx, [[2.5, ry - 27], [1.5, ry - 30]], "#2a2422", 1);
+      break;
+    case "iron": // barbatana de ferro
+      poly(ctx, [[-2, ry - 22.5], [1, ry - 26], [3, ry - 21.5]], MAIL_LO);
+      rect(ctx, -0.4, ry - 23.5, 1, 1, st.trim);
+      break;
+    case "plume": // pluma verde e dourada
+      curve(ctx, [-0.5, ry - 22.5], [3, ry - 28], [7, ry - 24], h.color, 2);
+      curve(ctx, [0.5, ry - 22.5], [4, ry - 26], [7, ry - 21], st.trim, 1.2);
+      break;
+    case "wings": // asas de falcão
+      poly(ctx, [[0, ry - 21.5], [6, ry - 27], [5, ry - 23], [7.5, ry - 23], [2, ry - 20]], "#f4f4f0");
+      break;
+    case "dragon": // espinhos de dragão vermelhos
+      poly(ctx, [[-2.5, ry - 22], [-1.5, ry - 25.5], [-0.3, ry - 22.4], [0.8, ry - 26], [2, ry - 21.8], [3.5, ry - 24.5], [3.6, ry - 20.5]], st.trim);
+      break;
+    case "cap":
+    default: // Stark: pluma cinza curta
+      poly(ctx, [[-1, ry - 22.6], [2.5, ry - 24.5], [4.5, ry - 21.8], [1.5, ry - 21.6]], "#8a8d90");
+      break;
+  }
   // escudo de pipa no braço de perto
   const sx = heavy && fight ? -2 : -3;
-  poly(ctx, [[sx - 5, ry - 11], [sx - 3, ry - 13], [sx + 3, ry - 13], [sx + 4, ry - 11], [sx + 1, ry + 5], [sx - 1, ry + 6]], h.dark);
-  poly(ctx, [[sx - 4, ry - 10.5], [sx - 2.5, ry - 12], [sx + 2.5, ry - 12], [sx + 3, ry - 10.5], [sx + 0.5, ry + 4], [sx - 1, ry + 4.5]], h.color);
-  stroke(ctx, [[sx - 0.5, ry - 11.5], [sx - 0.3, ry + 3.5]], h.ink, 1.1);
-  stroke(ctx, [[sx - 3.5, ry - 7], [sx + 2.5, ry - 7]], h.ink, 1.1);
-  rect(ctx, sx - 1.2, ry - 8, 1.6, 1.6, "#e8d38a"); // umbo
+  if (st.shield == "round") {
+    ell(ctx, sx - 0.5, ry - 4, 6, 6, MAIL_LO);
+    ell(ctx, sx - 0.5, ry - 4, 5, 5, st.field);
+  } else {
+    poly(ctx, [[sx - 5, ry - 11], [sx - 3, ry - 13], [sx + 3, ry - 13], [sx + 4, ry - 11], [sx + 1, ry + 5], [sx - 1, ry + 6]], MAIL_LO);
+    poly(ctx, [[sx - 4, ry - 10.5], [sx - 2.5, ry - 12], [sx + 2.5, ry - 12], [sx + 3, ry - 10.5], [sx + 0.5, ry + 4], [sx - 1, ry + 4.5]], st.field);
+    rect(ctx, sx - 4, ry - 12, 7, 1, st.trim);
+  }
+  drawGlyph(ctx, st.glyph, sx - 4, ry - (st.shield == "round" ? 7.5 : 9), st.charge);
   // arma na frente
   if (heavy && fight) {
     // lança baixa (deitada), empurrada no golpe

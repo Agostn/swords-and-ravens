@@ -233,3 +233,13 @@ Stark + mini-mapa jogado bem pelos dois), em 6 tipos de exército × 3 campos ×
    O empate da batalha do tabuleiro segue a mesma regra. (`bladeHolder` na entrada da conta; `duel` no resultado.)
 3. **Corvo Mensageiro:** 1 batalha por rodada.
 
+## Animação: luta mais longa e mais mortes (31/out)
+- A luta dura mais (fuga aos 10,4 s em vez de 7,4 s; fim aos 13,5 s).
+- **Só visual:** todo esquadrão que lutou perde pelo menos metade dos bonecos (o vencedor metade; quem perdeu metade
+  ou um a mais, e sempre sobra alguém para fugir). Peça destruída no tabuleiro continua morrendo inteira.
+  Figura única (dragão, navio, catapulta) só morre se a peça foi destruída. A conta e o tabuleiro não mudam.
+- Cada Casa tem armadura própria (`houseStyle.ts`): Stark cinza com pele e escudo redondo; Lannister dourado com
+  capa carmesim e juba de leão; Baratheon aço escuro e amarelo, cavaleiro com galhadas; Greyjoy ferro escuro,
+  braços de fora e machado; Tyrell verde esmaltado com pluma; Martell escamas de cobre, seda e pano no elmo, lança
+  mais comprida; Arryn aço claro, capa azul-céu e asas de falcão; Targaryen armadura negra com espinhos vermelhos.
+

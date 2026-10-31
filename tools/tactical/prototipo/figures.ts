@@ -5,7 +5,8 @@
  */
 import { Role, SquadKind } from "../../../agot-bg-game-server/src/common/tactical-battle/tacticalBattleData";
 import { House } from "./data";
-import { Sprite, fallenSprite, pixelSprite, shipSprite, soldierSprite, whiteSprite } from "./sprites";
+import { Sprite, fallenSprite, pixelSprite, shipSprite, whiteSprite } from "./sprites";
+import { soldierSprite } from "./soldiers";
 import { dragonFrame, knightSprite } from "./pixelart";
 
 export type Kind = "foot" | "horse" | "siege" | "dragon" | "tower" | "ship";

@@ -21,10 +21,12 @@ import { H, LW, W, ease, roundRect, terrainImage } from "./render";
 import { WALL_Y, drawWalls } from "./walls";
 import { drawSeaWaves } from "./ground";
 
-export const T_END = 10;
+// a luta ficou mais longa (31/out): mais tempo de troca de golpes antes de alguém fugir
+export const T_END = 13.5;
 const T_FIGHT = 3.2; // começam as baixas
-const T_DUEL = 5.0; // empate: os outros recuam e os campeões duelam no meio
-const T_ROUT = 7.4; // quem perdeu foge
+const T_DUEL = 8.0; // empate: os outros recuam e os campeões duelam no meio
+const T_ROUT = 10.4; // quem perdeu foge
+const DEATH_SPAN = 5.6; // as mortes se espalham por este tempo (de T_FIGHT + 0,5 até perto da fuga)
 
 /** Tamanho dos bonequinhos na luta. */
 export const FIG = 1.35;
@@ -323,27 +325,31 @@ export function createSim(field: FieldType, res: TacticalBattleResult, squads: R
       const mine = men.filter((m) => m.lane == lane && m.side == side && !isStatic(m));
       const k = kills[side];
       const order = [...mine].sort(() => rand() - 0.5).sort((p, q) => Number(ranged(p.role)) - Number(ranged(q.role)));
-      order.slice(0, k).forEach((m, i) => (m.dieAt = T_FIGHT + 0.5 + (i / Math.max(1, k)) * 3.2 + rand() * 0.3));
+      order.slice(0, k).forEach((m, i) => (m.dieAt = T_FIGHT + 0.5 + (i / Math.max(1, k)) * DEATH_SPAN + rand() * 0.3));
     });
   });
   if (outcome) {
-    // quem morre: só do lado que perdeu a batalha do tabuleiro
+    // Quem morre (só visual, 31/out: "pelo menos metade de cada esquadrão"):
+    //  - peça destruída no tabuleiro: o grupo inteiro;
+    //  - todo esquadrão que lutou perde pelo menos metade dos bonecos: o vencedor exatamente metade,
+    //    quem perdeu metade ou um a mais (sempre sobra alguém para fugir);
+    //  - figura única (dragão, navio, catapulta) só morre se a peça foi destruída.
     const dying: Man[] = [];
     const bySquad = new Map<string, Man[]>();
-    men.filter((m) => m.side == outcome.loser && !isStatic(m)).forEach((m) => bySquad.set(m.sid, [...(bySquad.get(m.sid) ?? []), m]));
+    men.filter((m) => !isStatic(m)).forEach((m) => bySquad.set(m.sid, [...(bySquad.get(m.sid) ?? []), m]));
     bySquad.forEach((list, sid) => {
-      if (outcome.destroyed.includes(sid)) dying.push(...list); // peça destruída: o grupo inteiro
-      else if (outcome.destroyed.length > 0 && list.length > 1 && res.lanes[list[0].lane].winner != null) {
-        // sobreviveu (e houve baixas na batalha): perde 1 ou 2 bonecos e o resto foge.
-        // Sem espada nenhuma, ninguém morre: todo mundo recua (como no tabuleiro).
-        const k = Math.min(list.length - 1, 1 + Math.floor(rand() * 2));
+      const side = list[0].side;
+      if (side == outcome.loser && outcome.destroyed.includes(sid)) dying.push(...list);
+      else if (list.length > 1 && res.lanes[list[0].lane].winner != null) {
+        const half = Math.floor(list.length / 2);
+        const k = side == outcome.loser ? Math.min(list.length - 1, half + (rand() < 0.5 ? 1 : 0)) : half;
         dying.push(...[...list].sort(() => rand() - 0.5).slice(0, k));
       }
     });
     // espalha as mortes durante a luta, faixa por faixa
     ([0, 1, 2] as Lane[]).forEach((lane) => {
       const here = dying.filter((m) => m.lane == lane).sort(() => rand() - 0.5);
-      here.forEach((m, i) => (m.dieAt = T_FIGHT + 0.5 + (i / Math.max(1, here.length)) * 3.2 + rand() * 0.3));
+      here.forEach((m, i) => (m.dieAt = T_FIGHT + 0.5 + (i / Math.max(1, here.length)) * DEATH_SPAN + rand() * 0.3));
     });
   }
 
@@ -353,7 +359,7 @@ export function createSim(field: FieldType, res: TacticalBattleResult, squads: R
   if (res.duel && res.winner) {
     // as baixas acontecem antes do duelo (depois todo mundo para e assiste)
     men.forEach((m) => {
-      if (m.dieAt < Infinity) m.dieAt = T_FIGHT + 0.3 + Math.max(0, (m.dieAt - T_FIGHT - 0.5) / 3.5) * (T_DUEL - T_FIGHT - 0.6);
+      if (m.dieAt < Infinity) m.dieAt = T_FIGHT + 0.3 + Math.max(0, (m.dieAt - T_FIGHT - 0.5) / (DEATH_SPAN + 0.3)) * (T_DUEL - T_FIGHT - 0.6);
     });
   }
   const sim: Sim = { duel: res.duel && res.winner ? { winner: res.winner, a: null, b: null, picked: false } : undefined, outcome, field, res, houses, men, shots: [], breaths: [], sparks: [], drops: [], dust: [], slashes: [], floor: null, t: 0, stop: 0, shake: 0, breach, rand, frontY };
