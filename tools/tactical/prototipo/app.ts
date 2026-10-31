@@ -5,7 +5,7 @@
  */
 import { boardStrength, resolveTacticalBattle, Squad, Lane, Side, TacticalBattleResult, LaneFactor } from "../../../agot-bg-game-server/src/common/tactical-battle/tacticalBattle";
 import { BASE_VALUE, FAR_FLANK_SHARE, FIELD_LANES, FieldType, ROW_FACTOR, Role, Row, SUPPORT_FACTOR, SquadKind, TERRAIN, UNOPPOSED_FLANK_SHARE, rolesFor } from "../../../agot-bg-game-server/src/common/tactical-battle/tacticalBattleData";
-import { computerStrategy, Piece, Scenario } from "../solver";
+import { bestReaction, computerStrategy, Piece, Scenario, rng } from "../solver";
 import {
   EMPTY_SIDE,
   FIELD_EXAMPLE,
@@ -70,10 +70,17 @@ let dragging: { id: string; ghost: HTMLElement; startX: number; startY: number; 
 let placedHit: PlacedToken[] = [];
 let timer: number | null = null;
 let timeLeft = 75;
-let phase: "place" | "battle" | "result" = "place";
+let phase: "place" | "react" | "battle" | "result" = "place";
+/** Reação: quem está reagindo agora, como cada lado estava antes, e o que cada um mudou. */
+let reactSide: Side = "defender";
+let reactBase: Record<Side, Unit[]> | null = null;
+let reactNote: Record<Side, string> = { attacker: "", defender: "" };
+let reactChanged: Record<Side, string | null> = { attacker: null, defender: null };
+let reactWarn = "";
 let sim: Sim | null = null;
 let simSeed = 1;
 let lastResult: TacticalBattleResult | null = null;
+let lastBoard: BoardBattle | null = null;
 let speed = 1;
 let goreOn = true;
 let raf: number | null = null;
@@ -258,7 +265,7 @@ function show(id: "home" | "custom" | "play"): void {
   window.scrollTo({ top: 0 });
 }
 
-function setPhase(p: "place" | "battle" | "result"): void {
+function setPhase(p: "place" | "react" | "battle" | "result"): void {
   $("play").dataset.phase = p;
   document.body.dataset.phase = p;
 }
@@ -338,6 +345,56 @@ function laneForces(side: Side): { total: number; here: number; help: number }[]
 }
 
 const totalForce = (side: Side): number => units[side].reduce((a, u) => a + baseValue(u, side), 0);
+
+type Outcome = "win" | "lose" | "tie";
+interface LaneOption {
+  role: Role;
+  kind: SquadKind;
+  out: Outcome;
+}
+const RANK: Record<Outcome, number> = { lose: 0, tie: 1, win: 2 };
+const isRanged = (r: Role): boolean => r == "arqueiro" || r == "flechas" || r == "catapulta";
+let outlookCache: { key: string; val: LaneOption[][] } = { key: "", val: [] };
+
+/**
+ * "Se ele vier todo aqui com…": para cada faixa e cada função que o inimigo pode escolher,
+ * roda a MESMA conta da luta (com as suas peças como estão) e diz se você ganha, perde ou empata.
+ * Se o inimigo tem cavaleiros também, considera a melhor escolha dele para os cavaleiros (o pior caso para você).
+ */
+function laneOutlook(side: Side): LaneOption[][] {
+  const enemy = other(side);
+  const key = JSON.stringify([side, config.field, units[side].map((u) => [u.lane, u.row, u.role]), units[enemy].map((u) => [u.kind, u.strength, u.support])]);
+  if (outlookCache.key == key) return outlookCache.val;
+  const mine = toSquads(units[side].map((u) => ({ ...u, lane: u.lane ?? (1 as Lane) })));
+  const eu = units[enemy];
+  const has = (k: SquadKind): boolean => eu.some((u) => u.kind == k && !u.locked);
+  const primary: SquadKind | null = has("ship") ? "ship" : has("footman") ? "footman" : has("knight") ? "knight" : null;
+  const val: LaneOption[][] = ([0, 1, 2] as Lane[]).map((L) => {
+    if (!primary || FIELD_LANES[config.field][L] == "bloqueado") return [];
+    const knightRoles: (Role | null)[] = primary != "knight" && has("knight") ? rolesFor("knight", false) : [null];
+    return rolesFor(primary, isSea()).map((pr) => {
+      let worst: Outcome = "win";
+      for (const kr of knightRoles) {
+        const theirs: Squad[] = eu.map((u) => {
+          const role = u.kind == primary ? pr : u.kind == "knight" && kr ? kr : u.role;
+          return { id: u.id, kind: u.kind, role, lane: u.locked ? (u.lane as Lane) : L, row: u.locked ? u.row : isRanged(role) ? "tras" : "frente", strength: u.strength, support: u.support };
+        });
+        const atk = side == "attacker" ? mine : theirs;
+        const def = side == "attacker" ? theirs : mine;
+        const res = resolveTacticalBattle({
+          field: config.field,
+          attacker: { squads: atk, card: config.attacker.card, orderBonus: config.attacker.order },
+          defender: { squads: def, card: config.defender.card, orderBonus: config.defender.order }
+        });
+        const out: Outcome = res.winner == side ? "win" : res.winner == enemy ? "lose" : "tie";
+        if (RANK[out] < RANK[worst]) worst = out;
+      }
+      return { role: pr, kind: primary, out: worst };
+    });
+  });
+  outlookCache = { key, val };
+  return val;
+}
 
 const listPt = (xs: Role[]): string => xs.map((x) => ROLE_NAMES[x].toLowerCase()).join(xs.length > 1 ? " e " : "");
 
@@ -526,18 +583,23 @@ function beginTurn(): void {
   startLoop();
 }
 
-function startTimer(): void {
+let timeMax = 75;
+function startTimer(secs = 75): void {
   stopTimer();
-  timeLeft = 75;
+  timeMax = secs;
+  timeLeft = secs;
   timer = window.setInterval(() => {
     timeLeft--;
     const el = document.getElementById("timer");
     if (el) {
       el.textContent = `${timeLeft}s`;
-      el.style.setProperty("--p", `${(timeLeft / 75) * 100}%`);
+      el.style.setProperty("--p", `${(timeLeft / timeMax) * 100}%`);
       el.classList.toggle("low", timeLeft <= 10);
     }
-    if (timeLeft <= 0) finishTurn();
+    if (timeLeft <= 0) {
+      if (phase == "react") finishReaction();
+      else finishTurn();
+    }
   }, 1000);
 }
 
@@ -551,6 +613,11 @@ function placeUnit(id: string, lane: Lane, row: Row): void {
   if (!u || u.locked) return;
   u.lane = lane;
   u.row = row;
+  if (phase == "react") {
+    enforceOne(id);
+    renderPanel();
+    return;
+  }
   // próximo da reserva fica selecionado, para ir tocando direto no campo
   const next = units[placingSide].find((x) => x.lane == null && !x.locked);
   selected = next ? next.id : null;
@@ -576,8 +643,9 @@ const BEATS: Partial<Record<Role, { vence: Role[]; teme: Role[] }>> = {
 };
 
 function renderPanel(): void {
-  if (phase != "place") return;
-  setPhase("place");
+  if (phase != "place" && phase != "react") return;
+  const reacting = phase == "react";
+  setPhase(phase);
   const h = houseOf(placingSide);
   const mine = units[placingSide];
   const placed = mine.filter((u) => u.lane != null).length;
@@ -590,7 +658,7 @@ function renderPanel(): void {
       ${squadSvg(h, u)}
       <span class="piece-name">${ROLE_NAMES[u.role]}</span>
       <span class="piece-where">${u.lane == null ? "na reserva" : where}</span>
-      ${u.lane != null ? `<span class="piece-ok" aria-hidden="true">✓</span>` : ""}
+      ${reacting && changedId() == u.id ? `<span class="piece-chg">mudou</span>` : !reacting && u.lane != null ? `<span class="piece-ok" aria-hidden="true">✓</span>` : ""}
     </button>`;
   };
   const roles = sel ? rolesFor(sel.kind, isSea()) : [];
@@ -606,7 +674,7 @@ function renderPanel(): void {
         <div class="editor-head">
           ${squadSvg(h, sel)}
           <div class="editor-title"><b>${KIND_NAMES[sel.kind]}${sel.support ? " de apoio" : ""}${sel.strength && (sel.kind == "dragon" || sel.kind == "garrison") ? ` · força ${sel.strength}` : ""}</b>
-          <small>${sel.locked ? "fica sempre atrás, no centro" : sel.lane == null ? "Toque numa casinha do campo para colocar." : "Toque noutra casinha para mudar de lugar."}</small></div>
+          <small>${sel.locked ? "fica sempre atrás, no centro" : sel.lane == null ? "Toque numa casinha do campo para colocar." : reacting ? "Mude a função aqui ou toque noutra casinha." : "Toque noutra casinha para mudar de lugar."}</small></div>
         </div>
         <div class="role-row">
           ${
@@ -621,37 +689,48 @@ function renderPanel(): void {
                   .join("")
               : ""
           }
-          ${sel.lane != null && !sel.locked ? `<button type="button" class="role-card back-card" data-back="${sel.id}"><span class="back-ico" aria-hidden="true">↩</span><b>Tirar</b></button>` : ""}
+          ${sel.lane != null && !sel.locked && !reacting ? `<button type="button" class="role-card back-card" data-back="${sel.id}"><span class="back-ico" aria-hidden="true">↩</span><b>Tirar</b></button>` : ""}
         </div>
         ${say}
       </div>`
-    : `<div class="editor empty"><p>Toque numa peça para escolher a função e ver onde ela rende mais.</p></div>`;
+    : `<div class="editor empty"><p>${reacting ? "Toque no esquadrão que você quer mudar (só 1)." : "Toque numa peça para escolher a função e ver onde ela rende mais."}</p></div>`;
   // guarda a rolagem da faixa de peças (senão ela volta para o começo a cada toque)
   const oldTray = document.querySelector<HTMLElement>("#panel .tray-wrap");
   const keepScroll = oldTray ? oldTray.scrollLeft : 0;
   $("panel").innerHTML = `
     <div class="turn-head">
       <button type="button" class="quit-btn" id="quit" aria-label="Sair para o início">‹</button>
-      <h2><span class="dot" style="background:${h.color}"></span>${h.name} <small>${placingSide == "attacker" ? "ataca" : "defende"}</small></h2>
+      <h2><span class="dot" style="background:${h.color}"></span>${h.name} <small>${reacting ? "reação" : placingSide == "attacker" ? "ataca" : "defende"}</small></h2>
       <div class="turn-tools">
-        <span id="timer" class="timer" style="--p:${(timeLeft / 75) * 100}%">${timeLeft}s</span>
+        <span id="timer" class="timer" style="--p:${(timeLeft / timeMax) * 100}%">${timeLeft}s</span>
         <button type="button" class="help-btn" id="help-play" aria-label="Como funciona o combate">?</button>
       </div>
     </div>
-    <ol class="steps">
+    ${
+      reacting
+        ? reactInfoHtml()
+        : `<ol class="steps">
       <li class="${st == 1 ? "now" : st > 1 ? "done" : ""}"><b>1</b>Toque numa peça</li>
       <li class="${st == 2 ? "now" : st > 2 ? "done" : ""}"><b>2</b>Toque numa casinha</li>
       <li class="${st == 3 ? "now" : ""}"><b>3</b>Pronto</li>
-    </ol>
+    </ol>`
+    }
     ${editor}
     <div class="tray-wrap">
-      <div class="tray-head"><b>Suas peças</b><span>${placed} de ${mine.length} no campo</span></div>
+      <div class="tray-head"><b>Suas peças</b><span>${reacting ? (changedId() ? "1 mudança (o máximo)" : "nenhuma mudança") : `${placed} de ${mine.length} no campo`}</span></div>
       <div class="tray">${mine.map((u, i) => chip(u, i)).join("")}</div>
     </div>
-    <div class="actions">
+    ${
+      reacting
+        ? `<div class="actions">
+      <button type="button" class="btn" id="undo" ${changedId() ? "" : "disabled"}>Desfazer</button>
+      <button type="button" class="btn primary" id="ready">${changedId() ? "Confirmar a troca" : "Manter como está"}</button>
+    </div>`
+        : `<div class="actions">
       <button type="button" class="btn" id="auto">Automático</button>
       <button type="button" class="btn primary" id="ready" ${placed == 0 ? "disabled" : ""}>${placed < mine.length ? `Pronto <small class="sub">${mine.length - placed} ${mine.length - placed == 1 ? "vai" : "vão"} p/ o centro</small>` : "Pronto"}</button>
-    </div>`;
+    </div>`
+    }`;
 
   const list = $("panel");
   const newTray = list.querySelector<HTMLElement>(".tray-wrap");
@@ -668,7 +747,10 @@ function renderPanel(): void {
   });
   list.querySelectorAll<HTMLButtonElement>("[data-role]").forEach((b) =>
     b.addEventListener("click", () => {
-      if (sel) sel.role = b.dataset.role as Role;
+      if (sel) {
+        sel.role = b.dataset.role as Role;
+        if (reacting) enforceOne(sel.id);
+      }
       renderPanel();
     })
   );
@@ -679,6 +761,18 @@ function renderPanel(): void {
       renderPanel();
     })
   );
+  if (reacting) {
+    $("undo").addEventListener("click", () => {
+      if (!reactBase) return;
+      units[placingSide] = clone(reactBase[placingSide]);
+      reactWarn = "";
+      renderPanel();
+    });
+    $("ready").addEventListener("click", finishReaction);
+    $("help-play").addEventListener("click", () => openTutorial(SLIDES.length - 2));
+    $("quit").addEventListener("click", goHome);
+    return;
+  }
   $("auto").addEventListener("click", () => {
     const btn = $<HTMLButtonElement>("auto");
     btn.disabled = true;
@@ -724,7 +818,7 @@ function slotAt(p: [number, number] | null): { lane: Lane; row: Row } | null {
 }
 
 function startDrag(e: PointerEvent, id: string, fromCanvas: boolean): void {
-  if (phase != "place") return;
+  if (phase != "place" && phase != "react") return;
   const u = units[placingSide].find((x) => x.id == id);
   if (!u || u.locked) {
     selected = id;
@@ -742,7 +836,7 @@ function startDrag(e: PointerEvent, id: string, fromCanvas: boolean): void {
 
 function moveDrag(e: PointerEvent): void {
   if (!dragging) {
-    if (phase == "place") {
+    if (phase == "place" || phase == "react") {
       const s = slotAt(canvasPoint(e.clientX, e.clientY));
       hoverSlot = selected ? s : null;
     }
@@ -774,7 +868,7 @@ function endDrag(e: PointerEvent): void {
   const s = slotAt(canvasPoint(e.clientX, e.clientY));
   hoverSlot = null;
   if (s) placeUnit(d.id, s.lane, s.row);
-  else if (d.fromCanvas) {
+  else if (d.fromCanvas && phase == "place") {
     const u = units[placingSide].find((x) => x.id == d.id);
     if (u && !u.locked) u.lane = null;
     selected = d.id;
@@ -783,7 +877,7 @@ function endDrag(e: PointerEvent): void {
 }
 
 function canvasDown(e: PointerEvent): void {
-  if (phase != "place") return;
+  if (phase != "place" && phase != "react") return;
   const p = canvasPoint(e.clientX, e.clientY);
   if (!p) return;
   const hit = placedHit.find((t) => p[0] >= t.x && p[0] <= t.x + t.w && p[1] >= t.y && p[1] <= t.y + t.h);
@@ -813,7 +907,7 @@ function finishTurn(): void {
     const side = other(placingSide);
     void (enemyPlan ?? thinkAsync(side)).then((strat) => {
       applyStrategy(side, strat);
-      runBattle();
+      startReaction();
     });
     return;
   }
@@ -823,7 +917,215 @@ function finishTurn(): void {
     $("handoff-text").innerHTML = `Agora é a vez de <b>${houseOf("defender").name}</b> (defende). Passe o aparelho sem olhar o campo.`;
     return;
   }
-  runBattle();
+  startReaction();
+}
+
+// ---------------------------------------------------------------- reação
+/**
+ * Depois de os dois posicionarem, os exércitos aparecem e cada lado pode mudar UM esquadrão
+ * (lugar e/ou função): primeiro quem defende, depois quem ataca. Assim não é só chute:
+ * quem escolheu mal conserta uma parte, e quem lê melhor o campo ganha.
+ */
+const isCpuSide = (side: Side): boolean => config.mode == "cpu" && side != config.humanSide;
+const where = (u: Unit): string => `${LANE_NAMES[u.lane ?? 1].toLowerCase()}, ${u.row == "frente" ? "frente" : "trás"}`;
+
+function changedId(side: Side = placingSide): string | null {
+  if (!reactBase) return null;
+  const base = reactBase[side];
+  const u = units[side].find((x) => {
+    const b = base.find((y) => y.id == x.id);
+    return b && (b.lane != x.lane || b.row != x.row || b.role != x.role);
+  });
+  return u ? u.id : null;
+}
+
+/** Só 1 esquadrão pode mudar: se outro já tinha mudado, ele volta para onde estava. */
+function enforceOne(keepId: string): void {
+  if (!reactBase) return;
+  reactWarn = "";
+  units[placingSide].forEach((u) => {
+    if (u.id == keepId) return;
+    const b = reactBase?.[placingSide].find((y) => y.id == u.id);
+    if (b && (b.lane != u.lane || b.row != u.row || b.role != u.role)) {
+      u.lane = b.lane;
+      u.row = b.row;
+      u.role = b.role;
+      reactWarn = `Só dá para mudar 1 esquadrão: o esquadrão ${units[placingSide].indexOf(u) + 1} voltou a ser como era.`;
+    }
+  });
+}
+
+function startReaction(): void {
+  phase = "react";
+  reactBase = { attacker: clone(units.attacker), defender: clone(units.defender) };
+  reactNote = { attacker: "", defender: "" };
+  reactChanged = { attacker: null, defender: null };
+  reactSide = "defender";
+  nextReaction();
+}
+
+function recordReaction(side: Side): void {
+  const id = changedId(side);
+  reactChanged[side] = id;
+  const name = houseOf(side).name;
+  if (!id || !reactBase) {
+    reactNote[side] = `${name} não mudou nada.`;
+    return;
+  }
+  const b = reactBase[side].find((x) => x.id == id) as Unit;
+  const u = units[side].find((x) => x.id == id) as Unit;
+  const n = units[side].indexOf(u) + 1;
+  const roleTxt = b.role != u.role ? `${ROLE_NAMES[b.role]} → ${ROLE_NAMES[u.role]}` : ROLE_NAMES[u.role];
+  const placeTxt = b.lane != u.lane || b.row != u.row ? ` (${where(b)} → ${where(u)})` : ` (${where(u)})`;
+  reactNote[side] = `${name} mudou o esquadrão ${n}: ${roleTxt}${placeTxt}.`;
+}
+
+function nextReaction(): void {
+  reactWarn = "";
+  if (isCpuSide(reactSide)) {
+    const side = reactSide;
+    const res = bestReaction(scenario(), side, toSquads(units.attacker), toSquads(units.defender));
+    units[side].forEach((u) => {
+      const q = res.find((x) => x.id == u.id);
+      if (q) {
+        u.lane = q.lane;
+        u.row = q.row;
+        u.role = q.role;
+      }
+    });
+    recordReaction(side);
+    afterReaction();
+    return;
+  }
+  placingSide = reactSide;
+  selected = null;
+  hoverSlot = null;
+  startTimer(45);
+  renderPanel();
+  startLoop();
+}
+
+function afterReaction(): void {
+  if (reactSide == "defender") {
+    reactSide = "attacker";
+    nextReaction();
+  } else runBattle();
+}
+
+function finishReaction(): void {
+  if (phase != "react") return;
+  stopTimer();
+  recordReaction(reactSide);
+  afterReaction();
+}
+
+/** "Se a luta fosse agora": quem ganha cada faixa com tudo como está. */
+function resultNow(): TacticalBattleResult {
+  return resolveTacticalBattle({
+    field: config.field,
+    attacker: { squads: toSquads(units.attacker), card: config.attacker.card, orderBonus: config.attacker.order },
+    defender: { squads: toSquads(units.defender), card: config.defender.card, orderBonus: config.defender.order }
+  });
+}
+
+function outcomeLine(res: TacticalBattleResult, me: Side): string {
+  if (!res.winner) return `<b class="tie">empate</b> (ninguém ganha bônus)`;
+  return res.winner == me ? `<b class="ok">você ganha</b> (+${res.bonus})` : `<b class="no">${houseOf(res.winner).name} ganha</b> (+${res.bonus} para ele)`;
+}
+
+function reactInfoHtml(): string {
+  const me = placingSide;
+  const foe = other(me);
+  const now = resultNow();
+  let extra = "";
+  if (me == "defender") {
+    // o atacante ainda responde: mostra o pior caso
+    const reply = bestReaction(scenario(), "attacker", toSquads(units.attacker), toSquads(units.defender));
+    const r2 = resolveTacticalBattle({
+      field: config.field,
+      attacker: { squads: reply, card: config.attacker.card, orderBonus: config.attacker.order },
+      defender: { squads: toSquads(units.defender), card: config.defender.card, orderBonus: config.defender.order }
+    });
+    extra = `<br>Se ${houseOf(foe).name} responder do melhor jeito: ${outcomeLine(r2, me)}`;
+  }
+  const lead =
+    me == "defender"
+      ? `Os exércitos apareceram. Mude <b>1 esquadrão</b> (lugar e/ou função) ou mantenha. Depois ${houseOf(foe).name} (ataca) ainda pode mudar 1.`
+      : `${reactNote.defender || ""} Agora você vê tudo e tem a <b>última palavra</b>: mude <b>1 esquadrão</b> ou mantenha.`;
+  return `<div class="react-info">
+    <p>${lead}</p>
+    <p class="react-now">Se a luta fosse agora: ${outcomeLine(now, me)}${extra}</p>
+    ${reactWarn ? `<p class="warn">${reactWarn}</p>` : ""}
+  </div>`;
+}
+
+// ---------------------------------------------------------------- batalha do tabuleiro
+/**
+ * A batalha do jogo original, com o bônus do mini-mapa: força das peças (com apoio) + carta de Casa
+ * + ordem + bônus. Quem perde sofre baixas = espadas do vencedor − torres do perdedor
+ * (no jogo, o perdedor escolhe quais peças morrem; aqui é sorteado). Apoio não sofre baixa.
+ * Empate: no jogo decide a trilha dos Feudos (Lâmina de Aço Valiriano); aqui fica com quem defende.
+ */
+interface BoardBattle {
+  totals: Record<Side, { tropas: number; carta: number; ordem: number; mini: number; total: number }>;
+  winner: Side;
+  tie: boolean;
+  swords: number;
+  towers: number;
+  casualties: number;
+  destroyed: string[];
+}
+
+function boardBattle(res: TacticalBattleResult, seed: number): BoardBattle {
+  const tot = (side: Side): BoardBattle["totals"][Side] => {
+    const tropas = toSquads(units[side]).reduce((a, q) => a + boardStrength(q, side, config.field), 0);
+    const carta = config[side].card?.strength ?? 0;
+    const ordem = config[side].order ?? 0;
+    const mini = res.winner == side ? res.bonus : 0;
+    return { tropas, carta, ordem, mini, total: tropas + carta + ordem + mini };
+  };
+  const totals = { attacker: tot("attacker"), defender: tot("defender") };
+  const tie = totals.attacker.total == totals.defender.total;
+  const winner: Side = totals.attacker.total > totals.defender.total ? "attacker" : "defender";
+  const loser = other(winner);
+  const swords = config[winner].card?.swords ?? 0;
+  const towers = config[loser].card?.towers ?? 0;
+  const casualties = Math.max(0, swords - towers);
+  const pool = units[loser].filter((u) => u.lane != null && !u.support && u.kind != "garrison" && boardStrength(toSquads([u])[0], loser, config.field) > 0);
+  const rand = rng(seed);
+  const destroyed: string[] = [];
+  // máquina de cerco do lado que perdeu não recua: é destruída (regra do jogo original)
+  pool.filter((u) => u.kind == "siege-engine").forEach((u) => {
+    destroyed.push(u.id);
+    pool.splice(pool.indexOf(u), 1);
+  });
+  for (let i = 0; i < casualties && pool.length; i++) destroyed.push(pool.splice(Math.floor(rand() * pool.length), 1)[0].id);
+  return { totals, winner, tie, swords, towers, casualties, destroyed };
+}
+
+function boardHtml(b: BoardBattle): string {
+  const row = (side: Side): string => {
+    const t = b.totals[side];
+    const parts = [`tropas ${t.tropas}`, `carta ${t.carta}`];
+    if (t.ordem) parts.push(`ordem ${t.ordem > 0 ? "+" : ""}${t.ordem}`);
+    if (t.mini) parts.push(`mini-mapa +${t.mini}`);
+    return `<li><b style="color:${houseOf(side).color}">${houseOf(side).name}</b>: ${parts.join(" + ")} = <b>${t.total}</b></li>`;
+  };
+  const loser = other(b.winner);
+  const names = b.destroyed
+    .map((id) => units[loser].find((x) => x.id == id) as Unit)
+    .filter((u) => u.kind != "siege-engine")
+    .map((u) => `${KIND_NAMES[u.kind].toLowerCase()} (${ROLE_NAMES[u.role].toLowerCase()})`);
+  const siege = b.destroyed.some((id) => units[loser].find((x) => x.id == id)?.kind == "siege-engine") ? " A máquina de cerco de quem perde não recua: é destruída." : "";
+  const deaths =
+    b.casualties == 0
+      ? `${houseOf(b.winner).name} tem ${b.swords} ${b.swords == 1 ? "espada" : "espadas"} e ${houseOf(loser).name} ${b.towers} ${b.towers == 1 ? "torre" : "torres"}: ninguém morre, ${houseOf(loser).name} recua.`
+      : `${b.swords} ${b.swords == 1 ? "espada" : "espadas"} − ${b.towers} ${b.towers == 1 ? "torre" : "torres"} = <b>${b.casualties} ${b.casualties == 1 ? "baixa" : "baixas"}</b>: morre ${names.join(" e ")}; o resto de ${houseOf(loser).name} recua.`;
+  return `<div class="board-res">
+    <h3>Batalha no tabuleiro</h3>
+    <ul>${row("attacker")}${row("defender")}</ul>
+    <p><b style="color:${houseOf(b.winner).color}">${houseOf(b.winner).name} vence</b>${b.tie ? " (empate: aqui quem defende segura; no jogo decide a Lâmina de Aço Valiriano)" : ""}. ${deaths}${siege}</p>
+  </div>`;
 }
 
 // ---------------------------------------------------------------- luta
@@ -835,6 +1137,7 @@ function runBattle(): void {
     defender: { squads: toSquads(units.defender), card: config.defender.card, orderBonus: config.defender.order }
   });
   simSeed = Math.floor(Math.random() * 1e9);
+  lastBoard = boardBattle(lastResult, simSeed);
   newSim();
   renderBattlePanel();
   startLoop();
@@ -847,7 +1150,8 @@ function newSim(): void {
     lastResult as TacticalBattleResult,
     { attacker: toSquads(units.attacker), defender: toSquads(units.defender) },
     { attacker: houseOf("attacker"), defender: houseOf("defender") },
-    simSeed
+    simSeed,
+    lastBoard ? { loser: other(lastBoard.winner), destroyed: lastBoard.destroyed } : undefined
   );
   if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) {
     while (sim.t < T_END) stepSim(sim, 0.05);
@@ -875,7 +1179,8 @@ function whyHtml(): string {
       return `<li>${head} — ${who}${rs ? ": " + rs : ""}</li>`;
     })
     .join("");
-  return `<ul class="why" aria-label="Por que cada faixa">${items}</ul>`;
+  const notes = [reactNote.defender, reactNote.attacker].filter(Boolean);
+  return `${notes.length ? `<p class="react-notes">Reação: ${notes.join(" ")}</p>` : ""}<ul class="why" aria-label="Por que cada faixa">${items}</ul>`;
 }
 
 function renderBattlePanel(): void {
@@ -919,7 +1224,9 @@ function startLoop(): void {
   const frame = (now: number): void => {
     const dt = Math.min(0.05, (now - lastFrame) / 1000);
     lastFrame = now;
-    if (phase == "place") {
+    if (phase == "place" || phase == "react") {
+      const reacting = phase == "react";
+      const nowRes = reacting ? resultNow() : null;
       const view = {
         field: config.field,
         house: houseOf(placingSide),
@@ -932,7 +1239,12 @@ function startLoop(): void {
         showHint: !!selected,
         preview: previewFor(units[placingSide].find((u) => u.id == selected) ?? null),
         wallFlag: houseOf("defender").color,
-        laneForce: laneForces(placingSide),
+        laneForce: reacting ? undefined : laneForces(placingSide),
+        outlook: reacting ? undefined : laneOutlook(placingSide),
+        enemySquads: reacting ? units[other(placingSide)] : undefined,
+        enemyChanged: reacting ? reactChanged[other(placingSide)] : null,
+        changed: reacting ? changedId() : null,
+        laneOutcome: nowRes ? nowRes.lanes.map((l) => (l.blocked || l.winner == null ? null : l.winner == "tie" ? "tie" : l.winner == placingSide ? "win" : "lose")) : undefined,
         enemyForce: totalForce(other(placingSide)),
         previewLabel: (() => {
           const i = units[placingSide].findIndex((u) => u.id == selected);
@@ -1024,6 +1336,7 @@ function showResult(): void {
       <h2 class="verdict">${verdict}</h2>
       <p class="bonus-line">${bonus}</p>
       ${res.metInCenter ? `<p class="note">Ninguém se encontrou nas faixas escolhidas, então os exércitos marcharam e lutaram no centro.</p>` : ""}
+      ${lastBoard ? boardHtml(lastBoard) : ""}
       <ol class="lanes-res">${lanesHtml}</ol>
       <div class="actions">
         <button type="button" class="btn" id="home-btn">Início</button>

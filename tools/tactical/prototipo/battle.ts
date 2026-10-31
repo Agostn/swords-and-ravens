@@ -18,7 +18,8 @@ import { rng } from "../solver";
 import { House, ROLE_NAMES, TERRAIN_NAMES } from "./data";
 import { DRAGON_SCALE, Kind, Pose, drawFallen, drawUnit, kindOf } from "./figures";
 import { H, LW, W, ease, roundRect, terrainImage } from "./render";
-import { drawWalls } from "./walls";
+import { WALL_Y, drawWalls } from "./walls";
+import { drawSeaWaves } from "./ground";
 
 export const T_END = 10;
 const T_FIGHT = 3.2; // começam as baixas
@@ -63,6 +64,12 @@ export function setGore(on: boolean): void {
 }
 
 interface Man {
+  /** id do esquadrão (peça do tabuleiro) */
+  sid: string;
+  /** está em cima da muralha (desenhado na frente dela) */
+  onWall?: boolean;
+  /** atacante parado no pé da muralha inteira (não tem como passar) */
+  atWall?: boolean;
   side: Side;
   lane: Lane;
   role: Role;
@@ -130,6 +137,7 @@ interface Spark {
 
 /** Poeira (passos de cavalo, choque, pedra). */
 interface Dust {
+  color?: string;
   x: number;
   y: number;
   vx: number;
@@ -161,6 +169,8 @@ interface Drop {
 }
 
 export interface Sim {
+  /** batalha do tabuleiro (quem foge e quem morre); sem ela, cada faixa decide */
+  outcome?: BoardOutcome;
   field: FieldType;
   res: TacticalBattleResult;
   houses: Record<Side, House>;
@@ -196,10 +206,22 @@ function formation(kind: Kind, cx: number, cy: number, side: Side): [number, num
 
 /** Distância entre os dois de uma dupla, parados (a média dos alcances). */
 function duelDist(a: Man, b: Man): number {
+  if (a.kind == "ship" || b.kind == "ship") return 66; // navios encostam um no outro
   return Math.max(20, (a.reach + b.reach) / 2 + 4);
 }
 
-export function createSim(field: FieldType, res: TacticalBattleResult, squads: Record<Side, Squad[]>, houses: Record<Side, House>, seed: number): Sim {
+/**
+ * Resultado da batalha do TABULEIRO (regras do jogo original): quem perdeu e quais peças dele
+ * morreram (espadas do vencedor − torres do perdedor). A animação segue isso:
+ * peça destruída = o grupo inteiro de bonecos morre; peça que sobrevive perde 1 ou 2 bonecos
+ * (só visual) e o resto foge; o vencedor não perde peça. Dragão (1 figura) só morre se for destruído.
+ */
+export interface BoardOutcome {
+  loser: Side;
+  destroyed: string[];
+}
+
+export function createSim(field: FieldType, res: TacticalBattleResult, squads: Record<Side, Squad[]>, houses: Record<Side, House>, seed: number, outcome?: BoardOutcome): Sim {
   const rand = rng(seed);
   const rowY: Record<Side, Record<Row, number>> = {
     attacker: { frente: H * 0.68, tras: H * 0.84 },
@@ -217,6 +239,7 @@ export function createSim(field: FieldType, res: TacticalBattleResult, squads: R
         const jx = (rand() - 0.5) * 2.5;
         const jy = (rand() - 0.5) * 2.5;
         men.push({
+          sid: sq.id,
           side,
           lane: sq.lane,
           role: sq.role,
@@ -264,6 +287,7 @@ export function createSim(field: FieldType, res: TacticalBattleResult, squads: R
     men.filter((m) => m.lane == lane && !isStatic(m)).forEach((m, i) => (m.lane = targets[i % targets.length]));
   });
 
+  // muralha inteira: a luta é no pé do muro (defensor em cima, atacante embaixo); portão ou buraco: na frente
   const frontY = FIELD_LANES[field].map((t) => (t == "muralha" || t == "portao" ? H * 0.47 : H * 0.5));
 
   // baixas: vêm do resultado de cada faixa
@@ -291,6 +315,7 @@ export function createSim(field: FieldType, res: TacticalBattleResult, squads: R
       const leftW = count(w) - kills[w];
       if (count(l) - kills[l] >= leftW) kills[l] = Math.min(count(l), count(l) - leftW + 1);
     }
+    if (outcome) return; // as baixas seguem a batalha do tabuleiro (abaixo)
     (["attacker", "defender"] as Side[]).forEach((side) => {
       const mine = men.filter((m) => m.lane == lane && m.side == side && !isStatic(m));
       const k = kills[side];
@@ -298,12 +323,81 @@ export function createSim(field: FieldType, res: TacticalBattleResult, squads: R
       order.slice(0, k).forEach((m, i) => (m.dieAt = T_FIGHT + 0.5 + (i / Math.max(1, k)) * 3.2 + rand() * 0.3));
     });
   });
+  if (outcome) {
+    // quem morre: só do lado que perdeu a batalha do tabuleiro
+    const dying: Man[] = [];
+    const bySquad = new Map<string, Man[]>();
+    men.filter((m) => m.side == outcome.loser && !isStatic(m)).forEach((m) => bySquad.set(m.sid, [...(bySquad.get(m.sid) ?? []), m]));
+    bySquad.forEach((list, sid) => {
+      if (outcome.destroyed.includes(sid)) dying.push(...list); // peça destruída: o grupo inteiro
+      else if (outcome.destroyed.length > 0 && list.length > 1 && res.lanes[list[0].lane].winner != null) {
+        // sobreviveu (e houve baixas na batalha): perde 1 ou 2 bonecos e o resto foge.
+        // Sem espada nenhuma, ninguém morre: todo mundo recua (como no tabuleiro).
+        const k = Math.min(list.length - 1, 1 + Math.floor(rand() * 2));
+        dying.push(...[...list].sort(() => rand() - 0.5).slice(0, k));
+      }
+    });
+    // espalha as mortes durante a luta, faixa por faixa
+    ([0, 1, 2] as Lane[]).forEach((lane) => {
+      const here = dying.filter((m) => m.lane == lane).sort(() => rand() - 0.5);
+      here.forEach((m, i) => (m.dieAt = T_FIGHT + 0.5 + (i / Math.max(1, here.length)) * 3.2 + rand() * 0.3));
+    });
+  }
 
-  const sim: Sim = { field, res, houses, men, shots: [], breaths: [], sparks: [], drops: [], dust: [], slashes: [], floor: null, t: 0, stop: 0, shake: 0, breach, rand, frontY };
+  FIELD_LANES[field].forEach((t, i) => {
+    if (t == "muralha" && !breach[i]) frontY[i] = WALL_Y + 10;
+  });
+  const sim: Sim = { outcome, field, res, houses, men, shots: [], breaths: [], sparks: [], drops: [], dust: [], slashes: [], floor: null, t: 0, stop: 0, shake: 0, breach, rand, frontY };
   ([0, 1, 2] as Lane[]).forEach((lane) => {
     if (res.lanes[lane].winner != null) pairUp(sim, lane);
   });
   return sim;
+}
+
+/**
+ * Muralha: ninguém atravessa a pedra. No portão (ou no buraco da catapulta) passa só pela abertura;
+ * na muralha inteira o defensor fica em cima do muro e o atacante luta embaixo.
+ */
+const BAND_TOP = WALL_Y - 26;
+const BAND_BOT = WALL_Y + 24;
+function wallBlock(sim: Sim, m: Man, prevY: number, dt: number): void {
+  if (m.kind == "dragon" || m.kind == "ship") return;
+  const lane = Math.max(0, Math.min(2, Math.floor(m.x / LW))) as Lane;
+  const t = FIELD_LANES[sim.field][lane];
+  if (t != "muralha" && t != "portao") {
+    m.onWall = false;
+    m.atWall = false;
+    return;
+  }
+  const cx = lane * LW + LW / 2;
+  const open = sim.breach[lane] && sim.t > T_FIGHT + 0.2;
+  const pass = t == "portao" ? (open ? 30 : 13) : open ? 28 : 0;
+  if (pass == 0) {
+    // muralha inteira
+    if (m.side == "defender") {
+      if (m.y > WALL_Y - 4) {
+        m.y = WALL_Y - 4;
+        m.vy = Math.min(0, m.vy);
+      }
+      m.onWall = m.y > WALL_Y - 30;
+    } else {
+      if (m.y < BAND_BOT + 2) {
+        m.y = BAND_BOT + 2;
+        m.vy = Math.max(0, m.vy);
+      }
+      m.atWall = m.y < BAND_BOT + 8; // atacante no pé do muro (cercando)
+    }
+    return;
+  }
+  m.onWall = false;
+  const inBand = m.y > BAND_TOP && m.y < BAND_BOT;
+  if (inBand && Math.abs(m.x - cx) > pass) {
+    if (!(prevY > BAND_TOP && prevY < BAND_BOT)) m.y = prevY; // bate no muro: não entra
+    // escorrega pela parede até a abertura
+    const dx = cx - m.x;
+    m.x += Math.sign(dx) * Math.min(Math.abs(dx) - pass, 70 * dt);
+    if (prevY > BAND_TOP && prevY < BAND_BOT) m.x = Math.max(cx - pass, Math.min(cx + pass, m.x));
+  }
 }
 
 /** Monta as duplas de uma faixa. */
@@ -315,7 +409,9 @@ function pairUp(sim: Sim, lane: Lane): void {
   if (pairs > 0) {
     const x0 = sim.res.metInCenter ? 16 : lane * LW + 10;
     const width = sim.res.metInCenter ? W - 32 : LW - 20;
-    const cols = Math.max(1, Math.min(pairs, Math.floor(width / 70)));
+    const ships = A[0].kind == "ship" || D[0].kind == "ship";
+    // navio é grande: uma dupla de navios ocupa a faixa toda, então eles fazem fila (um embaixo do outro)
+    const cols = Math.max(1, Math.min(pairs, Math.floor(width / (ships ? 170 : 70))));
     const rows = Math.ceil(pairs / cols);
     const colW = width / cols;
     for (let k = 0; k < pairs; k++) {
@@ -323,7 +419,7 @@ function pairUp(sim: Sim, lane: Lane): void {
       const r = Math.floor(k / cols);
       const inRow = Math.min(cols, pairs - r * cols);
       const sx = x0 + width / 2 + (c - (inRow - 1) / 2) * colW + (r % 2 ? colW * 0.2 : 0);
-      const sy = fy + (r - (rows - 1) / 2) * 42;
+      const sy = fy + (r - (rows - 1) / 2) * (ships ? 66 : 42);
       const a = A[k];
       const d = D[k];
       const dd = duelDist(a, d);
@@ -363,7 +459,8 @@ function joinFight(sim: Sim, m: Man, i = 0): void {
   m.foe = best;
   m.spot = false; // sem lugar marcado: vai direto no inimigo
   const crowd = sim.men.filter((x) => x.foe === best && x !== m && !x.dead && x.side == m.side).length;
-  m.yoff = crowd == 0 ? 0 : (crowd % 2 ? 14 : -14) * Math.ceil(crowd / 2) + (i % 2 ? 1 : -1);
+  const gap = m.kind == "ship" ? 52 : 14;
+  m.yoff = crowd == 0 ? 0 : (crowd % 2 ? gap : -gap) * Math.ceil(crowd / 2) + (i % 2 ? 1 : -1);
   if (!best.foe || best.foe.dead) best.foe = m;
 }
 
@@ -390,7 +487,7 @@ function steer(m: Man, x: number, y: number, maxSp: number, dt: number): void {
   const want = d < 0.8 ? 0 : Math.min(maxSp, d * 5); // freia ao chegar
   const tvx = d > 0 ? (dx / d) * want : 0;
   const tvy = d > 0 ? (dy / d) * want : 0;
-  const acc = m.kind == "horse" ? 3.2 : m.kind == "dragon" ? 2.5 : 8;
+  const acc = m.kind == "horse" ? 3.2 : m.kind == "dragon" ? 2.5 : m.kind == "ship" ? 1.4 : 8;
   const k = 1 - Math.exp(-dt * acc);
   m.vx += (tvx - m.vx) * k;
   m.vy += (tvy - m.vy) * k;
@@ -398,8 +495,14 @@ function steer(m: Man, x: number, y: number, maxSp: number, dt: number): void {
 
 // ---------------------------------------------------------------- golpes, sangue, impacto
 function bleed(sim: Sim, x: number, y: number, dirx: number, diry: number, amount: number): void {
-  if (!gore) return;
   const r = sim.rand;
+  if (sim.field == "mar") {
+    // no mar: lascas de madeira e água espirrando (sangue no mar sumiria na hora)
+    puff(sim, x + dirx * 6, y, Math.max(2, Math.round(amount / 3)), 70, 2.5, "120,78,40");
+    puff(sim, x, y + 6, 2, 50, 3, "235,248,255");
+    return;
+  }
+  if (!gore) return;
   const n = Math.round(amount);
   for (let i = 0; i < n; i++) {
     // a maioria voa para o lado do golpe; algumas espirram longe (jato)
@@ -413,6 +516,7 @@ function bleed(sim: Sim, x: number, y: number, dirx: number, diry: number, amoun
 
 /** Mancha no chão (fica até o fim). Pintada em 1×, com "pixel" do mesmo tamanho dos bonecos. */
 function stain(sim: Sim, x: number, y: number, size: number, dark: boolean): void {
+  if (sim.field == "mar") return; // a água não guarda mancha
   if (!sim.floor) {
     sim.floor = document.createElement("canvas");
     sim.floor.width = W;
@@ -434,12 +538,13 @@ function scorch(sim: Sim, x: number, y: number): void {
   ctx.fillRect(Math.round(x), Math.round(y), 2, 1);
 }
 
-function puff(sim: Sim, x: number, y: number, n: number, sp: number, r0: number): void {
+function puff(sim: Sim, x: number, y: number, n: number, sp: number, r0: number, color?: string): void {
   const r = sim.rand;
+  if (!color && sim.field == "mar") color = "235,248,255"; // no mar, poeira vira espuma
   for (let i = 0; i < n; i++) {
     const a = r() * Math.PI * 2;
     const v = sp * (0.4 + r() * 0.6);
-    sim.dust.push({ x: x + (r() - 0.5) * 6, y: y + (r() - 0.5) * 3, vx: Math.cos(a) * v, vy: Math.sin(a) * v * 0.5 - 6, t0: sim.t, life: 0.45 + r() * 0.4, r: r0 * (0.6 + r() * 0.8) });
+    sim.dust.push({ color, x: x + (r() - 0.5) * 6, y: y + (r() - 0.5) * 3, vx: Math.cos(a) * v, vy: Math.sin(a) * v * 0.5 - 6, t0: sim.t, life: 0.45 + r() * 0.4, r: r0 * (0.6 + r() * 0.8) });
   }
   if (sim.dust.length > 500) sim.dust.splice(0, sim.dust.length - 500);
 }
@@ -471,6 +576,7 @@ function hit(sim: Sim, from: { x: number; y: number }, m: Man, power: number, bl
     return;
   }
   m.hitT = t;
+  if (m.kind == "ship") puff(sim, m.x + (sim.rand() - 0.5) * 30, m.y, 6, 60, 3, "235,248,255");
   sim.slashes.push({ x: m.x - nx * 4, y: m.y - 14 * FIG, t0: t, d: nx >= 0 ? 1 : -1, big: power >= 1.5 });
   puff(sim, m.x, m.y, power >= 2 ? 5 : 1, 30, 2.5);
   bleed(sim, m.x, m.y, nx, ny, 12 + power * 10);
@@ -533,7 +639,7 @@ export function stepSim(sim: Sim, dt: number): void {
     }
     if (t < 0.6) continue;
     const L = sim.res.lanes[m.lane];
-    const lost = t > T_ROUT && L.winner && L.winner != "tie" && L.winner != m.side;
+    const lost = t > T_ROUT && (sim.outcome ? m.side == sim.outcome.loser : L.winner && L.winner != "tie" && L.winner != m.side);
     if (lost && !isStatic(m)) {
       steer(m, m.x, m.side == "attacker" ? H + 80 : -80, m.speed * 1.3, dt);
       m.engaged = false;
@@ -576,7 +682,8 @@ export function stepSim(sim: Sim, dt: number): void {
         m.atk = Math.max(0, Math.min(1, 1 - (m.nextShot - t) / 0.55));
         if (t > m.nextShot) {
           const d = m.flip ? -1 : 1;
-          sim.shots.push({ x0: m.x + 9 * d * FIG, y0: m.y - 15 * FIG, to: tg, tx: 0, ty: 0, t0: t, dur: Math.max(0.3, dist / 380), kind: "arrow", from: m });
+          const deckY = m.kind == "ship" ? 22 : 15;
+          sim.shots.push({ x0: m.x + 9 * d * FIG, y0: m.y - deckY * FIG, to: tg, tx: 0, ty: 0, t0: t, dur: Math.max(0.3, dist / 380), kind: "arrow", from: m });
           m.nextShot = t + 0.9 + r() * 0.6;
           m.shotAt = t;
         }
@@ -621,7 +728,11 @@ export function stepSim(sim: Sim, dt: number): void {
         m.engaged = true;
         m.nextHit = t + 0.1 + r() * 0.5;
         // carga de cavalaria: chega com tudo
-        if (m.kind == "horse" && Math.hypot(m.vx, m.vy) > 45 && t > T_FIGHT - 1) {
+        if (((m.kind == "horse" && Math.hypot(m.vx, m.vy) > 45) || (m.kind == "ship" && m.role == "ariete")) && t > T_FIGHT - 1) {
+          if (m.kind == "ship") {
+            sim.shake = Math.max(sim.shake, 6);
+            puff(sim, (m.x + foe.x) / 2, (m.y + foe.y) / 2, 24, 120, 5, "235,248,255");
+          }
           hit(sim, m, foe, 2);
           m.atkStart = t - 0.16;
           m.nextHit = t + 0.9;
@@ -732,12 +843,27 @@ export function stepSim(sim: Sim, dt: number): void {
         const d = Math.sqrt(age / 2.5) * (m.kind == "horse" ? 16 : 11) * Math.sqrt(r());
         stain(sim, m.x + Math.cos(a) * d * 1.4, m.y + Math.sin(a) * d * 0.55, r() < 0.4 ? 2 : 1, r() < 0.55);
       }
+    } else if (m.kind == "ship" && Math.hypot(m.vx, m.vy) > 8 && r() < 0.5) {
+      // rastro de espuma atrás do navio
+      const d = Math.hypot(m.vx, m.vy);
+      puff(sim, m.x - (m.vx / d) * 34, m.y + (r() - 0.5) * 6, 1, 8, 3, "235,248,255");
     } else if (Math.hypot(m.vx, m.vy) > (m.kind == "horse" ? 40 : 70) && r() < (m.kind == "horse" ? 0.35 : 0.08)) {
       // poeira dos passos (cavalo correndo levanta muita)
       puff(sim, m.x - m.vx * 0.05, m.y, 1, 10, m.kind == "horse" ? 4 : 2.5);
     }
+    const py = m.y;
     m.x += m.vx * dt;
     m.y += m.vy * dt;
+    wallBlock(sim, m, py, dt);
+    // ninguém sai do campo (navio é largo: fica mais longe da borda)
+    const edge = m.kind == "ship" ? 44 : m.kind == "dragon" ? 30 : 12;
+    if (m.x < edge) {
+      m.x = edge;
+      m.vx = Math.max(0, m.vx);
+    } else if (m.x > W - edge) {
+      m.x = W - edge;
+      m.vx = Math.min(0, m.vx);
+    }
   }
   // gotas de sangue voando
   sim.drops = sim.drops.filter((d) => {
@@ -803,7 +929,7 @@ function stepDragon(sim: Sim, m: Man, dt: number): void {
 /** Ponto da boca do dragão (o sprite olha para a direita; FIG × 0,95 é a escala dele). */
 export function dragonMouth(x: number, y: number, flip: boolean, s: number): [number, number] {
   const k = s * DRAGON_SCALE;
-  return [x + 48 * (flip ? -1 : 1) * k, y - 3 * k];
+  return [x + 54 * (flip ? -1 : 1) * k, y - 10 * k];
 }
 
 // ---------------------------------------------------------------- desenho
@@ -972,7 +1098,10 @@ export function drawSim(ctx: CanvasRenderingContext2D, sim: Sim): void {
   if (sim.floor && gore) ctx.drawImage(sim.floor, 0, 0, W, H);
   ctx.imageSmoothingEnabled = true;
   const lanesT = FIELD_LANES[sim.field];
-  drawWalls(ctx, sim.field, sim.breach.map((b) => b && t > T_FIGHT + 0.2), sim.houses.defender.color);
+  const hasWall = lanesT.some((x) => x == "muralha" || x == "portao");
+  const walls = (): void => drawWalls(ctx, sim.field, sim.breach.map((b) => b && t > T_FIGHT + 0.2), sim.houses.defender.color);
+  // quem está atrás da muralha é desenhado antes dela (a pedra cobre); o resto, depois
+  const behind = (m: Man): boolean => hasWall && !m.onWall && m.kind != "dragon" && m.y < WALL_Y + 16;
   const tag = (text: string, cx: number, y: number, bg: string, ink: string): void => {
     ctx.font = "700 16px 'Alegreya Sans', 'Trebuchet MS', sans-serif";
     ctx.textAlign = "center";
@@ -984,20 +1113,39 @@ export function drawSim(ctx: CanvasRenderingContext2D, sim: Sim): void {
     ctx.fillStyle = ink;
     ctx.fillText(text, cx, y + 1);
   };
+  if (sim.field == "mar") drawSeaWaves(ctx, t, W);
+  // cordas da abordagem entre navios que estão lutando
+  for (const m of sim.men) {
+    if (m.dead || m.kind != "ship" || !m.engaged || !m.foe || m.foe.dead || m.foe.kind != "ship" || m.side != "attacker") continue;
+    const f = m.foe;
+    ctx.strokeStyle = "rgba(60,40,20,.9)";
+    ctx.lineWidth = 1.2;
+    for (const k of [-10, 6]) {
+      ctx.beginPath();
+      ctx.moveTo(m.x + k, m.y - 16);
+      ctx.quadraticCurveTo((m.x + f.x) / 2, (m.y + f.y) / 2 - 8, f.x + k, f.y - 16);
+      ctx.stroke();
+    }
+  }
   const appear = ease(t / 0.6);
   const order = [...sim.men].sort((a, b) => Number(b.dead) - Number(a.dead) || (a.kind == "dragon" ? 1 : 0) - (b.kind == "dragon" ? 1 : 0) || a.y - b.y);
   ctx.save();
   ctx.globalAlpha = appear;
-  for (const m of order) {
+  const drawMan = (m: Man): void => {
     if (m.dead) drawFallen(ctx, m.x, m.y, FIG, pose(m, sim.houses[m.side], t), t - m.deadAt);
     else drawUnit(ctx, m.x, m.y, FIG, pose(m, sim.houses[m.side], t), m.dir);
-  }
+  };
+  for (const m of order) if (behind(m)) drawMan(m);
+  ctx.globalAlpha = 1;
+  walls();
+  ctx.globalAlpha = appear;
+  for (const m of order) if (!behind(m)) drawMan(m);
   ctx.restore();
   // poeira (quadradinhos, no estilo pixel)
   for (const d of sim.dust) {
     const p = (t - d.t0) / d.life;
     const rr = Math.round(d.r * (1 + p * 1.5));
-    ctx.fillStyle = `rgba(196,176,136,${0.38 * (1 - p)})`;
+    ctx.fillStyle = `rgba(${d.color ?? "196,176,136"},${(d.color ? 0.6 : 0.38) * (1 - p)})`;
     ctx.fillRect(Math.round(d.x - rr), Math.round(d.y - rr * 0.7 - 2), rr * 2, Math.max(2, Math.round(rr * 1.4)));
   }
   // marca do corte

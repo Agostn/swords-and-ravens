@@ -43,21 +43,22 @@ export function rolesFor(kind: SquadKind, seaBattle: boolean): Role[] {
 }
 
 /**
- * Valor de cada esquadrão: 3 × a força da peça no jogo original, na situação da batalha
- * (soldado 1 → 3, cavaleiro 2 → 6, navio 1 → 3). Assim o exército maior continua mais forte.
- *  - Máquina de cerco: força 4 só quando ATACA (ou apoia o ataque a) área com Castelo/Fortaleza
- *    → 12; em qualquer outra situação vale 0 e nem entra no mini-mapa (igual ao jogo original).
- *  - Dragão e guarnição: 3 × a força deles no momento.
+ * Valor de cada esquadrão = a força da peça no jogo original, na situação da batalha
+ * (soldado 1, cavaleiro 2, navio 1). É o MESMO número do tabuleiro, para não confundir
+ * (antes era 3 × a força; a conta é proporcional, então o resultado não muda).
+ *  - Máquina de cerco: força 4 só quando ATACA (ou apoia o ataque a) área com Castelo/Fortaleza;
+ *    em qualquer outra situação vale 0 e nem entra no mini-mapa (igual ao jogo original).
+ *  - Dragão e guarnição: a força deles no momento.
  *  - Peça ferida (derrotada e recuada) vale 0 no jogo original e também não entra.
  * Quem chama a conta passa a força da peça em `strength`.
  */
 export const BASE_VALUE: Record<SquadKind, number> = {
-  footman: 3,
-  knight: 3,
-  "siege-engine": 3,
-  ship: 3,
-  dragon: 3,
-  garrison: 3
+  footman: 1,
+  knight: 1,
+  "siege-engine": 1,
+  ship: 1,
+  dragon: 1,
+  garrison: 1
 };
 
 /** Força da peça no jogo original (sem contar dragão/guarnição, que variam). */
@@ -105,6 +106,26 @@ export const ADVANTAGE: Record<Role, Partial<Record<Role, number>>> = {
   // navio: no mar, pedra-papel-tesoura; em terra (apoio), atira como arqueiro
   flechas: { abordagem: 1.6, ariete: 0.7, flechas: 1.0, lanceiro: 1.4, escudeiro: 0.6, arqueiro: 1.0, cavalaria: 0.75, batedores: 1.0, catapulta: 1.5, dragao: 1.1, torre: 0.6 }
 };
+
+/**
+ * Quanto a "pedra-papel-tesoura" pesa: a vantagem usada na conta é 1 + (ADVANTAGE − 1) × COUNTER_SCALE.
+ * 1 = a tabela inteira; 0,5 = metade do efeito. Assim dá para ajustar o peso da escolha de função
+ * sem reescrever a tabela.
+ * Testado (30/out, tools/tactical/influencia.ts): com 1, uma carta de força 4 contra 0 ainda perdia o
+ * mini-mapa 35% das vezes só por causa da função escolhida. Com 0,7 (e a Reação), quem tem a carta
+ * melhor, a ordem melhor ou mais tropas quase sempre vence, e jogar bem rende o dobro.
+ */
+export const COUNTER_SCALE: number = (globalThis as { __COUNTER_SCALE__?: number }).__COUNTER_SCALE__ ?? 0.7;
+
+/**
+ * Só a escolha de função (o "pedra-papel-tesoura") é suavizada. Dragão, torre e catapulta
+ * não são escolha: a vantagem deles fica inteira (dragão continua sendo dragão).
+ */
+const CHOSEN_ROLES: Role[] = ["lanceiro", "escudeiro", "arqueiro", "cavalaria", "batedores", "abordagem", "ariete", "flechas"];
+export function advantage(mine: Role, theirs: Role): number {
+  const a = ADVANTAGE[mine][theirs] ?? 1;
+  return CHOSEN_ROLES.includes(mine) && CHOSEN_ROLES.includes(theirs) ? 1 + (a - 1) * COUNTER_SCALE : a;
+}
 
 /** Linha do esquadrão: frente ou trás. */
 export type Row = "frente" | "tras";

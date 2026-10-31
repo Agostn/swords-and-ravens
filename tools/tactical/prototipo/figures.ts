@@ -5,7 +5,8 @@
  */
 import { Role, SquadKind } from "../../../agot-bg-game-server/src/common/tactical-battle/tacticalBattleData";
 import { House } from "./data";
-import { Sprite, dragonFrame, fallenSprite, pixelSprite, soldierSprite, whiteSprite } from "./sprites";
+import { Sprite, fallenSprite, pixelSprite, shipSprite, soldierSprite, whiteSprite } from "./sprites";
+import { dragonFrame, knightSprite } from "./pixelart";
 
 export type Kind = "foot" | "horse" | "siege" | "dragon" | "tower" | "ship";
 
@@ -897,7 +898,7 @@ function drawDragon(ctx: CanvasRenderingContext2D, p: Pose): void {
 // ---------------------------------------------------------------- sprites (pixel art)
 let darkDragonCache: HTMLCanvasElement | null = null;
 /** Dragão caído: o quadro "pousado", mais escuro. */
-function darkDragon(img: HTMLImageElement, sx: number, sy: number, w: number, h: number): HTMLCanvasElement {
+function darkDragon(img: CanvasImageSource, sx: number, sy: number, w: number, h: number): HTMLCanvasElement {
   if (darkDragonCache) return darkDragonCache;
   const c = document.createElement("canvas");
   c.width = w;
@@ -926,8 +927,10 @@ function spriteOf(p: Pose, dir: number): [Sprite, string] | null {
     const f = ((Math.floor(p.walk / Q) % 4) + 4) % 4;
     const coat = Math.abs(p.seed ?? 0) % 5;
     const a = p.atk > 0.5 ? 1 : 0; // golpe: lança empurrada / dardo inclinado
-    const id = `h|${h.name}|${p.role}|${f}|${p.fight ? 1 : 0}|${coat}|${a}`;
-    return [pixelSprite(id, 64, 66, 32, 60, (ctx) => drawHorse(ctx, { ...p, flip: true, walk: f * Q + 0.4, atk: a, seed: coat, time: f })), id];
+    // parado (fora da luta): pernas retas
+    const fr = !p.moving && !p.fight ? 4 : f;
+    const id = `kn|${h.name}|${p.role}|${fr}|${p.fight ? 1 : 0}|${coat}|${a}`;
+    return [knightSprite(h, p.role, fr, !!p.fight, coat, a as 0 | 1), id];
   }
   if (p.kind == "siege") {
     const f = p.atk > 0.66 ? 2 : p.atk > 0.2 ? 1 : 0;
@@ -940,19 +943,15 @@ function spriteOf(p: Pose, dir: number): [Sprite, string] | null {
     return [pixelSprite(id, 40, 60, 18, 56, (ctx) => drawTower(ctx, { ...p, time: f * 0.5 })), id];
   }
   if (p.kind == "ship") {
-    const down = Math.sin(dir) > 0;
-    const f = Math.floor(((p.walk * 1.5) / Math.PI) % 2);
-    const id = `n|${h.name}|${down ? 1 : 0}|${f}`;
-    return [
-      pixelSprite(id, 44, 64, 22, 32, (ctx) => {
-        if (down) ctx.rotate(Math.PI);
-        drawShip(ctx, { ...p, walk: f * 2, atk: 0 });
-      }),
-      id
-    ];
+    void dir;
+    const f: 0 | 1 = Math.floor((p.time ?? 0) * 2.2) % 2 ? 1 : 0;
+    return [shipSprite(h, p.role, f), `ship|${h.name}|${p.role}|${f}`];
   }
   return null;
 }
+
+/** Navio é desenhado menor que a escala dos bonecos (senão não cabe na faixa). */
+export const SHIP_SCALE = 0.72;
 
 /*
  * Golpe em 4 tempos, como nos jogos de pixel art:
@@ -1053,17 +1052,16 @@ export const DRAGON_SCALE = 1.15;
 function drawDragonSprite(ctx: CanvasRenderingContext2D, x: number, y: number, s: number, p: Pose, faceRight: boolean): boolean {
   const t = p.time ?? 0;
   // cuspindo fogo: segura as asas abertas (o fogo é desenhado pela luta, da boca até o alvo)
-  const fr = p.atk > 0.05 ? dragonFrame("flight", 4) : p.fight === false && p.walk == 0 ? dragonFrame("idle", Math.floor(t * 4) % 6) : dragonFrame("flight", Math.floor(t * 9) % 6);
-  if (!fr) return false;
+  const flying = p.walk != 0 || p.fight !== false;
+  const fr = p.atk > 0.05 ? dragonFrame("special", 0) : !flying ? dragonFrame("idle", Math.floor(t * 3) % 4) : dragonFrame("flight", Math.floor(t * 9) % 6);
   const k = s * DRAGON_SCALE;
   ctx.save();
-  // sombra no chão, longe (ele voa)
-  if (p.walk != 0 || p.fight !== false) {
-    ctx.fillStyle = "rgba(0,0,0,.22)";
-    ctx.beginPath();
-    ctx.ellipse(x, y + 40 * s, 30 * s, 7 * s, 0, 0, Math.PI * 2);
-    ctx.fill();
-  }
+  // sombra no chão: voando fica longe e clara; pousado, embaixo das patas
+  ctx.fillStyle = flying ? "rgba(0,0,0,.2)" : "rgba(0,0,0,.32)";
+  ctx.beginPath();
+  if (flying) ctx.ellipse(x, y + 40 * s, 30 * s, 7 * s, 0, 0, Math.PI * 2);
+  else ctx.ellipse(x - 4 * k, y + 1 * k, 40 * k, 6 * k, 0, 0, Math.PI * 2);
+  ctx.fill();
   ctx.imageSmoothingEnabled = false;
   ctx.translate(x, y);
   ctx.scale(faceRight ? k : -k, k);
@@ -1085,11 +1083,30 @@ export function drawUnit(ctx: CanvasRenderingContext2D, x: number, y: number, s:
     ctx.save();
     ctx.translate(x, y);
     ctx.scale(s, s);
-    if (p.kind == "ship") ell(ctx, 3, 4, 11, 24, "rgba(0,20,40,.3)");
-    else groundShadow(ctx, p.kind == "horse" ? 14 : p.kind == "foot" ? 7 : 15, p.kind == "foot" ? 2.4 : 4);
+    if (p.kind == "ship") {
+      // espuma na linha da água
+      const k = SHIP_SCALE;
+      ell(ctx, 0, 1, 44 * k, 5 * k, "rgba(10,30,50,.35)");
+      ell(ctx, -2, 0, 40 * k, 3.5 * k, `rgba(230,245,255,${0.35 + 0.15 * Math.sin((p.time ?? 0) * 3)})`);
+    } else groundShadow(ctx, p.kind == "horse" ? 14 : p.kind == "foot" ? 7 : 15, p.kind == "foot" ? 2.4 : 4);
     ctx.restore();
+    if (p.kind == "ship") {
+      // navio balança nas ondas
+      const tt = p.time ?? 0;
+      const sk = s * SHIP_SCALE;
+      const yy = y + Math.sin(tt * 2.1) * 1.5 * s;
+      const rot = Math.sin(tt * 1.6) * 0.035 + (p.flash ? -p.flash * 0.08 : 0);
+      blitSprite(ctx, sp, x, yy, sk, faceRight, rot);
+      if (p.flash && p.flash > 0.02) {
+        ctx.save();
+        ctx.globalAlpha *= Math.min(1, p.flash) * 0.8;
+        blitSprite(ctx, whiteSprite(got[1], sp), x, yy, sk, faceRight, rot);
+        ctx.restore();
+      }
+      return;
+    }
     const bob = p.kind == "foot" ? Math.round(Math.abs(Math.sin(p.walk)) * 1.5) : p.kind == "horse" && p.moving ? Math.round(Math.abs(Math.sin(p.walk * 2)) * 2) : 0;
-    const fr = p.kind == "ship" ? false : faceRight;
+    const fr = faceRight;
     const rot = p.kind == "foot" || p.kind == "horse" ? leanOf(p) : 0;
     const sx = x + shiftOf(p) * s * (fr ? 1 : -1);
     blitSprite(ctx, sp, sx, y - bob * s, s, fr, rot);
@@ -1136,7 +1153,6 @@ export function drawFallen(ctx: CanvasRenderingContext2D, x: number, y: number, 
     const k = s * DRAGON_SCALE;
     const drop = fall * fall * 46 * s;
     const fr = fall < 1 ? dragonFrame("flight", 2) : dragonFrame("idle", 0);
-    if (!fr) return;
     ctx.save();
     ctx.fillStyle = `rgba(0,0,0,${0.18 + fall * 0.15})`;
     ctx.beginPath();
@@ -1153,10 +1169,34 @@ export function drawFallen(ctx: CanvasRenderingContext2D, x: number, y: number, 
     return;
   }
   if (p.kind == "ship") {
-    ctx.save();
-    ctx.globalAlpha *= Math.max(0, 1 - age / 1.6);
-    drawUnit(ctx, x, y + age * 6, s, { ...p, atk: 0 });
-    ctx.restore();
+    // afunda: inclina e desce; o que fica abaixo da linha da água some; depois só destroços boiando
+    const got = spriteOf(p, 0);
+    if (!got) return;
+    const sink = Math.min(1, age / 2.6);
+    const tt = p.time ?? 0;
+    if (sink < 1) {
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(x - 300, y - 400, 600, 400 + 2 * s);
+      ctx.clip();
+      blitSprite(ctx, got[0], x, y + sink * sink * 62 * s, s * SHIP_SCALE, !p.flip, (p.flip ? -1 : 1) * sink * 0.55);
+      ctx.restore();
+      // espuma e bolhas
+      ctx.fillStyle = `rgba(235,248,255,${0.6 * (1 - sink)})`;
+      for (let i = 0; i < 6; i++) {
+        const bx = x + Math.sin(i * 2.3 + tt * 3) * 26 * s;
+        const by = y - ((tt * 20 + i * 9) % 18) * s;
+        ctx.fillRect(Math.round(bx), Math.round(by), 2, 2);
+      }
+      ell(ctx, x, y + 1 * s, 40 * s * SHIP_SCALE, 4 * s * SHIP_SCALE, `rgba(235,248,255,${0.4 * (1 - sink)})`);
+    } else {
+      for (let i = 0; i < 7; i++) {
+        const dx = Math.sin(i * 1.7) * 30 * s;
+        const dy = Math.cos(i * 2.1) * 8 * s + Math.sin(tt * 2 + i) * 1.5;
+        ctx.fillStyle = i % 2 ? "#6a4020" : "#8c5a2c";
+        ctx.fillRect(Math.round(x + dx), Math.round(y + dy), 6 + (i % 3) * 2, 2);
+      }
+    }
     return;
   }
   const got = spriteOf({ ...p, atk: 0, walk: 0, fight: true }, 0);
@@ -1217,11 +1257,12 @@ export function drawSquad(
   kind: SquadKind,
   role: Role,
   house: House,
-  o: { back?: boolean; scale?: number; selected?: boolean; ghost?: boolean; time?: number; num?: number } = {}
+  o: { back?: boolean; scale?: number; selected?: boolean; ghost?: boolean; time?: number; num?: number; flip?: boolean } = {}
 ): { x: number; y: number; w: number; h: number } {
   const k = kindOf(kind);
   const s = o.scale ?? 1;
-  const back = o.back ?? true;
+  // flip: é do inimigo, de frente para você
+  const back = o.flip ? false : o.back ?? true;
   const n = MEN[k];
   const dx = (k == "horse" ? 25 : 14) * s;
   const dy = (k == "horse" ? 11 : 10) * s;
@@ -1244,7 +1285,7 @@ export function drawSquad(
   ctx.strokeStyle = o.selected ? "rgba(255,214,110,.98)" : house.color;
   ctx.lineWidth = o.selected ? 3 : 1.4;
   ctx.stroke();
-  pos.forEach(([x, y], i) => drawUnit(ctx, x, y, s, { role, kind: k, house, back, flip: false, walk: 0, atk: 0, fight: false, seed: i * 3 + role.length, time: o.time }));
+  pos.forEach(([x, y], i) => drawUnit(ctx, x, y, s, { role, kind: k, house, back, flip: !!o.flip, walk: 0, atk: 0, fight: false, seed: i * 3 + role.length, time: o.time }));
   if (o.num) {
     // número da peça (o mesmo da faixa de peças embaixo)
     const bx = cx - bw / 2 + 1 * s;

@@ -4,7 +4,8 @@ import { FIELD_LANES, FieldType, Role, Row, SquadKind, Terrain } from "../../../
 import { rng } from "../solver";
 import { House, TERRAIN_NAMES } from "./data";
 import { grassImage } from "./assets";
-import { drawSquad, kindOf } from "./figures";
+import { drawSquad, drawUnit, kindOf } from "./figures";
+import { detailLane, drawSeaWaves } from "./ground";
 import { drawWallBadges, drawWallLane, drawWalls, paintCastleGround } from "./walls";
 
 export const W = 600;
@@ -70,173 +71,7 @@ function paintLane(ctx: CanvasRenderingContext2D, x: number, w: number, t: Terra
     ctx.fillStyle = r() < 0.5 ? "rgba(255,250,220,.05)" : "rgba(0,0,0,.06)";
     ctx.fillRect(x + r() * w, r() * H, 2 + r() * 3, 1 + r() * 2);
   }
-  const blob = (cx: number, cy: number, rad: number, color: string): void => {
-    ctx.fillStyle = color;
-    ctx.beginPath();
-    ctx.arc(cx, cy, rad, 0, Math.PI * 2);
-    ctx.fill();
-  };
-  if (t == "aberto" || t == "muralha" || t == "portao") {
-    ctx.strokeStyle = "rgba(230,240,180,.16)";
-    ctx.lineWidth = 1.2;
-    for (let i = 0; i < 160; i++) {
-      const gx = x + r() * w;
-      const gy = r() * H;
-      ctx.beginPath();
-      ctx.moveTo(gx, gy);
-      ctx.lineTo(gx + 2 - r() * 4, gy - 5 - r() * 4);
-      ctx.stroke();
-    }
-    for (let i = 0; i < 6; i++) blob(x + r() * w, r() * H, 14 + r() * 20, "rgba(120,140,70,.18)");
-  }
-  if (t == "mata") {
-    for (let i = 0; i < 46; i++) {
-      const tx = x + r() * w;
-      const ty = r() * H;
-      if (Math.abs(ty - H / 2) < 46) continue;
-      const rad = 11 + r() * 12;
-      // árvore vista de cima: sombra, contorno escuro, copa em 3 tons e brilho
-      blob(tx + 5, ty + 6, rad + 1, "rgba(8,16,6,.42)");
-      blob(tx, ty, rad + 1, "#1b2d14");
-      blob(tx, ty, rad, "#2c4623");
-      blob(tx - rad * 0.2, ty - rad * 0.25, rad * 0.72, "#3b5c2c");
-      blob(tx + rad * 0.35, ty - rad * 0.05, rad * 0.4, "#35532a");
-      blob(tx - rad * 0.38, ty - rad * 0.42, rad * 0.32, "#5a8240");
-      blob(tx - rad * 0.48, ty - rad * 0.52, rad * 0.12, "rgba(190,220,140,.55)");
-    }
-  }
-  if (t == "colina") {
-    for (let k = 7; k >= 0; k--) {
-      ctx.fillStyle = `rgba(${120 + k * 6},${100 + k * 5},${60 + k * 3},${0.18 + k * 0.03})`;
-      ctx.beginPath();
-      ctx.ellipse(x + w / 2, H * 0.22, w * (0.12 + k * 0.06), H * (0.04 + k * 0.025), 0, 0, Math.PI * 2);
-      ctx.fill();
-    }
-    ctx.strokeStyle = "rgba(60,40,20,.35)";
-    ctx.lineWidth = 1.5;
-    for (let k = 1; k < 7; k++) {
-      ctx.beginPath();
-      ctx.ellipse(x + w / 2, H * 0.22, w * (0.12 + k * 0.06), H * (0.04 + k * 0.025), 0, 0, Math.PI * 2);
-      ctx.stroke();
-    }
-  }
-  if (t == "rio" || t == "vau") {
-    const top = (i: number): number => H * 0.455 + Math.sin(i * 0.9 + x * 0.02) * 7;
-    const bot = (i: number): number => H * 0.545 + Math.sin(i * 0.9 + x * 0.02 + 1.4) * 7;
-    ctx.fillStyle = "#a99a6c";
-    ctx.beginPath();
-    ctx.moveTo(x, top(0) - 6);
-    for (let i = 0; i <= 12; i++) ctx.lineTo(x + (w * i) / 12, top(i) - 6);
-    for (let i = 12; i >= 0; i--) ctx.lineTo(x + (w * i) / 12, bot(i) + 6);
-    ctx.fill();
-    const wg = ctx.createLinearGradient(0, H * 0.45, 0, H * 0.55);
-    wg.addColorStop(0, "#3f7798");
-    wg.addColorStop(0.5, "#2e6283");
-    wg.addColorStop(1, "#3f7798");
-    ctx.fillStyle = wg;
-    ctx.beginPath();
-    ctx.moveTo(x, top(0));
-    for (let i = 0; i <= 12; i++) ctx.lineTo(x + (w * i) / 12, top(i));
-    for (let i = 12; i >= 0; i--) ctx.lineTo(x + (w * i) / 12, bot(i));
-    ctx.fill();
-    ctx.strokeStyle = "rgba(225,240,255,.45)";
-    ctx.lineWidth = 1.5;
-    for (let i = 0; i < 14; i++) {
-      const wx = x + r() * w;
-      const wy = H * 0.48 + r() * H * 0.04;
-      ctx.beginPath();
-      ctx.moveTo(wx, wy);
-      ctx.quadraticCurveTo(wx + 7, wy - 3, wx + 14, wy);
-      ctx.stroke();
-    }
-    if (t == "vau") {
-      for (let i = 0; i < 9; i++) {
-        blob(x + w * 0.3 + r() * w * 0.4, H * 0.465 + i * 7, 6 + r() * 3, "#b9ae8c");
-      }
-    }
-  }
-  if (t == "pantano" || t == "calcada") {
-    for (let i = 0; i < 22; i++) {
-      ctx.fillStyle = "rgba(40,70,60,.55)";
-      ctx.beginPath();
-      ctx.ellipse(x + r() * w, r() * H, 18 + r() * 26, 7 + r() * 8, 0, 0, Math.PI * 2);
-      ctx.fill();
-    }
-    ctx.strokeStyle = "rgba(170,190,110,.7)";
-    ctx.lineWidth = 1.3;
-    for (let i = 0; i < 90; i++) {
-      const rx = x + r() * w;
-      const ry = r() * H;
-      ctx.beginPath();
-      ctx.moveTo(rx, ry);
-      ctx.lineTo(rx + (r() - 0.5) * 5, ry - 10);
-      ctx.stroke();
-    }
-    if (t == "calcada") {
-      ctx.fillStyle = "#8e7552";
-      ctx.fillRect(x + w * 0.4, 0, w * 0.2, H);
-      ctx.strokeStyle = "rgba(50,30,12,.55)";
-      ctx.lineWidth = 1;
-      for (let y = 0; y < H; y += 12) {
-        ctx.beginPath();
-        ctx.moveTo(x + w * 0.4, y);
-        ctx.lineTo(x + w * 0.6, y);
-        ctx.stroke();
-      }
-    }
-  }
-  if (t == "areia") {
-    ctx.lineWidth = 2;
-    for (let k = 0; k < 14; k++) {
-      const yy = r() * H;
-      ctx.strokeStyle = "rgba(150,105,45,.35)";
-      ctx.beginPath();
-      ctx.moveTo(x, yy);
-      ctx.quadraticCurveTo(x + w / 2, yy - 16 - r() * 10, x + w, yy + 6);
-      ctx.stroke();
-      ctx.strokeStyle = "rgba(255,240,200,.25)";
-      ctx.beginPath();
-      ctx.moveTo(x, yy - 3);
-      ctx.quadraticCurveTo(x + w / 2, yy - 19 - r() * 10, x + w, yy + 3);
-      ctx.stroke();
-    }
-  }
-  if (t == "bloqueado") {
-    for (let i = 0; i < 24; i++) {
-      const bx = x + r() * w;
-      const by = r() * H;
-      const s = 18 + r() * 18;
-      ctx.fillStyle = "#4e4a44";
-      ctx.beginPath();
-      ctx.moveTo(bx, by - s);
-      ctx.lineTo(bx + s, by + s * 0.6);
-      ctx.lineTo(bx - s, by + s * 0.6);
-      ctx.fill();
-      ctx.fillStyle = "#857f75";
-      ctx.beginPath();
-      ctx.moveTo(bx, by - s);
-      ctx.lineTo(bx - s * 0.2, by + s * 0.6);
-      ctx.lineTo(bx - s, by + s * 0.6);
-      ctx.fill();
-      ctx.fillStyle = "rgba(255,255,255,.65)";
-      ctx.beginPath();
-      ctx.moveTo(bx, by - s);
-      ctx.lineTo(bx + s * 0.25, by - s * 0.6);
-      ctx.lineTo(bx - s * 0.25, by - s * 0.6);
-      ctx.fill();
-    }
-  }
-  if (t == "mar") {
-    ctx.strokeStyle = "rgba(210,235,255,.28)";
-    ctx.lineWidth = 1.5;
-    for (let i = 0; i < 60; i++) {
-      const wx = x + r() * w;
-      const wy = r() * H;
-      ctx.beginPath();
-      ctx.arc(wx, wy, 7 + r() * 5, 3.5, 5.9);
-      ctx.stroke();
-    }
-  }
+  detailLane(ctx, x, w, t, r);
   // vinheta
   const v = ctx.createLinearGradient(x, 0, x + w, 0);
   v.addColorStop(0, "rgba(0,0,0,.18)");
@@ -353,6 +188,69 @@ export interface PlaceView {
   laneForce?: { total: number; here: number; help: number }[];
   /** força total do inimigo (as peças dele estão no tabuleiro, todo mundo sabe) */
   enemyForce?: number;
+  /** se o inimigo vier todo para a faixa com cada função: você ganha, perde ou empata */
+  outlook?: { role: Role; kind: SquadKind; out: "win" | "lose" | "tie" }[][];
+  /** reação: o exército inimigo já aparece (sem névoa) */
+  enemySquads?: { id: string; kind: SquadKind; role: Role; lane: Lane | null; row: Row }[];
+  /** esquadrão que o inimigo mudou na reação (destacado) */
+  enemyChanged?: string | null;
+  /** esquadrão seu que você mudou na reação */
+  changed?: string | null;
+  /** reação: quem ganharia cada faixa se a luta fosse agora */
+  laneOutcome?: ("win" | "lose" | "tie" | null)[];
+}
+
+/** Casinhas do inimigo (espelho das suas, do outro lado do campo). */
+function enemySlot(field: FieldType, lane: Lane, row: Row): Slot | undefined {
+  const s = slots(field).find((x) => x.lane == lane && x.row == row);
+  if (!s) return undefined;
+  return { ...s, y: H - s.y - s.h };
+}
+
+/** Reação: desenha o exército inimigo nas casinhas dele, virado para você. */
+function drawEnemySquads(ctx: CanvasRenderingContext2D, v: PlaceView, t: number): void {
+  const list = v.enemySquads ?? [];
+  // fundo levemente escuro do lado dele (sem névoa: agora todo mundo vê)
+  const g = ctx.createLinearGradient(0, 0, 0, H * 0.5);
+  g.addColorStop(0, "rgba(16,20,26,.35)");
+  g.addColorStop(1, "rgba(16,20,26,0)");
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, W, H * 0.5);
+  ([0, 1, 2] as Lane[]).forEach((lane) =>
+    (["frente", "tras"] as Row[]).forEach((row) => {
+      const s = enemySlot(v.field, lane, row);
+      if (!s) return;
+      ctx.fillStyle = "rgba(15,12,8,.16)";
+      roundRect(ctx, s.x, s.y, s.w, s.h, 12);
+      ctx.fill();
+      ctx.setLineDash([4, 6]);
+      ctx.strokeStyle = "rgba(255,236,190,.18)";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      ctx.setLineDash([]);
+      const here = list.filter((q) => q.lane == lane && q.row == row);
+      if (!here.length) return;
+      const w = Math.min(64, (s.w - 8) / here.length);
+      here.forEach((q, i) => {
+        const x = s.x + s.w / 2 + (i - (here.length - 1) / 2) * w;
+        const y = s.y + s.h * 0.72;
+        const box = drawSquad(ctx, x, y, q.kind, q.role, v.enemy, { scale: here.length > 2 ? 0.85 : 1, selected: false, ghost: false, time: t, flip: true, num: list.indexOf(q) + 1 });
+        if (v.enemyChanged == q.id) tagAbove(ctx, box.x + box.w / 2, box.y - 4, "mudou", "#c9302c");
+      });
+    })
+  );
+}
+
+function tagAbove(ctx: CanvasRenderingContext2D, cx: number, y: number, txt: string, color: string): void {
+  ctx.font = "800 12px 'Alegreya Sans', 'Trebuchet MS', sans-serif";
+  const tw = ctx.measureText(txt).width + 14;
+  ctx.fillStyle = color;
+  roundRect(ctx, cx - tw / 2, y - 18, tw, 18, 9);
+  ctx.fill();
+  ctx.fillStyle = "#fff6e2";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText(txt, cx, y - 8.5);
 }
 
 // ---------------------------------------------------------------- névoa (pixel art)
@@ -409,42 +307,45 @@ function fogLayer(seed: number, light: [number, number, number], dark: [number, 
 
 const num = (x: number): string => x.toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
 
-/** No lado do inimigo: "se a luta for aqui, sua força: X" em cada faixa. */
+/**
+ * No lado do inimigo, em cada faixa: "se ele vier todo aqui com…" e as funções que ele pode
+ * escolher, cada uma com ✓ (você ganha), ✗ (perde) ou = (empata). É a mesma conta da luta.
+ */
 function drawLaneForce(ctx: CanvasRenderingContext2D, v: PlaceView): void {
   const lf = v.laneForce as { total: number; here: number; help: number }[];
-  const max = Math.max(v.enemyForce ?? 0, ...lf.map((x) => x.total), 1);
   lf.forEach((f, i) => {
     if (FIELD_LANES[v.field][i] == "bloqueado") return;
+    const opts = v.outlook?.[i] ?? [];
     const cx = i * LW + LW / 2;
-    const y = H * 0.25;
-    const w = LW - 22;
-    ctx.fillStyle = "rgba(14,11,8,.78)";
-    roundRect(ctx, cx - w / 2, y - 26, w, 74, 10);
+    const y = H * 0.24;
+    const w = LW - 14;
+    const h = 108;
+    ctx.fillStyle = "rgba(14,11,8,.84)";
+    roundRect(ctx, cx - w / 2, y - 30, w, h, 10);
     ctx.fill();
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
+    ctx.fillStyle = "#f1e6cb";
+    ctx.font = "800 13px 'Alegreya Sans', 'Trebuchet MS', sans-serif";
+    ctx.fillText("se ele vier todo aqui com:", cx, y - 17, w - 10);
+    const n = Math.max(1, opts.length);
+    const step = (w - 12) / n;
+    opts.forEach((o, k) => {
+      const ox = cx - w / 2 + 6 + step * (k + 0.5);
+      const unitKind = kindOf(o.kind);
+      drawUnit(ctx, ox, y + 22, unitKind == "ship" ? 0.62 : unitKind == "horse" ? 0.62 : 0.8, { role: o.role, kind: unitKind, house: v.enemy, back: false, flip: true, walk: 0, atk: 0, fight: false, seed: k, time: 0 });
+      const mark = o.out == "win" ? "✓" : o.out == "lose" ? "✗" : "=";
+      ctx.fillStyle = o.out == "win" ? "#2f6b2a" : o.out == "lose" ? "#8a2f25" : "#4a4238";
+      ctx.beginPath();
+      ctx.arc(ox, y + 38, 10, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#fff6e2";
+      ctx.font = "900 14px 'Alegreya Sans', 'Trebuchet MS', sans-serif";
+      ctx.fillText(mark, ox, y + 38.5);
+    });
     ctx.fillStyle = "#bba98a";
-    ctx.font = "700 12.5px 'Alegreya Sans', 'Trebuchet MS', sans-serif";
-    ctx.fillText("se a luta for aqui", cx, y - 13);
-    ctx.fillStyle = f.total > 0 ? v.house.color : "#6f6658";
-    ctx.font = "800 26px 'Alegreya Sans', 'Trebuchet MS', sans-serif";
-    ctx.fillText(f.total > 0 ? num(f.total) : "0", cx, y + 9);
-    // barra: sua força aqui × força total do inimigo
-    const bw = w - 20;
-    const bx = cx - bw / 2;
-    ctx.fillStyle = "rgba(255,255,255,.12)";
-    ctx.fillRect(bx, y + 26, bw, 6);
-    ctx.fillStyle = v.house.color;
-    ctx.fillRect(bx, y + 26, (bw * f.here) / max, 6);
-    ctx.fillStyle = "rgba(255,255,255,.45)";
-    ctx.fillRect(bx + (bw * f.here) / max, y + 26, (bw * f.help) / max, 6);
-    if (v.enemyForce) {
-      ctx.fillStyle = v.enemy.color;
-      ctx.fillRect(bx + (bw * v.enemyForce) / max - 1, y + 23, 2, 12);
-    }
-    ctx.fillStyle = "#bba98a";
-    ctx.font = "600 11px 'Alegreya Sans', 'Trebuchet MS', sans-serif";
-    ctx.fillText(f.help > 0.05 ? `${num(f.here)} aqui + ${num(f.help)} de ajuda` : f.here > 0 ? "só quem está aqui" : "ninguém seu perto", cx, y + 41);
+    ctx.font = "600 11.5px 'Alegreya Sans', 'Trebuchet MS', sans-serif";
+    ctx.fillText(f.total > 0 ? `sua força aqui ${num(f.total)}${f.help > 0.05 ? ` (${num(f.help)} de ajuda)` : ""}` : "ninguém seu perto", cx, y + 64, w - 10);
   });
 }
 
@@ -513,18 +414,21 @@ export function drawPlacement(ctx: CanvasRenderingContext2D, v: PlaceView, t: nu
   ctx.drawImage(terrainImage(v.field), 0, 0, W, H);
   ctx.imageSmoothingEnabled = true;
   const lanesT = FIELD_LANES[v.field];
-  drawFog(ctx, t, v.enemy, v.enemyCount, v.enemyForce);
+  if (v.field == "mar") drawSeaWaves(ctx, t, W);
+  if (v.enemySquads) drawEnemySquads(ctx, v, t);
+  else drawFog(ctx, t, v.enemy, v.enemyCount, v.enemyForce);
   if (v.laneForce) drawLaneForce(ctx, v);
   // a muralha é do terreno (todo mundo sabe onde ela está): fica por cima da névoa
   drawWalls(ctx, v.field, [false, false, false], v.wallFlag ?? v.enemy.color);
   drawWallBadges(ctx, v.field);
   // nome do terreno de cada faixa (na linha do meio)
   lanesT.forEach((tt, i) => {
-    const label = TERRAIN_NAMES[tt];
+    const oc = v.laneOutcome?.[i];
+    const label = TERRAIN_NAMES[tt] + (v.laneOutcome && tt != "bloqueado" ? (oc == "win" ? " · ✓ sua" : oc == "lose" ? " · ✗ dele" : oc == "tie" ? " · empate" : " · sem luta") : "");
     ctx.font = "700 16px 'Alegreya Sans', 'Trebuchet MS', sans-serif";
     const tw = ctx.measureText(label).width + 20;
     const cx = i * LW + LW / 2;
-    ctx.fillStyle = "rgba(18,14,10,.78)";
+    ctx.fillStyle = oc == "win" ? "rgba(36,96,34,.92)" : oc == "lose" ? "rgba(140,40,32,.92)" : "rgba(18,14,10,.78)";
     roundRect(ctx, cx - tw / 2, H * 0.49 - 14, tw, 28, 14);
     ctx.fill();
     ctx.fillStyle = "#efe3c6";
@@ -598,6 +502,7 @@ export function drawPlacement(ctx: CanvasRenderingContext2D, v: PlaceView, t: nu
       line.forEach((q) => {
         const w = widthOf(q.kind);
         const box = drawSquad(ctx, x + w / 2, fy, q.kind, q.role, v.house, { scale, selected: v.selected == q.id, ghost: v.dragging == q.id, time: t, num: v.squads.indexOf(q) + 1 });
+        if (v.changed == q.id) tagAbove(ctx, box.x + box.w / 2, box.y - 2, "mudou", "#b07a12");
         placed.push({ id: q.id, ...box });
         x += w;
       });

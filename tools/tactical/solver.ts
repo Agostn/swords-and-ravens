@@ -3,7 +3,7 @@
  * "double oracle" + "regret matching+"). Usado pelo simulador de equilíbrio
  * (equilibrio.ts) e pelo computador do protótipo.
  */
-import { resolveTacticalBattle, Squad, Lane, CardInfo } from "../../agot-bg-game-server/src/common/tactical-battle/tacticalBattle";
+import { resolveTacticalBattle, Squad, Lane, CardInfo, TacticalBattleResult } from "../../agot-bg-game-server/src/common/tactical-battle/tacticalBattle";
 import {
   FIELD_LANES,
   FieldType,
@@ -146,7 +146,13 @@ export interface ScenarioResult {
   random: { attacker: number; defender: number; draw: number };
 }
 
-export function solveScenario(sc: Scenario): ScenarioResult {
+/** Mistura de equilíbrio: as jogadas usadas por cada lado e com que frequência. */
+export function solveScenarioMix(sc: Scenario): { A: Strategy[]; x: number[]; D: Strategy[]; y: number[]; v: number } {
+  const r = doubleOracle(sc);
+  return { A: r.SA.map((i) => r.A[i]), x: r.sol.x, D: r.SD.map((j) => r.D[j]), y: r.sol.y, v: r.sol.v };
+}
+
+function doubleOracle(sc: Scenario): { A: Strategy[]; D: Strategy[]; SA: number[]; SD: number[]; sol: { x: number[]; y: number[]; v: number } } {
   ORDERS = [sc.attackerOrder ?? 0, sc.defenderOrder ?? 0];
   const A = enumerate(sc.attacker, sc.field);
   const D = enumerate(sc.defender, sc.field);
@@ -190,6 +196,13 @@ export function solveScenario(sc: Scenario): ScenarioResult {
     }
     if (!added) break;
   }
+  return { A, D, SA, SD, sol };
+}
+
+export function solveScenario(sc: Scenario): ScenarioResult {
+  const { A, D, SA, SD, sol } = doubleOracle(sc);
+  const ac = sc.attackerCard ?? null;
+  const dc = sc.defenderCard ?? null;
   // estatísticas na mistura final
   let aw = 0;
   let dw = 0;
@@ -315,4 +328,77 @@ export function computerStrategy(sc: Scenario, side: "attacker" | "defender", se
     if (r <= 0) return pool[set[k]];
   }
   return pool[set[set.length - 1]];
+}
+
+
+// ---------------------------------------------------------------- reação (depois da revelação)
+/** Todas as reações de um lado: não mudar nada, ou mudar UM esquadrão (lugar e/ou função). */
+export function reactionsOf(strat: Strategy, field: FieldType): Strategy[] {
+  const out: Strategy[] = [strat];
+  strat.forEach((s, i) => {
+    if (s.kind == "garrison") return;
+    for (const o of optionsFor({ kind: s.kind }, field)) {
+      if (o.lane == s.lane && o.row == s.row && o.role == s.role) continue;
+      const n = strat.slice();
+      n[i] = { ...s, ...o };
+      out.push(n);
+    }
+  });
+  return out;
+}
+
+/** Nota da luta do ponto de vista do atacante: bônus (peso grande) + folga média nas faixas (desempate). */
+function scoreOf(r: TacticalBattleResult): number {
+  const b = !r.winner ? 0 : r.winner == "attacker" ? r.bonus : -r.bonus;
+  let m = 0;
+  r.lanes.forEach((l) => {
+    if (l.winner != null && l.attackerScore + l.defenderScore > 0) m += (l.attackerScore - l.defenderScore) / (l.attackerScore + l.defenderScore);
+  });
+  return b * 10 + m;
+}
+
+function evalPair(sc: Scenario, a: Strategy, d: Strategy): number {
+  return scoreOf(
+    resolveTacticalBattle({
+      field: sc.field,
+      attacker: { squads: a, card: sc.attackerCard ?? null, orderBonus: sc.attackerOrder ?? 0 },
+      defender: { squads: d, card: sc.defenderCard ?? null, orderBonus: sc.defenderOrder ?? 0 }
+    })
+  );
+}
+
+/**
+ * Melhor reação do computador. O atacante (último) escolhe a melhor resposta ao que vê.
+ * O defensor (primeiro) escolhe a troca que deixa o atacante com a pior melhor resposta.
+ * Em empate, prefere não mudar nada.
+ */
+export function bestReaction(sc: Scenario, side: "attacker" | "defender", a: Strategy, d: Strategy): Strategy {
+  if (side == "attacker") {
+    let best = a;
+    let bv = evalPair(sc, a, d) + 1e-6;
+    for (const a2 of reactionsOf(a, sc.field)) {
+      const v = evalPair(sc, a2, d);
+      if (v > bv + 1e-9) {
+        bv = v;
+        best = a2;
+      }
+    }
+    return best;
+  }
+  const RA = reactionsOf(a, sc.field);
+  const reply = (d2: Strategy): number => {
+    let m = -Infinity;
+    for (const a2 of RA) m = Math.max(m, evalPair(sc, a2, d2));
+    return m;
+  };
+  let best = d;
+  let bv = reply(d) - 1e-6;
+  for (const d2 of reactionsOf(d, sc.field)) {
+    const v = reply(d2);
+    if (v < bv - 1e-9) {
+      bv = v;
+      best = d2;
+    }
+  }
+  return best;
 }

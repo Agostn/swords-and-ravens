@@ -1,4 +1,4 @@
-/** Tutorial com imagens: como funciona o combate tático, em 6 passos. */
+/** Tutorial com imagens: como funciona o combate tático, em 7 passos. */
 import { Role, SquadKind } from "../../../agot-bg-game-server/src/common/tactical-battle/tacticalBattleData";
 import { drawFigure } from "./battle";
 import { HOUSES, House } from "./data";
@@ -66,7 +66,7 @@ function men(ctx: CanvasRenderingContext2D, role: Role, kind: SquadKind, cx: num
 export const SLIDES: Slide[] = [
   {
     title: "1. O campo e o seu lado",
-    text: "O campo tem 3 faixas: esquerda, centro e direita. Cada faixa tem duas casinhas do seu lado: frente e trás. Você põe suas peças ali. Ao tocar numa peça, cada casinha mostra a FORÇA dela ali (soldado normal = 3, cavaleiro = 6; verde é melhor). No lado do inimigo aparece a sua força se a luta for em cada faixa, contando a ajuda de quem está longe. O lado do inimigo fica escondido na névoa até a luta começar.",
+    text: "O campo tem 3 faixas: esquerda, centro e direita. Cada faixa tem duas casinhas do seu lado: frente e trás. Você põe suas peças ali. Ao tocar numa peça, cada casinha mostra a FORÇA dela ali — o mesmo número do tabuleiro: soldado 1, cavaleiro 2 (verde = rende mais ali). No lado do inimigo aparece, em cada faixa, o que acontece se ele vier todo para lá com cada função: ✓ você ganha, ✗ perde. O lado dele fica na névoa até os dois ficarem prontos.",
     draw: (ctx) => {
       ground(ctx, "planicie", H * 0.36);
       // névoa
@@ -216,7 +216,23 @@ export const SLIDES: Slide[] = [
     }
   },
   {
-    title: "6. O resultado: +1 ou +2",
+    title: "6. Reação: os exércitos aparecem",
+    text: "Quando os dois ficam prontos, a névoa some e cada um vê o exército do outro. Aí cada lado pode mudar UM esquadrão (de lugar e/ou de função): primeiro quem defende, depois quem ataca, que tem a última palavra. Assim não é chute: escolheu mal? Conserta uma parte. Leu melhor o campo? Ganha. O nome de cada faixa mostra quem ganharia se a luta fosse agora.",
+    draw: (ctx) => {
+      ground(ctx, "planicie", H * 0.32);
+      men(ctx, "escudeiro", "footman", LW * 0.5, 110, D, "defender", 3);
+      men(ctx, "arqueiro", "footman", LW * 0.5, 250, A, "attacker", 3);
+      label(ctx, "✗ arqueiro perde", LW * 0.5, 180, "rgba(140,40,32,.92)", "#fff6e2", 15);
+      arrow(ctx, LW * 1.0, 180, LW * 1.9, 180, "#e0b354", 5);
+      label(ctx, "muda 1 esquadrão", LW * 1.45, 150, "rgba(18,14,10,.88)", "#e0b354", 15);
+      men(ctx, "escudeiro", "footman", LW * 2.4, 110, D, "defender", 3);
+      men(ctx, "lanceiro", "footman", LW * 2.4, 250, A, "attacker", 3);
+      label(ctx, "✓ lanceiro vence", LW * 2.4, 180, "rgba(36,96,34,.92)", "#fff6e2", 15);
+      label(ctx, "1º quem defende · 2º quem ataca", CW / 2, 32, "rgba(18,14,10,.85)", "#efe3c6", 15);
+    }
+  },
+  {
+    title: "7. O resultado: +1 ou +2",
     text: "Quem vencer mais faixas ganha o mini-mapa e soma +1 na batalha do tabuleiro. Se vencer todas as faixas com luta (pelo menos duas), soma +2. Se ninguém se encontrar nas faixas, os exércitos marcham e lutam no centro. Depois a batalha segue igual ao jogo original: Espada de Aço Valiriano, baixas e retirada.",
     draw: (ctx) => {
       ctx.fillStyle = "#2a2119";

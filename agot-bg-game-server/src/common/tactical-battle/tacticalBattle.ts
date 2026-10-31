@@ -6,7 +6,8 @@
  * do resultado) e pelo simulador de equilíbrio (tools/tactical).
  */
 import {
-  ADVANTAGE,
+  advantage,
+  COUNTER_SCALE,
   BASE_VALUE,
   BONUS_ALL_LANES,
   BONUS_MAJORITY,
@@ -190,7 +191,7 @@ function laneDamage(
   for (const s of mine) {
     let adv = 0;
     for (const t of theirs) {
-      let a = ADVANTAGE[s.role][t.role] ?? 1;
+      let a = advantage(s.role, t.role);
       if (screened && t.row == "tras" && a > 1 && (s.role == "cavalaria" || s.role == "batedores")) {
         a = 1;
       }
@@ -206,8 +207,8 @@ function laneDamage(
     if (s.supportOrderBonus) f *= 1 + ORDER_FACTOR * s.supportOrderBonus;
     total += squadValue(s) * f;
 
-    if (adv >= 1.3) factors.push({ side, kind: "counter", role: s.role, vs: dominantEnemy(theirs) });
-    else if (adv <= 0.8) factors.push({ side, kind: "weak", role: s.role, vs: dominantEnemy(theirs) });
+    if (adv >= 1 + 0.3 * COUNTER_SCALE) factors.push({ side, kind: "counter", role: s.role, vs: dominantEnemy(theirs) });
+    else if (adv <= 1 - 0.2 * COUNTER_SCALE) factors.push({ side, kind: "weak", role: s.role, vs: dominantEnemy(theirs) });
   }
 
   if (breached) factors.push({ side, kind: "wall-breach", terrain });

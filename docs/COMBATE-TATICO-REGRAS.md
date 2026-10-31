@@ -1,4 +1,4 @@
-# Combate tático — regras e números (versão 3, 30/out, para aprovar)
+# Combate tático — regras e números (versão 4, 30/out, para aprovar)
 
 Regra opcional (liga/desliga na sala de espera). O tabuleiro e a batalha do jogo original não mudam:
 o mini-mapa só soma **+1 ou +2** para quem lutar melhor. Plano das etapas: `docs/PLANO-COMBATE-TATICO.md`.
@@ -9,22 +9,24 @@ O teste de equilíbrio é `tools/tactical/equilibrio.ts` (resultado em `tools/ta
 
 ## Em uma frase
 Cada peça vira um esquadrão; os dois lados escondem onde põem cada esquadrão (3 faixas × frente/trás)
-e qual função ele tem; o servidor compara faixa por faixa; quem vencer mais faixas com luta ganha o bônus.
+e qual função ele tem; depois os exércitos aparecem e cada lado pode mudar **1 esquadrão** (a Reação);
+o servidor compara faixa por faixa; quem vencer mais faixas com luta ganha o bônus.
 
 ## 1. Esquadrões
 | Peça | Esquadrão (bolinhas) | Valor | Funções para escolher |
 |---|---|---|---|
-| Soldado | 3 | 3 | **Lanceiro**, **Escudeiro** ou **Arqueiro** |
-| Cavaleiro | 2 | 6 | **Cavalaria** (carga) ou **Batedores** (cavalaria leve) |
-| Máquina de cerco | 1 | **12 só quando ataca castelo/fortaleza**; senão 0 (não entra) | Catapulta |
-| Navio no mar | 1 | 3 | **Abordagem**, **Aríete** ou **Flechas** |
-| Navio apoiando batalha em terra | 1 | 3 × 80% | **Flechas** (atira do litoral, como arqueiro) |
-| Dragão | 1 | 3 × força do dragão na rodada | — |
-| Guarnição (só de quem defende) | torre fixa atrás, no centro | 3 × valor da guarnição | — |
+| Soldado | 4 bonecos | 1 | **Lanceiro**, **Escudeiro** ou **Arqueiro** |
+| Cavaleiro | 4 bonecos | 2 | **Cavalaria** (carga) ou **Batedores** (cavalaria leve) |
+| Máquina de cerco | 1 | **4 só quando ataca castelo/fortaleza**; senão 0 (não entra) | Catapulta |
+| Navio no mar | 1 | 1 | **Abordagem**, **Aríete** ou **Flechas** |
+| Navio apoiando batalha em terra | 1 | 1 × 80% | **Flechas** (atira do litoral, como arqueiro) |
+| Dragão | 1 | força do dragão na rodada | — |
+| Guarnição (só de quem defende) | torre fixa atrás, no centro | valor da guarnição | — |
 | Apoio de vizinho | como a peça | 80% do valor (chega depois) | igual à peça |
 | Peça ferida (que recuou) | não entra | 0 | — |
 
-O valor é **3 × a força da peça no jogo original, na situação da batalha**. Assim o exército maior
+O valor é **a força da peça no jogo original, na situação da batalha** — o mesmo número do tabuleiro
+(antes era 3 ×; a conta é proporcional, então nada muda no resultado, só fica mais fácil de entender). Assim o exército maior
 continua mais forte, e tudo o que o jogo original diz sobre força continua valendo:
 - **Máquina de cerco:** no jogo original vale 4 só quando ataca (ou apoia o ataque a) área com
   Castelo/Fortaleza, e 0 no resto (inclusive defendendo). Aqui é igual: fora disso ela fica de fora.
@@ -39,7 +41,8 @@ continua mais forte, e tudo o que o jogo original diz sobre força continua vale
 - **Dragão:** forte contra todos; o que mais o machuca são arqueiros juntos.
 - **Mar:** Abordagem > Aríete > Flechas > Abordagem.
 
-Tabela (quanto rende quem está na linha contra quem está na coluna):
+Tabela (quanto rende quem está na linha contra quem está na coluna). **Desde a versão 4 a conta usa só 70% do
+efeito** (`COUNTER_SCALE` = 0,7): 1,5 vira 1,35 e 0,6 vira 0,72. Dragão, torre e catapulta ficam com o valor inteiro.
 
 | | Lanceiro | Escudeiro | Arqueiro | Cavalaria | Batedores |
 |---|---|---|---|---|---|
@@ -167,3 +170,40 @@ Próximo passo: o protótipo jogável (etapa 4) — feito, link no chat e em `to
 Quem fica sozinho numa faixa ajuda onde tem luta: a faixa vizinha recebe 30% do que ele causaria lá.
 Se não houver luta na vizinha, ele atravessa o campo e ajuda a faixa da outra ponta com 15% (metade).
 Assim nenhuma peça fica inútil, mas ficar longe da luta custa caro. (`UNOPPOSED_FLANK_SHARE` = 0,30; `FAR_FLANK_SHARE` = 0,15.)
+
+## Reação: os exércitos aparecem (versão 4, 30/out)
+Quando os dois ficam prontos, a névoa some e cada um vê o exército do outro. Cada lado pode mudar
+**1 esquadrão** (de lugar e/ou de função) ou manter: **primeiro quem defende, depois quem ataca** (última palavra).
+- Por quê: com escolha escondida e exércitos iguais, a função virava chute. Com a Reação, quem escolheu mal
+  conserta uma parte, e quem lê melhor o campo ganha. O nome de cada faixa mostra quem ganharia "se fosse agora".
+- O defensor fica com a primeira jogada, mas já tem terreno, muralha e ordem de Defesa a favor.
+- Servidor: `tacticalReaction.ts` (`isValidReaction`: mesmos esquadrões, no máximo 1 mudado, guarnição parada).
+  Computador: `bestReaction` em `tools/tactical/solver.ts` (o defensor pensa na melhor resposta do atacante).
+
+## Batalha no tabuleiro e baixas (versão 4, 30/out)
+O mini-mapa só dá **+1 ou +2**. A batalha continua a do jogo original:
+força das peças (com apoio) + carta de Casa + ordem + bônus do mini-mapa. Quem perde sofre
+**baixas = espadas do vencedor − torres do perdedor** (o perdedor escolhe quais peças; no protótipo é sorteado).
+Apoio não sofre baixa; máquina de cerco de quem perde é destruída.
+**A animação segue isso:** peça destruída = o grupo inteiro de bonecos morre; peça que sobrevive perde 1 ou 2
+bonecos (só visual, e só se houve baixa) e o resto foge; o vencedor não perde peça; sem espada, ninguém morre e
+quem perdeu recua. Dragão (1 figura) só morre se for uma das baixas.
+
+## Sorte x estratégia: o que o teste mostrou (versão 4, 30/out)
+Teste novo: `tools/tactical/influencia.ts` — batalha inteira (tropas + apoio + carta de Casa sorteada do baralho
+Stark + mini-mapa jogado bem pelos dois), em 6 tipos de exército × 3 campos × 25 pares de carta.
+| | Antes (tabela inteira, sem Reação) | Agora (70% + Reação) |
+|---|---|---|
+| Mini-mapa muda quem vence a batalha | 13,7% | ~11% |
+| Carta de Casa muda quem vence | 15,7% | ~10% |
+| Carta 4 × 0, exércitos iguais: quem tem a carta perde o mini-mapa | 35% | 0% |
+| Marcha +1, exércitos iguais: quem tem a ordem perde | 30% | 0–8% |
+| Jogador bom contra novato (bônus médio, de −2 a +2) | +0,67 | **+1,3 a +1,4** |
+| Exércitos iguais, tudo igual: atacante / defensor / empate | 41% / 42% / 17% | ~50% / ~15% / ~35% |
+- **Leitura:** a vantagem de fora (mais tropas, carta, ordem, apoio) agora quase sempre se confirma, e pensar
+  rende o dobro. O que ainda decide entre exércitos idênticos é ler o campo na Reação.
+- **Para ficar de olho:** com tudo igual, quem ataca leva vantagem por ter a última palavra. No jogo de verdade
+  quem defende quase sempre tem ordem de Defesa (+1/+2), terreno ou muralha; se nas partidas o ataque ganhar
+  demais, dá para trocar a ordem da Reação ou dar a última palavra a quem tem a Lâmina de Aço Valiriano.
+- Arqueiro ficou um pouco menos usado no jogo ótimo (0,8 de 4 escolhas); ainda é a resposta ao lanceiro.
+

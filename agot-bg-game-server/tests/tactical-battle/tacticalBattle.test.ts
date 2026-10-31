@@ -1,6 +1,8 @@
 import { resolveTacticalBattle, Squad } from "../../src/common/tactical-battle/tacticalBattle";
 import { getBattleField, REGION_TERRAIN } from "../../src/common/tactical-battle/tacticalFields";
-import { ADVANTAGE, ROLES_BY_KIND } from "../../src/common/tactical-battle/tacticalBattleData";
+import { ADVANTAGE, ROLES_BY_KIND, advantage, COUNTER_SCALE } from "../../src/common/tactical-battle/tacticalBattleData";
+import { isValidReaction } from "../../src/common/tactical-battle/tacticalReaction";
+import { squadValue } from "../../src/common/tactical-battle/tacticalBattle";
 import * as fs from "fs";
 import * as path from "path";
 
@@ -156,5 +158,25 @@ describe("combate tático", () => {
     expect(getBattleField("winterfell", false, 0)).toBe("floresta");
     expect(getBattleField("moat-cailin", false, 0)).toBe("pantano");
     expect(getBattleField("the-narrow-sea", true, 0)).toBe("mar");
+  });
+
+  it("a força no mini-mapa é a mesma do tabuleiro (soldado 1, cavaleiro 2)", () => {
+    expect(squadValue(sq("a", "footman", "lanceiro", 1))).toBe(1);
+    expect(squadValue(sq("b", "knight", "cavalaria", 1))).toBe(2);
+  });
+
+  it("a pedra-papel-tesoura é suavizada, mas o dragão continua inteiro", () => {
+    expect(COUNTER_SCALE).toBeLessThan(1);
+    expect(advantage("arqueiro", "escudeiro")).toBeCloseTo(1 + (0.6 - 1) * COUNTER_SCALE);
+    expect(advantage("dragao", "lanceiro")).toBe(ADVANTAGE.dragao.lanceiro);
+  });
+
+  it("reação: só 1 esquadrão pode mudar, e a guarnição não sai do lugar", () => {
+    const base: Squad[] = [sq("a", "footman", "arqueiro", 0, "tras"), sq("b", "footman", "escudeiro", 1), { ...sq("g", "garrison", "torre", 1, "tras"), strength: 2 }];
+    expect(isValidReaction(base, base, "planicie")).toBe(true);
+    expect(isValidReaction(base, [{ ...base[0], role: "lanceiro", lane: 2, row: "frente" }, base[1], base[2]], "planicie")).toBe(true);
+    expect(isValidReaction(base, [{ ...base[0], role: "lanceiro" }, { ...base[1], lane: 2 }, base[2]], "planicie")).toBe(false);
+    expect(isValidReaction(base, [base[0], base[1], { ...base[2], lane: 0 }], "planicie")).toBe(false);
+    expect(isValidReaction(base, [{ ...base[0], role: "cavalaria" }, base[1], base[2]], "planicie")).toBe(false);
   });
 });

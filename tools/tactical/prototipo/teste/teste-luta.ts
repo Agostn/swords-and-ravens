@@ -32,22 +32,27 @@ for (let n = 0; n < 400; n++) {
   let idleTime = 0;
   // olha de 4,2 s a 6,2 s: quem fica parado o tempo todo nesse intervalo
   const still = new Map<number, number>();
+  const where = new Map<number, string>();
   while (sim.t < 6.2) {
     stepSim(sim, 0.02);
     if (sim.t < 4.2) continue;
     men.forEach((m, i) => {
       if (m.dead || m.kind == "tower" || m.kind == "siege" || m.kind == "dragon" || m.role == "arqueiro" || m.role == "flechas") return;
       if (res.lanes[m.lane].winner == null) return;
+      if (m.onWall || m.atWall) return; // defensor em cima da muralha segurando a posição: é de propósito
       const enemies = men.filter((o) => o.side != m.side && o.lane == m.lane && !o.dead && o.kind != "tower");
       if (!enemies.length) return;
       const nearest = Math.min(...enemies.map((o) => Math.hypot(o.x - m.x, o.y - m.y)));
-      if (!m.engaged && nearest > 70 && Math.hypot(m.vx, m.vy) < 8) still.set(i, (still.get(i) ?? 0) + 0.02);
+      if (!m.engaged && nearest > 70 && Math.hypot(m.vx, m.vy) < 8) {
+        still.set(i, (still.get(i) ?? 0) + 0.02);
+        where.set(i, `${m.side[0]}${m.role[0]} x${Math.round(m.x)} y${Math.round(m.y)} foe${m.foe ? Math.round(m.foe.x) + "," + Math.round(m.foe.y) : "-"}`);
+      }
     });
   }
   still.forEach((v) => (idleTime = Math.max(idleTime, v)));
   if (idleTime > 1.0) {
     idleCases++;
-    if (out.length < 10) out.push(`#${n} ${field} A=${A.map((s) => s.role[0] + s.lane).join(",")} D=${D.map((s) => s.role[0] + s.lane).join(",")} parado ${idleTime.toFixed(1)} s`);
+    if (out.length < 10) out.push(`#${n} ${field} A=${A.map((s) => s.role[0] + s.lane).join(",")} D=${D.map((s) => s.role[0] + s.lane).join(",")} parado ${idleTime.toFixed(1)} s ${[...where.values()].slice(0, 3).join(" | ")}`);
   }
 }
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

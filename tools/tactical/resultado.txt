@@ -1,79 +1,79 @@
-planicie: 2 soldados x 2 soldados                    valor -0.00 | ótimo: atac  40% def  40% emp  20% | chute: atac  46% def  45% emp  10% | lanceiro 1.21, arqueiro 1.18, escudeiro 1.61
-planicie: 1 sold+1 cav x 1 sold+1 cav                valor -0.00 | ótimo: atac  34% def  34% emp  33% | chute: atac  40% def  40% emp  20% | lanceiro 1.34, cavalaria 1.33, batedores 0.67, escudeiro 0.01, arqueiro 0.65
-planicie: 3 soldados x 1 sold+1 cav                  valor -0.01 | ótimo: atac  49% def  50% emp   1% | chute: atac  22% def  72% emp   6% | lanceiro 1.97, arqueiro 0.49, escudeiro 1.54, cavalaria 0.50, batedores 0.50
-planicie: 2 sold+1 cav x 2 soldados                  valor +1.00 | ótimo: atac 100% def   0% emp   0% | chute: atac  89% def   8% emp   3% | lanceiro 4.00, cavalaria 1.00
-planicie: 1 soldado x 3 soldados                     valor -1.00 | ótimo: atac   0% def 100% emp   0% | chute: atac   8% def  89% emp   4% | lanceiro 4.00
-planicie: 4 soldados x 2 soldados                    valor +1.00 | ótimo: atac 100% def   0% emp   0% | chute: atac  79% def  16% emp   4% | lanceiro 3.00, escudeiro 1.00, arqueiro 2.00
-planicie: 2 cavaleiros x 3 soldados                  valor +1.00 | ótimo: atac 100% def   0% emp   0% | chute: atac  86% def  10% emp   4% | cavalaria 1.00, batedores 1.00, lanceiro 3.00
-colinas: 2 soldados x 2 soldados                     valor +0.00 | ótimo: atac  40% def  40% emp  20% | chute: atac  40% def  52% emp   8% | lanceiro 1.21, arqueiro 1.18, escudeiro 1.61
-colinas: 1 sold+1 cav x 1 sold+1 cav                 valor +0.00 | ótimo: atac  34% def  33% emp  33% | chute: atac  34% def  55% emp  12% | lanceiro 1.26, cavalaria 1.26, batedores 0.74, arqueiro 0.72, escudeiro 0.01
-colinas: 3 soldados x 1 sold+1 cav                   valor -0.00 | ótimo: atac  50% def  50% emp   0% | chute: atac  21% def  74% emp   5% | lanceiro 1.83, arqueiro 0.77, escudeiro 1.40, cavalaria 0.50, batedores 0.50
-colinas: 2 sold+1 cav x 2 soldados                   valor +1.00 | ótimo: atac 100% def   0% emp   0% | chute: atac  80% def  16% emp   4% | lanceiro 1.50, cavalaria 0.00, batedores 1.00, escudeiro 1.00, arqueiro 1.50
-colinas: 1 soldado x 3 soldados                      valor -1.00 | ótimo: atac   0% def 100% emp   0% | chute: atac   4% def  93% emp   3% | lanceiro 4.00
-colinas: 4 soldados x 2 soldados                     valor +1.00 | ótimo: atac 100% def   0% emp   0% | chute: atac  72% def  23% emp   5% | lanceiro 2.00, escudeiro 2.00, arqueiro 2.00
-colinas: 2 cavaleiros x 3 soldados                   valor +1.00 | ótimo: atac 100% def   0% emp   0% | chute: atac  73% def  22% emp   6% | cavalaria 1.00, batedores 1.00, lanceiro 1.00, escudeiro 1.00, arqueiro 1.00
-floresta: 2 soldados x 2 soldados                    valor +0.00 | ótimo: atac  40% def  40% emp  20% | chute: atac  46% def  45% emp   9% | lanceiro 1.18, arqueiro 1.21, escudeiro 1.60
-floresta: 1 sold+1 cav x 1 sold+1 cav                valor -0.00 | ótimo: atac  34% def  34% emp  33% | chute: atac  43% def  40% emp  17% | lanceiro 1.34, cavalaria 1.33, batedores 0.67, escudeiro 0.01, arqueiro 0.65
-floresta: 3 soldados x 1 sold+1 cav                  valor +0.00 | ótimo: atac  50% def  50% emp   0% | chute: atac  32% def  61% emp   7% | lanceiro 1.65, escudeiro 1.85, arqueiro 0.50, cavalaria 0.50, batedores 0.50
-floresta: 2 sold+1 cav x 2 soldados                  valor +1.00 | ótimo: atac 100% def   0% emp   0% | chute: atac  83% def  13% emp   4% | lanceiro 4.00, cavalaria 1.00
-floresta: 1 soldado x 3 soldados                     valor -1.00 | ótimo: atac   0% def 100% emp   0% | chute: atac   9% def  88% emp   3% | lanceiro 4.00
-floresta: 4 soldados x 2 soldados                    valor +1.00 | ótimo: atac 100% def   0% emp   0% | chute: atac  79% def  17% emp   4% | lanceiro 3.00, escudeiro 1.00, arqueiro 2.00
-floresta: 2 cavaleiros x 3 soldados                  valor +1.00 | ótimo: atac 100% def   0% emp   0% | chute: atac  74% def  21% emp   5% | cavalaria 1.00, batedores 1.00, lanceiro 2.00, escudeiro 1.00
-montanha: 2 soldados x 2 soldados                    valor +0.00 | ótimo: atac  40% def  40% emp  20% | chute: atac  39% def  53% emp   7% | lanceiro 1.21, arqueiro 1.18, escudeiro 1.61
-montanha: 1 sold+1 cav x 1 sold+1 cav                valor +0.00 | ótimo: atac  34% def  33% emp  33% | chute: atac  23% def  76% emp   0% | lanceiro 1.26, cavalaria 1.26, batedores 0.74, arqueiro 0.72, escudeiro 0.01
-montanha: 3 soldados x 1 sold+1 cav                  valor -0.00 | ótimo: atac  50% def  50% emp   0% | chute: atac  19% def  75% emp   6% | lanceiro 1.83, arqueiro 0.77, escudeiro 1.40, cavalaria 0.50, batedores 0.50
-montanha: 2 sold+1 cav x 2 soldados                  valor +1.00 | ótimo: atac 100% def   0% emp   0% | chute: atac  88% def   8% emp   4% | lanceiro 1.50, cavalaria 0.00, batedores 1.00, escudeiro 1.00, arqueiro 1.50
-montanha: 1 soldado x 3 soldados                     valor -1.00 | ótimo: atac   0% def 100% emp   0% | chute: atac   2% def  95% emp   3% | lanceiro 4.00
-montanha: 4 soldados x 2 soldados                    valor +1.00 | ótimo: atac 100% def   0% emp   0% | chute: atac  78% def  18% emp   4% | lanceiro 2.00, escudeiro 2.00, arqueiro 2.00
-montanha: 2 cavaleiros x 3 soldados                  valor +1.00 | ótimo: atac 100% def   0% emp   0% | chute: atac  73% def  22% emp   5% | cavalaria 1.00, batedores 1.00, lanceiro 1.00, escudeiro 1.00, arqueiro 1.00
-rio: 2 soldados x 2 soldados                         valor -0.20 | ótimo: atac  27% def  47% emp  25% | chute: atac  38% def  55% emp   7% | lanceiro 1.08, arqueiro 1.24, escudeiro 1.68
-rio: 1 sold+1 cav x 1 sold+1 cav                     valor -0.33 | ótimo: atac  33% def  67% emp   0% | chute: atac  33% def  60% emp   7% | lanceiro 1.12, cavalaria 0.98, batedores 1.02, escudeiro 0.35, arqueiro 0.52
-rio: 3 soldados x 1 sold+1 cav                       valor +0.00 | ótimo: atac  33% def  33% emp  34% | chute: atac  27% def  68% emp   5% | lanceiro 1.38, arqueiro 0.92, escudeiro 1.70, cavalaria 0.50, batedores 0.50
-rio: 2 sold+1 cav x 2 soldados                       valor +1.00 | ótimo: atac 100% def   0% emp   0% | chute: atac  76% def  20% emp   4% | lanceiro 2.00, cavalaria 0.00, batedores 1.00, escudeiro 1.00, arqueiro 1.00
-rio: 1 soldado x 3 soldados                          valor -1.00 | ótimo: atac   0% def 100% emp   0% | chute: atac   3% def  94% emp   3% | lanceiro 4.00
-rio: 4 soldados x 2 soldados                         valor +1.00 | ótimo: atac 100% def   0% emp   0% | chute: atac  71% def  24% emp   5% | lanceiro 2.00, escudeiro 2.00, arqueiro 2.00
-rio: 2 cavaleiros x 3 soldados                       valor +0.33 | ótimo: atac  45% def  11% emp  44% | chute: atac  61% def  33% emp   6% | cavalaria 0.67, batedores 1.33, lanceiro 1.98, escudeiro 1.02
-pantano: 2 soldados x 2 soldados                     valor -0.27 | ótimo: atac  32% def  59% emp   9% | chute: atac  37% def  57% emp   6% | lanceiro 1.33, arqueiro 0.97, escudeiro 1.70
-pantano: 1 sold+1 cav x 1 sold+1 cav                 valor -0.55 | ótimo: atac  10% def  65% emp  25% | chute: atac  33% def  61% emp   6% | lanceiro 1.10, cavalaria 1.34, batedores 0.66, arqueiro 0.90, escudeiro 0.00
-pantano: 3 soldados x 1 sold+1 cav                   valor +0.00 | ótimo: atac  34% def  33% emp  33% | chute: atac  31% def  63% emp   6% | lanceiro 1.35, escudeiro 1.64, arqueiro 1.01, cavalaria 0.50, batedores 0.50
-pantano: 2 sold+1 cav x 2 soldados                   valor +1.00 | ótimo: atac 100% def   0% emp   0% | chute: atac  72% def  23% emp   5% | lanceiro 2.00, cavalaria 0.00, batedores 1.00, escudeiro 1.00, arqueiro 1.00
-pantano: 1 soldado x 3 soldados                      valor -1.00 | ótimo: atac   0% def 100% emp   0% | chute: atac   4% def  94% emp   2% | lanceiro 4.00
-pantano: 4 soldados x 2 soldados                     valor +1.00 | ótimo: atac 100% def   0% emp   0% | chute: atac  71% def  24% emp   5% | lanceiro 2.00, escudeiro 2.00, arqueiro 2.00
-pantano: 2 cavaleiros x 3 soldados                   valor -0.20 | ótimo: atac  16% def  36% emp  47% | chute: atac  50% def  43% emp   7% | cavalaria 0.80, batedores 1.20, lanceiro 1.30, escudeiro 1.30, arqueiro 0.40
-deserto: 2 soldados x 2 soldados                     valor -0.00 | ótimo: atac  40% def  40% emp  20% | chute: atac  44% def  49% emp   7% | lanceiro 1.21, arqueiro 1.18, escudeiro 1.61
-deserto: 1 sold+1 cav x 1 sold+1 cav                 valor -0.00 | ótimo: atac  33% def  34% emp  33% | chute: atac  38% def  49% emp  13% | lanceiro 1.27, cavalaria 1.27, batedores 0.73, arqueiro 0.73, escudeiro 0.00
-deserto: 3 soldados x 1 sold+1 cav                   valor -0.01 | ótimo: atac  49% def  50% emp   1% | chute: atac  27% def  68% emp   5% | lanceiro 1.96, arqueiro 0.50, escudeiro 1.54, cavalaria 0.50, batedores 0.50
-deserto: 2 sold+1 cav x 2 soldados                   valor +1.00 | ótimo: atac 100% def   0% emp   0% | chute: atac  81% def  15% emp   3% | lanceiro 4.00, cavalaria 0.00, batedores 1.00
-deserto: 1 soldado x 3 soldados                      valor -1.00 | ótimo: atac   0% def 100% emp   0% | chute: atac   6% def  91% emp   3% | lanceiro 4.00
-deserto: 4 soldados x 2 soldados                     valor +1.00 | ótimo: atac 100% def   0% emp   0% | chute: atac  76% def  19% emp   5% | lanceiro 3.00, escudeiro 1.00, arqueiro 2.00
-deserto: 2 cavaleiros x 3 soldados                   valor +1.00 | ótimo: atac 100% def   0% emp   0% | chute: atac  79% def  16% emp   5% | cavalaria 1.00, batedores 1.00, lanceiro 3.00, escudeiro 0.00
-castelo: 2 soldados x 2 soldados                     valor -0.27 | ótimo: atac  32% def  59% emp   9% | chute: atac  39% def  54% emp   7% | lanceiro 1.34, arqueiro 0.97, escudeiro 1.69
-castelo: 1 sold+1 cav x 1 sold+1 cav                 valor -0.54 | ótimo: atac  10% def  64% emp  26% | chute: atac  35% def  57% emp   8% | lanceiro 1.07, cavalaria 1.30, batedores 0.70, escudeiro 0.17, arqueiro 0.75
-castelo: 3 soldados x 1 sold+1 cav                   valor +0.00 | ótimo: atac  50% def  50% emp   1% | chute: atac  25% def  70% emp   6% | lanceiro 1.45, arqueiro 0.52, escudeiro 2.03, cavalaria 0.50, batedores 0.50
-castelo: 2 sold+1 cav x 2 soldados                   valor +1.00 | ótimo: atac 100% def   0% emp   0% | chute: atac  80% def  17% emp   4% | lanceiro 2.00, cavalaria 0.00, batedores 1.00, escudeiro 1.00, arqueiro 1.00
-castelo: 1 soldado x 3 soldados                      valor -1.00 | ótimo: atac   0% def 100% emp   0% | chute: atac   5% def  93% emp   3% | lanceiro 4.00
-castelo: 4 soldados x 2 soldados                     valor +1.00 | ótimo: atac 100% def   0% emp   0% | chute: atac  73% def  21% emp   5% | lanceiro 2.00, escudeiro 2.00, arqueiro 2.00
-castelo: 2 cavaleiros x 3 soldados                   valor +0.33 | ótimo: atac  45% def  11% emp  44% | chute: atac  66% def  28% emp   6% | cavalaria 0.67, batedores 1.33, lanceiro 1.65, escudeiro 1.01, arqueiro 0.34
-fortaleza: 2 soldados x 2 soldados                   valor -0.27 | ótimo: atac  32% def  59% emp   9% | chute: atac  36% def  58% emp   7% | lanceiro 1.34, arqueiro 0.97, escudeiro 1.69
-fortaleza: 1 sold+1 cav x 1 sold+1 cav               valor -0.54 | ótimo: atac  10% def  64% emp  26% | chute: atac  31% def  63% emp   6% | lanceiro 1.07, cavalaria 1.30, batedores 0.70, escudeiro 0.17, arqueiro 0.75
-fortaleza: 3 soldados x 1 sold+1 cav                 valor +0.00 | ótimo: atac  50% def  50% emp   1% | chute: atac  27% def  68% emp   5% | lanceiro 1.45, arqueiro 0.52, escudeiro 2.03, cavalaria 0.50, batedores 0.50
-fortaleza: 2 sold+1 cav x 2 soldados                 valor +1.00 | ótimo: atac 100% def   0% emp   0% | chute: atac  73% def  23% emp   4% | lanceiro 2.00, cavalaria 0.00, batedores 1.00, escudeiro 1.00, arqueiro 1.00
-fortaleza: 1 soldado x 3 soldados                    valor -1.00 | ótimo: atac   0% def 100% emp   0% | chute: atac   3% def  95% emp   2% | lanceiro 4.00
-fortaleza: 4 soldados x 2 soldados                   valor +1.00 | ótimo: atac 100% def   0% emp   0% | chute: atac  69% def  27% emp   5% | lanceiro 2.00, escudeiro 2.00, arqueiro 2.00
-fortaleza: 2 cavaleiros x 3 soldados                 valor +0.33 | ótimo: atac  45% def  11% emp  44% | chute: atac  53% def  41% emp   6% | cavalaria 0.67, batedores 1.33, lanceiro 1.65, escudeiro 1.01, arqueiro 0.34
-castelo: 2 sold+1 cerco x 2 soldados                 valor +1.00 | ótimo: atac 100% def   0% emp   0% | chute: atac  71% def  23% emp   6% | lanceiro 2.00, arqueiro 2.00
-castelo: 2 sold+1 cerco x 3 soldados                 valor +1.00 | ótimo: atac 100% def   0% emp   0% | chute: atac  47% def  45% emp   9% | lanceiro 0.00, escudeiro 3.58, arqueiro 1.42
-fortaleza: 1 sold+1 cerco x 3 soldados               valor -1.00 | ótimo: atac   0% def 100% emp   0% | chute: atac  34% def  58% emp   8% | lanceiro 1.00, arqueiro 2.00, escudeiro 1.00
-planicie: 2 sold+1 cerco x 2 soldados (cerco vale 0) valor -0.00 | ótimo: atac  40% def  40% emp  20% | chute: atac  46% def  45% emp   9% | lanceiro 1.21, arqueiro 1.18, escudeiro 1.61
-planicie: Marcha +1 x Defesa +1 (2 sold x 2 sold)    valor -0.00 | ótimo: atac  40% def  40% emp  20% | chute: atac  46% def  45% emp  10% | lanceiro 1.21, arqueiro 1.18, escudeiro 1.61
-planicie: Marcha +1 x sem ordem (2 sold x 2 sold)    valor +0.27 | ótimo: atac  59% def  32% emp   9% | chute: atac  52% def  41% emp   6% | lanceiro 1.33, escudeiro 1.71, arqueiro 0.97
-planicie: Marcha -1 x Defesa +2 (2 sold x 2 sold)    valor -0.34 | ótimo: atac  33% def  67% emp   0% | chute: atac  35% def  58% emp   7% | lanceiro 1.21, arqueiro 1.11, escudeiro 1.68
-rio: 2 sold + apoio de navio x 2 sold                valor +1.00 | ótimo: atac 100% def   0% emp   0% | chute: atac  50% def  43% emp   8% | lanceiro 2.00, flechas 1.00, escudeiro 1.00, arqueiro 1.00
-fortaleza: 2 sold+1 cerco x 2 sold + guarnição 2     valor +1.00 | ótimo: atac 100% def   0% emp   0% | chute: atac  42% def  49% emp   8% | lanceiro 1.28, arqueiro 1.72, escudeiro 1.00
-fortaleza: 3 soldados x 2 sold + guarnição 2         valor -1.00 | ótimo: atac   0% def 100% emp   0% | chute: atac   7% def  89% emp   3% | lanceiro 2.00, arqueiro 2.00, escudeiro 1.00
+planicie: 2 soldados x 2 soldados                    valor -0.00 | ótimo: atac  29% def  29% emp  41% | chute: atac  46% def  44% emp  10% | lanceiro 1.20, arqueiro 0.80, escudeiro 2.00
+planicie: 1 sold+1 cav x 1 sold+1 cav                valor +0.00 | ótimo: atac   0% def   0% emp 100% | chute: atac  41% def  42% emp  17% | lanceiro 2.00, cavalaria 2.00
+planicie: 3 soldados x 1 sold+1 cav                  valor -0.14 | ótimo: atac  35% def  49% emp  16% | chute: atac  17% def  77% emp   6% | lanceiro 1.72, arqueiro 0.30, escudeiro 1.98, cavalaria 0.43, batedores 0.57
+planicie: 2 sold+1 cav x 2 soldados                  valor +1.00 | ótimo: atac 100% def   0% emp   0% | chute: atac  92% def   6% emp   2% | lanceiro 4.00, cavalaria 1.00
+planicie: 1 soldado x 3 soldados                     valor -1.00 | ótimo: atac   0% def 100% emp   0% | chute: atac   4% def  93% emp   2% | lanceiro 4.00
+planicie: 4 soldados x 2 soldados                    valor +1.00 | ótimo: atac 100% def   0% emp   0% | chute: atac  82% def  14% emp   5% | lanceiro 6.00
+planicie: 2 cavaleiros x 3 soldados                  valor +1.00 | ótimo: atac 100% def   0% emp   0% | chute: atac  90% def   7% emp   4% | cavalaria 1.00, batedores 1.00, lanceiro 3.00
+colinas: 2 soldados x 2 soldados                     valor -0.00 | ótimo: atac  31% def  31% emp  38% | chute: atac  38% def  52% emp  10% | lanceiro 1.23, arqueiro 0.77, escudeiro 2.00
+colinas: 1 sold+1 cav x 1 sold+1 cav                 valor -0.00 | ótimo: atac   0% def   0% emp 100% | chute: atac  33% def  58% emp   9% | lanceiro 2.00, cavalaria 2.00
+colinas: 3 soldados x 1 sold+1 cav                   valor -0.14 | ótimo: atac  35% def  49% emp  16% | chute: atac  16% def  78% emp   6% | lanceiro 1.73, arqueiro 0.59, escudeiro 1.68, cavalaria 0.43, batedores 0.57
+colinas: 2 sold+1 cav x 2 soldados                   valor +1.00 | ótimo: atac 100% def   0% emp   0% | chute: atac  84% def  13% emp   3% | lanceiro 1.00, cavalaria 0.00, batedores 1.00, escudeiro 1.00, arqueiro 2.00
+colinas: 1 soldado x 3 soldados                      valor -1.00 | ótimo: atac   0% def 100% emp   0% | chute: atac   2% def  96% emp   2% | lanceiro 4.00
+colinas: 4 soldados x 2 soldados                     valor +1.00 | ótimo: atac 100% def   0% emp   0% | chute: atac  74% def  21% emp   5% | lanceiro 2.00, escudeiro 2.00, arqueiro 2.00
+colinas: 2 cavaleiros x 3 soldados                   valor +1.00 | ótimo: atac 100% def   0% emp   0% | chute: atac  75% def  20% emp   5% | cavalaria 1.00, batedores 1.00, lanceiro 2.00, escudeiro 0.50, arqueiro 0.50
+floresta: 2 soldados x 2 soldados                    valor -0.00 | ótimo: atac  32% def  32% emp  36% | chute: atac  46% def  44% emp   9% | lanceiro 1.26, arqueiro 0.75, escudeiro 1.99
+floresta: 1 sold+1 cav x 1 sold+1 cav                valor +0.00 | ótimo: atac   0% def   0% emp 100% | chute: atac  43% def  41% emp  16% | lanceiro 2.00, cavalaria 2.00, batedores 0.00, escudeiro 0.00
+floresta: 3 soldados x 1 sold+1 cav                  valor -0.14 | ótimo: atac  35% def  49% emp  16% | chute: atac  30% def  63% emp   7% | lanceiro 1.72, arqueiro 0.30, escudeiro 1.98, cavalaria 0.43, batedores 0.57
+floresta: 2 sold+1 cav x 2 soldados                  valor +1.00 | ótimo: atac 100% def   0% emp   0% | chute: atac  86% def  11% emp   4% | lanceiro 4.00, cavalaria 1.00
+floresta: 1 soldado x 3 soldados                     valor -1.00 | ótimo: atac   0% def 100% emp   0% | chute: atac   6% def  91% emp   3% | lanceiro 4.00
+floresta: 4 soldados x 2 soldados                    valor +1.00 | ótimo: atac 100% def   0% emp   0% | chute: atac  81% def  15% emp   4% | lanceiro 6.00
+floresta: 2 cavaleiros x 3 soldados                  valor +1.00 | ótimo: atac 100% def   0% emp   0% | chute: atac  77% def  18% emp   5% | cavalaria 1.00, batedores 1.00, lanceiro 2.00, escudeiro 1.00
+montanha: 2 soldados x 2 soldados                    valor -0.00 | ótimo: atac  31% def  31% emp  38% | chute: atac  39% def  54% emp   8% | lanceiro 1.23, arqueiro 0.77, escudeiro 2.00
+montanha: 1 sold+1 cav x 1 sold+1 cav                valor -0.00 | ótimo: atac   0% def   0% emp 100% | chute: atac  23% def  76% emp   1% | lanceiro 2.00, cavalaria 2.00
+montanha: 3 soldados x 1 sold+1 cav                  valor -0.14 | ótimo: atac  35% def  49% emp  16% | chute: atac  17% def  80% emp   4% | lanceiro 1.73, arqueiro 0.59, escudeiro 1.68, cavalaria 0.43, batedores 0.57
+montanha: 2 sold+1 cav x 2 soldados                  valor +1.00 | ótimo: atac 100% def   0% emp   0% | chute: atac  91% def   6% emp   3% | lanceiro 1.00, cavalaria 0.00, batedores 1.00, escudeiro 1.00, arqueiro 2.00
+montanha: 1 soldado x 3 soldados                     valor -1.00 | ótimo: atac   0% def 100% emp   0% | chute: atac   1% def  98% emp   1% | lanceiro 4.00
+montanha: 4 soldados x 2 soldados                    valor +1.00 | ótimo: atac 100% def   0% emp   0% | chute: atac  79% def  16% emp   5% | lanceiro 2.00, escudeiro 2.00, arqueiro 2.00
+montanha: 2 cavaleiros x 3 soldados                  valor +1.00 | ótimo: atac 100% def   0% emp   0% | chute: atac  74% def  20% emp   6% | cavalaria 1.00, batedores 1.00, lanceiro 2.00, escudeiro 0.50, arqueiro 0.50
+rio: 2 soldados x 2 soldados                         valor -0.20 | ótimo: atac  32% def  52% emp  16% | chute: atac  36% def  56% emp   8% | lanceiro 1.40, arqueiro 0.81, escudeiro 1.79
+rio: 1 sold+1 cav x 1 sold+1 cav                     valor -0.33 | ótimo: atac  11% def  45% emp  44% | chute: atac  32% def  60% emp   8% | lanceiro 0.81, cavalaria 1.51, batedores 0.49, escudeiro 0.00, arqueiro 1.19
+rio: 3 soldados x 1 sold+1 cav                       valor -0.00 | ótimo: atac  30% def  31% emp  39% | chute: atac  23% def  71% emp   6% | lanceiro 1.51, arqueiro 0.84, escudeiro 1.65, cavalaria 0.50, batedores 0.50
+rio: 2 sold+1 cav x 2 soldados                       valor +1.00 | ótimo: atac 100% def   0% emp   0% | chute: atac  79% def  16% emp   5% | lanceiro 2.00, cavalaria 0.00, batedores 1.00, escudeiro 1.00, arqueiro 1.00
+rio: 1 soldado x 3 soldados                          valor -1.00 | ótimo: atac   0% def 100% emp   0% | chute: atac   2% def  97% emp   2% | lanceiro 4.00
+rio: 4 soldados x 2 soldados                         valor +1.00 | ótimo: atac 100% def   0% emp   0% | chute: atac  73% def  22% emp   4% | lanceiro 3.00, escudeiro 1.00, arqueiro 2.00
+rio: 2 cavaleiros x 3 soldados                       valor +1.00 | ótimo: atac 100% def   0% emp   0% | chute: atac  62% def  30% emp   8% | cavalaria 1.00, batedores 1.00, lanceiro 1.70, escudeiro 1.30
+pantano: 2 soldados x 2 soldados                     valor -0.33 | ótimo: atac  33% def  66% emp   1% | chute: atac  34% def  58% emp   7% | lanceiro 1.10, arqueiro 1.17, escudeiro 1.73
+pantano: 1 sold+1 cav x 1 sold+1 cav                 valor -0.67 | ótimo: atac   4% def  70% emp  26% | chute: atac  32% def  61% emp   7% | lanceiro 1.16, cavalaria 1.23, batedores 0.77, arqueiro 0.72, escudeiro 0.11
+pantano: 3 soldados x 1 sold+1 cav                   valor +0.00 | ótimo: atac  34% def  33% emp  33% | chute: atac  29% def  64% emp   7% | lanceiro 1.33, escudeiro 1.65, arqueiro 1.02, cavalaria 0.50, batedores 0.50
+pantano: 2 sold+1 cav x 2 soldados                   valor +1.00 | ótimo: atac 100% def   0% emp   0% | chute: atac  74% def  21% emp   5% | lanceiro 1.50, cavalaria 0.00, batedores 1.00, escudeiro 1.00, arqueiro 1.50
+pantano: 1 soldado x 3 soldados                      valor -1.00 | ótimo: atac   0% def 100% emp   0% | chute: atac   2% def  97% emp   1% | lanceiro 4.00
+pantano: 4 soldados x 2 soldados                     valor +1.00 | ótimo: atac 100% def   0% emp   0% | chute: atac  73% def  22% emp   5% | lanceiro 3.00, escudeiro 1.00, arqueiro 2.00
+pantano: 2 cavaleiros x 3 soldados                   valor -0.00 | ótimo: atac  50% def  50% emp   1% | chute: atac  49% def  44% emp   8% | cavalaria 0.99, batedores 1.01, lanceiro 1.20, escudeiro 0.85, arqueiro 0.95
+deserto: 2 soldados x 2 soldados                     valor -0.00 | ótimo: atac  33% def  33% emp  33% | chute: atac  42% def  48% emp  10% | lanceiro 1.24, arqueiro 0.77, escudeiro 1.99
+deserto: 1 sold+1 cav x 1 sold+1 cav                 valor -0.00 | ótimo: atac   0% def   0% emp 100% | chute: atac  37% def  51% emp  12% | lanceiro 1.71, cavalaria 1.71, batedores 0.29, arqueiro 0.29, escudeiro 0.00
+deserto: 3 soldados x 1 sold+1 cav                   valor -0.14 | ótimo: atac  35% def  49% emp  16% | chute: atac  23% def  70% emp   6% | lanceiro 1.72, arqueiro 0.30, escudeiro 1.98, cavalaria 0.43, batedores 0.57
+deserto: 2 sold+1 cav x 2 soldados                   valor +1.00 | ótimo: atac 100% def   0% emp   0% | chute: atac  84% def  12% emp   4% | lanceiro 4.00, cavalaria 1.00
+deserto: 1 soldado x 3 soldados                      valor -1.00 | ótimo: atac   0% def 100% emp   0% | chute: atac   4% def  94% emp   2% | lanceiro 4.00
+deserto: 4 soldados x 2 soldados                     valor +1.00 | ótimo: atac 100% def   0% emp   0% | chute: atac  78% def  17% emp   5% | lanceiro 3.00, escudeiro 1.00, arqueiro 2.00
+deserto: 2 cavaleiros x 3 soldados                   valor +1.00 | ótimo: atac 100% def   0% emp   0% | chute: atac  82% def  14% emp   4% | cavalaria 0.00, batedores 2.00, lanceiro 3.00
+castelo: 2 soldados x 2 soldados                     valor -0.33 | ótimo: atac  33% def  66% emp   0% | chute: atac  38% def  54% emp   8% | lanceiro 1.42, arqueiro 0.90, escudeiro 1.68
+castelo: 1 sold+1 cav x 1 sold+1 cav                 valor -0.60 | ótimo: atac   4% def  64% emp  32% | chute: atac  33% def  58% emp   9% | lanceiro 0.90, cavalaria 1.40, batedores 0.60, arqueiro 0.89, escudeiro 0.21
+castelo: 3 soldados x 1 sold+1 cav                   valor -0.11 | ótimo: atac  35% def  46% emp  20% | chute: atac  20% def  73% emp   7% | lanceiro 1.45, arqueiro 0.74, escudeiro 1.81, cavalaria 0.44, batedores 0.56
+castelo: 2 sold+1 cav x 2 soldados                   valor +1.00 | ótimo: atac 100% def   0% emp   0% | chute: atac  82% def  14% emp   4% | lanceiro 1.50, cavalaria 0.00, batedores 1.00, escudeiro 1.00, arqueiro 1.50
+castelo: 1 soldado x 3 soldados                      valor -1.00 | ótimo: atac   0% def 100% emp   0% | chute: atac   3% def  96% emp   2% | lanceiro 4.00
+castelo: 4 soldados x 2 soldados                     valor +1.00 | ótimo: atac 100% def   0% emp   0% | chute: atac  75% def  19% emp   5% | lanceiro 3.00, escudeiro 1.00, arqueiro 2.00
+castelo: 2 cavaleiros x 3 soldados                   valor +0.33 | ótimo: atac  44% def  11% emp  45% | chute: atac  67% def  26% emp   7% | cavalaria 0.67, batedores 1.33, lanceiro 1.99, escudeiro 0.84, arqueiro 0.17
+fortaleza: 2 soldados x 2 soldados                   valor -0.33 | ótimo: atac  33% def  66% emp   0% | chute: atac  33% def  60% emp   7% | lanceiro 1.42, arqueiro 0.90, escudeiro 1.68
+fortaleza: 1 sold+1 cav x 1 sold+1 cav               valor -0.60 | ótimo: atac   4% def  64% emp  32% | chute: atac  29% def  64% emp   7% | lanceiro 0.90, cavalaria 1.40, batedores 0.60, arqueiro 0.89, escudeiro 0.21
+fortaleza: 3 soldados x 1 sold+1 cav                 valor -0.11 | ótimo: atac  35% def  46% emp  20% | chute: atac  22% def  71% emp   7% | lanceiro 1.45, arqueiro 0.74, escudeiro 1.81, cavalaria 0.44, batedores 0.56
+fortaleza: 2 sold+1 cav x 2 soldados                 valor +1.00 | ótimo: atac 100% def   0% emp   0% | chute: atac  74% def  21% emp   5% | lanceiro 1.50, cavalaria 0.00, batedores 1.00, escudeiro 1.00, arqueiro 1.50
+fortaleza: 1 soldado x 3 soldados                    valor -1.00 | ótimo: atac   0% def 100% emp   0% | chute: atac   1% def  97% emp   1% | lanceiro 4.00
+fortaleza: 4 soldados x 2 soldados                   valor +1.00 | ótimo: atac 100% def   0% emp   0% | chute: atac  71% def  24% emp   5% | lanceiro 3.00, escudeiro 1.00, arqueiro 2.00
+fortaleza: 2 cavaleiros x 3 soldados                 valor +0.33 | ótimo: atac  44% def  11% emp  45% | chute: atac  52% def  40% emp   8% | cavalaria 0.67, batedores 1.33, lanceiro 1.99, escudeiro 0.84, arqueiro 0.17
+castelo: 2 sold+1 cerco x 2 soldados                 valor +1.00 | ótimo: atac 100% def   0% emp   0% | chute: atac  73% def  22% emp   6% | lanceiro 4.00
+castelo: 2 sold+1 cerco x 3 soldados                 valor +1.00 | ótimo: atac 100% def   0% emp   0% | chute: atac  46% def  45% emp   9% | lanceiro 0.00, escudeiro 2.00, arqueiro 3.00
+fortaleza: 1 sold+1 cerco x 3 soldados               valor -1.00 | ótimo: atac   0% def 100% emp   0% | chute: atac  33% def  59% emp   8% | lanceiro 1.00, arqueiro 2.00, escudeiro 1.00
+planicie: 2 sold+1 cerco x 2 soldados (cerco vale 0) valor -0.00 | ótimo: atac  29% def  29% emp  41% | chute: atac  45% def  45% emp  10% | lanceiro 1.20, arqueiro 0.80, escudeiro 2.00
+planicie: Marcha +1 x Defesa +1 (2 sold x 2 sold)    valor -0.00 | ótimo: atac  29% def  29% emp  41% | chute: atac  46% def  44% emp  10% | lanceiro 1.20, arqueiro 0.80, escudeiro 2.00
+planicie: Marcha +1 x sem ordem (2 sold x 2 sold)    valor +0.27 | ótimo: atac  59% def  32% emp   9% | chute: atac  52% def  40% emp   7% | lanceiro 1.33, arqueiro 0.97, escudeiro 1.70
+planicie: Marcha -1 x Defesa +2 (2 sold x 2 sold)    valor -0.50 | ótimo: atac  13% def  63% emp  25% | chute: atac  31% def  60% emp   9% | lanceiro 1.49, arqueiro 1.25, escudeiro 1.25
+rio: 2 sold + apoio de navio x 2 sold                valor +1.00 | ótimo: atac 100% def   0% emp   0% | chute: atac  50% def  41% emp   8% | lanceiro 1.73, flechas 1.00, escudeiro 2.12, arqueiro 0.15
+fortaleza: 2 sold+1 cerco x 2 sold + guarnição 2     valor +1.00 | ótimo: atac 100% def   0% emp   0% | chute: atac  42% def  49% emp   9% | lanceiro 3.41, arqueiro 0.59, escudeiro 0.00
+fortaleza: 3 soldados x 2 sold + guarnição 2         valor -1.00 | ótimo: atac   0% def 100% emp   0% | chute: atac   6% def  91% emp   3% | lanceiro 2.00, arqueiro 2.00, escudeiro 1.00
 planicie: dragão (força 2) x 2 soldados              valor +0.00 | ótimo: atac   0% def   0% emp 100% | chute: atac  97% def   0% emp   3% | lanceiro 0.00, arqueiro 2.00
-planicie: 2 sold + 1 apoio x 3 soldados              valor -0.33 | ótimo: atac  12% def  45% emp  43% | chute: atac  37% def  56% emp   8% | lanceiro 1.68, arqueiro 1.45, escudeiro 2.87
-mar: 2 navios x 2 navios                             valor +0.00 | ótimo: atac  40% def  40% emp  20% | chute: atac  47% def  46% emp   7% | abordagem 0.82, flechas 1.59, ariete 1.60
-mar: 3 navios x 1 navio                              valor +1.00 | ótimo: atac 100% def   0% emp   0% | chute: atac  85% def  13% emp   2% | abordagem 4.00
-planicie: cartas 3⚔ x 0 (2 sold x 2 sold)            valor +0.34 | ótimo: atac  67% def  33% emp   0% | chute: atac  61% def  32% emp   7% | lanceiro 1.44, arqueiro 1.24, escudeiro 1.33
-planicie: cartas 4 x 1▲▲ (1sold+1cav x 1sold+1cav)   valor +0.50 | ótimo: atac  62% def  12% emp  25% | chute: atac  55% def  35% emp  11% | lanceiro 1.50, cavalaria 1.13, batedores 0.87, escudeiro 0.13, arqueiro 0.38
+planicie: 2 sold + 1 apoio x 3 soldados              valor -0.33 | ótimo: atac  12% def  45% emp  43% | chute: atac  36% def  57% emp   7% | lanceiro 1.50, arqueiro 1.67, escudeiro 2.83
+mar: 2 navios x 2 navios                             valor -0.00 | ótimo: atac  34% def  34% emp  33% | chute: atac  45% def  45% emp  10% | abordagem 0.68, flechas 1.33, ariete 1.99
+mar: 3 navios x 1 navio                              valor +1.00 | ótimo: atac 100% def   0% emp   0% | chute: atac  89% def   7% emp   4% | abordagem 4.00
+planicie: cartas 3⚔ x 0 (2 sold x 2 sold)            valor +0.60 | ótimo: atac  64% def   4% emp  32% | chute: atac  63% def  28% emp   8% | lanceiro 1.50, escudeiro 1.59, arqueiro 0.91
+planicie: cartas 4 x 1▲▲ (1sold+1cav x 1sold+1cav)   valor +0.60 | ótimo: atac  64% def   4% emp  32% | chute: atac  53% def  36% emp  10% | lanceiro 1.40, cavalaria 1.30, batedores 0.70, escudeiro 0.10, arqueiro 0.50
