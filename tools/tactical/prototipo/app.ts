@@ -122,10 +122,20 @@ function buildUnits(side: Side): Unit[] {
     if (siegeCounts) for (let i = 0; i < c.siege; i++) add("siege-engine", { row: "tras" });
     if (c.dragon > 0) add("dragon", { strength: c.dragon });
     for (let i = 0; i < c.supportFootmen; i++) add("footman", { support: true });
-    for (let i = 0; i < c.supportShips; i++) add("ship", { support: true, row: "tras" });
+    // navios de apoio NÃO entram no campo de terra (31/out: barco no meio do rio ficava estranho):
+    // viram um bônus pronto, igual ao da ordem (ver shipBonus)
     if (side == "defender" && c.garrison > 0) add("garrison", { strength: c.garrison, lane: 1, row: "tras", locked: true });
   }
   return out;
+}
+
+/** Navios apoiando de fora (batalha de terra): +1 cada, como um ponto de ordem (Marcha +1). No tabuleiro, +1 de força cada. */
+function shipBonus(side: Side): number {
+  return isSea() ? 0 : config[side].supportShips ?? 0;
+}
+/** ordem + navios de apoio: o bônus pronto que entra na luta das faixas */
+function orderOf(side: Side): number {
+  return (config[side].order ?? 0) + shipBonus(side);
 }
 
 function piecesOf(side: Side): Piece[] {
@@ -144,8 +154,8 @@ function scenario(): Scenario {
     defender: piecesOf("defender"),
     attackerCard: config.attacker.card,
     defenderCard: config.defender.card,
-    attackerOrder: config.attacker.order,
-    defenderOrder: config.defender.order
+    attackerOrder: orderOf("attacker"),
+    defenderOrder: orderOf("defender")
   };
 }
 
@@ -464,7 +474,7 @@ function renderCustom(): void {
         <summary>Apoio, carta e ordem</summary>
         <div class="steps-list">
           ${!sea ? step(side, "supportFootmen", "Soldados de apoio", tokenSvg(h, "escudeiro", 26), "vêm de áreas vizinhas") : ""}
-          ${!sea ? step(side, "supportShips", "Navios de apoio", tokenSvg(h, "flechas", 26), "atiram do litoral") : ""}
+          ${!sea ? step(side, "supportShips", "Navios de apoio", tokenSvg(h, "flechas", 26), "+1 cada, como uma ordem (não entram no campo)") : ""}
           ${step(side, "card.strength", "Carta de Casa: força", "<b class='ico'>4</b>")}
           ${step(side, "card.swords", "Carta: espadas", "<b class='ico'>⚔</b>")}
           ${step(side, "card.towers", "Carta: torres", "<b class='ico'>▲</b>")}
@@ -839,6 +849,14 @@ function endDrag(e: PointerEvent): void {
   dragging = null;
   d.ghost.remove();
   if (!d.moved) {
+    // toque numa peça do campo com OUTRA peça escolhida: põe a escolhida ali (não troca a seleção sem querer)
+    if (d.fromCanvas && selected && selected != d.id) {
+      const s = slotAt(canvasPoint(e.clientX, e.clientY));
+      if (s) {
+        placeUnit(selected, s.lane, s.row);
+        return;
+      }
+    }
     // foi só um toque: seleciona
     selected = d.id;
     renderPanel();
@@ -861,6 +879,13 @@ function canvasDown(e: PointerEvent): void {
   if (!p) return;
   const hit = placedHit.find((t) => p[0] >= t.x && p[0] <= t.x + t.w && p[1] >= t.y && p[1] <= t.y + t.h);
   if (hit) {
+    const hu = units[placingSide].find((x) => x.id == hit.id);
+    const s = slotAt(p);
+    // peça fixa (ou do outro lado) embaixo do toque, com outra peça escolhida: põe a escolhida no lugar
+    if ((!hu || hu.locked) && selected && selected != hit.id && s) {
+      placeUnit(selected, s.lane, s.row);
+      return;
+    }
     startDrag(e, hit.id, true);
     return;
   }
@@ -1081,8 +1106,8 @@ function finishReaction(): void {
 function resultNow(): TacticalBattleResult {
   return resolveTacticalBattle({
     field: config.field,
-    attacker: { squads: toSquads(units.attacker), card: config.attacker.card, orderBonus: config.attacker.order, tactic: tactics.attacker },
-    defender: { squads: toSquads(units.defender), card: config.defender.card, orderBonus: config.defender.order, tactic: tactics.defender },
+    attacker: { squads: toSquads(units.attacker), card: config.attacker.card, orderBonus: orderOf("attacker"), tactic: tactics.attacker },
+    defender: { squads: toSquads(units.defender), card: config.defender.card, orderBonus: orderOf("defender"), tactic: tactics.defender },
     bladeHolder: bladeHolder()
   });
 }
@@ -1108,14 +1133,14 @@ function bestChangeHtml(me: Side): string {
   const n = units[me].findIndex((u) => u.id == ch.id) + 1;
   const res = resolveTacticalBattle({
     field: config.field,
-    attacker: { squads: me == "attacker" ? best : base.attacker, card: config.attacker.card, orderBonus: config.attacker.order, tactic: tactics.attacker },
-    defender: { squads: me == "defender" ? best : base.defender, card: config.defender.card, orderBonus: config.defender.order, tactic: tactics.defender },
+    attacker: { squads: me == "attacker" ? best : base.attacker, card: config.attacker.card, orderBonus: orderOf("attacker"), tactic: tactics.attacker },
+    defender: { squads: me == "defender" ? best : base.defender, card: config.defender.card, orderBonus: orderOf("defender"), tactic: tactics.defender },
     bladeHolder: bladeHolder()
   });
   const now = resolveTacticalBattle({
     field: config.field,
-    attacker: { squads: base.attacker, card: config.attacker.card, orderBonus: config.attacker.order, tactic: tactics.attacker },
-    defender: { squads: base.defender, card: config.defender.card, orderBonus: config.defender.order, tactic: tactics.defender },
+    attacker: { squads: base.attacker, card: config.attacker.card, orderBonus: orderOf("attacker"), tactic: tactics.attacker },
+    defender: { squads: base.defender, card: config.defender.card, orderBonus: orderOf("defender"), tactic: tactics.defender },
     bladeHolder: bladeHolder()
   });
   if (now.winner == res.winner && now.bonus == res.bonus) return `<p class="react-tip">💡 Dica: nenhuma troca muda o resultado. Pode manter.</p>`;
@@ -1142,7 +1167,7 @@ function reactInfoHtml(): string {
  * Empate: no jogo decide a trilha dos Feudos (Lâmina de Aço Valiriano); aqui fica com quem defende.
  */
 interface BoardBattle {
-  totals: Record<Side, { tropas: number; carta: number; ordem: number; mini: number; total: number }>;
+  totals: Record<Side, { tropas: number; carta: number; ordem: number; navios: number; mini: number; total: number }>;
   winner: Side;
   tie: boolean;
   swords: number;
@@ -1156,8 +1181,9 @@ function boardBattle(res: TacticalBattleResult, seed: number): BoardBattle {
     const tropas = toSquads(units[side]).reduce((a, q) => a + boardStrength(q, side, config.field), 0);
     const carta = config[side].card?.strength ?? 0;
     const ordem = config[side].order ?? 0;
+    const navios = shipBonus(side);
     const mini = res.winner == side ? res.bonus : 0;
-    return { tropas, carta, ordem, mini, total: tropas + carta + ordem + mini };
+    return { tropas, carta, ordem, navios, mini, total: tropas + carta + ordem + navios + mini };
   };
   const totals = { attacker: tot("attacker"), defender: tot("defender") };
   const tie = totals.attacker.total == totals.defender.total;
@@ -1190,6 +1216,7 @@ function boardHtml(b: BoardBattle): string {
     const t = b.totals[side];
     const parts = [`tropas ${t.tropas}`, `carta ${t.carta}`];
     if (t.ordem) parts.push(`ordem ${t.ordem > 0 ? "+" : ""}${t.ordem}`);
+    if (t.navios) parts.push(`navios de apoio +${t.navios}`);
     if (t.mini) parts.push(`bônus da batalha +${t.mini}`);
     return `<li><b style="color:${houseOf(side).color}">${houseOf(side).name}</b>: ${parts.join(" + ")} = <b>${t.total}</b></li>`;
   };
@@ -1220,8 +1247,8 @@ function runBattle(): void {
   phase = "battle";
   lastResult = resolveTacticalBattle({
     field: config.field,
-    attacker: { squads: toSquads(units.attacker), card: config.attacker.card, orderBonus: config.attacker.order, tactic: tactics.attacker },
-    defender: { squads: toSquads(units.defender), card: config.defender.card, orderBonus: config.defender.order, tactic: tactics.defender },
+    attacker: { squads: toSquads(units.attacker), card: config.attacker.card, orderBonus: orderOf("attacker"), tactic: tactics.attacker },
+    defender: { squads: toSquads(units.defender), card: config.defender.card, orderBonus: orderOf("defender"), tactic: tactics.defender },
     bladeHolder: bladeHolder()
   });
   simSeed = Math.floor(Math.random() * 1e9);

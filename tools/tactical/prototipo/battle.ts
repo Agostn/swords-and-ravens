@@ -224,7 +224,7 @@ function duelDist(a: Man, b: Man): number {
  * Resultado da batalha do TABULEIRO (regras do jogo original): quem perdeu e quais peças dele
  * morreram (espadas do vencedor − torres do perdedor). A animação segue isso:
  * A batalha do tabuleiro é o ÚLTIMO cálculo e acontece ANTES da animação (31/out): a animação já sabe tudo.
- * Peça destruída = o grupo inteiro de bonecos morre; peça que sobrevive perde até metade (+1) dos bonecos
+ * Peça destruída = o grupo inteiro de bonecos morre; quem perdeu fica com 1 boneco por esquadrão; quem venceu perde metade
  * (só visual) e o resto foge; o vencedor não perde peça. Dragão (1 figura) só morre se for destruído.
  */
 export interface BoardOutcome {
@@ -341,8 +341,8 @@ export function createSim(field: FieldType, res: TacticalBattleResult, squads: R
   if (outcome) {
     // Quem morre (só visual, 31/out: "pelo menos metade de cada esquadrão"):
     //  - peça destruída no tabuleiro: o grupo inteiro;
-    //  - todo esquadrão que lutou perde pelo menos metade dos bonecos, conforme a SUA faixa (o que a barra
-    //    mostra): quem venceu a faixa perde metade, quem perdeu a faixa metade + 1, empate metade cada;
+    //  - quem perdeu a batalha: cada esquadrão que sobrevive fica com 1 boneco;
+    //  - quem venceu: cada esquadrão que lutou perde metade (metade + 1 se perdeu a faixa);
     //  - figura única (dragão, navio, catapulta) só morre se a peça foi destruída.
     const dying: Man[] = [];
     const bySquad = new Map<string, Man[]>();
@@ -351,6 +351,8 @@ export function createSim(field: FieldType, res: TacticalBattleResult, squads: R
       const side = list[0].side;
       const lw = res.lanes[list[0].lane].winner;
       if (side == outcome.loser && outcome.destroyed.includes(sid)) dying.push(...list);
+      // quem PERDEU a batalha: cada esquadrão que sobrevive fica com 1 boneco só (31/out: "tem que dar a sensação")
+      else if (side == outcome.loser && list.length > 1) dying.push(...[...list].sort(() => rand() - 0.5).slice(0, list.length - 1));
       else if (list.length > 1 && lw != null) {
         const half = Math.floor(list.length / 2);
         const lostLane = lw != "tie" && lw != side;

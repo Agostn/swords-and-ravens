@@ -235,8 +235,9 @@ Stark + mini-mapa jogado bem pelos dois), em 6 tipos de exército × 3 campos ×
 
 ## Animação: luta mais longa e mais mortes (31/out)
 - A luta dura mais (fuga aos 10,4 s em vez de 7,4 s; fim aos 13,5 s).
-- **Só visual:** todo esquadrão que lutou perde pelo menos metade dos bonecos (o vencedor metade; quem perdeu metade
-  ou um a mais, e sempre sobra alguém para fugir). Peça destruída no tabuleiro continua morrendo inteira.
+- **Só visual:** quem PERDEU a batalha do tabuleiro fica com 1 boneco só em cada esquadrão (foge sozinho); a peça
+  morta pelas espadas ⚔ morre inteira (qualquer tipo de tropa). Quem venceu perde metade dos bonecos dos esquadrões
+  que lutaram (metade + 1 onde perdeu a faixa, sempre sobra alguém).
   Figura única (dragão, navio, catapulta) só morre se a peça foi destruída. A conta e o tabuleiro não mudam.
 - Cada Casa tem armadura própria (`houseStyle.ts`): Stark cinza com pele e escudo redondo; Lannister dourado com
   capa carmesim e juba de leão; Baratheon aço escuro e amarelo, cavaleiro com galhadas; Greyjoy ferro escuro,
@@ -294,3 +295,14 @@ o outro vai fazer, mas o que mais conta é escolher a ordem que combina com as S
   importam as espadas e as torres (quem morre). Um esquadrão só morre inteiro na animação se a peça morreu no
   tabuleiro; os outros perdem bonecos, mas sempre sobra pelo menos 1. No fim aparece "X VENCE A BATALHA" com quantas
   peças morreram, e o resultado de cada faixa fica numa etiqueta pequena.
+
+## Navios só no mar (31/out)
+- Em batalha de terra (inclusive no rio) **os navios não entram no campo**. Barco no meio do rio ao lado de
+  cavaleiro ficava estranho.
+- Navio apoiando de fora vira um **bônus pronto, do mesmo tipo da ordem**: cada navio de apoio vale +1, como a
+  Marcha +1 (+6% na luta das faixas). Na batalha do tabuleiro ele soma +1 de força, como no jogo original
+  ("navios de apoio +N" na conta).
+- Na batalha naval (campo Mar) os navios continuam sendo as peças do campo.
+- O motor ainda aceita navio de apoio como peça em terra (função "flechas"); quem decide não colocar é a tela.
+  Quando ligar no jogo de verdade, fazer o mesmo: navio de apoio em terra entra como ponto de ordem.
+
