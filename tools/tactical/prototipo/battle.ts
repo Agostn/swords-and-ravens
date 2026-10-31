@@ -75,6 +75,8 @@ interface Man {
   gy: number;
   /** deslocamento vertical na dupla (quem entra 2 contra 1) */
   yoff: number;
+  /** tem um lugar marcado na linha de duplas (gx, gy); senão vai direto no inimigo */
+  spot: boolean;
   reach: number;
   dir: number;
   speed: number;
@@ -223,6 +225,7 @@ export function createSim(field: FieldType, res: TacticalBattleResult, squads: R
           gx: x + jx,
           gy: y + jy,
           yoff: 0,
+          spot: false,
           reach: REACH[sq.role] ?? 20,
           dir: side == "attacker" ? -Math.PI / 2 : Math.PI / 2,
           speed: kind == "horse" ? 92 : kind == "dragon" ? 130 : kind == "ship" ? 40 : kind == "foot" ? 50 + rand() * 8 : 0,
@@ -315,6 +318,8 @@ function pairUp(sim: Sim, lane: Lane): void {
       a.gy = sy;
       d.gx = sx + dd / 2;
       d.gy = sy;
+      a.spot = true;
+      d.spot = true;
     }
     const extra = A.length > D.length ? A.slice(pairs) : D.slice(pairs);
     extra.forEach((m, i) => joinFight(sim, m, i));
@@ -341,6 +346,7 @@ function joinFight(sim: Sim, m: Man, i = 0): void {
     }
   }
   m.foe = best;
+  m.spot = false; // sem lugar marcado: vai direto no inimigo
   const crowd = sim.men.filter((x) => x.foe === best && x !== m && !x.dead && x.side == m.side).length;
   m.yoff = crowd == 0 ? 0 : (crowd % 2 ? 14 : -14) * Math.ceil(crowd / 2) + (i % 2 ? 1 : -1);
   if (!best.foe || best.foe.dead) best.foe = m;
@@ -570,10 +576,12 @@ export function stepSim(sim: Sim, dt: number): void {
     const sway = Math.sin(t * 3 + m.phase) * 2; // fica se mexendo, não parado como estátua
     let tx: number;
     let ty: number;
+    // o lugar marcado só vale enquanto a dupla também vem para ele; se não vier, vai direto no inimigo
+    if (m.spot && (foe.foe !== m || !foe.spot || (t > T_FIGHT && Math.hypot(m.gx - m.x, m.gy - m.y) < 4))) m.spot = false;
     if (!m.engaged && !near) {
       // ainda indo: primeiro para o lugar da dupla; quem entra depois vai direto no inimigo
-      tx = foe.foe === m && m.yoff == 0 ? m.gx : foe.x + s * dd;
-      ty = foe.foe === m && m.yoff == 0 ? m.gy : foe.y + m.yoff;
+      tx = m.spot ? m.gx : foe.x + s * dd;
+      ty = m.spot ? m.gy : foe.y + m.yoff;
     } else {
       tx = foe.x + s * (dd - lunge) + sway * 0.5;
       ty = foe.y + m.yoff;
