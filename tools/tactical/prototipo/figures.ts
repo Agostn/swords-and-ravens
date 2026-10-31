@@ -1169,6 +1169,32 @@ export function drawFallen(ctx: CanvasRenderingContext2D, x: number, y: number, 
     ctx.restore();
     return;
   }
+  if (p.kind == "siege") {
+    // máquina de cerco destruída: tábuas quebradas e a roda caída
+    const tt = Math.min(1, age / 0.4);
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.scale(s, s);
+    ell(ctx, 0, 1, 18, 4, "rgba(0,0,0,.28)");
+    const planks: [number, number, number, number][] = [[-14, -2, 16, 0.3], [-4, -5, 18, -0.5], [4, 0, 14, 0.9], [-10, 2, 12, -0.2], [8, -6, 10, 1.4]];
+    planks.forEach(([dx, dy, len, ang], i) => {
+      ctx.save();
+      ctx.translate(dx * tt, dy * tt);
+      ctx.rotate(ang * tt);
+      ctx.fillStyle = i % 2 ? "#6a4020" : "#8c5a2c";
+      ctx.fillRect(-len / 2, -1.5, len, 3);
+      ctx.fillStyle = "#3a2410";
+      ctx.fillRect(-len / 2, 1, len, 1);
+      ctx.restore();
+    });
+    ctx.strokeStyle = "#3a2410";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.ellipse(10, 2, 5, 2.5, 0, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+    return;
+  }
   if (p.kind == "ship") {
     // afunda: inclina e desce; o que fica abaixo da linha da água some; depois só destroços boiando
     const got = spriteOf(p, 0);
@@ -1242,8 +1268,7 @@ export function drawFallen(ctx: CanvasRenderingContext2D, x: number, y: number, 
   } else if (p.kind == "horse") {
     ctx.scale(1, 0.6);
     drawHorse(ctx, { ...p, walk: 0, atk: 0, fight: true });
-  } else if (p.kind == "siege") drawSiege(ctx, { ...p, atk: 0 });
-  else drawTower(ctx, p);
+  } else drawTower(ctx, p);
   ctx.restore();
 }
 

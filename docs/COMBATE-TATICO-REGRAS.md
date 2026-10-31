@@ -348,3 +348,15 @@ o outro vai fazer, mas o que mais conta é escolher a ordem que combina com as S
   alto, brasão grande (13 × 13 pixels, desenho nosso: lobo, leão, cervo, lula, rosa, sol, lua e falcão, dragão),
   duas faixas embaixo e ponta com franja, nas cores de cada Casa. Não copia a imagem de referência (é arte de
   outra pessoa); sem os lemas.
+
+## Máquina de cerco e guarnição: igual ao jogo (31/out, conferido no código do jogo)
+- **Máquina de cerco** (`unitTypes.ts`): "+4 de força ao atacar (ou apoiar um ataque contra) área com castelo
+  ou fortaleza; senão, 0. Não pode recuar quando perde: é destruída."
+  - Atacando castelo/fortaleza: entra na Mesa (2 catapultas com operadores).
+  - **Defendendo**, ou atacando campo sem castelo: vale 0 e não entra na Mesa. Mas, se o lado dela perder, ela é
+    destruída mesmo assim (a tela de montar agora deixa pôr máquina de cerco nos dois lados).
+  - Quando perde: os operadores largam a máquina e fogem, e a máquina vira tábuas quebradas.
+- **Guarnição** (`CombatGameState.getGarrisonCombatStrength`): é a ficha da área (castelos de origem das Casas),
+  e só soma para **quem defende**. É independente das máquinas de cerco: o defensor continua com a guarnição
+  tendo ou não máquina de cerco.
+- Estandarte Lannister refeito (leão rampante com juba, faixa e franja douradas), mais perto da referência.

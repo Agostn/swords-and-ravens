@@ -82,9 +82,9 @@ export function glyphRows(g: Glyph): string[] {
  * Cores do estandarte de cada Casa (31/out, estilo dos estandartes em pixel art: pano comprido pendurado numa
  * travessa, ponta embaixo com franja). Desenho nosso; só as cores e o bicho de cada Casa.
  */
-export const BANNERS: Record<string, { field: string; charge: string; edge: string; fringe: string }> = {
+export const BANNERS: Record<string, { field: string; charge: string; edge: string; fringe: string; charge2?: string; band?: string }> = {
   Stark: { field: "#ecebe6", charge: "#6f757b", edge: "#b9bec4", fringe: "#c9ccd0" },
-  Lannister: { field: "#b3222c", charge: "#f0c95a", edge: "#7d141c", fringe: "#e8c766" },
+  Lannister: { field: "#b3222c", charge: "#f0c95a", edge: "#8f1820", fringe: "#e8c766", charge2: "#c8902c", band: "#e8c766" },
   Baratheon: { field: "#e8b923", charge: "#1d1a17", edge: "#a37e10", fringe: "#2a2622" },
   Greyjoy: { field: "#1f2226", charge: "#d9b13f", edge: "#0f1113", fringe: "#d9b13f" },
   Tyrell: { field: "#3f8a3a", charge: "#f0cf4a", edge: "#285a25", fringe: "#e7e3d0" },
@@ -99,7 +99,7 @@ export const BANNERS: Record<string, { field: string; charge: string; edge: stri
  */
 const SIGILS: Record<string, string[]> = {
   Stark: [".#.........#.", ".##.......##.", ".###.....###.", ".###########.", "..#########..", "..##.###.##..", "..#########..", "...#######...", "....#####....", "....##.##....", ".....###.....", "......#......"],
-  Lannister: ["....###......", "...#####.....", "..###.##.....", "..#######....", "...####..#...", "....#####.#..", "...#######...", "..########...", "..##.####....", ".##..##.##...", ".#...##..##..", ".....#....#..", "....##...##.."],
+  Lannister: ["...++++......", "..++++++.....", ".++#.##++....", "###.####+...#", ".#####+++..#.", "..#.#++++..#.", "##..######.#.", ".##.#######.#", "..##########.", ".....######..", "....#######..", "...###..###..", "..##....###..", ".##......##..", "##......###.."],
   Baratheon: ["#..#.....#..#", "#.#.#...#.#.#", ".##.#...#.##.", "..###...###..", "....#####....", "...#######...", "...##.#.##...", "...#######...", "....#####....", "....#####....", ".....###.....", ".....###.....", "......#......"],
   Greyjoy: ["....#####....", "...#######...", "..##.###.##..", "..#########..", "...#######...", "..#.#.#.#.#..", ".#.#..#..#.#.", ".#..#.#.#..#.", "#..#..#..#..#", "#..#.....#..#", ".#..#...#..#.", "..#.......#.."],
   Tyrell: [".....###.....", "...##...##...", "..#..###..#..", ".#..#...#..#.", ".#.#.###.#.#.", ".#.#.#.#.#.#.", ".#..#.#.#..#.", "..#..###..#..", "...##...##...", ".....###.....", "......#......", "....###.##...", "......#......"],
@@ -119,12 +119,13 @@ const LETTERS: Record<string, string[]> = {
   A: [".###.", "#...#", "#...#", "#####", "#...#", "#...#", "#...#"]
 };
 
-/** Brasão do estandarte, sempre 13 × 13 (completa com linhas vazias, centralizado). */
+export const SIGIL_H = 15;
+/** Brasão do estandarte, sempre 13 × 15 (completa com linhas vazias, centralizado). */
 export function bannerSigil(house: string): string[] {
   const g = SIGILS[house] ?? SIGILS.Stark;
   const rows = g.map((r) => r.padEnd(13, ".").slice(0, 13));
-  const top = Math.floor((13 - rows.length) / 2);
-  return [...Array(top).fill(".".repeat(13)), ...rows, ...Array(13 - rows.length - top).fill(".".repeat(13))];
+  const top = Math.floor((SIGIL_H - rows.length) / 2);
+  return [...Array(top).fill(".".repeat(13)), ...rows, ...Array(SIGIL_H - rows.length - top).fill(".".repeat(13))];
 }
 export function bannerLetter(house: string): string[] {
   return LETTERS[house[0]] ?? LETTERS.S;

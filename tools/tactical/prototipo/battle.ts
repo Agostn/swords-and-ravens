@@ -16,7 +16,7 @@ import { Lane, Side, Squad, TacticalBattleResult } from "../../../agot-bg-game-s
 import { FIELD_LANES, FieldType, Role, Row, SquadKind, TACTIC_NAMES, TACTIC_WIN_BONUS } from "../../../agot-bg-game-server/src/common/tactical-battle/tacticalBattleData";
 import { rng } from "../solver";
 import { House, ROLE_NAMES, TERRAIN_NAMES } from "./data";
-import { BANNERS, bannerLetter, bannerSigil, styleOf } from "./houseStyle";
+import { BANNERS, SIGIL_H, bannerLetter, bannerSigil, styleOf } from "./houseStyle";
 import { DRAGON_SCALE, Kind, Pose, drawFallen, drawUnit, kindOf } from "./figures";
 import { H, LW, W, ease, roundRect, terrainImage } from "./render";
 import { WALL_Y, drawWalls } from "./walls";
@@ -376,6 +376,8 @@ export function createSim(field: FieldType, res: TacticalBattleResult, squads: R
         dying.push(...[...list].sort(() => rand() - 0.5).slice(0, k));
       }
     });
+    // máquina de cerco de quem perdeu: destruída na fuga (não pode recuar, regra do jogo)
+    men.filter((m) => m.kind == "siege" && m.side == outcome.loser && outcome.destroyed.includes(m.sid)).forEach((m) => (m.dieAt = T_ROUT + 0.4));
     // espalha as mortes durante a luta, faixa por faixa
     ([0, 1, 2] as Lane[]).forEach((lane) => {
       const here = dying.filter((m) => m.lane == lane).sort(() => rand() - 0.5);
@@ -761,7 +763,7 @@ function drawFlag(ctx: CanvasRenderingContext2D, sim: Sim): void {
   // em pixel art: inicial no alto, brasão grande, faixas embaixo, ponta com franja)
   const u = size;
   const cols = 19;
-  const rows = 36;
+  const rows = 38;
   const bw = cols * u;
   const x0 = tx - bw / 2;
   const y0 = ty + 3 * u;
@@ -793,11 +795,17 @@ function drawFlag(ctx: CanvasRenderingContext2D, sim: Sim): void {
     const lr = r - 3;
     if (lr >= 0 && lr < 7) for (let i = 0; i < 5; i++) if (let7[lr][i] == "#") px(xa + (7 + i) * u, y, u, u, bn.charge);
     // brasão 13 × 13, linhas 12 a 24
+    // brasão 13 × 15 ("#" cor do brasão, "+" sombra), linhas 12 a 26
     const sr = r - 12;
-    if (sr >= 0 && sr < 13) for (let i = 0; i < 13; i++) if (sig[sr][i] == "#") px(xa + (3 + i) * u, y, u, u, bn.charge);
+    if (sr >= 0 && sr < SIGIL_H)
+      for (let i = 0; i < 13; i++) {
+        const ch = sig[sr][i];
+        if (ch == "#") px(xa + (3 + i) * u, y, u, u, bn.charge);
+        else if (ch == "+") px(xa + (3 + i) * u, y, u, u, bn.charge2 ?? bn.charge);
+      }
     // duas faixas embaixo (cor da borda e da franja)
-    if (r == 26 || r == 27) px(xa + u, y, wa - 2 * u, u, bn.edge);
-    if (r == 28) px(xa + u, y, wa - 2 * u, u, bn.fringe);
+    if (r == 28 || r == 29) px(xa + u, y, wa - 2 * u, u, bn.band ?? bn.edge);
+    if (r == 30) px(xa + u, y, wa - 2 * u, u, bn.fringe);
     // franja na ponta
     if (r >= tipStart) {
       px(xa - u, y + u, u, 2 * u, bn.fringe);
@@ -939,6 +947,14 @@ function kill(sim: Sim, m: Man, nx: number, ny: number, power: number): void {
   const t = sim.t;
   m.dead = true;
   m.deadAt = t;
+  // máquina de cerco destruída: desmonta em madeira e fumaça (não voa nem sangra)
+  if (m.kind == "siege") {
+    m.vx = 0;
+    m.vy = 0;
+    puff(sim, m.x, m.y - 10, 16, 60, 6, "150,130,100");
+    sim.shake = Math.max(sim.shake, 2);
+    return;
+  }
   // jogado longe
   const heavy = m.kind == "horse" || m.kind == "ship";
   m.vx += nx * (heavy ? 60 : 150) * Math.min(2, power);
@@ -1405,12 +1421,19 @@ export function dragonMouth(x: number, y: number, flip: boolean, s: number): [nu
  * Soldado que opera a máquina de cerco (31/out): fica do lado dela e puxa a alavanca quando ela atira.
  * front = false desenha o de trás (antes da máquina), true o da frente (depois).
  */
-function drawCrew(ctx: CanvasRenderingContext2D, m: Man, h: House, t: number, front: boolean): void {
+function drawCrew(ctx: CanvasRenderingContext2D, sim: Sim, m: Man, h: House, t: number, front: boolean): void {
   const spots: [number, number][] = [[-17, -3], [15, 5]];
+  // quem perdeu: os operadores largam a máquina e fogem (31/out); a máquina de quem perde é destruída (regra do jogo)
+  const L = sim.res.lanes[m.lane];
+  const lost = sim.outcome ? m.side == sim.outcome.loser : !!L.winner && L.winner != "tie" && L.winner != m.side;
+  const fleeFrom = lost ? Math.min(T_ROUT, m.dead ? m.deadAt + 0.2 : Infinity) : Infinity;
+  const fleeing = t > fleeFrom;
+  const away = m.side == "attacker" ? 1 : -1;
   spots.forEach(([dx, dy], i) => {
     if ((dy > 0) != front) return;
-    const x = m.x + dx * FIG;
-    const y = m.y + dy * FIG;
+    const run = fleeing ? (t - fleeFrom) * (68 + i * 8) : 0;
+    const x = m.x + dx * FIG + (fleeing ? dx * 0.3 * Math.min(1, t - fleeFrom) : 0);
+    const y = m.y + dy * FIG + away * run;
     const q = (t - m.shotAt + 0.18 + i * 0.05) / 0.45;
     const p: Pose = {
       role: i == 0 ? "escudeiro" : "lanceiro",
@@ -1418,15 +1441,18 @@ function drawCrew(ctx: CanvasRenderingContext2D, m: Man, h: House, t: number, fr
       house: h,
       back: false,
       flip: dx > 0,
-      walk: 0,
+      walk: fleeing ? t * 9 + i : 0,
       atk: 0,
       seed: m.seed + i,
       time: t + m.phase + i,
-      atkPhase: q >= 0 && q < 1 ? q : undefined,
-      moving: false,
+      atkPhase: !fleeing && q >= 0 && q < 1 ? q : undefined,
+      moving: fleeing,
       guard: false
     };
-    if (m.dead) drawFallen(ctx, x, y, FIG, p, t - m.deadAt);
+    if (fleeing) {
+      p.back = away < 0;
+      if (y > -30 && y < H + 30) drawUnit(ctx, x, y, FIG, p, away > 0 ? Math.PI / 2 : -Math.PI / 2);
+    } else if (m.dead) drawFallen(ctx, x, y, FIG, p, t - m.deadAt);
     else drawUnit(ctx, x, y, FIG, p, m.dir);
   });
 }
@@ -1571,10 +1597,10 @@ export function drawSim(ctx: CanvasRenderingContext2D, sim: Sim): void {
     ctx.restore();
   }
   const drawMan = (m: Man): void => {
-    if (m.kind == "siege") drawCrew(ctx, m, sim.houses[m.side], t, false);
+    if (m.kind == "siege") drawCrew(ctx, sim, m, sim.houses[m.side], t, false);
     if (m.dead) drawFallen(ctx, m.x, m.y, FIG, pose(m, sim.houses[m.side], t), t - m.deadAt);
     else drawUnit(ctx, m.x, m.y, FIG, pose(m, sim.houses[m.side], t), m.dir);
-    if (m.kind == "siege") drawCrew(ctx, m, sim.houses[m.side], t, true);
+    if (m.kind == "siege") drawCrew(ctx, sim, m, sim.houses[m.side], t, true);
   };
   for (const m of order) if (behind(m)) drawMan(m);
   ctx.globalAlpha = 1;

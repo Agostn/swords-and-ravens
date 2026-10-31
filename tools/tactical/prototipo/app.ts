@@ -477,7 +477,7 @@ const ARMY_KEYS = ["footmen", "knights", "siege", "dragon", "ships"];
 function armyCount(side: Side): number {
   const c = config[side];
   if (isSea()) return c.ships;
-  return c.footmen + c.knights + (side == "attacker" ? c.siege : 0) + (c.dragon > 0 ? 1 : 0);
+  return c.footmen + c.knights + c.siege + (c.dragon > 0 ? 1 : 0);
 }
 
 function getV(side: Side, key: string): number {
@@ -532,7 +532,7 @@ function renderCustom(): void {
       <div class="steps-list">
         ${sea ? step(side, "ships", "Navios", tokenSvg(h, "abordagem", 26)) : step(side, "footmen", "Soldados", tokenSvg(h, "lanceiro", 26), "cada um vira 2 esquadrões na batalha")}
         ${sea ? "" : step(side, "knights", "Cavaleiros", tokenSvg(h, "cavalaria", 26), "cada um vira 2 a cavalo ou 4 a pé")}
-        ${!sea && side == "attacker" ? step(side, "siege", "Máquinas de cerco", tokenSvg(h, "catapulta", 26), "peça de QUEM ATACA: catapulta que derruba muralha e portão (só vale contra castelo e fortaleza); cada uma vira 2") : ""}
+        ${!sea ? step(side, "siege", "Máquinas de cerco", tokenSvg(h, "catapulta", 26), side == "attacker" ? "+4 só atacando castelo ou fortaleza (vira 2 catapultas na batalha); em outro campo vale 0. Se perder, é destruída (não pode recuar)" : "defendendo vale 0 e não entra na batalha (regra do jogo). Se perder, é destruída (não pode recuar)") : ""}
         ${!sea ? step(side, "dragon", "Dragão: força", tokenSvg(h, "dragao", 26), "0 = sem dragão") : ""}
         ${!sea && side == "defender" ? step(side, "garrison", "Guarnição", tokenSvg(h, "torre", 26), "defesa FIXA do castelo de quem defende (a ficha de guarnição do jogo): torre no centro, não é peça do exército") : ""}
       </div>
@@ -1279,6 +1279,8 @@ interface BoardBattle {
   destroyed: string[];
   /** peças do tabuleiro que morrem */
   deadPieces: string[];
+  /** máquinas de cerco de quem perde (destruídas: não podem recuar) */
+  siegeLost: number;
 }
 
 function boardBattle(res: TacticalBattleResult, seed: number): BoardBattle {
@@ -1309,7 +1311,11 @@ function boardBattle(res: TacticalBattleResult, seed: number): BoardBattle {
   });
   for (let i = 0; i < casualties && pool.length; i++) deadPieces.push(pool.splice(Math.floor(rand() * pool.length), 1)[0]);
   const destroyed = units[loser].filter((u) => deadPieces.includes(u.piece)).map((u) => u.id);
-  return { totals, winner, tie, swords, towers, casualties, destroyed, deadPieces };
+  // máquinas de cerco que não entraram na batalha (defendendo, ou atacando campo sem castelo): valem 0, mas quem
+  // perde também as perde (não podem recuar)
+  const onField = units[loser].some((u) => u.kind == "siege-engine");
+  const siegeLost = deadPieces.filter((pc) => units[loser].some((u) => u.piece == pc && u.kind == "siege-engine")).length + (onField ? 0 : config[loser].siege ?? 0);
+  return { totals, winner, tie, swords, towers, casualties, destroyed, deadPieces, siegeLost };
 }
 
 /** frase curta do resultado final, para o fim da animação */
@@ -1321,8 +1327,10 @@ function wonAll(res: TacticalBattleResult): boolean {
 
 function boardLine(b: BoardBattle): string {
   const Lz = houseOf(other(b.winner)).name;
-  const n = b.deadPieces.length;
-  return n == 0 ? `Ninguém morre (${b.swords == 0 ? "carta sem espada ⚔" : "as torres ▲ protegem"}) · ${Lz} recua` : `${n == 1 ? "Morre 1 peça" : `Morrem ${n} peças`} de ${Lz} · o resto recua`;
+  const sg = b.siegeLost;
+  const n = b.deadPieces.length - b.deadPieces.filter((pc) => units[other(b.winner)].some((u) => u.piece == pc && u.kind == "siege-engine")).length;
+  const extra = sg ? ` · ${sg == 1 ? "máquina de cerco destruída" : `${sg} máquinas de cerco destruídas`}` : "";
+  return (n == 0 ? `Ninguém morre (${b.swords == 0 ? "carta sem espada ⚔" : "as torres ▲ protegem"}) · ${Lz} recua` : `${n == 1 ? "Morre 1 peça" : `Morrem ${n} peças`} de ${Lz} · o resto recua`) + extra;
 }
 
 function boardHtml(b: BoardBattle): string {
@@ -1338,7 +1346,7 @@ function boardHtml(b: BoardBattle): string {
   const pieceUnit = (pc: string): Unit => units[loser].find((x) => x.piece == pc) as Unit;
   const killed = b.deadPieces.map(pieceUnit).filter((u) => u && u.kind != "siege-engine");
   const names = killed.map((u) => (u.dismounted ? "cavaleiro (a pé)" : KIND_NAMES[u.kind].toLowerCase()));
-  const siege = b.deadPieces.some((pc) => pieceUnit(pc)?.kind == "siege-engine") ? " A máquina de cerco de quem perde não recua: é destruída." : "";
+  const siege = b.siegeLost > 0 ? ` ${b.siegeLost == 1 ? "A máquina de cerco" : `As ${b.siegeLost} máquinas de cerco`} de ${houseOf(loser).name} não ${b.siegeLost == 1 ? "pode" : "podem"} recuar: ${b.siegeLost == 1 ? "é destruída" : "são destruídas"} (regra do jogo).` : "";
   // em palavras simples: quem mata são as espadas ⚔ da carta do vencedor; as torres ▲ da carta do perdedor protegem
   const W = houseOf(b.winner).name;
   const Lz = houseOf(loser).name;
