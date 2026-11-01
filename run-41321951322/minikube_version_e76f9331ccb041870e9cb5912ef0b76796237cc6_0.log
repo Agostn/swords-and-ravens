@@ -1,0 +1,33 @@
+Log file created at: 2026/10/25 21:48:01
+Running on machine: pkrvm057k3fv4l7
+Binary: Built with gc go1.26.5 for linux/amd64
+Log line format: [IWEF]mmdd hh:mm:ss.uuuuuu threadid file:line] msg
+I1025 21:48:01.542968    2920 out.go:361] Setting OutFile to fd 1 ...
+I1025 21:48:01.543191    2920 out.go:409] TERM=,COLORTERM=, which probably does not support color
+I1025 21:48:01.543194    2920 out.go:375] Setting ErrFile to fd 2...
+I1025 21:48:01.543196    2920 out.go:409] TERM=,COLORTERM=, which probably does not support color
+I1025 21:48:01.544529    2920 root.go:332] Updating PATH: /home/packer/.minikube/bin
+W1025 21:48:01.544612    2920 root.go:308] Error reading config file at /home/packer/.minikube/config/config.json: open /home/packer/.minikube/config/config.json: no such file or directory
+I1025 21:48:01.545991    2920 out.go:204] v1.39.0
+Log file created at: 2026/10/25 21:48:37
+Running on machine: pkrvm057k3fv4l7
+Binary: Built with gc go1.26.5 for linux/amd64
+Log line format: [IWEF]mmdd hh:mm:ss.uuuuuu threadid file:line] msg
+I1025 21:48:37.031004    5190 out.go:361] Setting OutFile to fd 1 ...
+I1025 21:48:37.031179    5190 out.go:409] TERM=,COLORTERM=, which probably does not support color
+I1025 21:48:37.031181    5190 out.go:375] Setting ErrFile to fd 2...
+I1025 21:48:37.031184    5190 out.go:409] TERM=,COLORTERM=, which probably does not support color
+I1025 21:48:37.031342    5190 root.go:332] Updating PATH: /home/packer/.minikube/bin
+W1025 21:48:37.031418    5190 root.go:308] Error reading config file at /home/packer/.minikube/config/config.json: open /home/packer/.minikube/config/config.json: no such file or directory
+I1025 21:48:37.032045    5190 out.go:204] v1.39.0
+Log file created at: 2026/10/26 15:23:03
+Running on machine: runnervmnwato
+Binary: Built with gc go1.26.5 for linux/amd64
+Log line format: [IWEF]mmdd hh:mm:ss.uuuuuu threadid file:line] msg
+I1026 15:23:03.594165    4699 out.go:361] Setting OutFile to fd 1 ...
+I1026 15:23:03.616337    4699 out.go:409] TERM=,COLORTERM=, which probably does not support color
+I1026 15:23:03.616348    4699 out.go:375] Setting ErrFile to fd 2...
+I1026 15:23:03.616354    4699 out.go:409] TERM=,COLORTERM=, which probably does not support color
+I1026 15:23:03.616903    4699 root.go:332] Updating PATH: /home/packer/.minikube/bin
+W1026 15:23:03.617122    4699 root.go:308] Error reading config file at /home/packer/.minikube/config/config.json: open /home/packer/.minikube/config/config.json: no such file or directory
+I1026 15:23:03.637345    4699 out.go:204] v1.39.0

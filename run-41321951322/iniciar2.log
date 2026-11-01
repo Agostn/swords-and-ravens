@@ -1,0 +1,25 @@
+---> Procurando atualização no GitHub
+     Já está na versão mais nova.
+---> Ligando o banco de dados e o Redis
+---> Conferindo a página do jogo
+Página do jogo já está atualizada.
+---> O site já está ligado.
+---> Deixando o site público (para você e os amigos)
+
+==============================================================
+  PRONTO! O site está no ar. Abra este link:
+
+  http://localhost:8000
+
+  (ou na aba "Portas", linha "Site (abra este)")
+
+  1. Cada pessoa cria a sua conta (só nome de usuário e senha).
+  2. Em "Todas as partidas", crie a partida.
+  3. Na sala de espera, copie o link do convite e mande
+     para os amigos. Cada um escolhe a Casa.
+  4. Escolha o cenário e as regras e clique em "Iniciar partida".
+
+  O site continua ligado mesmo se você fechar esta aba, até o
+  Codespace desligar por falta de uso.
+==============================================================
+
