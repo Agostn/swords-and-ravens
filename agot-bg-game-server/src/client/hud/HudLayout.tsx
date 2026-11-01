@@ -61,6 +61,7 @@ import HudBattleResult from "./HudBattleResult";
 import HouseChip from "./HouseChip";
 import HudSupplyTrack from "./HudSupplyTrack";
 import HudSituation from "./HudSituation";
+import HudGuide, { guideUi } from "./HudGuide";
 import HudRoundTracker from "./HudRoundTracker";
 import displayedVictoryPoints from "./displayedVictoryPoints";
 import hudSettings from "./hudSettings";
@@ -481,6 +482,7 @@ export default class HudLayout extends Component<HudLayoutProps> {
             {this.renderCommsCorner()}
           </>
         )}
+        <HudGuide />
       </div>
     );
   }
@@ -872,6 +874,16 @@ export default class HudLayout extends Component<HudLayoutProps> {
       <Popover id="hud-help-popover" className="hud-help-popover">
         <Popover.Title as="h3">{t("hud.help.title")}</Popover.Title>
         <Popover.Content>
+          <button
+            type="button"
+            className="btn btn-warning btn-sm w-100 mb-2 fw-bold"
+            onClick={() => {
+              document.body.click();
+              guideUi.show();
+            }}
+          >
+            📖 Guia rápido do jogo (para iniciantes)
+          </button>
           <ul>
             <li>{t("hud.help.zoom")}</li>
             <li>{t("hud.help.drag")}</li>
@@ -1006,6 +1018,15 @@ export default class HudLayout extends Component<HudLayoutProps> {
     );
   }
 
+  private get isInCombat(): boolean {
+    let g: unknown = this.ingame.leafState;
+    while (g) {
+      if (g instanceof CombatGameState) return true;
+      g = (g as { parentGameState?: unknown }).parentGameState;
+    }
+    return false;
+  }
+
   private renderActionDock(leftSpace: number, rightSpace: number): ReactNode {
     const ownTurn = this.isOwnTurn;
     const ended = this.ingame.childGameState instanceof GameEndedGameState;
@@ -1036,8 +1057,13 @@ export default class HudLayout extends Component<HudLayoutProps> {
         ref={this.actionDockRef}
         className={classNames("hud-panel hud-action-dock", {
           "own-turn": ownTurn,
-          minimized: minimized
+          minimized: minimized,
+          // 01/nov: batalha cabe inteira (sem rolar): painel mais alto e em duas colunas
+          "in-combat": this.isInCombat
         })}
+        // a dica das áreas do mapa não aparece por cima do painel (aparecia "Mar do Verão Leste" em cima das cartas)
+        onMouseEnter={() => document.body.classList.add("hud-over-dock")}
+        onMouseLeave={() => document.body.classList.remove("hud-over-dock")}
         style={
           this.isPhone ? undefined : { left: leftSpace, right: rightSpace }
         }

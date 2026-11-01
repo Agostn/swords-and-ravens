@@ -959,3 +959,10 @@ hr.red {
 @import "./lobby.scss";
 @import "./hud-mobile.scss";
 @import "./pieces.scss";
+
+// 01/nov: área escolhida (ex.: para onde recuar) — dourada e com contorno, para ver bem que está selecionada
+.highlighted-region-area-strong {
+  stroke: #ffe08a;
+  stroke-width: 6;
+  paint-order: stroke;
+}

@@ -52,34 +52,13 @@ import orderImages from "./orderImages";
 import presentImage from "../../public/images/icons/present.svg";
 import HouseCardComponent from "./game-state-panel/utils/HouseCardComponent";
 import allKnownHouseCards from "./utils/houseCardHelper";
+import { buildRecentSummary } from "./hud/recentSummary";
 import classNames from "classnames";
 import GameReplayManager from "./game-replay/GameReplayManager";
 import { t, tr } from "./i18n/i18n";
 
 const fogOfWarRegion = "a region";
 const fogOfWarUnit = "unit";
-
-// Acontecimentos que viram blocos grandes (cabeçalhos, tabelas, cartas)
-// e não cabem no resumo da tela nova.
-const HUD_SKIPPED_LOG_TYPES: string[] = [
-  "turn-begin",
-  "orders-revealed",
-  "combat-result",
-  "westeros-cards-drawn",
-  "wildling-card-revealed",
-  "wildling-bidding",
-  "clash-of-kings-bidding-done",
-  "clash-of-kings-final-ordering",
-  "westeros-card-executed",
-  "westeros-phase-began",
-  "planning-phase-began",
-  "action-phase-began",
-  "draft-house-cards-began",
-  "action-phase-resolve-raid-began",
-  "action-phase-resolve-march-began",
-  "action-phase-resolve-consolidate-power-began",
-  "user-house-assignments"
-];
 
 interface GameLogListComponentProps {
   ingameGameState: IngameGameState;
@@ -140,14 +119,14 @@ export default class GameLogListComponent extends Component<GameLogListComponent
     this.currentRound = 0;
 
     if (this.props.onlyLast) {
-      const recent = this.logManager.logs
-        .filter((l) => !HUD_SKIPPED_LOG_TYPES.includes(l.data.type))
-        .slice(-this.props.onlyLast);
-      return recent.map((l, i) => (
-        <div key={`hud-log_${i}`} className="hud-log-line">
-          {this.renderGameLogData(l.data, this.game.turn)}
-        </div>
-      ));
+      // 01/nov: resumo em palavras simples (resultado das batalhas, selvagens, cartas) — ver hud/recentSummary.tsx
+      return buildRecentSummary(
+        this.logManager.logs,
+        this.game,
+        this.fogOfWar,
+        (data) => this.renderGameLogData(data, this.game.turn),
+        this.props.onlyLast
+      );
     }
 
     const highlightLog = (i: number): boolean => {
@@ -986,6 +965,21 @@ export default class GameLogListComponent extends Component<GameLogListComponent
               p3: data.lanesWon[0],
               p4: data.lanesWon[1]
             })}
+            {(() => {
+              // a luta continua disponível aqui depois de fechada (só as recebidas nesta sessão do navegador)
+              const ingame = this.props.ingameGameState;
+              const replay = data.replayId ? ingame.tacticalReplayHistory.find((r) => r.id == data.replayId) : undefined;
+              if (!replay) return null;
+              return (
+                <button
+                  type="button"
+                  className="btn btn-sm btn-outline-warning ms-2 py-0 px-2"
+                  onClick={() => (ingame.tacticalReplay = { ...replay })}
+                >
+                  ▶ Ver a luta
+                </button>
+              );
+            })()}
           </p>
         );
       }

@@ -171,7 +171,10 @@ function edgePct(side: Side): number {
   return Math.round((Math.pow(a / b, 1 + EDGE_EXP) - 1) * 100);
 }
 
-/** Faixa no topo: força de cada lado no tabuleiro e quem começa na frente (31/out). */
+/**
+ * Quadro no topo (01/nov, era só uma linha que ninguém entendia): COMO VENCER em uma frase, a barra da força de
+ * cada lado no tabuleiro e, em palavras simples, quanto essa força ajuda na Mesa.
+ */
 function edgeHtml(): string {
   const A = boardTotalOf("attacker");
   const D = boardTotalOf("defender");
@@ -179,12 +182,24 @@ function edgeHtml(): string {
   const hd = houseOf("defender");
   const lead: Side | null = A > D ? "attacker" : D > A ? "defender" : null;
   const zero = lead && Math.min(A, D) <= 0;
-  const tail = zero && lead
-    ? `${houseOf(other(lead)).name} está com força 0: <b style="color:${houseOf(lead).color}">${houseOf(lead).name}</b> vence onde tiver tropas`
-    : lead
-    ? `<b style="color:${houseOf(lead).color}">${houseOf(lead).name}</b> começa com <b>+${edgePct(lead)}%</b> em todas as faixas`
-    : "força igual: decide a estratégia (empate total: Lâmina)";
-  return `<p class="edge-line" title="Força no tabuleiro: tropas + apoio + carta + ordem. Quem vencer mais faixas vence a batalha.">⚖ <b style="color:${ha.color}">${ha.name} ${A}</b> × <b style="color:${hd.color}">${hd.name} ${D}</b> → ${tail}</p>`;
+  const L = lead ? houseOf(lead) : null;
+  const tail = zero && L
+    ? `${houseOf(other(lead as Side)).name} está com força 0: <b style="color:${L.color}">${L.name}</b> vence onde tiver tropas.`
+    : lead && L
+    ? `<b style="color:${L.color}">${L.name}</b> tem mais força: luta <b>${edgePct(lead)}% mais forte</b> em todas as faixas. Mesmo assim, onde e como cada um se posiciona pode virar a luta.`
+    : "Força igual: quem se posicionar melhor vence (empate total: decide a Lâmina de Aço Valiriano).";
+  const ink = (hex: string): string => {
+    const n = parseInt(hex.replace("#", "").slice(0, 6), 16) || 0;
+    const lum = 0.299 * ((n >> 16) & 255) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255);
+    return lum > 140 ? "#1b1610" : "#fff";
+  };
+  const seg = (h: House, v: number): string =>
+    `<span style="flex:${Math.max(v, 0.6)} 1 0;background:${h.color};color:${ink(h.color)}" title="${h.name}: força ${v} no tabuleiro">${h.name} <b>${v}</b></span>`;
+  return `<div class="edge-line edge-box">
+    <p class="edge-goal"><span class="g-long">🎯 <b>Para vencer:</b> ganhe <b>mais faixas</b> que o inimigo (esquerda, centro, direita). Só há luta numa faixa onde os dois lados têm tropas; se ninguém se encontrar, todos lutam no centro.</span><span class="g-short">🎯 Vence quem ganhar <b>mais faixas</b></span></p>
+    <div class="edge-bar" aria-label="Força no tabuleiro: ${ha.name} ${A}, ${hd.name} ${D}">${seg(ha, A)}${seg(hd, D)}</div>
+    <p class="edge-tail">⚖ Força no tabuleiro = tropas + apoio + carta + ordem. ${tail}</p>
+  </div>`;
 }
 
 /** ordem + apoio: o bônus pronto que entra na luta das faixas */
@@ -1312,6 +1327,8 @@ interface BoardBattle {
   deadPieces: string[];
   /** máquinas de cerco de quem perde (destruídas: não podem recuar) */
   siegeLost: number;
+  /** 01/nov: luta mostrada antes das baixas: quantas peças quem perdeu ainda vai escolher no mapa */
+  pending?: number;
 }
 
 function boardBattle(res: TacticalBattleResult, seed: number): BoardBattle {
@@ -1362,6 +1379,7 @@ function boardLine(b: BoardBattle): string {
   const sg = b.siegeLost;
   const n = b.deadPieces.length - b.deadPieces.filter((pc) => units[other(b.winner)].some((u) => u.piece == pc && u.kind == "siege-engine")).length;
   const extra = sg ? ` · ${sg == 1 ? "máquina de cerco destruída" : `${sg} máquinas de cerco destruídas`}` : "";
+  if (b.pending) return `${Lz} perde ${b.pending == 1 ? "1 peça" : `${b.pending} peças`} · escolhe no mapa${extra}`;
   return (n == 0 ? `Ninguém morre (${b.swords == 0 ? "carta sem espada ⚔" : embed && b.swords > b.towers ? "a carta impediu" : "as torres ▲ protegem"}) · ${Lz} recua` : `${n == 1 ? "Morre 1 peça" : `Morrem ${n} peças`} de ${Lz} · o resto recua`) + extra;
 }
 
@@ -1385,8 +1403,14 @@ function boardHtml(b: BoardBattle): string {
   // em palavras simples: quem mata são as espadas ⚔ da carta do vencedor; as torres ▲ da carta do perdedor protegem
   const W = houseOf(b.winner).name;
   const Lz = houseOf(loser).name;
-  const deaths =
-    b.casualties == 0
+  const loserIsMe = !!embed && embed.side == loser;
+  const deaths = b.pending
+    ? `<b>${Lz} perde ${b.pending == 1 ? "1 peça" : `${b.pending} peças`}</b> (espadas ⚔ da carta de ${W}${b.towers ? ` menos as torres ▲ da carta de ${Lz}` : ""}). ${
+        loserIsMe
+          ? `<b>Ao voltar ao mapa, você escolhe qual peça morre.</b>`
+          : `${Lz} escolhe no mapa qual peça morre.`
+      } O resto recua.`
+    : b.casualties == 0
       ? embed && b.swords > b.towers
         ? `Ninguém morre: a carta de ${Lz} impediu as baixas. ${Lz} recua.`
         : b.swords == 0
@@ -1840,6 +1864,8 @@ interface EmbedStart {
   board?: Record<Side, BoardTotals>;
   swords?: number;
   towers?: number;
+  /** luta antes das baixas: quantas peças quem perdeu vai escolher no mapa */
+  pendingCasualties?: number;
   text?: string;
   /** frase menor embaixo do texto de espera */
   sub?: string;
@@ -2005,7 +2031,9 @@ function embedBoard(res: TacticalBattleResult): BoardBattle {
   const d = embed as EmbedStart;
   const winner: Side = d.winner ?? res.winner ?? bladeHolder();
   const loser = other(winner);
-  const deadPieces = [...new Set(d.killed ?? [])].filter((pc) => units[loser].some((u) => u.piece == pc));
+  const pending = d.pendingCasualties;
+  const siegeOfLoser = pending != null ? units[loser].filter((u) => u.kind == "siege-engine").map((u) => u.piece) : [];
+  const deadPieces = [...new Set([...(d.killed ?? []), ...siegeOfLoser])].filter((pc) => units[loser].some((u) => u.piece == pc));
   const destroyed = units[loser].filter((u) => deadPieces.includes(u.piece)).map((u) => u.id);
   const zero = (side: Side): BoardTotals => ({ tropas: 0, carta: 0, ordem: 0, apoio: 0, mini: 0, total: d.totals[side] });
   const swords = d.swords ?? 0;
@@ -2019,7 +2047,8 @@ function embedBoard(res: TacticalBattleResult): BoardBattle {
     casualties: deadPieces.filter((pc) => !units[loser].some((u) => u.piece == pc && u.kind == "siege-engine")).length,
     destroyed,
     deadPieces,
-    siegeLost: deadPieces.filter((pc) => units[loser].some((u) => u.piece == pc && u.kind == "siege-engine")).length
+    siegeLost: deadPieces.filter((pc) => units[loser].some((u) => u.piece == pc && u.kind == "siege-engine")).length,
+    pending: pending ?? undefined
   };
 }
 

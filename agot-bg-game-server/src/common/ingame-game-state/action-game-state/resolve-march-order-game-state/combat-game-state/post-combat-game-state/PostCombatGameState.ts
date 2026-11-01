@@ -147,6 +147,9 @@ export default class PostCombatGameState extends GameState<
       this.markHouseCardAsUsed(house, houseCard);
     });
 
+    // Mesa de Batalha (01/nov): a luta aparece já, antes de quem perdeu escolher as baixas no mapa
+    this.sendTacticalReplay(true);
+
     this.proceedAfterWinnerDetermination();
   }
 
@@ -381,11 +384,20 @@ export default class PostCombatGameState extends GameState<
    * Mesa de Batalha: com tudo decidido (vencedor e baixas), todos assistem à luta. As peças de quem perdeu que
    * morreram (baixas, máquina de cerco que não recua, ferido) foram anotadas em tactical.killed.
    */
-  sendTacticalReplay(): void {
+  sendTacticalReplay(early = false): void {
     const tactical = this.combat.tactical;
-    if (!tactical || tactical.replayed) return;
+    if (!tactical) return;
+    if (tactical.replayed) {
+      // a luta já apareceu antes das baixas: só avisa quem morreu (para "Ver a luta" no histórico)
+      if (!early && tactical.id) {
+        tactical.killed = _.uniq(tactical.killed);
+        this.entireGame.broadcastToClients({ type: "tactical-battle-killed", id: tactical.id, killed: tactical.killed });
+      }
+      return;
+    }
     tactical.replayed = true;
     tactical.killed = _.uniq(tactical.killed);
+    if (early) tactical.pendingCasualties = this.expectedLoserCasualties();
     // a conta do tabuleiro vai junto (o cliente pode já ter saído da batalha quando a luta começa)
     const line = (h: House): TacticalBoardLine | null => {
       const st = this.combat.stats.find((x) => x.house == h.id);
@@ -407,6 +419,25 @@ export default class PostCombatGameState extends GameState<
     tactical.swords = this.combat.getHouseCardSwordIcons(this.winner);
     tactical.towers = this.combat.getHouseCardTowerIcons(this.loser);
     this.entireGame.broadcastToClients({ type: "tactical-battle-replay", replay: tactical });
+  }
+
+  /**
+   * Quantas peças quem perdeu vai escolher para morrer (a mesma conta do proceedCasualties: espadas ⚔ de quem
+   * venceu − torres ▲ de quem perdeu, contando as cartas de Marés da Batalha). Feridos e máquinas de cerco morrem
+   * de qualquer jeito e não entram aqui. É uma previsão para a tela da luta: as habilidades das cartas que vêm
+   * depois do vencedor raramente mudam isso (ver RISCOS).
+   */
+  expectedLoserCasualties(): number {
+    const tides = (h: House): { sword: number; tower: number } => {
+      const c = h == this.attacker ? this.combat.attackerTidesOfBattleCard : this.combat.defenderTidesOfBattleCard;
+      return { sword: c ? c.swordIcons : 0, tower: c ? c.towerIcons : 0 };
+    };
+    const swords = this.combat.getHouseCardSwordIcons(this.winner) + tides(this.winner).sword;
+    const towers = this.combat.getHouseCardTowerIcons(this.loser) + tides(this.loser).tower;
+    const left = this.loserCombatData.army.filter((u) => !u.wounded && u.type.canRetreat).length;
+    const n = Math.min(Math.max(0, swords - towers), left);
+    if (n > 0 && this.combat.areCasualtiesPrevented(this.loser)) return 0;
+    return n;
   }
 
   proceedHouseCardHandling(): void {

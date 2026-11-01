@@ -24,6 +24,8 @@ import ravenImage from "../../../public/images/icons/raven.svg";
 import HouseChip from "./HouseChip";
 import hudSettings from "./hudSettings";
 import { t } from "../i18n/i18n";
+import { guideUi, GuideSection } from "./HudGuide";
+import WildlingsAttackGameState from "../../common/ingame-game-state/westeros-game-state/wildlings-attack-game-state/WildlingsAttackGameState";
 
 type StepStatus = "done" | "now" | "next" | "skipped";
 type ActionStepKey = "raven" | "raid" | "march" | "consolidate" | "objectives";
@@ -139,6 +141,19 @@ export default class HudRoundTracker extends Component<HudRoundTrackerProps> {
     return { house: null, text: t("hud.round.now.action") };
   }
 
+  /** assunto do Guia que explica o que está acontecendo agora */
+  private guideSection(): GuideSection {
+    const ingame = this.ingame;
+    if (findState(ingame, CombatGameState)) return "batalha";
+    if (findState(ingame, WildlingsAttackGameState)) return "selvagens";
+    if (findState(ingame, UseRavenGameState)) return "corvo";
+    const phase = this.phase;
+    if (phase == "planning") return "ordens";
+    if (phase == "westeros") return "rodada";
+    if (findState(ingame, ResolveRaidOrderGameState) || findState(ingame, ResolveMarchOrderGameState)) return "ordens";
+    return "rodada";
+  }
+
   private renderPhase(key: "westeros" | "planning" | "action", status: StepStatus): ReactNode {
     return (
       <li
@@ -243,6 +258,14 @@ export default class HudRoundTracker extends Component<HudRoundTrackerProps> {
             <span className="hrt-now-label">{t("hud.round.nowLabel")}</span>
             {now.house && <HouseChip house={now.house} size={20} mine={now.house == this.props.house} />}
             <span className="hrt-now-text">{now.text}</span>
+            <button
+              type="button"
+              className="hrt-help"
+              title="Entenda esta parte do jogo"
+              onClick={() => guideUi.show(this.guideSection())}
+            >
+              ? Entenda
+            </button>
           </div>
         )}
 

@@ -35,6 +35,8 @@ const PIECE_KINDS: SquadKind[] = ["footman", "knight", "siege-engine", "ship", "
 
 /** O que a Mesa decidiu (fica no CombatGameState para o resultado e para a animação no fim). */
 export interface TacticalOutcome {
+  /** identifica a luta (o histórico usa para "Ver a luta" de novo) */
+  id?: string;
   field: FieldType;
   attackerId: string;
   defenderId: string;
@@ -56,6 +58,11 @@ export interface TacticalOutcome {
   /** espadas da carta de quem venceu e torres da carta de quem perdeu */
   swords?: number;
   towers?: number;
+  /**
+   * 01/nov: a luta é mostrada logo que a Mesa decide, ANTES de quem perdeu escolher as baixas no mapa (antes o
+   * jogo pedia a peça que ia morrer e só depois mostrava a batalha). Aqui vai quantas peças quem perdeu vai perder.
+   */
+  pendingCasualties?: number;
 }
 
 export interface TacticalBoardLine {
@@ -191,6 +198,7 @@ export default class TacticalBattleGameState extends GameState<CombatGameState> 
     });
     const winner = result.winner == "attacker" ? attacker : result.winner == "defender" ? defender : blade;
     const outcome: TacticalOutcome = {
+      id: v4(),
       field: this.field,
       attackerId: attacker.id,
       defenderId: defender.id,
@@ -207,7 +215,8 @@ export default class TacticalBattleGameState extends GameState<CombatGameState> 
       attacker: attacker.id,
       defender: defender.id,
       lanesWon: [result.lanesWon.attacker, result.lanesWon.defender],
-      duel: !!result.duel || !result.winner
+      duel: !!result.duel || !result.winner,
+      replayId: outcome.id
     });
     this.combat.onTacticalBattleEnd(outcome);
   }

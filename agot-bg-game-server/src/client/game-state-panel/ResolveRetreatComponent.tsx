@@ -13,11 +13,40 @@ import Col from "react-bootstrap/Col";
 import {observable} from "mobx";
 import Region from "../../common/ingame-game-state/game-data-structure/Region";
 import { t, tr } from "../i18n/i18n";
+import * as _ from "lodash";
+import Unit from "../../common/ingame-game-state/game-data-structure/Unit";
+import { UnitOnMapProperties } from "../MapControls";
+import PartialRecursive from "../../utils/PartialRecursive";
 
 @observer
 export default class ResolveRetreatComponent extends Component<GameStateComponentProps<ResolveRetreatGameState>> {
 
     @observable selectRegionComponent: SelectRegionComponent;
+    modifyUnitsOnMapCallback: (() => [Unit, PartialRecursive<UnitOnMapProperties>][]) | null = null;
+
+    /**
+     * 01/nov: o exército que perdeu e precisa fugir pisca em amarelo no mapa e, quando a área de recuo é
+     * escolhida, aparece a seta até ela (antes não dava para ver quem estava recuando nem para onde).
+     */
+    modifyUnitsOnMap(): [Unit, PartialRecursive<UnitOnMapProperties>][] {
+        const army = this.props.gameState.postCombat.loserCombatData.army;
+        const target = this.selectRegionComponent ? this.selectRegionComponent.selectedRegion : null;
+        return army.map((u) => [u, {
+            highlight: { active: true, color: "yellow" },
+            animateAttention: !target,
+            targetRegion: target ?? undefined
+        }]);
+    }
+
+    componentDidMount(): void {
+        this.props.mapControls.modifyUnitsOnMap.push(
+            (this.modifyUnitsOnMapCallback = () => this.modifyUnitsOnMap())
+        );
+    }
+
+    componentWillUnmount(): void {
+        _.pull(this.props.mapControls.modifyUnitsOnMap, this.modifyUnitsOnMapCallback);
+    }
 
     render(): ReactNode {
         const unitCountToBeDestroyed = (this.selectRegionComponent && this.selectRegionComponent.selectedRegion)

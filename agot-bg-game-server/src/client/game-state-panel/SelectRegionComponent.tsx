@@ -74,12 +74,20 @@ export default class SelectRegionComponent extends Component<
           { highlight: { active: true }, onClick: () => this.onRegionClick(r) }
         ]);
       } else {
+        // 01/nov: a escolhida fica dourada e forte; as outras opções continuam clicáveis (trocar direto)
+        const selected = this.selectedRegion;
         return [
+          ...this.props.gameState.regions
+            .filter((r) => r != selected)
+            .map((r): [Region, PartialRecursive<RegionOnMapProperties>] => [
+              r,
+              { highlight: { active: true, light: true }, onClick: () => this.onRegionClick(r) }
+            ]),
           [
-            this.selectedRegion,
+            selected,
             {
-              highlight: { active: true },
-              onClick: () => this.onRegionClick(this.selectedRegion as Region)
+              highlight: { active: true, strong: true, color: "#f0c75e" },
+              onClick: () => this.onRegionClick(selected)
             }
           ]
         ];

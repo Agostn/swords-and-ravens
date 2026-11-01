@@ -149,7 +149,7 @@ export default class CombatComponent extends Component<
             }
           ];
     return (
-      <div key={`combat-component-${this.props.gameState.stateVersion}`}>
+      <div key={`combat-component-${this.props.gameState.stateVersion}`} className="combat-panel">
         <Col xs={12}>
           <div style={{ display: "flex", justifyContent: "center" }}>
             <h5>

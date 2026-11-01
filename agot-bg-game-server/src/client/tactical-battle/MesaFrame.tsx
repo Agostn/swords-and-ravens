@@ -23,6 +23,8 @@ interface MesaFrameProps {
   /** texto do botão do canto quando minimizada */
   pill?: string;
   onOpen?: () => void;
+  /** a luta já terminou de ser decidida: o botão de cima fecha (fica no Histórico) em vez de minimizar */
+  closeInsteadOfMinimize?: boolean;
 }
 
 export default class MesaFrame extends Component<MesaFrameProps> {
@@ -123,10 +125,14 @@ export default class MesaFrame extends Component<MesaFrameProps> {
           className="btn btn-sm btn-secondary"
           style={{ position: "absolute", top: 8, right: 8, zIndex: 1, opacity: 0.9 }}
           onClick={() => this.props.onHide()}
-          aria-label="Minimizar e voltar ao mapa"
-          title="Minimizar e voltar ao mapa (a batalha continua)"
+          aria-label={this.props.closeInsteadOfMinimize ? "Fechar a luta e voltar ao mapa" : "Minimizar e voltar ao mapa"}
+          title={
+            this.props.closeInsteadOfMinimize
+              ? "Fechar e voltar ao mapa (a luta fica no Histórico: ▶ Ver a luta)"
+              : "Minimizar e voltar ao mapa (a batalha continua)"
+          }
         >
-          ▁ Minimizar
+          {this.props.closeInsteadOfMinimize ? "✕ Fechar" : "▁ Minimizar"}
         </button>
         <iframe
           ref={this.frame}

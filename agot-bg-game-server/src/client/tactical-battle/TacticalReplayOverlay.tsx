@@ -6,6 +6,7 @@
  * Quem não está na batalha só vê a luta no fim.
  */
 import { observer } from "mobx-react";
+import { reaction, IReactionDisposer } from "mobx";
 import React, { Component, ReactNode } from "react";
 import IngameGameState from "../../common/ingame-game-state/IngameGameState";
 import CombatGameState from "../../common/ingame-game-state/action-game-state/resolve-march-order-game-state/combat-game-state/CombatGameState";
@@ -40,6 +41,21 @@ interface Step {
 export default class TacticalReplayOverlay extends Component<Props> {
   /** a luta é montada uma vez só (a batalha some do jogo durante a animação e os números não podem mudar) */
   cachedReplay: { r: TacticalOutcome; start: Record<string, unknown> } | null = null;
+  disposeReaction: IReactionDisposer | null = null;
+
+  componentDidMount(): void {
+    // 01/nov: começou outra Mesa → a luta antiga sai da frente (continua no histórico, "Ver a luta")
+    this.disposeReaction = reaction(
+      () => this.leaf instanceof TacticalBattleGameState,
+      (inBattle) => {
+        if (inBattle && this.props.ingame.tacticalReplay) this.props.ingame.tacticalReplay = null;
+      }
+    );
+  }
+
+  componentWillUnmount(): void {
+    this.disposeReaction?.();
+  }
   /** batalha em que eu estava na Mesa (para a etapa "esperando as baixas") */
   myCombat: CombatGameState | null = null;
   myCombatInfo: { base: Record<string, unknown>; steps: string[] } | null = null;
@@ -173,6 +189,7 @@ export default class TacticalReplayOverlay extends Component<Props> {
       board: r.board ?? (a && d ? { attacker: a, defender: d } : undefined),
       swords: r.swords ?? (sameCombat ? sameCombat.getHouseCardSwordIcons(winnerHouse) : 0),
       towers: r.towers ?? (sameCombat ? sameCombat.getHouseCardTowerIcons(loserHouse) : 0),
+      pendingCasualties: r.pendingCasualties,
       steps: mySide ? steps : undefined,
       step: steps ? steps.length - 1 : undefined
     };
@@ -180,15 +197,17 @@ export default class TacticalReplayOverlay extends Component<Props> {
 
   currentStep(): Step | null {
     const r = this.props.ingame.tacticalReplay;
-    if (r) {
-      if (!this.cachedReplay || this.cachedReplay.r !== r) this.cachedReplay = { r, start: this.replayStart(r) };
-      return { key: `replay:${r.attackerId}-${r.defenderId}-${r.killed.join(",")}`, start: this.cachedReplay.start, pill: "⚔ Ver a luta" };
-    }
-    const leaf = this.leaf;
-    if (leaf instanceof TacticalBattleGameState) {
-      const step = this.battleStep(leaf);
+    // uma Mesa nova vem antes da luta antiga (que fica no histórico)
+    const leafNow = this.leaf;
+    if (leafNow instanceof TacticalBattleGameState) {
+      const step = this.battleStep(leafNow);
       if (step) return step;
     }
+    if (r) {
+      if (!this.cachedReplay || this.cachedReplay.r !== r) this.cachedReplay = { r, start: this.replayStart(r) };
+      return { key: `replay:${r.id ?? `${r.attackerId}-${r.defenderId}`}-${r.killed.join(",")}`, start: this.cachedReplay.start, pill: "⚔ Ver a luta" };
+    }
+    const leaf = this.leaf;
     // a Mesa já decidiu: o perdedor escolhe as baixas no mapa (por isso começa minimizada); a luta vem depois
     if (this.myCombat && this.myCombatInfo && this.combatOf(leaf) === this.myCombat && !(leaf instanceof TacticalBattleGameState)) {
       const steps = this.myCombatInfo.steps;
@@ -217,7 +236,18 @@ export default class TacticalReplayOverlay extends Component<Props> {
     const minimized = step.startsMinimized
       ? mesaUi.openKey != step.key
       : mesaUi.minKey == step.key;
+    const isReplay = step.key.startsWith("replay:");
+    const close = (): void => {
+      this.props.ingame.tacticalReplay = null;
+      this.myCombat = null;
+      this.myCombatInfo = null;
+    };
     const minimize = (): void => {
+      // 01/nov: a luta não fica presa no canto: sair dela fecha (dá para ver de novo no histórico)
+      if (isReplay) {
+        close();
+        return;
+      }
       mesaUi.minKey = step.key;
       mesaUi.openKey = "";
     };
@@ -232,13 +262,11 @@ export default class TacticalReplayOverlay extends Component<Props> {
         pill={step.pill}
         onOpen={open}
         onHide={minimize}
+        closeInsteadOfMinimize={isReplay}
         onMessage={(m) => {
           if (m.type == "tb-hide") minimize();
-          else if (m.type == "tb-close") {
-            this.props.ingame.tacticalReplay = null;
-            this.myCombat = null;
-            this.myCombatInfo = null;
-          } else if (m.type == "tb-submit" || m.type == "tb-react") this.sendToServer(m);
+          else if (m.type == "tb-close") close();
+          else if (m.type == "tb-submit" || m.type == "tb-react") this.sendToServer(m);
         }}
       />
     );

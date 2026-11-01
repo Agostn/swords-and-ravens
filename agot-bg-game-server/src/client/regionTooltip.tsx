@@ -92,6 +92,20 @@ function renderStrength(region: Region): React.ReactNode {
 }
 
 /** Força de combate de uma peça (para o balão da peça no mapa). */
+/** Uma frase para quem está começando (01/nov): o que a peça faz. Aparece ao passar o mouse na peça. */
+const UNIT_HINTS: Record<string, string> = {
+  footman: "Soldado: força 1 na batalha.",
+  knight: "Cavaleiro: força 2 na batalha.",
+  ship: "Navio: força 1; só no mar e portos. Com Apoio, ajuda batalhas em terra vizinhas.",
+  "siege-engine": "Máquina de cerco: força 4 só atacando castelo ou fortaleza (senão 0). Se perder, é destruída.",
+  dragon: "Dragão: força de 0 a 5, conforme a rodada."
+};
+
+export function renderUnitHint(u: Unit): React.ReactNode {
+  const hint = UNIT_HINTS[u.type.id];
+  return hint ? <div className="unit-hint" style={{ fontSize: "0.8rem", opacity: 0.85, marginTop: 2 }}>{hint}</div> : null;
+}
+
 export function renderUnitStrength(u: Unit): React.ReactNode {
   if (u.wounded) {
     return <div className="unit-tip-strength wounded">{t("map.unit.woundedNoStrength")}</div>;

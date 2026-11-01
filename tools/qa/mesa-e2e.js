@@ -216,7 +216,7 @@ async function handleMesa(p, tag, log) {
   const browser = await chromium.launch(process.env.CHROMIUM ? { executablePath: process.env.CHROMIUM } : {});
   const pages = [];
   for (const n of [1, 2, 3]) {
-    const p = await browser.newPage({ viewport: { width: 1280, height: 900 } });
+    const p = await browser.newPage({ viewport: { width: Number((process.env.VIEW || "1280x900").split("x")[0]), height: Number((process.env.VIEW || "1280x900").split("x")[1]) } });
     p.on("pageerror", (e) => console.log(`[#${n} erro na página] ${e.message}`));
     p.on("console", (m) => { if (m.type() == "error" && !/favicon|404/.test(m.text())) console.log(`[#${n} console] ${m.text().slice(0, 200)}`); });
     await p.goto(BASE + (process.env.PROD ? "?u=" + n : "") + "#" + n);
@@ -245,8 +245,15 @@ async function handleMesa(p, tag, log) {
   }
   console.log("estado:", await state(), "Mesa ligada:", await pages[0].evaluate(() => window.gameClient.entireGame.gameSettings.tacticalCombat));
   let mesas = 0; let last = ""; let same = 0;
+  const shotCards = new Set();
   for (let step = 0; step < STEPS && mesas < WANT; step++) {
     const res = [];
+    // print da escolha da carta de Casa (antes de os robôs escolherem), uma vez por batalha
+    if (process.env.SHOT_CARDS && !shotCards.has(mesas) && (await state()) == "ChooseHouseCardGameState") {
+      shotCards.add(mesas);
+      await pages[0].waitForTimeout(800);
+      for (let i = 0; i < pages.length; i++) await pages[i].screenshot({ path: `${out}/carta${mesas}-p${i + 1}.png` });
+    }
     for (let i = 0; i < pages.length; i++) {
       const p = pages[i];
       const tag = `m${mesas}-p${i + 1}-s${step}`;

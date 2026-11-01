@@ -19,6 +19,7 @@ import { SerializedWaitedForData } from "../common/ingame-game-state/Player";
 export type ServerMessage =
   | TacticalBattleSubmitted
   | TacticalBattleReplay
+  | TacticalBattleKilled
   | NewUser
   | HouseChosen
   | AuthenticationResponse
@@ -460,6 +461,13 @@ interface TacticalBattleSubmitted {
 interface TacticalBattleReplay {
   type: "tactical-battle-replay";
   replay: TacticalOutcome;
+}
+
+/** Mesa de Batalha: quem perdeu já escolheu as baixas (a luta apareceu antes); atualiza o "Ver a luta" do histórico */
+interface TacticalBattleKilled {
+  type: "tactical-battle-killed";
+  id: string;
+  killed: string[];
 }
 
 interface UpdateCombatStats {

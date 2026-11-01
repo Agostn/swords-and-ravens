@@ -521,6 +521,8 @@ interface TacticalBattleResultLog {
   lanesWon: [number, number];
   /** empate nas faixas: decidiu a Lâmina (trilha dos Feudos) */
   duel: boolean;
+  /** a luta desta batalha (TacticalOutcome.id), para "Ver a luta" no histórico */
+  replayId?: string;
 }
 
 interface CombatValyrianSwordUsed {

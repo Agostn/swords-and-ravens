@@ -6764,3 +6764,212 @@ body.hud-phone .popover.hud-house-popover {
     cursor: pointer;
   }
 }
+
+// ---------- Últimos acontecimentos em palavras simples (01/nov, hud/recentSummary.tsx) ----------
+// rola por dentro (antes cortava em 96px e escondia os resultados)
+.hud-recent .hud-recent-body,
+.hud-col-right .hud-recent .hud-recent-body {
+  max-height: min(360px, 48vh);
+  overflow-y: auto;
+  mask-image: none;
+  padding-right: 2px;
+}
+.hud-col-right .hud-recent .hud-recent-body { max-height: none; }
+
+.hud-sum-round {
+  margin: 6px 0 4px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(226, 182, 90, 0.85);
+  border-bottom: 1px solid rgba(226, 182, 90, 0.2);
+  &:first-child { margin-top: 0; }
+}
+
+.hud-sum-row {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  padding: 6px 8px;
+  margin-bottom: 5px;
+  border-radius: 8px;
+  background: rgba(255, 244, 220, 0.04);
+  border-left: 3px solid rgba(255, 244, 220, 0.15);
+  font-size: 12.5px;
+  line-height: 1.35;
+  color: rgba(255, 244, 220, 0.85);
+
+  &.kind-battle { border-left-color: #c0504d; background: rgba(192, 80, 77, 0.1); }
+  &.kind-wild-lose { border-left-color: #8fb3d9; background: rgba(143, 179, 217, 0.1); }
+  &.kind-wild-win { border-left-color: #7fbf7f; background: rgba(127, 191, 127, 0.1); }
+  &.kind-westeros { border-left-color: #e2b65a; background: rgba(226, 182, 90, 0.08); }
+  &.kind-supply { border-left-color: #b08d57; }
+  &.kind-other { background: transparent; padding-top: 2px; padding-bottom: 2px; }
+
+  b { color: #fff4dc; }
+}
+
+.hud-sum-icon {
+  flex: none;
+  width: 18px;
+  text-align: center;
+  font-size: 14px;
+  line-height: 1.2;
+}
+.kind-other .hud-sum-icon { color: rgba(255, 244, 220, 0.35); }
+
+.hud-sum-text { min-width: 0; flex: 1; }
+.hud-sum-title {
+  font-size: 13px;
+  // linhas antigas do Histórico podem ter títulos e cartas grandes: aqui fica tudo do mesmo tamanho
+  * { font-size: 12.5px !important; margin: 0 !important; }
+  img { max-height: 40px; width: auto; }
+  .row, .col, .col-auto { display: inline; padding: 0; }
+}
+.kind-other .hud-sum-title { font-size: 12.5px; }
+.hud-sum-line {
+  font-size: 12px;
+  color: rgba(255, 244, 220, 0.72);
+  * { font-size: 12px !important; }
+}
+
+// ---------- batalha numa tela só (01/nov) ----------
+body.hud-over-dock .tooltip.region-tip,
+body.hud-over-dock .tooltip[id^="region-"] {
+  display: none !important;
+}
+
+.hud-action-dock.in-combat {
+  max-width: 900px;
+
+  .hud-action-body {
+    max-height: calc(100vh - 150px);
+  }
+
+  // o "AGORA"/rodada repete o título; na batalha o espaço vai para a batalha
+  .hud-round-tracker {
+    display: none;
+  }
+
+  // a situação de baixo (pontos, reserva…) também sai enquanto a batalha está na tela
+  .hud-situation {
+    display: none;
+  }
+}
+
+@media (min-width: 900px) {
+  // à esquerda a conta (quem ataca, quem defende, força); à direita o que fazer (cartas, apoio, confirmar)
+  .hud-action-dock.in-combat .combat-panel {
+    display: grid;
+    grid-template-columns: 350px minmax(0, 1fr);
+    column-gap: 14px;
+    align-items: start;
+    padding: 8px 10px 6px;
+
+    > * {
+      grid-column: 2;
+      max-width: 100%;
+      flex: none;
+    }
+
+    > :first-child {
+      grid-column: 1;
+      grid-row: 1 / span 30;
+      padding: 0;
+    }
+
+    h5 {
+      margin-bottom: 4px;
+      font-size: 1.05rem;
+    }
+
+    .hcpick-preview {
+      max-height: 150px;
+    }
+  }
+}
+
+// "? Entenda" ao lado do AGORA: abre o Guia já no assunto da fase (01/nov)
+.hrt-help {
+  flex: none;
+  margin-left: 6px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(226, 182, 90, 0.55);
+  background: rgba(226, 182, 90, 0.12);
+  color: #e2b65a;
+  font-size: 11.5px;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+  &:hover { background: rgba(226, 182, 90, 0.25); }
+}
+
+// ---------- Guia rápido (hud/HudGuide.tsx) ----------
+.hud-guide-dialog { max-width: 860px; }
+.hud-guide {
+  background: #1f1a14;
+  color: #f1e6cf;
+  border: 1px solid rgba(226, 182, 90, 0.4);
+  .modal-header { border-bottom-color: rgba(226, 182, 90, 0.25); }
+  .modal-title { font-family: inherit; font-size: 1.25rem; color: #f3d48a; }
+  .close, .btn-close { color: #fff; filter: invert(1); opacity: 0.8; }
+}
+.guide-wrap { display: flex; gap: 16px; min-height: 380px; }
+.guide-nav {
+  flex: 0 0 210px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.guide-tab {
+  text-align: left;
+  padding: 7px 10px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: rgba(241, 230, 207, 0.85);
+  font-size: 14px;
+  &:hover { background: rgba(255, 255, 255, 0.05); }
+  &.active { background: rgba(226, 182, 90, 0.16); border-color: rgba(226, 182, 90, 0.5); color: #fff4dc; font-weight: 700; }
+}
+.guide-body {
+  flex: 1;
+  min-width: 0;
+  font-size: 14.5px;
+  line-height: 1.5;
+  h4 { font-size: 1.15rem; color: #f3d48a; margin-bottom: 10px; }
+  li { margin-bottom: 6px; }
+  b { color: #fff4dc; }
+  .guide-tip { font-size: 13px; color: rgba(241, 230, 207, 0.7); }
+}
+.guide-units {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 12px;
+  > div {
+    display: grid;
+    grid-template-columns: 54px 1fr;
+    grid-template-rows: auto 1fr;
+    column-gap: 10px;
+    padding: 8px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.04);
+    > b { align-self: end; }
+    > span { font-size: 13px; color: rgba(241, 230, 207, 0.8); }
+  }
+}
+.guide-unit { grid-row: 1 / span 2; width: 54px; height: 54px; object-fit: contain; }
+.guide-orders {
+  dt { display: flex; align-items: center; gap: 8px; margin-top: 10px; color: #fff4dc; }
+  dd { margin: 2px 0 0 44px; font-size: 13.5px; color: rgba(241, 230, 207, 0.85); }
+}
+.guide-order { width: 36px; height: 36px; }
+@media (max-width: 700px) {
+  .guide-wrap { flex-direction: column; min-height: 0; }
+  .guide-nav { flex: none; flex-direction: row; flex-wrap: wrap; }
+  .guide-tab { font-size: 12.5px; padding: 4px 8px; }
+  .guide-units { grid-template-columns: 1fr; }
+}

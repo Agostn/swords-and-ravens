@@ -157,6 +157,8 @@ export default class IngameGameState extends GameState<
   @observable bannedUsers: Set<string> = new Set();
   /** Mesa de Batalha: luta para assistir (chega quando tudo foi decidido; só no cliente) */
   @observable tacticalReplay: TacticalOutcome | null = null;
+  /** lutas da Mesa recebidas nesta sessão do navegador (o histórico tem "Ver a luta" para elas) */
+  @observable tacticalReplayHistory: TacticalOutcome[] = [];
 
   childGameStateBeforeCancellation: IngameChildGameState | null = null;
   childGameStateBeforeVassalsModification: IngameChildGameState | null = null;
@@ -2093,6 +2095,17 @@ export default class IngameGameState extends GameState<
         : null;
     } else if (message.type == "tactical-battle-replay") {
       this.tacticalReplay = message.replay;
+      if (message.replay.id) {
+        this.tacticalReplayHistory = [
+          ...this.tacticalReplayHistory.filter((r) => r.id != message.replay.id),
+          message.replay
+        ].slice(-30);
+      }
+    } else if (message.type == "tactical-battle-killed") {
+      // a luta continua igual na tela; só o "Ver a luta" do histórico passa a mostrar quem morreu
+      this.tacticalReplayHistory = this.tacticalReplayHistory.map((r) =>
+        r.id == message.id ? { ...r, killed: message.killed, pendingCasualties: undefined } : r
+      );
     } else if (message.type == "user-banned") {
       this.bannedUsers.add(message.userId);
     } else if (message.type == "user-unbanned") {
