@@ -432,8 +432,12 @@ o outro vai fazer, mas o que mais conta é escolher a ordem que combina com as S
   Casa + ordem (+ guarnição, Lâmina e efeitos das cartas, no jogo completo). Uma faixa no topo mostra
   "Stark 9 × Lannister 7 → Stark começa com +X% em todas as faixas".
 - **Na Mesa** os esquadrões passam a somar essa força (a carta e o apoio reforçam quem está no campo), com um
-  ajuste para a estratégia pesar nas batalhas apertadas: valor × (total / tropas) × (total / média dos dois) ^ −0,6
-  (`EDGE_EXP`). A ordem e a força da carta não contam de novo.
+  ajuste opcional: valor × (total / tropas) × (total / média dos dois) ^ `EDGE_EXP`. A ordem e a força da carta
+  não contam de novo. **01/nov:** `EDGE_EXP` passou de −0,6 para **0** (escolha do Agostinho: "mais força"),
+  porque com −0,6 quem tinha +4 no tabuleiro vencia só 60% das vezes nos castelos e o resultado parecia sem
+  sentido. Medido (80 batalhas por caso, planície/castelo/fortaleza): jogando sem cuidado +1 → 55%, +2 → 74%,
+  +4 → 84%; jogando bem +1 → 89%, +2 → 94%, +3 → 99%. Quando o lado mais fraco vence, a tela da luta explica
+  por quê (faixas, posição, muralha e portão).
 - **Quem vencer mais faixas vence a batalha.** Não existe mais "bônus da batalha" nem a conta separada do
   tabuleiro: um resultado só, sem perder na Mesa e ganhar no tabuleiro. Empate total → duelo de campeões (vence
   quem tem a Lâmina de Aço Valiriano).

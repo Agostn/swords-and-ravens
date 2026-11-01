@@ -47,6 +47,24 @@ export interface TacticalOutcome {
   killed: string[];
   /** a animação já foi mandada para todos */
   replayed?: boolean;
+  /**
+   * Conta do tabuleiro de cada lado (tropas, carta, ordem, apoio, resto = Lâmina e outros), mandada junto com a
+   * luta: quando a batalha já acabou no cliente (ex.: quem perdeu não tinha para onde recuar) os números não
+   * podem depender dela, senão aparecia "força das tropas 0 + carta 0 = 4".
+   */
+  board?: { attacker: TacticalBoardLine; defender: TacticalBoardLine };
+  /** espadas da carta de quem venceu e torres da carta de quem perdeu */
+  swords?: number;
+  towers?: number;
+}
+
+export interface TacticalBoardLine {
+  tropas: number;
+  carta: number;
+  ordem: number;
+  apoio: number;
+  mini: number;
+  total: number;
 }
 
 export default class TacticalBattleGameState extends GameState<CombatGameState> {

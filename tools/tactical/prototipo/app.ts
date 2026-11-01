@@ -1368,6 +1368,9 @@ function boardLine(b: BoardBattle): string {
 function boardHtml(b: BoardBattle): string {
   const row = (side: Side): string => {
     const t = b.totals[side];
+    // conta detalhada desconhecida (partida antiga): mostra só o total, nunca "0 + 0 = 4"
+    if (t.tropas + t.carta + t.ordem + t.apoio + t.mini == 0 && t.total > 0)
+      return `<li><b style="color:${houseOf(side).color}">${houseOf(side).name}</b>: força total <b>${t.total}</b></li>`;
     const parts = [`força das tropas ${t.tropas}`, `carta ${t.carta}`];
     if (t.ordem) parts.push(`ordem ${t.ordem > 0 ? "+" : ""}${t.ordem}`);
     if (t.apoio) parts.push(`apoio +${t.apoio}`);
@@ -1390,9 +1393,17 @@ function boardHtml(b: BoardBattle): string {
         ? `Ninguém morre: a carta de ${W} não tem espadas ⚔ (são as espadas que matam). ${Lz} recua.`
         : `Ninguém morre: a carta de ${W} tem ${b.swords} ${b.swords == 1 ? "espada ⚔" : "espadas ⚔"}, mas a de ${Lz} tem ${b.towers} ${b.towers == 1 ? "torre ▲ que protege" : "torres ▲ que protegem"}. ${Lz} recua.`
       : `<b>${killed.length == 1 ? "Morre 1 peça" : `Morrem ${killed.length} peças`}</b> de ${Lz}: ${names.join(" e ")} (espadas ⚔ da carta de ${W}${b.towers ? ` menos as torres ▲ da carta de ${Lz}` : ""}). O resto recua.`;
+  // quem tinha menos força no tabuleiro e mesmo assim venceu: dizer por quê (senão parece erro)
+  const ta = b.totals.attacker.total;
+  const td = b.totals.defender.total;
+  const upset = ta != td && (ta > td ? "attacker" : "defender") != b.winner;
+  const upsetNote = upset
+    ? `<p class="note">${W} tinha menos força no tabuleiro (${b.totals[b.winner].total} × ${b.totals[loser].total}), mas venceu porque ganhou mais faixas na Mesa: a força do tabuleiro reforça as tropas, e quem decide é a luta nas faixas (posição, funções${config.field == "castelo" || config.field == "fortaleza" ? ", muralha e portão" : " e terreno"}).</p>`
+    : "";
   return `<div class="board-res">
     <h3>2. Força no tabuleiro (reforçou as tropas na Mesa) e quem morre</h3>
     <ul>${row("attacker")}${row("defender")}</ul>
+    ${upsetNote}
     <p>${deaths}${siege}</p>
   </div>`;
 }

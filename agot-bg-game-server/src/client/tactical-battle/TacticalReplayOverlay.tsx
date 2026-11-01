@@ -169,9 +169,10 @@ export default class TacticalReplayOverlay extends Component<Props> {
       result: r.result,
       killed: r.killed,
       winner,
-      board: a && d ? { attacker: a, defender: d } : undefined,
-      swords: sameCombat ? sameCombat.getHouseCardSwordIcons(winnerHouse) : 0,
-      towers: sameCombat ? sameCombat.getHouseCardTowerIcons(loserHouse) : 0,
+      // o servidor manda a conta junto com a luta; a da batalha aberta é só para partidas antigas
+      board: r.board ?? (a && d ? { attacker: a, defender: d } : undefined),
+      swords: r.swords ?? (sameCombat ? sameCombat.getHouseCardSwordIcons(winnerHouse) : 0),
+      towers: r.towers ?? (sameCombat ? sameCombat.getHouseCardTowerIcons(loserHouse) : 0),
       steps: mySide ? steps : undefined,
       step: steps ? steps.length - 1 : undefined
     };

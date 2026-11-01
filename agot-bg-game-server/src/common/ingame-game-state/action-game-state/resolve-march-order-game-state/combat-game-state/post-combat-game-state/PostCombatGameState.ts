@@ -30,6 +30,7 @@ import { NotificationType } from "../../../../../EntireGame";
 import popRandom from "../../../../../../utils/popRandom";
 import Order from "../../../../../../common/ingame-game-state/game-data-structure/Order";
 import orders from "../../../../../../common/ingame-game-state/game-data-structure/orders";
+import { TacticalBoardLine } from "../tactical-battle-game-state/TacticalBattleGameState";
 
 export default class PostCombatGameState extends GameState<
   CombatGameState,
@@ -385,6 +386,26 @@ export default class PostCombatGameState extends GameState<
     if (!tactical || tactical.replayed) return;
     tactical.replayed = true;
     tactical.killed = _.uniq(tactical.killed);
+    // a conta do tabuleiro vai junto (o cliente pode já ter saído da batalha quando a luta começa)
+    const line = (h: House): TacticalBoardLine | null => {
+      const st = this.combat.stats.find((x) => x.house == h.id);
+      if (!st) return null;
+      const tropas = st.army + st.garrison;
+      const known = tropas + st.houseCardStrength + st.orderBonus + st.support + st.valyrianSteelBlade;
+      return {
+        tropas,
+        carta: st.houseCardStrength,
+        ordem: st.orderBonus,
+        apoio: st.support,
+        mini: st.valyrianSteelBlade + (st.total - known),
+        total: st.total
+      };
+    };
+    const a = line(this.attacker);
+    const d = line(this.defender);
+    if (a && d) tactical.board = { attacker: a, defender: d };
+    tactical.swords = this.combat.getHouseCardSwordIcons(this.winner);
+    tactical.towers = this.combat.getHouseCardTowerIcons(this.loser);
     this.entireGame.broadcastToClients({ type: "tactical-battle-replay", replay: tactical });
   }
 

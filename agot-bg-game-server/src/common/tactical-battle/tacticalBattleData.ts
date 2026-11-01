@@ -341,7 +341,11 @@ export const SIZE_EQUALIZE: number = (globalThis as { __SIZE_EQ__?: number }).__
  */
 // medido (140 batalhas, jogando bem): 0 → quem tem +1 de força vence 86%, +2 93%; −0,6 → +1 68%, +2 74%,
 // +3 86%, +4 ou mais 97% (a estratégia pesa nas batalhas apertadas; as desiguais quase não viram)
-export const EDGE_EXP: number = (globalThis as { __EDGE__?: number }).__EDGE__ ?? -0.6;
+// 01/nov: −0,6 → 0. Com −0,6, posicionando sem cuidado (como a maioria joga), quem tinha +4 de força vencia só
+// 60% e o vencedor parecia sorteado ("vencedor estranho", principalmente em castelo). Medido de novo (80
+// batalhas em planície/castelo/fortaleza, vantagem.ts): 0 → sem cuidado +1 55%, +2 74%, +3 79%, +4 84%;
+// jogando bem +1 89%, +2 94%, +3 99%.
+export const EDGE_EXP: number = (globalThis as { __EDGE__?: number }).__EDGE__ ?? 0;
 
 /** Bônus na batalha do tabuleiro para quem vence o mini-mapa (exército pequeno). */
 export const BONUS_ALL_LANES = 2;

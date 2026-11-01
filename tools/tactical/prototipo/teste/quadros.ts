@@ -24,6 +24,24 @@ const CENAS: Record<string, { field: FieldType; A: Squad[]; D: Squad[]; destroye
     ],
     destroyed: ["d1"]
   },
+  // como no print do Agostinho (01/nov): Baratheon ataca castelo da Lannister, luta na Muralha e no Portão
+  "castelo-print": {
+    field: "castelo",
+    A: [
+      { id: "a0", kind: "footman", role: "lanceiro", lane: 0, row: "frente", strength: 1, share: 0.5, piece: "p1" },
+      { id: "a1", kind: "footman", role: "escudeiro", lane: 0, row: "frente", strength: 1, share: 0.5, piece: "p1" },
+      { id: "a2", kind: "footman", role: "lanceiro", lane: 1, row: "frente", strength: 1, share: 0.5, piece: "p2" },
+      { id: "a3", kind: "footman", role: "arqueiro", lane: 1, row: "tras", strength: 1, share: 0.5, piece: "p2" }
+    ],
+    D: [
+      { id: "d0", kind: "footman", role: "arqueiro", lane: 0, row: "frente", strength: 1, share: 0.5, piece: "q1" },
+      { id: "d1", kind: "footman", role: "lanceiro", lane: 0, row: "frente", strength: 1, share: 0.5, piece: "q1" },
+      { id: "d2", kind: "footman", role: "escudeiro", lane: 1, row: "frente", strength: 1, share: 0.5, piece: "q2" },
+      { id: "d3", kind: "footman", role: "arqueiro", lane: 1, row: "tras", strength: 1, share: 0.5, piece: "q2" },
+      { id: "g", kind: "garrison", role: "torre", lane: 1, row: "tras", strength: 1 }
+    ],
+    destroyed: ["a0", "a1"]
+  },
   "castelo-dragao": {
     field: "castelo",
     A: [
